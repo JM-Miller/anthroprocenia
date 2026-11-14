@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Mod id="anthroprocenia_map_history" version="4"
+	xmlns="ModInfo">
+	<Properties>
+		<Name>anthroprocenia</Name>
+		<Description>A full gameplay overhaul mod utilizing existing functionality and code intended to provide an expierence halfway between Europa Universalis and Civilization 4: Rhye's and Fall</Description>
+		<Authors>jmiller3496</Authors>
+		<EnabledByDefault>1</EnabledByDefault>
+		<ShowInBrowser>1</ShowInBrowser>
+		<AffectsSavedGames>0</AffectsSavedGames>
+	</Properties>
+	<!-- NON-save-affecting (AffectsSavedGames=0): a game saved with this mod active does NOT list it as a
+	     required mod, so those saves keep loading even if the player later disables or removes it. The
+	     recorder still restores itself on load as long as the mod stays enabled in
+	     Add-Ons (the default), so recording survives save/reload in normal play. This deliberately replaces
+	     the earlier save-affecting design and its soft-disable option, which risked blocking old saves from
+	     loading. Legacy saves created by the earlier save-affecting design match both mod id and display
+	     Name; this rename may prevent those legacy saves from loading. -->
+	<Dependencies>
+		<Mod id="base-standard" title="LOC_MODULE_BASE_STANDARD_NAME"/>
+	</Dependencies>
+	<ActionCriteria>
+		<Criteria id="always">
+			<AlwaysMet></AlwaysMet>
+		</Criteria>
+	</ActionCriteria>
+	<ActionGroups>
+		<ActionGroup id="anthroprocenia-ingame" scope="game" criteria="always">
+			<Actions>
+				<UpdateText>
+					<Item>text/en_us/AnthroproceniaText.xml</Item>
+				</UpdateText>
+				<UIScripts>
+					<Item>ui/anthroprocenia-recorder.js</Item>
+					<Item>ui/anthroprocenia-geography.js</Item>
+					<Item>ui/anthroprocenia-playback.js</Item>
+				</UIScripts>
+				<ImportFiles>
+					<Item>ui/anthroprocenia-layout.txt</Item>
+				</ImportFiles>
+			</Actions>
+		</ActionGroup>
+	</ActionGroups>
+</Mod>

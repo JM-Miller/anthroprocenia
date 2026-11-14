@@ -1,0 +1,28 @@
+[SIZE=6][B]Anthroprocenia[/B][/SIZE]
+
+Anthroprocenia records your Civilization VII game and adds an interactive historical [B]Map View[/B]: a replay timeline, geographic labels, and configurable map layers.
+
+[SIZE=5][B]Features[/B][/SIZE]
+[LIST]
+[*][B]History replay[/B]: scrub, step, or play back every recorded turn, with territory, settlements, roads, and units.
+[*][B]Geography[/B]: generated names for continents, seas, rivers, mountains, and other natural features, aligned with their outlines.
+[*][B]Townscapes[/B]: zoom in to see detailed settlements with streets, buildings, and a large central landmark for each district.
+[*][B]Population[/B]: walking residents with names, genders, occupations, personality traits, and homes. The Population panel groups people by civilization, settlement, and home location, sorts by occupation, shows occupation counts on hover, and can pause the walkers.
+[*][B]Layers[/B]: toggle borders, labels, rivers, natural features, continent boundaries, fog of war, and more.
+[*][B]Controls[/B]: mouse, touch, keyboard, and controller support.
+[/LIST]
+
+[SIZE=5][B]Installation[/B][/SIZE]
+[LIST=1]
+[*]Download and open the zip.
+[*]Extract the [I]anthroprocenia[/I] folder into:
+[CODE]%LOCALAPPDATA%\Firaxis Games\Sid Meier's Civilization VII\Mods\[/CODE]
+(Create the [I]Mods[/I] folder if it does not exist.) The result should be [I]Mods\anthroprocenia\anthroprocenia.modinfo[/I].
+[*]Remove any older Anthroprocenia copies, including a Steam Workshop subscription, so only one is loaded.
+[*]Restart the game and enable [B]Anthroprocenia[/B] under [B]Add-Ons[/B].
+[/LIST]
+
+[SIZE=5][B]Usage[/B][/SIZE]
+Open [B]Map View[/B] from the in-game HUD. Drag or use the arrow keys to pan, and use the mouse wheel or +/- to zoom. Space plays or pauses the replay. Open the Population panel with the button at the top center of the map.
+
+Does not affect saved games. Also available on the Steam Workshop. License: MIT.

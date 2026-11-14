@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Mod id="anthroprocenia_map_history" version="63"
+	xmlns="ModInfo">
+	<Properties>
+		<Name>Anthroprocenia</Name>
+		<Description>Explore a historical map of your Civilization VII game with replay, geographic labels, and customizable map layers.</Description>
+		<Authors>jmiller3496</Authors>
+		<EnabledByDefault>1</EnabledByDefault>
+		<ShowInBrowser>1</ShowInBrowser>
+		<AffectsSavedGames>1</AffectsSavedGames>
+	</Properties>
+	<Dependencies>
+		<Mod id="base-standard" title="LOC_MODULE_BASE_STANDARD_NAME"/>
+	</Dependencies>
+	<References>
+		<Mod id="age-antiquity"/>
+		<Mod id="age-exploration"/>
+		<Mod id="age-modern"/>
+		<Mod id="ged-ynamp"/>
+	</References>
+	<ActionCriteria>
+		<Criteria id="antiquity"><AgeInUse>AGE_ANTIQUITY</AgeInUse></Criteria>
+		<Criteria id="exploration"><AgeInUse>AGE_EXPLORATION</AgeInUse></Criteria>
+		<Criteria id="modern"><AgeInUse>AGE_MODERN</AgeInUse></Criteria>
+		<Criteria id="always">
+			<AlwaysMet></AlwaysMet>
+		</Criteria>
+	</ActionCriteria>
+	<ActionGroups>
+		<ActionGroup id="realistic-speed" scope="shell" criteria="always">
+			<Properties><LoadOrder>1000</LoadOrder></Properties>
+			<Actions>
+				<UpdateDatabase><Item>config/RealisticSpeed.sql</Item><Item>config/SetupDefaults.sql</Item><Item>config/OversizedMaps.sql</Item></UpdateDatabase>
+				<UpdateText><Item>text/en_us/AnthroproceniaText.xml</Item></UpdateText>
+			</Actions>
+		</ActionGroup>
+		<ActionGroup id="realistic-antiquity" scope="game" criteria="antiquity">
+			<Properties><LoadOrder>1000</LoadOrder></Properties>
+			<Actions><UpdateDatabase><Item>data/calendar-antiquity.sql</Item><Item>data/realistic-calendar.sql</Item></UpdateDatabase></Actions>
+		</ActionGroup>
+		<ActionGroup id="realistic-exploration" scope="game" criteria="exploration">
+			<Properties><LoadOrder>1000</LoadOrder></Properties>
+			<Actions><UpdateDatabase><Item>data/calendar-exploration.sql</Item><Item>data/realistic-calendar.sql</Item></UpdateDatabase></Actions>
+		</ActionGroup>
+		<ActionGroup id="realistic-modern" scope="game" criteria="modern">
+			<Properties><LoadOrder>1000</LoadOrder></Properties>
+			<Actions><UpdateDatabase><Item>data/calendar-modern.sql</Item><Item>data/realistic-calendar.sql</Item></UpdateDatabase></Actions>
+		</ActionGroup>
+		<ActionGroup id="anthroprocenia-input" scope="shell" criteria="always">
+			<Actions>
+				<UpdateDatabase>
+					<Item>config/AnthroproceniaInput.xml</Item>
+				</UpdateDatabase>
+			</Actions>
+		</ActionGroup>
+		<ActionGroup id="anthroprocenia-ingame" scope="game" criteria="always">
+			<Actions>
+				<UpdateText>
+					<Item>text/en_us/AnthroproceniaText.xml</Item>
+				</UpdateText>
+				<UIScripts>
+					<Item>ui/history/anthroprocenia-calendar-hud.js</Item>
+					<Item>ui/history/anthroprocenia-recorder.js</Item>
+					<Item>ui/geography/anthroprocenia-names-db.js</Item>
+					<Item>ui/geography/anthroprocenia-geography.js</Item>
+					<Item>ui/map/anthroprocenia-playback.js</Item>
+				</UIScripts>
+				<ImportFiles>
+					<Item>maps/oversized-dimensions.js</Item>
+					<Item>maps/continents-voronoi.js</Item>
+					<Item>maps/pangaea-voronoi.js</Item>
+					<Item>maps/fractal-voronoi.js</Item>
+					<Item>maps/archipelago-voronoi.js</Item>
+					<Item>maps/shattered-seas-voronoi.js</Item>
+					<Item>maps/shuffle-voronoi.js</Item>
+					<Item>maps/terra-incognita-voronoi.js</Item>
+					<Item>maps/donut-voronoi.js</Item>
+					<Item>ui/map/anthroprocenia-calendar.js</Item>
+					<Item>ui/map/anthroprocenia-skipahead.js</Item>
+					<Item>ui/map/anthroprocenia-map-details.js</Item>
+					<Item>ui/map/anthroprocenia-unit-highlights.js</Item>
+					<Item>ui/map/anthroprocenia-ui.js</Item>
+					<Item>ui/map/anthroprocenia-timeline.js</Item>
+					<Item>ui/map/anthroprocenia-layout.txt</Item>
+					<Item>ui/map/anthroprocenia-placement.js</Item>
+					<Item>ui/map/anthroprocenia-sites.js</Item>
+					<Item>ui/map/anthroprocenia-units.js</Item>
+					<Item>ui/map/anthroprocenia-townscape.js</Item>
+					<Item>ui/map/anthroprocenia-crowds.js</Item>
+					<Item>ui/map/anthroprocenia-people.js</Item>
+					<Item>ui/map/anthroprocenia-population-panel.js</Item>
+					<Item>ui/map/anthroprocenia-demography.js</Item>
+					<Item>ui/map/anthroprocenia-namegen.js</Item>
+					<Item>ui/map/anthroprocenia-townlinks.js</Item>
+					<Item>ui/map/anthroprocenia-persist.js</Item>
+					<Item>ui/map/anthroprocenia-commands.js</Item>
+					<Item>ui/map/anthroprocenia-linenames.js</Item>
+				</ImportFiles>
+			</Actions>
+		</ActionGroup>
+	</ActionGroups>
+</Mod>

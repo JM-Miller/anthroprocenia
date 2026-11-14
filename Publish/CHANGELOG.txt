@@ -1,0 +1,428 @@
+Anthroprocenia changelog
+(Newest first. Paste the latest entry into the Workshop change notes and the CivFanatics update.)
+
+Version 63
+- Replace vertex-only shared-territory wedges with a connected core and side-joined edge pieces. Anchor borrowed colors to solid neighboring territory instead of swapping colors between adjacent split tiles. Preserve actual ownership, fog, wrapping, shared-tile coverage and incremental repaint behavior; use at most seven polygons per shared tile.
+- Give mod panels a shared Chronicle-inspired navy/gold frame, inset gilding, ornamental headers and serif titles.
+- Streamline Skip Ahead to an absolute target-year slider and custom BCE/CE year input. Add a season slider in Exploration and a month slider in Modern, with no year-zero gap or native range-input dependency.
+- Begin Autoplay minimizes the panel while retaining header progress, restore/close/Stop controls and the center pause/resume circle. Keep current-Age bounds, native turn targeting, single-player safeguards and early-stop behavior; restore the panel on errors.
+- Native AI research/prerequisite rules are unchanged. Fully restart the game; live-game confirmation is still required.
+
+Version 62
+- Use Confederacy instead of Confederacies throughout generated country names and invalidate earlier cached labels.
+- Narrate civilization events as history rather than tile-count reports. Name the actual continents/regions involved in territorial gains and losses; do not invent locations or causes. Give each event a dynamic description grounded in its recorded changes.
+- Add ellipsis-truncated descriptions to World Chronicle cards with full-text hover/focus tooltips. Preserve event seeking, current-turn highlighting, custom scrolling and bounded forty-event pages.
+- Refresh selected-scout discovery highlights when plots are revealed and discovery improvements are added or collected. Keep distant outlines visible, empty geometry hidden, and transient lookup failures retryable. Preserve native revealed-site filtering and live-map-only selection behavior.
+- Autoplay behavior is unchanged.
+
+Version 61
+- Show decoration previews at one-quarter of the full-townscape zoom threshold in a separate screen-sized SVG below roads/roofs. Keep towns and walkers at their existing thresholds; retain visibility, fog, settling, close-zoom physical scale and map-close behavior.
+- Sample coarse natural features before layout: at most 256 candidates / 2048 commands / 65536 characters for sub-48-pixel tiles. Closer views use at most 1024 candidates / 8192 commands / 262144 characters. Islet bands share those budgets and offscreen islets are culled before geometry construction; actual item anchors and town tree command targets remain intact.
+- Generate preview/dense simplified decoration paths directly without normalizing or caching unused detailed silhouettes. Release inactive decoration geometry and retain bounded, cached viewport placement.
+- Latest crash dump shows an access violation with Intel DX12 driver and D3D12Core stack frames, alongside renderer command-set exhaustion. Reduce mod rendering pressure without claiming a proven native-driver repair; affected-save confirmation is required. If necessary, test the game's DX11 launch option and an appropriate graphics-driver update.
+
+Version 60
+- Show early townscape decoration previews, then transition to physical 2-8-foot shapes at close zoom. Raise visible detail to 4096 markers (8x the previous early-zoom limit) and target 256x denser viewport vegetation while preserving collision checks, bounded candidate generation and cached small pans.
+- Keep all decoration groups within a shared 8192-command / 262144-character budget using adaptive simplified shapes. Cap retained placements at 6144 and explicitly hide empty SVG paths.
+- Defer capture updates and detail redraws until rapid panning/zooming settles for 250 ms. On turn catch-up, cancel superseded detail/marker timers and scatter jobs instead of submitting duplicate batches; retain historical positions. Latest renderer logs show command-set/job exhaustion, without an available new crash dump; native crash elimination requires affected-save confirmation.
+- Replace Population row CSS rejected by Gameface (mixed percentage/pixel calc and max-content) with supported left/right anchoring.
+
+Version 59
+- Fix the confirmed playback startup ReferenceError (Cannot access 'showNaturalFeatures' before initialization) that prevented Map View from loading. Remove the premature top-level visibility call; preserve visibility updates in the initialized camera/render lifecycle.
+- Add whole-module execution and DOM-ready HUD integration regression coverage, checking that the Map View API and visible Map HUD control are installed without startup errors. Fully restart Civ VII after updating.
+
+Version 58
+- Start World Chronicle closed. Slash the clock-arrow icon when its next click closes the Chronicle; keep its normal icon when its next click opens it.
+- Replace unsupported HUD-focus :not selectors with Gameface-compatible root classes and descendant rules. Hide other native/mod HUD roots while Chronicle is open, include newly added UI, and restore native styles and menu access on close or overlay transitions.
+- Hide townscape labels immediately during camera panning and restore them after 250 ms without navigation input, retaining cached layouts.
+- Hide coarse hills, cliffs, forests, mountains and other natural-feature glyphs while townscapes are visible. Preserve terrain, waterways, town decorations, tree command targets and item anchors.
+- Cull offscreen map details and cap the combined six-pass fog-gradient output at 8192 commands and 262144 characters. The latest captured crash is a native Gameface/Renoir access violation; these renderer-load mitigations require affected-save confirmation rather than a claim of proven crash elimination.
+
+Version 57
+- Keep townscape roads/miniroads, roofs, creeks and rivers in screen-sized SVG viewports at maximum zoom, preserving their map-coordinate geometry and visibility switches without extreme CSS scaling or subpixel local clips.
+- Size all townscape decoration silhouettes to 2-8 feet across, including their round outlines, using the existing 100-mile tile scale. Normalize different shapes, preserve placement clearances and make simplified glyphs use the same physical span.
+- Replace cliff-edge lines with filled grey-brown rocky fringes and pale rock facets. Draw nine smaller hills per sampled hill tile, controlled by Natural features.
+- Replace dotted white/gold fog-off frontiers with feathered dark-gray/light-gray gradients using bounded retained bands. Rename the visibility option to Revealed terrain and update its hover helper.
+- Explicitly hide disabled map-detail paths so retained native SVG geometry cannot leave hills, cliffs or fog frontiers visible after their checkbox is cleared. Preserve individual vector budgets and deterministic large-map sampling.
+
+Version 56
+- Add native single-player Skip Ahead with turn/calendar input, real AI decisions and yields, target progress, cancellation and Age/game/session stops. Require saving first; stop for Age choices. Add an exact-center autoplay pause/resume circle that survives panel/map closure and hides behind menus. Native turn timing still requires live-game confirmation.
+- Fit Visibility to its contents within the viewport. Replace its history toggle with a clock-arrow circle between Leaders and walker pause; move the circle into the focused Chronicle header while open. Dock a styled gold/navy World Chronicle at the map bottom and reversibly hide other game/mod HUD content.
+- Add a combined horizontal civilization-events ruler above the scrubber, with detailed hover/focus tooltips, clickable event turns, wheel scrolling and bounded forty-event pages. Autoscroll and switch pages to the current turn during playback; preserve manual browsing when paused. Build the shared world model in bounded batches and release it on close. Require fog off for combined history.
+- Replace the Chronicle's native OS scrollbar with a navy/gold custom rail and draggable gold thumb; retain wheel, rail-click, keyboard and playback synchronization.
+- Highlight every Chronicle event belonging to the displayed turn while playing or paused historically. Suppress highlights only when paused at the actual live Age/turn, not merely the newest recording.
+- Expand family/civilization milestones and add fading upper-center notifications for newly observed player-civ events, without initial backlog. Include construction, wonders, pillaging/restoration, growth, yields, contacts, relationships, suzerainty, celebrations, crises and Ages.
+- Add recorded cliff-edge/hill geometry and optional fog-off visibility frontiers: white unexplored, gold current sight. Highlight native-valid revealed destinations for scouts, missionaries, merchants and settlers, distinguishing freshwater founding sites. Keep vector/viewport limits explicit.
+- Fully color shared river/mountain territory partitions without changing ownership. Start mod windows expanded; use minimize/maximize glyphs, native button frames and hover helpers. Slash the compass icon when its next click disables arrows.
+- Add a square map-scale drag handle and smaller translucent red X reset circle. Retain manual position across map closure/zoom, clamp it to the viewport and restore automatic placement on reset.
+- Normalize repeated articles and overlapping government suffixes in country names, including Confederacies Tribes -> Tribal Confederacy. Regenerate older cached country labels while retaining valid polity, geographic and capital names.
+- Automated checks and browser mocks are not native crash/gameplay proof. Fully restart Civ VII; verify autoplay and rendering against the affected save.
+
+Version 55
+- Add independent visibility switches for townscape buildings, decorations, parks/fields, walls, quays, roads/bridges, creeks/pools, fires/accents, walker dots/crowds and hats. Make the visibility panel horizontally scrollable, including with the wheel. Hidden elements do not intercept clicks or alter simulated road networks and people.
+- Keep townscape roads, roofs and decorations visible during zoom while settled-detail rebuilding stays debounced. Repaint wrapped, fog-filtered terrain before returning control to the renderer instead of exposing a black partial-loading frame.
+- Add a middle-right compass circle visible only with townscapes. Toggle selection-style arrows for the current camera tile and its six adjacent tiles; honor fog and menus, and batch the arrows within vector budgets.
+- Connect same-tile townscapes and facing edge townscapes on adjacent tiles, preferring nearby major roads. Include compact offscreen road terminals without generating distant towns. Follow actual road bends in walking networks; retain water/bridge checks. Taper major map roads to 20 feet across just beyond townscape visibility.
+- Fix the confirmed unit-input ReferenceError: move click helpers out of selectFlagUnit into module scope and compile the intact module in a regression test. Deduplicate slow mouseup/click tails on Population entries and circle controls.
+- Add close-zoom occupation crowns, hats and symbols; draw rare occupations above common trades within a 512-icon/128-path budget.
+- Replace the civ timeline's text glyph with SVG. Render both timelines as labeled event rulers with escaped detailed tooltips and 40-event paging. Rename court sections from the recorded government; add deterministic country-name grammar variants.
+- Preserve real Earth region/continent names without generated suffixes or stale cached rewrites, correct Antartica to Antarctica, and add eleven verified stock-Earth landmarks while retaining projection checks.
+- Reduce Agriculture and Chiefdom to one tenth of version 54's final costs: 220 science and 393 culture in the base Antiquity trees. Leave later tiers unchanged. Fully restart Civ VII; use a new game for database pacing. Live native crash/renderer confirmation is still required.
+
+Version 54
+- Address zoom-in allocation/rendering hazards: hide civilization-symbol layers immediately at townscape zoom, defer decorative placement until the padded viewport is known, and release temporary town candidate arrays. The 01:11 crash is recorded in telemetry but its native dump was cleared; live confirmation is still required.
+- Unit-circle selections consume the full DOM/native click gesture instead of allowing a second world click to immediately deselect the unit or open a settlement beneath it. Preserve native plot placement and ordinary background clicks.
+- Distant crowds draw one eighth of their formation dots, restoring one quarter, one half, then every dot as zoom increases. Keep every simulated member, group count, picking radius and selected/pinned/commanded individual.
+- Increase natural symbol sampling from 1,024 to 1,536 within the existing command/contour/character ceilings. Show up to 512 town decorations at crowd zoom and 1,536 closer up; retain the 8,192-command decoration ceiling and allocate at most four times the draw budget in viewport placements.
+- Keep townscape roads fully opaque and add zoom/aspect-aware screen-width floors to minor roads, main roads, links and house connectors. Physical road routes and collision widths remain unchanged. Fully restart Civ VII.
+
+Version 53
+- Investigate the 00:40 DX12 crash package: V8 out-of-memory allocation failures near its 128 MB heap limit. Bound long-stroke spatial indexing and wide queries, stop workplace lookups retaining unloaded townscapes, and bound parsed replay caches. Keep exact long-stroke collision handling; native crash elimination still needs live verification.
+- Render region names as whole text lines instead of separate transformed/shadowed glyphs to reduce zoom-out allocation and renderer pressure. Preserve text, rotation and wrapping; remove only the decorative character arch.
+- Restrict leaders and their connected living families to leadership/family activities, both visible and offscreen, without granting relatives leader command bonuses. Remove the action prefix and genealogy disclaimer from the Family Tree hint.
+- Add paged Family Tree Events Timeline (births, marriages, deaths, arrivals and saved observed occupation/move changes). Add a circular T button beside Walker Speed for the player's civilization timeline, derived from historical settlement, relationship, identity and discovery records.
+- Enable realistic calendar action groups for all ages again. Scale technology/civic/repeatable costs to the extended age budgets; set Agriculture and Chiefdom to their next tiers' costs before scaling. Restart and start a new game for realistic gameplay pacing.
+
+Version 51
+- Keep townscapes, roofs, labels and decorations visible during camera pans while the existing debounced scene refresh catches up; zoom and other structural view changes still hide stale scenes until a complete current view commits.
+- Remove autonomous visits to decorative furniture without removing any decoration rendering. Keep building activities and square strolls; dropping furniture stops also reduces walking-graph and route-planning work.
+- Add regression coverage for pan visibility, zoom hiding and retained decoration output. Fully restart Civ VII.
+
+Version 52
+- On leaving townscape zoom, empty the hidden SVG paths and invalidate the roof geometry cache once, rather than retaining the largest native vector buffers while zoomed out. Rebuild the same detail on re-entry; keep population, walking data and visible-scene geometry unchanged.
+- Cover DX12-oriented zoom-out release and same-view recovery with an actual town-render lifecycle regression. This releases mod-owned SVG input; live verification is still required to confirm the game renderer releases its native resources.
+
+Version 50
+- Address the retained 14:37:32 Vulkan command-set/out-of-memory crash reported when zooming out from townscapes. Previous native-camera isolation and natural-detail limits did not eliminate it; structural townscape paths and roofs still had no drawing ceiling.
+- With user approval, hide townscape paths, labels and walkers before navigation transforms and wait for 250 ms of stable camera/input before rebuilding. Coalesce pending refreshes; preserve the walker world/commands, cancel on close/recycle, and leave stale or failed scenes hidden.
+- Bound static roads/bridges/quays/walls and other structural paths to 8,192 SVG commands / 262,144 characters per batch. Roofs plus roof details have a separate identical budget; highlights have 4,096 / 131,072. Deterministically sample complete subpaths, favor sparse groups, and avoid unchanged path writes. Dense views may show fewer details; full accepted buildings, housing, population and walking/collision geometry remain unchanged.
+- Retain normal-zoom territory fringes and existing decoration/natural rendering safeguards. Add actual-function regressions for rapid navigation, programmatic trips, zoom-in recovery, canceled/failed commits, pending walkers and measurable geometry ceilings.
+- Emit a v50 settled-townscape diagnostic and a one-time geometry-limit warning. SVG counts are not native Vulkan command-set counts: the exact failing native draw and crash elimination still require live verification. Fully restart Civ VII and retry the affected save.
+
+Version 49
+- Make action-commanded walkers obey the walker pause control instead of walking while autonomous people are paused. Preserve queued commands/routes and resume at the chosen speed without catching up paused time; command fade progression also waits.
+- Keep camera-only reprojection and visibility cleanup active while paused. Add repeated-pause/resume regression coverage using the actual people tick. Fully restart Civ VII.
+
+Version 48
+- Stop the repeating opacity animation on walker highlight circles so the outline stays steady while the walker moves. Keep selection arrows blinking and preserve indoor/deselection/stale-view hiding.
+- Give single-member coarse crowd dots the full walker tooltip, including their live current action, identity, occupation and other existing person details. Reuse the same action formatter as close-up walkers and Population; real multi-person groups retain the count/picker tooltip.
+- Add regressions for shared live action text across close/coarse dots, command travel/arrival/blocked changes, multi-person group labels and steady ring versus blinking arrow styles. Fully restart Civ VII.
+
+Version 47
+- Explicitly hide unused individual/crowd SVG batches. Empty path data alone no longer controls visibility: reduced fade/color batches, indoor/offscreen walkers and crowd-mode transitions cannot leave spare paths visible when the parent SVG returns.
+- On camera invalidation hide every dot batch; reveal a reused slot only after setting current geometry/appearance. Keep the bounded reusable SVG pool and skip redundant visibility assignments.
+- Stop and hide walkers synchronously when closing Map View, before panel cleanup or another animation callback.
+- Add a regression modeling retained native geometry after empty path data, covering shrinking/empty batches, parent re-show and slot reuse, plus crowd-mode hiding. Live game verification remains necessary; fully restart Civ VII.
+- Brighten building-entrance subroads to opaque cream (#f0d8a4), retaining explicit opacity of one, existing widths and routes.
+
+Version 46
+- Closing Population now deselects all people/Home Location/tile entries and command-picked walkers, stops person camera trips/following, clears hover/selection rings and command targeting, and closes the crowd picker. Apply the same cleanup on map close/reset. Preserve saved pins, expanded groups, sorting, walker pause/speed and issued commands; minimizing remains distinct from closing.
+- Clear retained individual and crowd SVG paths and rings immediately on stale camera/inactive zoom, not only parent display. Include crowd/individual split mode in the camera key. Keep old geometry cleared if reprojection fails, AI processing suspends redraw, or a camera trip temporarily retains the walking simulation.
+- Brighten local/main/link/access roads and bridge decks/rails, explicitly setting opacity, stroke-opacity and fill-opacity to one without widening roads or changing routing.
+- Keep decorative barrels on the map but remove them from autonomous walker visit destinations. Leave building activities and other decoration visits unchanged.
+- Add regressions for close/reopen deselection, immediate stale-geometry removal, failed projection, split-mode changes, trip stop cleanup, opaque road styles and decorative barrel exclusion. Fully restart Civ VII.
+
+Version 45
+- Address another Vulkan command-set/out-of-memory crash at 13:42:59. The UI log confirms v44's bounded natural renderer was active; it did not eliminate the native failure.
+- With user approval, isolate 2D Map View navigation from the hidden native 3D camera. Remove delayed native zoom/pan/projection-correction requests and camera-restoration writes. Keep read-only initial fitting, navigation/decorative debounce timestamps and native selection/build-placement behavior. Closing Map View no longer transfers the browsed camera to the native world.
+- Restore every eligible visible territory/coastline fringe, hiding only below two projected pixels in either tile axis, including minimap. Replace the former sparse 2,048-edge selection with padded viewport culling and debounced state invalidation when navigating beyond its coverage.
+- Merge continuous same-side curve segments and remove redundant baseline/end vertices. Preserve fog gating and matching full/partial geometry. The former global 8,192-polygon / 32,768-vertex ceiling no longer applies; 4,096 subdivisions is a detail target with a two-segment minimum per visible edge.
+- Full 40,960-tile adversarial fixture: 101,649 polygons / 304,947 vertices versus v42's 302,514 / 1,011,624, while restoring all boundaries; a 240-by-160 viewport after panning needs 1,716 / 5,148. Retain three color-batched paints. These are geometry counts, not native command measurements.
+- Add native-camera write spies and boundary coverage/viewport/lobe regressions. Emit a v45 camera-isolation diagnostic on opening. Fully restart and retry the affected save: native crash elimination remains unverified pending live reproduction.
+
+Version 44
+- Address the reported delayed hiding of tree/mountain shapes during the repeated 13:30 zoom-out Vulkan crash. The v43 boundary change did not resolve that native failure.
+- Hide natural-feature SVGs and islet bands synchronously before camera transforms whenever their rendered camera differs. Keep hidden until a complete current-camera draw; reject old-camera scatter continuations. Cover same-tier zoom, coarse tier-one navigation and minimap resize, not only detail-tier/subpixel threshold changes.
+- Intentionally hide natural decorations during continuous navigation, restoring after it settles. Preserve terrain fills, ownership borders, item markers and all accepted town-tree collision/picking positions.
+- Separately sample at most 1,024 natural symbols and cap actual two-tone plus islet drawing at 16,384 SVG commands / 524,288 characters. The existing placement-count budget alone did not constrain actual drawing complexity.
+- Add real camera/marker integration tests for pre-transform hiding, rapid zoom coalescing, interrupted/failed draws, minimap resize, toggles and exact geometry limits; test under 96 MB heap.
+- Emit low-volume v44 render-tier/geometry diagnostics for live verification. Fully restart Civ VII and reload the affected save; native GPU-crash elimination remains unverified until that live reproduction.
+
+Version 43
+- Address the 13:17 repeat Vulkan command-set/out-of-memory crash during full-map zoom-out. Repair a verified unbounded path outside v42's town/walker changes: whole-map coastline/territory fringe exceeded its nominal 60,000-polygon budget because of mandatory per-edge subdivisions and uncounted sign-split polygons.
+- Hard-limit decorative fringe to 2,048 topology-selected edges and 4,096 segments, at most 8,192 polygons / 32,768 polygon vertices per paint, including first partial paints with stale high-detail settings. Keep all tile fills and ownership borders; oversized maps intentionally have sparser decorative boundary detail.
+- Suppress fringe below eight projected pixels in either tile dimension, including minimap views. Invalidate/schedule state repaints at that threshold even within a label tier, and restore detail on zoom-in.
+- Keep topology selection stable across full/partial paints, territory and fog changes; release retained layout arrays on recording/layout recycling. Log when boundary detail is limited.
+- Same 40,960-tile adversarial fixture: actual v42 function emitted 302,514 polygons / 1,011,624 vertices; v43 emits 5,068 / 16,952, with three color-batched paints in both. Tests include 96 MB heap runs; these geometry counts are not Vulkan command-set measurements or proof of the sole native crash cause.
+- Fully restart Civ VII and reload the affected save for native zoom-out verification.
+
+Version 42
+- Address renderer pressure around the 13:00 native graphics crash: retained logs show command-set exhaustion, Vulkan out-of-memory errors and a GPU-crash report, unlike the earlier V8 heap failure. Exact attribution to an individual mod drawing operation remains unproven.
+- Batch individual walkers by color/fifteen visible fade levels and crowds into two color paths. Preserve represented people, military colors, formations, picking radii, selection rings and camera/interturn clearing. Individual dots use octagons with unchanged horizontal/vertical diameter.
+- Bound decoration drawing to 1,024 spatially distributed viewport placements, 8,192 SVG path commands and 262,144 geometry characters. Simplify complex shapes within reserved footprints; deliberately reduce detail in dense views while preserving full shapes in smaller close-up views.
+- Preserve the 50x vegetation target and accepted collision/leisure data separately from the draw budget. Diagnose limiting once per map session. SVG geometry limits are not measurements of Vulkan command sets.
+- Stress-test 24,000 decoration candidates and 7,200 individual/isolated crowd members, including constrained 96 MB heap runs. Live GPU-crash reproduction/verification remains necessary; fully restart Civ VII after installation.
+
+Version 41
+- Remove main-square background fills, retaining gathering destinations; default walker speed and missing-speed fallbacks to 1x without changing the original 5x pace.
+- Hide stale screen-space walkers/crowds immediately on camera changes, including while AI-turn simulation is suspended, and reveal only after a complete current-view projection. Clip the walker SVG to the viewport.
+- Allow nearby opposing road ends with up to 45-degree skew to form bridges, and raise the bounded scene bridge budget from 128 to 256. Retain maximum spans, dry banks, water and obstacle checks.
+- Use brighter fully opaque road strokes without widening streets, approaches or connecting roads.
+- Switch scale-bar labels to feet below a one-mile target span, with readable 1/2/5 distances and physically correct lengths.
+- Restart Civ VII after installation.
+
+Version 40
+- Replace the walker-speed circle's auto-sized text span with centered, explicit-size SVG path lettering for 1x through 5x. The visible label no longer depends on Gameface fallback-font or text-span sizing.
+- Preserve speed cycling, pause state, input deduplication, toolbar placement, UI scaling, tooltips and accessible speed labels. Restart Civ VII after installation.
+
+Version 39
+- Fix Map View building/wonder and city-improvement placement clicks being skipped by the city-overlay input guard. Translate plot-selection input before that generic guard; retain native panel targets, FINISH-only mouse submission and selection permissions.
+- Make road widths one twentieth of v38, including entrance paths, link roads and bridge roadways. Scale road collision clearances consistently while keeping river widths unchanged.
+- Shrink each subdivided roof to one quarter width/length (one sixteenth area), including filled parts and outlines; preserve locations, residence IDs, housing capacity and population. Triple the minimum building-to-building clearance.
+- Target 50x vegetation scatter density through deterministic, streamed viewport cells. Retain the 24,000-decoration cap and collision/water avoidance; wide scenes use bounded sampling instead of allocating huge town-wide vegetation arrays.
+- Extend coastal decks onto dry land; connect the landing to meandering streets and add deck-contained branches to every deck. Hide and diagnose waterfronts lacking a clear land/road connection instead of displaying floating isolated quays.
+- Major miniroads measure about 9.9 feet and smaller lanes 5.3 feet across at the existing 100-miles-per-tile scale. Actual accepted vegetation counts depend on space and scene budgets. Restart Civ VII after installation.
+
+Version 38
+- Diagnose the 04:28 crash from its preserved minidump: V8 allocation failures near 128 MB and a fatal out-of-memory handler.
+- Reduce scene footprint buffering so distant offscreen towns do not fill all 24 geometry slots. In the four-visible-home fixture, layout preparation fell from 333 ms / 37.5 MB retained heap to 58 ms / 6.6 MB, without reducing visible-town density.
+- Release inactive entry housing/roof/decor references and trim decoded caches; update surviving walker groups to the current graph and discard obsolete runner graph caches.
+- Stream four-way subdivision to the existing accepted-roof budget; reuse coincident approach junctions, score undirected walking edges once, and spatially filter their obstacles. Preserve doors, harbors, water avoidance and exact populations.
+- Suspend decorative simulation and scene rebuilds during AI processing, resuming after local turn activation; retain replay operation at age/game end.
+- Keep resolved end-turn recording; skip provisional whole-map captures while Map View is closed, request freshness on opening, and cancel redundant pending scans at turn begin.
+- Remove duplicate district and map-coordinate engine lookups; snapshot tech/civic handles once per player. Log capture durations above 250 ms for live turn-time diagnosis.
+- Native AI/autosave and other mods remain outside the benchmark. Full-game crash/turn-time verification is still required; restart Civ VII after installation.
+
+Version 37
+- Fix calendar HUD mutation errors on native UI nodes without Element.matches/querySelector; do not observe the entire map DOM when the extended calendar is inactive. Preserve delayed HUD creation and later calendar activation.
+- Remove quadratic nearest-street scans when joining dense townscape walker networks on the same tile, using exact indexed searches with deterministic nearest-node ties. Regression coverage compares results with exhaustive searches and checks a 2,000-node integrated world.
+- Build door-road detour waypoints only after direct meandering approaches fail; preserve all obstacle/water/deck checks and dense-fixture door connections.
+- The previous freeze occurred after successful game loading, around townscape rebuilding. These verified UI errors and synchronous hotspots are fixed; live verification of that scene remains required.
+
+Version 36
+- Repair a verified installation conflict: an active nested v4 manifest shared v35's mod ID but lacked the new map scripts. Add a Windows release installer that verifies references/hashes, disables only duplicate manifests with this exact mod identity (preserving files/backups), refuses newer copies, and verifies that exactly one active identity remains.
+- Add low-volume map bootstrap and dimension-registration diagnostics. The 03:48 launch crashed before the native generator logged startup, with no available current dump; do not treat the duplicate-installation defect as a proven native crash cause. Full restart and live launch verification remain necessary.
+- Preserve the v35 oversized-dimension repair, 63-player capture optimization, and existing requested setup/calendar settings.
+
+Version 35
+- Address the latest 03:35 map-generation failure: native map-utilities attempted to read x from missing Giant-size dimensions. Add eight small native Voronoi entry points that register the engine's oversized dimensions before the native request handler, including Donut's separate square-dimension table. Preserve native/provider sizes, and explicitly report invalid dimensions.
+- Remap native map choices/defaults and their map-specific options, restrictions, start rules and criteria to the compatibility scripts. Leave YnAMP's Giant Earth and other provider scripts unchanged; do not modify game files. Restart and reselect the map in a new setup; old presets may retain the original script path.
+- Snapshot player diplomacy handles once per replay relationship capture. A 63-player regression reduces player lookups from 2,017 to 64 and diplomacy-handle reads from 1,953 to 63, preserving pairwise records and refreshing handles on every capture.
+- Preserve the temporary calendar rollback, 63-player defaults, restricted map sizes and bounded townscape/crowd caches. Native map initialization is regression-tested; full 63-player generation/campaign stability still needs live-game verification.
+
+Version 34
+- Temporarily disable the three extended-calendar gameplay action groups without deleting their wiring, SQL, date calculations or tests. New games use native turn counts, age progression, research/civic costs and celebration pacing; retain the Realistic-only speed choice. Native dates and replay life behavior resume when the extended-calendar database flag is absent. Existing saves/replays are not converted.
+- Set every frontend map size to 63 default total players and raise its maximum to at least 63, without increasing human-player limits.
+- Restrict selectable sizes to Giant, Giant Earth (when supplied as a size), and Ludicrous. Keep YnAMP's Giant Earth map script, which uses Giant size. An oversized-map provider is required; scripts restricted to other sizes cannot be used.
+- Document restoration of the preserved extended-calendar action groups. Restart and start a new game to apply the calendar rollback.
+
+Version 33
+- Default new setups to no end-of-age countdown, Catastrophic disasters, score victory off, and Giant size when provided by a map mod in the applicable size domain. Preserve supported defaults without Giant; keep options editable and do not rewrite saves or saved presets.
+- Default to Antiquity with Apex-only randomized civilizations and AI Apex Civilization Transition, retaining native historical leader association and civilization unlock requirements. Native rules choose successors; human choices remain manual.
+- Initialize Population, Leaders and Family Tree panels minimized, alongside the already-minimized timeline and visibility controls. Start building-people sections, leadership groups and pinned leadership groups collapsed.
+- Set the minimum walker diameter to 0.0003 miles, retaining a lower-zoom readability floor. Derive maximum zoom from that scale so the minimum-size dot is 12 UI-scaled pixels across; retain its diameter during fades and scale hit areas/selection rings with it.
+
+Version 32
+- Add an early camera/tick crowd-visibility guard that hides and clears retained crowd paths even when cached shape metadata is missing, before graph rebuilding or simulation can fail. Disable close-zoom crowd hit testing and restore coarse paths on zoom-out.
+- Split each original townscape roof into four inset roofs with deterministic IDs and quarter capacity shares. Accept complete parent groups under the existing fair per-home 6,000-roof scene budget, preserving exact population totals and aggregate capacity.
+- Add bounded deterministic meandering/branching approaches from miniature streets to roof doors and connected harbor landings/dockhouses. Share drawing, decoration reservations and walking geometry. Report blocked entrances instead of drawing through obstacles; permit harbor walking only on continuous connected decks.
+- Share one approach through each four-building group's central gap before branching to its doors. Retain unsplit cached layouts and release offscreen derived geometry; the subdivided layout passes the constrained 96 MB heap regression instead of retaining four copies of every offscreen roof.
+- Exempt map chrome, native menu controls and active overlays from command/map input suppression, including engine events targeting document/body. Add deduplicated DOM/keyboard activation for native mod buttons, and a retained explicit 1x-5x text span inside the walker-speed button.
+- Restore the extended calendar with annual Antiquity (4,400 turns, 4000 BCE-400 CE), seasonal Exploration (5,400 turns, Spring 400-Winter 1749), and full-month Modern (2,400 turns, January 1750-December 1949). Rename Standard to Realistic and remove other speed choices, including the multiplayer default.
+- Fix age timer budgets independently of age-length settings and remove event-based timer acceleration. Scale technology/civic costs, additive repeatable costs, celebration duration and happiness-curve parameters by the extended age budget without slowing production, growth, movement or diplomacy. Supply verified native celebration defaults where database rows are absent.
+- Display exact dates in the HUD and new replay records without replacing the native date API. Store fractional life-year durations for seasonal/monthly records; retain legacy replay behavior and event-based combat/pillage hazards.
+- Replace repeated linear recording-history lookups with an incremental index and skip provisional scans during AI turns, preserving authoritative captures.
+- This version affects saves and requires a new game. Other gameplay overhauls may conflict. Native schemas/data and automated regressions are checked; full live-game transitions/research/celebrations still need verification after restart.
+
+Version 31
+- Refresh screen-space walkers and crowds synchronously with camera zoom/pan, cancelling the pending callback so no stale crowd frame survives a camera change. Keep the 24-screen breakup threshold and paused/selected/pinned/commanded/runner behavior.
+- Include isolated ordinary walkers in coarse display paths instead of leaving their individual circle elements behind when zooming out. Keep exact dot counts and actual positions without inventing nearby members.
+- Restore townscape grass and bush geometry and stroke widths from the extra 1/20 reduction that made them effectively invisible even at maximum zoom. Preserve footprint reservations, shared SVG paths and bounded placement caches.
+- Find actual dry-to-wet shoreline transitions for waterfronts, including homes whose icon lies in water. Anchor the connected landing/pier/dockhouse assembly on dry land; omit waterfronts if no land connection exists. Preserve riverbanks and horizontal map wrapping.
+- Add synchronous zoom/pan, singleton crowd, projected vegetation-size and land-connected waterfront regressions. Native calendar and gameplay progression remain unchanged; the long-calendar changes are deferred.
+
+Version 30
+- Diagnose the latest crash from its local packaged minidump: V8 reported process out of memory after repeated allocation failures near its 128 MB heap ceiling.
+- Bound natural-decoration caches by the live marker budget and 64 tile lists, and scattered marker geometry by 64 tiles. Identical 150-tile forest panning retains 8,960 markers instead of 193,280, without reducing on-screen density.
+- Retain at most 24 heavy town entries, 24 decoded layouts and 24 path sets. Limit encoded layout libraries to eight entries and enforce their byte budget immediately, including while replay saves are disabled, rather than waiting for a delayed save.
+- Stop decoration placement at the remaining scene budget, skip exhausted budgets before candidate generation, discard candidate arrays after preparing town leisure destinations, and reduce retained tile-decoration patches from 128 to 32.
+- Double crowd breakup zoom from 12 to 24 viewport heights per tile, still capped at attainable maximum zoom. Decorations continue to appear at the individual-walker threshold.
+- Update coarse crowd simulation/rendering at up to 20 Hz and individual walkers at up to 30 Hz using elapsed time, preserving walking speed. Apply zoom-mode changes immediately; retain selected/pinned/commanded/runner exemptions and exact crowd dot counts. Promote reused shape templates and use linear clump-membership filtering.
+- Add cache-growth, encoded-library, dense-town panning and update-cadence regressions, including constrained 96 MB heap runs. Live Civ VII verification after restart is still required; lower retained mod memory addresses the diagnosed failure mechanism but cannot guarantee the entire game's heap usage.
+
+Version 29
+- Fix townscape selection starvation: prioritize the actual viewport instead of a coarse two-tile sorting center. Keep the 24-home scene budget, nearby road/waterfront candidates and small-pan reuse; invalidate the cached scene before a budget-excluded town enters view.
+- Replace unsupported :not/:first-child panel-minimization CSS reported by Civ VII with basic class selectors. Keep minimized headers visible, preserve panel contents and retain mouse/keyboard restoration.
+- Bound heavy town entries to a 48-entry least-recently-used cache and shape/path caches to 96 entries each instead of retaining over 600 and clearing them all at once.
+- Join town walking networks through street nodes rather than searching thousands of building doors for each neighbouring town. Keep residents connected through real streets and preserve bridge/water restrictions.
+- Add visible-town starvation, safe-pan, cache-capacity and dense-network regression coverage. The latest game logs confirm a native crash but its dump is unavailable; these fixes address demonstrated compatibility and resource/workload problems, not a proven native crash cause. Live-game stability still needs verification.
+
+Version 28
+- Remove the map scale's background panel and border, retaining the toothed scale, distance labels and UI-clear placement.
+
+Version 27
+- Add pointed cavalry skeins, loose long ranged/siege rectangles, and compact infantry shield walls for recorded alert, sleeping or fortified states. Inactive military units scatter loosely and hold their assembly rather than repeatedly marching.
+- Add organized road caravans, irregular path-going crowds and loose stationary/meandering civilian groups. Retain civilian unit travel formations at close zoom and keep ordinary town residents independent there.
+- Share bounded cached formation templates between crowd SVG paths and obstacle-checked close-zoom offsets. Rotate with travel direction, retain one dot per represented person, and preserve runner/command/pin exemptions and individual selection.
+- Record optional sparse unit activity for historical formation selection without changing existing packed unit fields. Older records remain compatible without inventing missing activity; fortification operations are captured when observed after recording starts.
+- Put a retained fullscreen black backdrop behind the map loading/error placard, hiding the main game during map assembly. Hide it with the placard when the map is ready or closed.
+
+Version 26
+- Add minimize/restore buttons to Population, Leaders and Family Tree headers. Keep each panel open and retain its contents while its body is hidden; support mouse and keyboard activation without duplicate clicks.
+- Start the timeline and visibility-checkbox panels minimized, retaining their eye/clock restore controls.
+- Add a zoom-aware toothed map scale with 100 miles across each tile and readable 1/2/5 distances. Place it in unobstructed screen space clear of mod controls and nearby HUD panels; hide behind menus or when no space remains.
+- Show townscape decorations at the same aspect-aware close-zoom threshold as individual walkers, capped at the attainable maximum zoom.
+- Automatically hide all non-townscape label layers at townscape zoom without changing checkbox settings. Add a Townscape labels master toggle and apply existing settlement, building and river-name toggles to corresponding townscape labels. Invalidate cached label layouts when toggles change; stop recreating non-townscape feature names in the townscape layer.
+- Decouple distant crowd rendering from shared-route membership, so newly outdoor walkers, arrivals and walkers in route cooldowns aggregate immediately. Clear their individual circles on zoom-out even while paused; preserve selected, pinned, commanded and runner exemptions, formation membership and individual picker identities.
+
+Version 25
+- Reconnect nearby facing road ends across water with bounded, deterministic plank-and-rail bridges. Walkers and commanded routes may cross water tiles and townscape pools only on actual bridge decks; retain creek/road coverage checks elsewhere.
+- Replace counted crowd circles with cached scattered-dot paths containing exactly one dot per represented person; retain military ranks, individual selection and the clump member picker. Reuse one SVG element per clump with transform-only movement.
+- Show townscape decorations at the attainable maximum map zoom. Stabilize scene selection with map-anchored bounds and geometry-aware caches, retaining precision for miniature roads.
+- Give buildings physical roof-boundary doors. Let casual walkers leave streets for open square stops and accepted decorations, approach stationary neighbours for reciprocal chats, and briefly pause mid-walk. Reserve decoration visits alongside square stops; military formations and runners retain their duties. Ambient activities do not spend command actions or grant yields.
+- Double townscape decoration candidates and add tables, carts, wells, statues, market stalls and baskets using shared, bounded SVG paths and obstacle reservations.
+- Replace native walker controls with game-style role buttons, explicit engine-release handling and duplicate mouse/engine event protection; preserve visible speed text, keyboard activation and the shared pause state. Automated and browser fixtures pass; live Civ VII input still requires verification after restart.
+
+Version 24
+- Add top-center walker Play/Pause and Speed controls beside Leaders, hidden behind game menus and kept clear of map UI. Share pause with the Population Panel. Cycle 1x through 5x, with default 5x preserving the original pace; apply speed to autonomous, commanded, formation and runner movement and modeled activity clocks.
+- Give every townscape a nominal 10-mile diameter on the 100-mile tile scale, scaling building geometry, decorations, roads, creeks and matching collision widths together. Show townscapes only when a tile exceeds both viewport dimensions, including map aspect ratio. Slightly enlarge street, road, creek, river and building labels.
+- Reduce townscape vegetation another 20 times and preserve precision for tiny ground and decoration paths.
+- Share destination route searches among distant walker clumps; split civilian clumps on close zoom without changing person identities. Select a clump to open a paginated individual-person picker. Keep bounded shared routes and retained aggregate markers; individual simulation updates still run.
+- Add military formations using the same clumping and independent Supply runner and Message runner occupations. Runners repeatedly travel to the nearest reachable friendly encampment and return to their formation; explicit commands take priority and a missing camp is reported.
+- Record society discoveries, celebrations and crisis context for historical playback. Add discovery-unlocked occupations, contextual autonomous actions and family meetings; show explicitly modeled plausible offscreen actions in visible people rows. Keep personal names based on civilization rather than faith, and keep autonomous activities separate from command yields and action limits.
+
+Version 23
+- Give the Family Tree a square, fitted viewport with drag panning, cursor-anchored wheel zoom, zoom/fit buttons and keyboard navigation. Preserve shared hover and double-click follow without treating drags as double-clicks.
+- Widen the Population Panel and retain complete person-row text using horizontal scrolling when needed. Add a live second-line Action display and matching tooltip activity text, including command names/destinations and blocked movement; retain command labels across reloads.
+- Let autonomous walkers stop at occupation-compatible doors along their routes, perform ambient work and resume their original destination. Add safe person-specific bends and occasional shared-destination travel favoring living relatives and same-unit housemates. Ambient activities do not grant command yields.
+- Hover Command Panel rows to highlight viable on-screen targets and the row itself; clear temporary highlights on leave. Click a row to retain targeting, preview eligible walkers' routes over a valid target, and left/right-click it to execute and clear selection. Escape cancels. Retain the original right-click menu when no row is selected.
+
+Version 22
+- Add Currently outside to the selected building's people view, listing active resident walkers outdoors rather than visitors inside other buildings. All three sections collapse independently and retain their state as occupancy updates.
+- Prevent walkers crossing or walking along townscape creeks and connecting mini-rivers unless visible road or bridge geometry covers the wet stretch. Apply the same restriction to commanded off-network legs, with an explicit notice for blocked movement.
+- Show all shared Population pins in a collapsible Pinned people section of the Leaders Panel on every civ tab, including nonleaders and unavailable people.
+- Add a Family Tree header pin to pin/unpin all living displayed relatives together. Respect the shared saved-pin limit atomically and distinguish living generations from pinned predecessors.
+- Assign occupation-based workplaces in same-civ townscapes on the same or adjacent tiles, with deterministic building slots, bounded shared caches, workplace columns/tooltips and occasional commutes. Resolve accepted roofs lazily and explicitly identify unloaded townscapes; no per-person workplace records or population-sized arrays.
+- Shrink mini-decorations and townscape-only small trees by 20 percent and double their target density. Retain collision checks, viewport culling and cached shared SVG paths; cap natural markers at 10,000 during townscapes and ordinary-land decorations at 24,000.
+
+Version 21
+- Share the same hover highlight across Population rows, duplicate pinned rows, Leaders rows and Family Tree boxes. Hovering a map walker uses the same effect; retained past lives never highlight their replacements.
+- Replace the Family Tree list with individual boxes, spouse links and branching parent/child paths across generations, with two-axis scrolling.
+- Double-click living Family Tree boxes to camera-follow and pin that person; repeating it keeps following. Population Panel double-clicks retain the animated camera trip.
+- Add collapsible civilization-and-role sections to the Leaders Panel, preserving collapsed sections across tabs and expanding the corresponding section when selecting a walker.
+
+Version 20
+- Remove the bumpy circular palisade walls from towns and camps. Preserve other stone walls, bastions and recorded tile-edge fortifications; invalidate old townscape layout caches.
+- Require accepted roofs and their filled attached parts to have at least four distinct finite vertices and nonzero area, logging rejected invalid footprints.
+- Preserve SVG polygon coordinate precision instead of rounding tiny roofs into lines or points. Keep explicit polygon closure and wait until both roof dimensions reach half a screen pixel before drawing, without changing residence assignments.
+
+Version 19
+- Population and Leaders close buttons now show X, retaining the circular people/crown opening buttons.
+- Leaders tabs: Your civ, Met civs and All civs, using the viewed turn's recorded contacts and preserving Fog of War. Tab changes reset scrolling and hover; missing contact history is shown explicitly.
+- Automatically model marriages and children between existing entries in bounded Home Location cohorts. Population name rows show marital status, spouse and child counts; the Family Tree displays reciprocal spouse/parent/child links, living ages and retained deaths. Relationships are generation-specific, reconstructed from represented lives rather than Civilization VII household records; changing home membership can change reconstructed links.
+- Double-click living Population or Family Tree entries for a slow zoom-out, pan and maximum-zoom arrival at their walker or occupied roof centre. Accepted home roofs/tile positions cover inactive walkers. Retain the bounded walking scene through zoom-out to preserve indoor visitors; stop existing follow and cancel trips on manual navigation, overlays, turn changes, death, closing the map or another trip.
+
+Version 18
+- Ordinary townscape roofs become inset rectangles. Accepted building footprints and attached parts keep a small margin from one another; central landmarks, cultural monuments and tents retain their distinctive shapes.
+- Slightly larger road labels, with prioritized creek labels and named connected townscape rivers.
+- Minor, major and connecting road strokes are clipped away from townscape creeks, pools, map rivers and nearby water tiles. Intentional bridges and waterfront decks remain; drawing, labels, decoration reservations and connecting-road inputs share the dry fragments.
+- Early/Middle/Late stages in every era now use recorded era-local turns 1-149, 150-299 and 300 onward. Sparse recordings and an era's eventual duration do not shift these boundaries. Older cached population-panel phases are rebuilt.
+
+Version 17
+- Minor roads trim stretches beneath accepted building footprints and attached parts, including neighboring townscapes, with clearance for their strokes, rounded caps and SVG coordinate rounding.
+- Drawing, minor-road labels and decoration reservations share the cleared fragments. A spatial index and scene caching avoid repeated building scans while panning.
+
+Version 16
+- Indoor walker selection arrows point above the roof currently occupied, including visits to another Home Location, rather than reverting to the home icon circle. Outdoor and zoomed-out targets retain their existing behavior.
+- Building footprints and attached parts clear townscape minor/major roads and connecting-road strokes. Reject roofs more than three-quarters covered by sampled pool/creek water; decorations reserve full footprints against the accepted roofs and their parts.
+- Spatially indexed ground queries keep building-vs-road/water placement checks local.
+- Population and Leaders open/close controls are circular people/crown icon buttons. Added icons to sort, clear, Show all homes, select-none and show-more actions; leader rows gain pin, camera-follow and family-tree controls.
+- Camera follow cancels the previous target, lists the new target among pinned walkers and saves a pin when a slot is available. At the permanent-pin limit, the followed person has an additional temporary pin row. Stopping follow keeps saved pins; unpinning the active target stops follow.
+- Clicking a walker reveals and highlights their Population Panel row, focuses their Leaders row when open, and checks eligible player-owned people for commands immediately. Repeated clicks do not uncheck them; foreign people, spent commands and historical turns retain their restrictions.
+
+Version 15
+- Hide the outer ring of rectangular townscape field plots.
+- Pools, creeks and connected waterways render underneath roads, quay decks, decorations and buildings.
+- More vegetation, with deterministic natural decorations across ordinary land tiles even without a townscape. Existing decoration zoom gate, fog/water/obstacle exclusions, bounded tile-patch caches, viewport placement budgets and padded pan reuse are preserved.
+- Four times deeper maximum camera zoom.
+- Population-driven town building density: target small-building capacities of 3/4/6 and large-building capacities of 15/20/30 by era. Bound layouts to 1,000 roofs and accepted scenes to 6,000; increase occupancy when placement or performance budgets prevent more geometry.
+- Assign every resident to an accepted roof, excluding rejected/overlapping candidates. Lives here totals now exactly match each drawable Home Location's population. Tooltips, walkers and building-filtered Population Panel lists share these arithmetic assignments without per-person save records.
+- Keep nearby roof rendering separate from residence identities: offscreen/subpixel roofs are not submitted to SVG, and small pans reuse cached paths.
+
+Version 14
+- All ordinary map city-selection routes are blocked at townscape zoom, including engine clicks and deferred item UI. Building and walker selection still work; explicit plot-placement workflows are preserved.
+- Restore the transparent map input surface instead of hiding it with the legacy marker dots. Walker tooltips explicitly include name, gender, numeric age and occupation; building tooltips show their names and resident counts.
+- Stable procedural roof assignments shared by walkers and the Population Panel, reconstructed from person IDs without per-person save records. Each roof has a distinct door.
+- A selected roof opens Currently inside and Lives here lists, including visiting walkers from other Home Locations. Residents without active walkers remain indoors at home. Occupancy refreshes twice per second; both lists page in ID order with bounded search. Show all homes restores normal population sorting and saved pins.
+- Padded scene and label-layout caches avoid icon scans, sorting, walking-network rebuilds and label collision work on small pans. Unchanged walker size/opacity is not re-submitted; unchanged local walk graphs retain their node mapping.
+- Civ-coloured marker paths are hidden immediately at the zoom threshold, without waiting for a delayed redraw. Legacy marker shapes are parked while the transparent map input surface remains active.
+- Shorter, shore-focused waterfront decks and dockhouses. Overlapping neighbouring waterfront layouts are omitted, and ordinary buildings keep clear of accepted decks.
+
+Version 13
+- Water-aligned quay and pier decks with dockhouses for harbors, docks, ports, quays and related Home Locations, over coastal/lake water and navigable or non-navigable rivers. Other waterside homes get smaller landings. These are visual structures, not new water-crossing routes for walkers.
+- Click a townscape building to show its name above the roof and filter the Population Panel to its Home Location. Show all homes clears the filter; saved pins are preserved. No separate roof-level households are invented.
+- Circular district walls remain only for palaces, forts and urban centres. Recorded wall constructibles draw walls along outside tile edges, excluding edges shared by same-owner walled tiles.
+- Decorations reserve their full footprints against buildings and their strokes, rivers, creeks, roads, quay decks, walls, natural features and other decorations, including neighbouring townscapes.
+- Removed pink flower circles and simplified tiny bush/rock shapes. Spatial collision indexing, cached placement/path data and padded viewport culling greatly reduce decoration work.
+- Hide remaining non-resource owner-coloured marker shapes and the legacy unit marker layer while townscapes show.
+
+Version 12
+- Hover Home Location grounds or individual townscape buildings for their names and populations. Building populations are estimates dividing the home total among its visible buildings; they are not separately simulated households. Population Panel Home Location tooltips include name and population too.
+- Each townscape displays its Home Location name above it.
+- More minor-road and creek labels: up to 600 total labels, smaller readable text on shorter lines and more repeats on long lines.
+- Major street ends extend to map roads or other townscape streets beyond the old neighbour cutoff, preferring forward connections. Townscape waterways join one another or map rivers, including navigable rivers. Roads still avoid water tiles, and no destination is fabricated when none exists.
+- Decorative bridges also span townscape creeks crossed by new roads.
+- Buildings and roof details render above townscape ground elements, decorations, walls, fires and battle accents.
+
+Version 11
+- A Follow camera crosshair beside each person's pin keeps their walker centered and outdoors without changing saved pins. Click again to stop or follow someone else. It follows moving units across turns and stops on death, a missing home or closing Map View.
+- Rewarded walkers show a yield icon and their share of the gained amount above them when they finish their command. The popup rises and slowly fades for 3.6 seconds, then is discarded; it is visual feedback, not an extra payment.
+- All command rewards, including healing, are reduced to about one tenth of the previous amounts. Thousandths are retained in displays, saved totals and carryover so tiny rewards are not lost.
+- Each living AI major civilization earns a bonus to every civilization yield equal to the sum of the player's walker civilization-yield gains that turn. Human rivals and minor civilizations are excluded; healing and wounds do not contribute. Bonuses are saved and paid at turn end, with fractional carryover.
+- Failed yield payments remain queued and retry without repeating successful player or rival payments.
+
+Version 10
+- Up to 480 people represented per townscape and 7,200 walkers across the map, retaining the changing indoor/outdoor crowd.
+- Many more tiny plants and rocks, plus lampposts, benches, barrels and crates at the closest zoom levels.
+- Encampment tents are 1/40 the former width and length, with building-style detail, doors, collision and command targeting.
+- Home Location select-all checkboxes and a Population Panel Select none button; selection is compact even for millions of people. Commands still use walkers represented on the map.
+- A Family Tree icon opens a live lineage panel with recorded births, ages and deaths. Unknown relatives are not invented; this is a compact modeled lineage, not a complete household genealogy.
+- A narrower, scrollable Command Panel on the left, with wrapping command labels.
+- Non-resource icon circles, city dots, wonder triangles and underlying unit/building/improvement shapes stay hidden while townscapes show.
+- Oasis silhouettes and additional terrain shapes, with separately recorded cliffs that can coexist with forests and other features. Older recordings upgrade on their next capture.
+- Walker command menus, command clicks and completed selection gestures consume their DOM and engine input so they do not open the city details behind them. Ordinary city clicks remain available afterward.
+
+Version 9
+- Pins are kept from turn to turn, including people of units that march, upgrade or stack up: each unit is followed from the tile it moved from, and a unit's people keep their names and lives wherever it goes.
+- Commands bring in far less: a few people earn 2% of an action's yield, rising with the square of the crowd to the full amount for forty or more; any leader taking part earns it all. Fractions are shown to two decimals, and only whole yields are paid at the end of the turn, the rest carrying over.
+- The Population Panel names each major civilization by its country name (as the map shows it with the fog of war off), with the name it goes by with the fog on in parentheses, e.g. "The South American Gallic Kingdom (The Gallics)".
+
+Version 8
+- Yields from commands are now really paid in: they are queued (saved with the game) and granted to your civilization when your turn ends; anything left unpaid (e.g. after a reload) is paid at the start of the next turn. The old gameplay script, which the game never ran, is gone.
+- New yield: Unit Health. Healing actions heal the unit of the walker aimed at (or the doers' own unit); a risky action that fails wounds the doers' unit.
+- Many more commands: every trade has a dozen or more actions (over 250 in all), plus some anyone can do. Success chances are much lower (most one in five or less; at most 60%, or 80% with a leader).
+- Commanded walkers walk to their target at walking pace instead of jumping there.
+- Commands only reach targets on the walker's own tile or the tiles next to it.
+- Command Panel at the bottom centre: lists what the picked people can do, by trade, with yields, chances and targets.
+- Leaders: royal families at the Palace, Governors at urban centres, Commanders with their Scribes and Aides, Centurions and Optios in Roman units, officers in other units. A Leaders Panel (button beside the Population button) lists them. Leaders get three commands a turn, extra actions, and greatly raise the chance of actions they join.
+- The Territory checkbox switches off while townscapes are visible (and can be ticked back on).
+- Semi-unique townscape layouts for each building, wonder, improvement and unit type, including DLC.
+- Mini-decorations (grass, bushes, flowers, rocks) appear across townscapes when zoomed in very far.
+
+Version 7
+- Names along the map: townscape buildings, roads and creeks get civ-specific names matching their Home Location, written along their length; rivers (navigable or not), mountain ranges and forests are named along their length too.
+- While townscapes are shown, trees are drawn 20x smaller and the settlement/country/region/improvement labels are much smaller.
+- Commands for your own people (live turn only, once per person per turn): pick people with the checkboxes in the Population panel or by dragging a selection box over the townscapes (Ctrl adds to the selection; Shift+drag or middle-drag pans the map). Right-click a building, tree or another person to choose an action that fits who is picked and what was clicked (e.g. a Caretaker can "Tend to grounds" at the Palace; a Warrior can attack an enemy walker whose unit is fighting this one).
+- Every occupation has at least two actions tied to a yield. Success, amount and risk depend on how many people take part and how many allied buildings or enemy walkers are nearby; people can die or newcomers arrive, changing the panel's and map's population counts. Gold and Influence are paid into your treasury at the end of the turn; other yields are tallied by the mod.
+- People who acted stay where they are for the rest of the turn, even when walking is unpaused. People who aren't soldiers keep away from tiles and townscapes where fighting is going on.
+- While aiming a command (holding the right mouse button, or with the action menu open), picked people show meandering arrow paths along roads, creeks and bridges to the target.
+
+Version 6
+- Townscapes: much thinner roads, link roads and creeks; townscapes are drawn fully opaque.
+- Population panel: pin button on every person (pinned people stay at the top of the panel and their walker stays in sight on the map; saved with the game).
+- Population panel: search box (names, occupations, age categories and place names).
+- Population panel: age category column (Child, Youth, Adult, Elder). People age each turn, sometimes change occupation, and die (old age, disease, battle, pillaging) and are born (more when cities grow with surplus food). Tooltips show births and deaths this turn.
+
+Version 5
+- Map View: clicking a walking person no longer opens the city view; hovering a townscape building no longer outlines it.
+- Residents show what they are doing when hovered (based on occupation, gender, and era), e.g. "Tending to Grounds", "Buying Supplies", "Traveling to {place}", "Heading Home".
+- Residents travel further and more often, stopping at trees, riverbanks, fields, and resources.
+- Population is spread more unevenly: most people live in city centers and urban districts, few on rural improvements.
+
+Version 4
+- Map View: city dots and decorative unit dots are hidden while townscapes are shown.
+- Townscapes: ten times as many, smaller buildings in the same layouts, plus one large central building per district.
+- Population panel: moved to the top center with an icon; grouped by Home Location; sort by occupation; gender column; occupation-count tooltips on every level; pause/play button for walking residents.
+- Hovering a panel entry points a blinking arrow at that person, home, or tile (at the screen edge when it is off screen). Hovering a person, home, or tile on the map highlights the matching panel rows.
+- Residents avoid trees, rivers, and buildings where possible, entering buildings through doors.
+- Compact, ID-based storage for names, personality traits, and homes.

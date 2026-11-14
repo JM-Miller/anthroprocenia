@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Database>
+	<InputActions>
+		<Row ActionId="anthroprocenia-zoom-in" DeviceType="Keyboard" Name="LOC_CAMERA_ZOOM_IN" Description="LOC_CAMERA_ZOOM_IN_HELP"/>
+		<Row ActionId="anthroprocenia-zoom-out" DeviceType="Keyboard" Name="LOC_CAMERA_ZOOM_OUT" Description="LOC_CAMERA_ZOOM_OUT_HELP"/>
+	</InputActions>
+	<InputContextConstraints>
+		<Row ActionId="anthroprocenia-zoom-in" ContextId="World"/>
+		<Row ActionId="anthroprocenia-zoom-in" ContextId="Unit"/>
+		<Row ActionId="anthroprocenia-zoom-in" ContextId="Dual"/>
+		<Row ActionId="anthroprocenia-zoom-out" ContextId="World"/>
+		<Row ActionId="anthroprocenia-zoom-out" ContextId="Unit"/>
+		<Row ActionId="anthroprocenia-zoom-out" ContextId="Dual"/>
+	</InputContextConstraints>
+	<InputActionDefaultGestures>
+		<Row ActionId="anthroprocenia-zoom-in" Index="0" GestureType="KBMouse" GestureData="KEY_PLUS"/>
+		<Row ActionId="anthroprocenia-zoom-out" Index="0" GestureType="KBMouse" GestureData="KEY_MINUS"/>
+	</InputActionDefaultGestures>
+</Database>

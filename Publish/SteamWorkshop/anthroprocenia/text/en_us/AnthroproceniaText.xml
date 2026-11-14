@@ -1,0 +1,37 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Database>
+	<EnglishText>
+		<Row Tag="LOC_ANTHRO_REALISTIC_SPEED"><Text>Realistic</Text></Row>
+		<Row Tag="LOC_ANTHRO_REALISTIC_SPEED_HELP"><Text>4,400 annual Antiquity turns, 5,400 seasonal Exploration turns, and 2,400 monthly Modern turns, ending December 1949. Research, civics and celebrations follow the extended ages.</Text></Row>
+		<!-- Playback panel transport-button captions (fxs-button renders caption via data-l10n-id).
+		     The triangle glyphs render fine; avoid the pipe '|' char — Civ's loc system treats it as
+		     markup and drops it, so skip-to-start/end use DOUBLE triangles instead of a bar. -->
+		<Row Tag="LOC_ANTHROPROCENIA_TO_START">
+			<Text>◀◀</Text>
+		</Row>
+		<Row Tag="LOC_ANTHROPROCENIA_PREV">
+			<Text>◀</Text>
+		</Row>
+		<Row Tag="LOC_ANTHROPROCENIA_PLAY">
+			<Text>Play</Text>
+		</Row>
+		<Row Tag="LOC_ANTHROPROCENIA_PAUSE">
+			<Text>Pause</Text>
+		</Row>
+		<Row Tag="LOC_ANTHROPROCENIA_NEXT">
+			<Text>▶</Text>
+		</Row>
+		<Row Tag="LOC_ANTHROPROCENIA_TO_END">
+			<Text>▶▶</Text>
+		</Row>
+		<Row Tag="LOC_ANTHROPROCENIA_MAP">
+			<Text>Open Map View</Text>
+		</Row>
+		<Row Tag="LOC_ANTHROPROCENIA_MAP_VIEW">
+			<Text>Map View</Text>
+		</Row>
+		<Row Tag="LOC_ANTHROPROCENIA_EXIT_MAP_VIEW">
+			<Text>Exit Map View</Text>
+		</Row>
+	</EnglishText>
+</Database>

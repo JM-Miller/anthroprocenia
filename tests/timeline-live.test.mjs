@@ -1,0 +1,82 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { loadModule } from './load.mjs';
+const { CivilizationTimeline, LiveTimelineFeed, familyEvents } = await loadModule('anthroprocenia-timeline.js');
+const territory = (plot, owner) => plot * 1024 + (owner + 1) * 8;
+test('combined history shares one world model, covers every recorded civilization, and does not duplicate wars or invent contacts', () => {
+  const model = new CivilizationTimeline(null), date = turn => [0, turn + 1, turn ? 0 : 1, '4999 BCE'];
+  const identity = (id, name) => [id, 'Leader', name, name, 0, 0, name, '', 'Chiefdom'];
+  const extra = { buildingName: () => 'Granary' };
+  model.observe(0, date(0), { s: 1, terr: [territory(0, 0), territory(1, 1)], set: [[0, 'Rome', 1, 'Town'], [1, 'Carthage', 1, 'Town']], bld: [[1, [1]]] },
+    { idd: [identity(0, 'Romans'), identity(1, 'Carthaginians'), identity(2, 'Gauls')], soc: [[0, [], false, false], [1, [], false, false]], rel: [[0, 1, 0]], met: [0] }, x => x, () => 'War of the Plains', extra);
+  const before = model.clone();
+  const observe = timeline => timeline.observe(1, date(1), { bld: [[0, [1]], [1, []]], set: [[1, 'Carthage', 2, 'Town']], terr: [territory(2, 1)] },
+    { soc: [[0, [1], false, false], [1, [2], true, false]], rel: [[0, 1, 4], [1, 2, 0]], met: [0, 1, 2] }, x => 'Technology ' + x, () => 'War of the Plains', extra);
+  observe(model);
+  const text = model.events.map(e => e.text).join('\n');
+  for (const pattern of [/Rome \(Romans\)/, /Carthage \(Carthaginians\)/, /Romans developed their Granary infrastructure/, /Carthaginians lost part of their Granary infrastructure/, /Romans mastered Technology 1/, /Carthaginians mastered Technology 2/, /Carthaginians began a celebration/]) assert.match(text, pattern);
+  assert.equal(model.events.filter(e => /War of the Plains/.test(e.text)).length, 1);
+  assert.equal(model.events.filter(e => /first contact/.test(e.text)).length, 1, 'only a recorded new relationship proves third-party first contact');
+  assert.equal(before.tileCounts.get(1), 1); assert.equal(before.societies.get(1).discoveries.size, 0);
+  observe(before);
+  assert.deepEqual(before.events, model.events, 'provisional observation clones do not contaminate the committed model');
+});
+test('recorded milestones include construction, wonders, growth, yields, pillaging, contact, celebrations, crises and suzerainty', () => {
+  const model = new CivilizationTimeline(0), date = turn => [0, turn + 1, turn ? 0 : 1, `${4000 - turn} BCE`];
+  const name = id => 'Discovery ' + id, war = () => 'War';
+  const extra = suzerains => ({ suzerains, buildingName: () => 'Granary', wonderName: () => 'Pyramids' });
+  model.observe(0, date(0), { s: 1, terr: [territory(0, 0)], set: [[0, 'York', 1, 'Town', [5]]], bld: [[0, [1]]], won: [], dmg: [] },
+    { met: [0], soc: [[0, [], false, false]] }, name, war, extra([]));
+  const initial = model.clone();
+  model.observe(1, date(1), { terr: [territory(1, 0)], set: [[0, 'York', 2, 'City', [22]]], bld: [[0, [1, 2]]], won: [[0, 0, 1]], dmg: [[0, [2]]] },
+    { met: [0, 1], soc: [[0, [1], true, true]], rel: [[0, 1, 1]] }, name, war, extra([[5, 0]]));
+  const text = model.events.map(e => e.text).join('\n');
+  for (const pattern of [/expanded their territory/, /population grew/, /became City/, /harvests flourished/, /developed their Granary infrastructure/, /completed Pyramids/, /suffered pillaging/, /first contact/, /began a celebration/, /entered an Age crisis/, /became suzerain/, /became friendly/]) assert.match(text, pattern);
+  assert.ok(model.events.every(event => event.details && !event.details.startsWith('Source:')), 'each milestone has its own narrative description');
+  assert.ok(new Set(model.events.map(event => event.details)).size > 10, 'descriptions vary with the observed event');
+  assert.equal(initial.events.length, 1); assert.equal(initial.tileCount, 1);
+  assert.deepEqual(initial.buildings.get(0), [1]); assert.equal(initial.wonders.size, 0);
+});
+test('territorial narratives describe the lands that actually changed in deltas and snapshots without inventing geography', () => {
+  for (const owner of [0, null]) {
+    const model = new CivilizationTimeline(owner), frame = turn => [0, turn + 1, turn === 0 ? 1 : 0, '4000 BCE'];
+    const extra = { placeName: plot => plot < 2 ? 'Europe' : plot < 4 ? 'Asia' : '' };
+    const players = { idd: [[0, 'Leader', 'The Southern Gauls', 'Gallic'], [1, 'Leader', 'The Spanish', 'Spanish']] };
+    model.observe(0, frame(0), { s: 1, terr: [territory(0, 0), territory(2, 1)] }, players, String, () => 'War', extra);
+    model.observe(1, frame(1), { terr: [territory(1, 0), territory(3, 0)] }, null, String, () => 'War', extra);
+    const expansion = model.events.find(event => /Southern Gauls expanded/.test(event.text));
+    assert.match(expansion.text, /in Asia and Europe/);
+    assert.match(expansion.details, /New lands in Asia and Europe came under The Southern Gauls rule/);
+    assert.doesNotMatch(expansion.text, /tiles|total|gained \d/);
+    const before = model.clone();
+    model.observe(2, frame(2), { s: 1, terr: [territory(3, 0), territory(2, 1)] }, players, String, () => 'War', extra);
+    assert.match(model.events.at(-1).text, /Southern Gauls saw their borders recede in Europe/);
+    assert.equal(before.territory.get(0), 0, 'snapshot changes cannot mutate provisional checkpoints');
+    model.observe(3, frame(3), { terr: [territory(8, 0)] }, null, String, () => 'War', extra);
+    assert.match(model.events.at(-1).text, /expanded their territory\.$/);
+    assert.doesNotMatch(model.events.at(-1).text, /Europe|Asia|unknown|undefined/);
+    const count = model.events.length;
+    model.observe(4, frame(4), { s: 1, terr: [territory(3, 0), territory(8, 0), territory(2, 1)] }, players, String, () => 'War', extra);
+    assert.equal(model.events.length, count, 'unchanged snapshots do not invent expansion events');
+  }
+});
+test('live event feed suppresses old history and replay, deduplicates provisional records, and retains every event in a fast skip', () => {
+  const feed = new LiveTimelineFeed();
+  const event = (turn, text) => ({ turn, text });
+  feed.accept([event(0, 'old')], 0); assert.equal(feed.take(), null);
+  feed.accept([event(0, 'old'), event(0, 'new')], 0); assert.equal(feed.take().text, 'new');
+  feed.accept([event(0, 'old'), event(0, 'new')], 0); assert.equal(feed.take(), null);
+  const events = Array.from({ length: 1000 }, (_, i) => event(i + 1, 'Event ' + i));
+  feed.accept(events, 1000);
+  for (const expected of events) assert.equal(feed.take(), expected);
+  assert.equal(feed.take(), null); assert.equal(feed.pending.length, 0);
+  feed.accept([event(1, 'past')], 1); assert.equal(feed.take(), null);
+});
+test('family milestones use recorded lifespans, include both parents and widowhood, and omit future or posthumous adulthood', () => {
+  const members = [{ id: 'a', born: 0 }, { id: 'b', born: 1, parents: ['a'] },
+    { id: 'c', born: 0, deathYear: 10, spouse: 'a' }];
+  const events = familyEvents(members, member => member.id, [0, 20], [[0, 1, 1, '100 BCE'], [0, 21, 0, '80 BCE']]);
+  const text = events.map(e => e.text).join('\n');
+  assert.match(text, /a became a parent of b/); assert.match(text, /a was widowed/);
+  assert.match(text, /b reached adulthood/); assert.doesNotMatch(text, /c reached adulthood|turned sixty/);
+});
