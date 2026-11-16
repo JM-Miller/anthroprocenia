@@ -63,11 +63,11 @@ test('every civilization names its units, even without a city', () => {
 });
 
 test('world population is estimated from the year and shared out among the map\'s entities', () => {
-  assert.equal(estimatedWorldPopulation(-20000), 4e6);
-  assert.equal(estimatedWorldPopulation(5000), 10.2e9);
-  assert.ok(Math.abs(estimatedWorldPopulation(1) - 200e6) < 1);
+  assert.equal(estimatedWorldPopulation(-20000), 28e6);
+  assert.equal(estimatedWorldPopulation(5000), 71.4e9);
+  assert.ok(Math.abs(estimatedWorldPopulation(1) - 1400e6) < 1);
   const mid = estimatedWorldPopulation(-4000);
-  assert.ok(mid > 5e6 && mid < 14e6);
+  assert.ok(mid > 35e6 && mid < 98e6);
   let previous = 0;
   for (const year of [-8000, -3000, 0, 1000, 1500, 1900, 2000, 2050]) {
     const value = estimatedWorldPopulation(year);

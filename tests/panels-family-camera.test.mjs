@@ -19,7 +19,8 @@ function slice(name) {
   return source.slice(start, end + 1);
 }
 function context(names, state) {
-  const ctx = vm.createContext({ ...panel, ...demo, ...state });
+  if (names.includes('timelineRowsHtml')) names = [...names, 'datedTimelineRowsHtml'];
+  const ctx = vm.createContext({ ...panel, ...demo, ...timeline, highlightChronicleEvent() {}, ...state });
   vm.runInContext(names.map(slice).join('\n'), ctx);
   return ctx;
 }

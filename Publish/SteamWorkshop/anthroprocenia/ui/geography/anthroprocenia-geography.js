@@ -13,6 +13,7 @@ const NAME_PARTS = {
   seas: ["Azure", "Calm", "Cerulean", "Coral", "Distant", "Opal", "Sapphire", "Tranquil"],
   gulfs: ["Amber", "Blue", "Crescent", "Jade", "Quiet", "Shining", "Summer", "Windward"],
   oceans: ["Endless", "Far", "Great", "Open", "Outer", "Silent", "Western", "World"],
+  lakes: ["Crystal", "Dawn", "Emerald", "Mirror", "Pearl", "Silver", "Still", "Willow"],
 };
 const HISTORICAL_REGION_NAMES = {
   AKSUM: ["Aksum", "Tigray", "Hamasien"],
@@ -448,8 +449,12 @@ function neighborsOf(plot) {
     evenRow ? 0 : 1, evenRow ? -1 : 0,
     evenRow ? 0 : 1, evenRow ? -1 : 0,
   ];
+  // Map View boundary edges use E,W,NE,NW,SE,SW, not the native enum's order.
+  const directions = [DirectionTypes.DIRECTION_EAST, DirectionTypes.DIRECTION_WEST,
+    DirectionTypes.DIRECTION_NORTHEAST, DirectionTypes.DIRECTION_NORTHWEST,
+    DirectionTypes.DIRECTION_SOUTHEAST, DirectionTypes.DIRECTION_SOUTHWEST];
   for (let direction = 0; direction < 6; direction++) {
-    const neighbor = apiValue("adjacent plot lookup", () => GameplayMap.getAdjacentPlotLocation(plot, direction), null);
+    const neighbor = apiValue("adjacent plot lookup", () => GameplayMap.getAdjacentPlotLocation(plot, directions[direction]), null);
     if (!neighbor || !Number.isInteger(neighbor.x) || !Number.isInteger(neighbor.y)) continue;
     if (neighbor.y < 0 || neighbor.y >= mapHeight) continue;
     const expectedX = plot.x + horizontalOffsets[direction];
@@ -516,7 +521,7 @@ function landClass(x, y) {
   const mountain = apiValue("mountain lookup", () => GameplayMap.isMountain(x, y), false);
   const terrainType = apiValue("terrain type lookup", () => GameInfo.Terrains.lookup(GameplayMap.getTerrainType(x, y))?.TerrainType, "");
   return {
-    water: !!water,
+    water: !!water || !!lake,
     river: !!river,
     riverName: river ? riverNameAt(x, y) : "",
     navigableRiver: !!navigableRiver,
@@ -704,15 +709,22 @@ function splitConnectedBy(tiles, locations, keyOf) {
   return parts;
 }
 
-// Split one region into two contiguous halves: farthest-point seeds, then a simultaneous flood from each.
+// Graph-distance seeds keep winding coastlines and wrapped continents contiguous.
 function splitRegionTiles(tiles, locations) {
-  const distance = (a, b) => { const p = locations.get(a), q = locations.get(b); return (p.x - q.x) ** 2 + (p.y - q.y) ** 2; };
-  const mid = centerIndex(tiles, locations);
-  let s0 = tiles[0], best = -1;
-  for (const t of tiles) { const d = distance(t, mid); if (d > best) { best = d; s0 = t; } }
-  let s1 = tiles[0]; best = -1;
-  for (const t of tiles) { const d = distance(t, s0); if (d > best) { best = d; s1 = t; } }
-  const set = new Set(tiles), owner = new Map([[s0, 0], [s1, 1]]), queue = [s0, s1];
+  const set = new Set(tiles);
+  const farthest = seed => {
+    const seen = new Set([seed]), queue = [seed];
+    for (let cursor = 0; cursor < queue.length; cursor++) {
+      for (const neighbor of neighborsOf(locations.get(queue[cursor]))) {
+        if (!set.has(neighbor.index) || seen.has(neighbor.index)) continue;
+        seen.add(neighbor.index); queue.push(neighbor.index);
+      }
+    }
+    if (seen.size !== set.size) throw new Error("Cannot subdivide a disconnected geographic region");
+    return queue[queue.length - 1];
+  };
+  const s0 = farthest(tiles[0]), s1 = farthest(s0);
+  const owner = new Map([[s0, 0], [s1, 1]]), queue = [s0, s1];
   for (let cursor = 0; cursor < queue.length; cursor++) {
     const index = queue[cursor];
     for (const neighbor of neighborsOf(locations.get(index))) {
@@ -723,23 +735,22 @@ function splitRegionTiles(tiles, locations) {
   }
   const a = [], b = [];
   for (const t of tiles) {
-    let o = owner.get(t);
-    if (o === undefined) o = distance(t, s0) <= distance(t, s1) ? 0 : 1;
-    (o ? b : a).push(t);
+    (owner.get(t) ? b : a).push(t);
   }
   return [a, b];
 }
 
 // Bring the region count to `target`: split the biggest regions while short, merge the smallest while over.
 function fitRegionCount(entries, locations, target) {
-  entries = entries.filter(entry => entry.tiles.length);
+  entries = entries.flatMap(entry => splitConnectedBy(entry.tiles, locations, () => null)
+    .map(tiles => ({ ...entry, tiles })));
   while (entries.length < target) {
     let big = null;
     for (const entry of entries) if (!entry.water && !entry.island && entry.tiles.length >= 2 && (!big || entry.tiles.length > big.tiles.length)) big = entry;
     if (!big) break;
     const [a, b] = splitRegionTiles(big.tiles, locations);
     if (!a.length || !b.length) break;
-    entries.splice(entries.indexOf(big), 1, { tiles: a, water: big.water }, { tiles: b, water: big.water });
+    entries.splice(entries.indexOf(big), 1, { ...big, tiles: a }, { ...big, tiles: b });
   }
   if (entries.length > target) {
     const entryByTile = new Map();
@@ -779,7 +790,9 @@ function fitRegionCount(entries, locations, target) {
       for (const index of small.tiles) {
         for (const neighbor of neighborsOf(locations.get(index))) {
           const other = entryByTile.get(neighbor.index);
-          if (other && other !== small && other.water === small.water) { target2 = other; break; }
+          if (other && other !== small && other.water === small.water &&
+              other.continent === small.continent && other.waterKind === small.waterKind &&
+              !other.island && !small.island) { target2 = other; break; }
         }
         if (target2) break;
       }
@@ -827,13 +840,13 @@ function buildGeography() {
     }
   }
 
-  const landComponents = collectComponents(records, record => !record.water, locations);
+  const landComponents = collectComponents(records, record => !record.water && !record.lake, locations);
   const oceanComponents = collectComponents(records,
     record => record.water && record.deepWater && !record.lake && !record.river, locations);
   const seaComponents = collectComponents(records,
     record => record.water && !record.deepWater && !record.lake && !record.river, locations);
-  const lakeComponents = collectComponents(records, record => record.lake && !record.river, locations);
-  const riverWaterComponents = collectComponents(records, record => record.water && record.river, locations);
+  const lakeComponents = collectComponents(records, record => record.lake, locations);
+  const riverWaterComponents = collectComponents(records, record => record.water && record.river && !record.lake, locations);
   const landTileCount = landComponents.reduce((total, tiles) => total + tiles.length, 0);
   const islandThreshold = Math.max(8, Math.floor(landTileCount * 0.015));
   const islandComponents = landComponents.filter(tiles => tiles.length <= islandThreshold)
@@ -870,7 +883,7 @@ function buildGeography() {
     features.push({ id: `archipelago:${tiles[0]}`, type: "archipelago",
       name: geographicName(stem, "archipelago", tiles[0]), center: centerIndex(tiles, locations), tiles });
   }
-  const usedRegionNames = new Set(), regionNameCursors = new Map(), landSeeds = new Map(), civByOwner = new Map();
+  const usedRegionNames = new Set(), nativeRegionNames = new Set(), regionNameCursors = new Map(), landSeeds = new Map(), civByOwner = new Map();
   for (const [index, plot] of locations) {
     const civ = majorCivAt(index, locations, civByOwner);
     if (!civ) continue;
@@ -887,13 +900,17 @@ function buildGeography() {
       const river = water && sorted.every(index => records.get(index)?.river);
       const islandTile = !water && sorted.every(index => islandTiles.has(index)) ? sorted[0] : undefined;
       const name = water
-        ? geographicName(historicalName, deepWater ? "ocean" : river ? "river" : lake ? "lake" : "sea", sorted[0])
+        ? geographicName(historicalName, lake ? "lake" : deepWater ? "ocean" : river ? "river" : "sea", sorted[0])
         : islandTile !== undefined ? geographicName(historicalName, "island", sorted[0]) : historicalName;
-      const region = { id: `${water ? "water" : "land"}:${sorted[0]}`, name, center, tiles: sorted, boundary: [], island: islandTile !== undefined };
+      const region = { id: `${water ? "water" : "land"}:${sorted[0]}`, name, center, tiles: sorted, boundary: [], water, island: islandTile !== undefined };
       if (!water && nativeEarthRivers) {
         const earthName = (earthRegionAt && earthRegionAt(locations.get(center))) ||
           earthContinentName(records.get(center)?.continent?.name);
-        if (earthName) { region.name = earthName; region.nativeEarthName = true; }
+        if (earthName) {
+          region.name = uniqueGeographicName(earthName, nativeRegionNames, value => value.toLowerCase());
+          nativeRegionNames.add(region.name.toLowerCase());
+          region.nativeEarthName = true;
+        }
       }
       regions.push(region);
       for (const index of sorted) {
@@ -907,7 +924,7 @@ function buildGeography() {
   for (const tiles of landComponents) {
     // A land-connected island is one region, even if its continent IDs differ.
     if (tiles.length <= islandThreshold) landEntries.push({ tiles, water: false, island: true });
-    else for (const part of splitConnectedBy(tiles, locations, continentOf)) landEntries.push({ tiles: part, water: false });
+    else for (const part of splitConnectedBy(tiles, locations, continentOf)) landEntries.push({ tiles: part, water: false, continent: continentOf(part[0]) });
     const sorted = tiles.slice().sort((a, b) => a - b);
     const key = sorted.join(",");
     if (tiles.length <= islandThreshold) {
@@ -921,9 +938,14 @@ function buildGeography() {
       });
     }
   }
-  const waterEntries = [...oceanComponents, ...seaComponents, ...lakeComponents, ...riverWaterComponents]
-    .map(tiles => ({ tiles, water: true }));
-  const finalEntries = fitRegionCount([...landEntries, ...waterEntries], locations, REGION_TARGET);
+  const waterEntries = [
+    ...oceanComponents.map(tiles => ({ tiles, water: true, waterKind: "ocean" })),
+    ...seaComponents.map(tiles => ({ tiles, water: true, waterKind: "sea" })),
+    ...lakeComponents.map(tiles => ({ tiles, water: true, waterKind: "lake" })),
+    ...riverWaterComponents.map(tiles => ({ tiles, water: true, waterKind: "river" })),
+  ];
+  const landTarget = Math.min(REGION_TARGET, Math.max(landEntries.length, Math.floor(landTileCount / 12)));
+  const finalEntries = [...fitRegionCount(landEntries, locations, landTarget), ...waterEntries];
   const allLandTiles = [];
   for (const entry of finalEntries) if (!entry.water) allLandTiles.push(...entry.tiles);
   const civAssignments = nearestCivAssignments(allLandTiles, locations, landSeeds);
@@ -1008,6 +1030,7 @@ function buildGeography() {
   const waterGroups = [
     { type: "oceans", tiles: oceanComponents },
     { type: "seas", tiles: seaComponents },
+    { type: "lakes", tiles: lakeComponents },
   ];
   for (const waterGroup of waterGroups) for (const tiles of waterGroup.tiles) {
     const sorted = tiles.slice().sort((a, b) => a - b);
@@ -1015,9 +1038,9 @@ function buildGeography() {
       const plot = locations.get(index);
       return total + neighborsOf(plot).filter(neighbor => !records.get(neighbor.index)?.water).length;
     }, 0);
-    const type = waterGroup.type === "oceans" ? "oceans"
+    const type = waterGroup.type === "oceans" || waterGroup.type === "lakes" ? waterGroup.type
       : shoreline >= 5 && sorted.length < landTileCount * 0.2 ? "gulfs" : "seas";
-    const suffix = type === "oceans" ? "Ocean" : type === "gulfs" ? "Gulf" : "Sea";
+    const suffix = type === "oceans" ? "Ocean" : type === "gulfs" ? "Gulf" : type === "lakes" ? "Lake" : "Sea";
     features.push({
       id: `${type}:${sorted[0]}`,
       type: suffix.toLowerCase(),
@@ -1068,6 +1091,11 @@ function buildGeography() {
   }
   for (const feature of features) {
     if (!feature.nativeEarthName) feature.name = rememberValidatedName(`name5:feature2:${feature.id}`, feature.name);
+  }
+  for (const feature of features) {
+    if (feature.type !== "island" && feature.type !== "lake") continue;
+    const region = regions.find(region => region.id === regionForTile.get(feature.center));
+    if (region && region.tiles.length === feature.tiles.length) feature.name = region.name;
   }
   for (const region of regions) boundary.push(...region.boundary.map(edge => ({ ...edge, regionId: region.id })));
   geographyCache = { width, height, regions, features, boundary, regionForTile, locations };

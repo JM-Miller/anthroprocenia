@@ -215,24 +215,25 @@ test('scene budgets limit accepted geometry, retain exact populations, and still
   }));
   let decorated = -1;
   const ctx = context(['townZoomKey', 'syncTownscapes', 'townHousingFor', 'polygonPath', 'linePath', 'syncTownRoofs', 'townMinorRoads', 'submitTownGeometry'], {
-    townInterturn: { active: false },
+    townInterturn: { active: false }, scatterJob: null, lastMapInputTs: 0,
     syncTownVisibility() {}, syncTownElementVisibility() {}, syncTownCompass() {}, townLinkTile: () => 0, iconPoints: [], townRender: { pending: false, logged: true }, townViewKey: () => 'current',
-    syncMapLabelVisibility() {}, syncMapSvgViewport() {}, syncTownDecorationVisibility() {},
+    syncMapLabelVisibility() {}, syncRiverDeltas() {}, syncMapSvgViewport() {}, syncTownDecorationVisibility() {},
     terrainMarkerPaths: new Map(), unitDom: {}, dotDom: {}, wonDom: {}, mapVisible: true, showWonders: false,
     townscapeActive: () => true, bgLayer: { el: { style: {} } }, columnShiftMarkersStale: false, fogMarkersStale: false,
     townLayer: { style: {} }, ensureTownscapeLayer() {}, townKey: '', townSizeKey: '1000x1000', townHighlightKey: null,
     townPaths: Object.fromEntries(keys.map(k => [k, { style: {}, setAttribute() {} }])),
     TOWN_ROOF_PATHS: roofKeys, townRoofScene: {}, townSceneEntries: () => entries, townWaterfronts: () => [],
     planEntryLinks: () => ({ roads: [], water: [], bridges: [], tileWalls: [] }),
-    townBuildingGround: () => ({ clear: () => true }),
-    townDryRoads() {}, townBridgeRoads() {}, townAccessRoads() {}, releaseTownSceneEntries() {}, prepareTownLeisure() {},
+    townBuildingGround: function* () { return { clear: () => true }; },
+    townDryRoads: function* () {}, townBridgeRoads: function* () {}, townAccessRoads: function* () {}, releaseTownSceneEntries() {}, prepareTownLeisure() {},
     window: { innerWidth: 100, innerHeight: 100 }, mapPxW: 1000, mapPxH: 1000,
     mapVisible: true, miniMapVisible: false, miniMapScale: 1, colShift: 0,
     viewZoom: 100, viewAspectY: 1, hexW: 100, hexH: 115, mapX: 0, mapY: 0, mapPanX: 0, mapPanY: 0, pos: 0, detailD: 4, fogMode: false,
-    syncPeople() {}, syncTownDecorations: e => { decorated = e.length; }, revalidateTownHover() {}, syncTownLabels() {},
-    err: e => assert.fail(e), iconPoints: [],
+    peopleActive: () => false, syncPeople() {}, advanceTownDecorations: e => { decorated = e.length; }, revalidateTownHover() {}, syncTownLabels() {},
+    err: e => assert.fail(e), iconPoints: [], scheduleTownRefresh() {},
   });
   ctx.syncTownscapes();
+  while (ctx.townRender.accessJob) ctx.syncTownscapes();
   const accepted = entries.reduce((n, e) => n + e.final.length, 0);
   assert.ok(accepted <= 6000 && accepted >= 6000 - entries.length * 3);
   for (const entry of entries) {
@@ -344,7 +345,7 @@ test('all eras use exact 149/150 and 299/300 turn boundaries independent of repl
   const before = ctx.townEraNow();
   ctx.frames.push([2, 999]);
   assert.deepEqual(JSON.parse(JSON.stringify(ctx.townEraNow())), JSON.parse(JSON.stringify(before)));
-  assert.match(slice('popFrameSignature'), /v7\./, 'old phase-derived occupation and panel data is invalidated');
+  assert.match(slice('popFrameSignature'), /v8\./, 'old phase-derived occupation and panel data is invalidated');
 });
 
 test('bumpy palisade rings are absent, while stone, bastion and recorded tile walls remain', () => {

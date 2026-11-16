@@ -82,7 +82,7 @@ test('real road clipping, bridge decoration and walking graph reconnect local st
   assert.equal(walker.node, 1);
   assert.equal(walker.x, 0.5);
   assert.equal(walker.y, 0);
-  assert.ok(slice('syncTownscapes').indexOf('townBridgeRoads(entries, plan)') < slice('syncTownscapes').indexOf('townBuildingGround(entries, plan)'));
+  assert.ok(slice('syncTownscapes').indexOf('townBridgeRoads(entries, plan, true)') < slice('syncTownscapes').indexOf('townBuildingGround(entries, plan, true)'));
 });
 
 test('additional bridges join skewed opposing road banks but never perpendicular streets or dry gaps', () => {
@@ -237,7 +237,7 @@ test('7,200 individual walkers retain position, scale and fade with bounded reus
 
 test('walking graph cache invalidates subpixel road changes rather than rounding them to whole map pixels', () => {
   let builds = 0;
-  const ctx = context(['walkGraphFor'], { buildWalkGraph: () => ({ serial: ++builds }) });
+  const ctx = context(['walkGraphFor'], { buildWalkGraph: function* () { return { serial: ++builds }; } });
   const entry = { final: [{ sourceIndex: 0 }], linkRoads: [road(0.01, 0.02)] };
   const first = ctx.walkGraphFor(entry);
   assert.equal(ctx.walkGraphFor(entry), first);

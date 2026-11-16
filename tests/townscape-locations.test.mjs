@@ -66,13 +66,13 @@ test('closed waterways connect to external rivers and new roads crossing townsca
   assert.equal(alone.roads.length, 0, 'no fabricated destination when no other road or town exists');
 });
 
-test('the playback supplies map-wide roads and navigable river geometry to the link planner', () => {
+test('the playback supplies indexed nearby roads and navigable river geometry to the link planner', () => {
   let captured;
   const riverTileSegs = new Map([[10, [{ x1: 0, y1: -2, x2: 0, y2: 2, hw: 3 }]]]);
-  const road = { pts: line(60, -20, 60, 20) };
+  const road = { pts: [...line(60, -20, 60, 20), { x: 90, y: 42 }] };
   const ctx = context(['planEntryLinks'], {
     hexW: 20, hexH: 24, mapPxW: 500, basePos: { 10: { x: 80, y: 30 } },
-    townLinkTile: () => 10, neighborsByIndex: [], iconPoints: [], fogMode: false,
+    townLinkTile: () => 10, neighborsByIndex: { 10: [1, 2] }, iconPoints: [], fogMode: false,
     riverTileSegs, roadLines: new Map([[1, [road]], [2, [road]]]),
     townPointBlocked: () => false, segmentTouchesWater: () => false, townTileWalls: () => [],
     planTownLinks: opts => { captured = opts; return links.planTownLinks(opts); },

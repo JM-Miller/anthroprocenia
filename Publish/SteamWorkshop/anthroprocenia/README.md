@@ -15,6 +15,145 @@ alongside the `config`, `data`, `ui`, and `text` directories. Remove or disable 
 Anthroprocenia installations so that only one manifest with the mod ID remains.
 Fully restart the game and enable the mod in **Add-Ons**.
 
+## Connected regions, compatible curves and country-name variety (version 70)
+
+Region boundary directions now match Map View's hex edges rather than the
+native direction enum order. Subdivision uses connected graph floods, including
+across map seams and winding coastlines; detached pieces remain separate regions
+even when that exceeds the target region count. Every map tile belongs to exactly
+one connected region, including islands, lakes, rivers and ocean tiles.
+
+Arched country/region labels use HTML text runs instead of SVG text paths, avoiding
+the missing text and stray diagonal-line rendering problem in the game UI.
+Each line has at most eight runs, so long names do not create an unbounded
+number of transformed character elements. The arching checkbox still works.
+
+Country names have expanded government-compatible formats, descriptive qualifiers
+and alternate cultural roots. Selection is deterministic for each country and
+settlement-size bucket, not rerolled by redraws or leader changes. Historical
+pre-state/dynastic forms, era overrides, small capital states and distinct
+capital-derived roots are retained. Geographic qualifiers still compare canonical
+roots, regardless of alternate names or government titles; directional terms
+are not chosen at random. Only despotisms with more than three settlements can
+receive an Empire title.
+
+Fully restart Civ VII after updating.
+
+## Restored geographic names and curved labels (version 69)
+
+Generated subregions cover every map tile exactly once. Mainland subregions are
+connected and subdivided independently of water bodies, preserving islands,
+lakes and continent boundaries. Islands, oceans, seas/gulfs, lakes, rivers and
+mountain ranges receive stable automatic names, including on generated maps.
+
+Region and geographic-feature labels share collision detection: a name is moved
+within its own visible tiles or omitted when no readable space remains, rather
+than drawn over another name. The partition still covers the full map when
+crowded labels are hidden; zooming in makes room for more names.
+
+Country/region text curves are restored and enabled by default. The **Country/
+region text arching** checkbox still switches them off. **Island, water and
+mountain names**, **Region names** and **River names** control their respective
+labels. Whole-line SVG text paths avoid per-character DOM costs.
+
+Fully restart Civ VII after updating.
+
+## Map presentation, dated chronicles and shared country roots (version 68)
+
+Diplomacy transitions show the fullscreen **Loading Map...** placard. Live Map
+View tooltips use the native plot information at the hovered map coordinates,
+while the original world tooltip is suppressed; historical tooltips still use
+recorded information.
+
+River tiles retain their recorded territorial ownership without artificial
+shared wedges. Region names have an eleven-screen-pixel minimum size. Visibility
+controls now include **Unit previous movement arrows**, **Region Boundaries**
+(independent of continent boundaries), and optional **Country/region text
+arching**. Arching defaults off and uses whole-line SVG text paths.
+
+World Chronicle and timelines group events by date into expandable boxes.
+Expanded groups show complete descriptions. Hovering or focusing a located
+event highlights its recorded plots; events without recorded locations do not
+invent one. Pages contain forty date groups and keep matching dates together.
+
+Country qualifiers compare shared roots, ignoring government titles and
+grandeur: Han, The Han Dynasty and Great Han can become The Western Han,
+The Central Han Dynasty and Great Eastern Han. Distinct capital-derived roots
+such as Roman and Ravenian remain separate. Fully restart Civ VII after updating
+and verify the affected save.
+
+## Persistent unit lenses and country-name corrections (version 67)
+
+Native settler legends, trade choosers and continent panels no longer count as
+full-screen menus. Selected-unit tile highlights remain visible across overlay
+polls while these lens panels are open; real menus, historical playback and
+deselection still hide them.
+
+Version 67 compared complete unqualified generated country names; version 68
+supersedes this with root-based comparison while preserving genuinely distinct
+capital-derived names. Country-name caches are invalidated when naming changes.
+
+Native UI name replacement now uses one pass over the original text, consumes
+adjacent native articles and the trailing " Civilization" suffix, and never
+re-translates inserted country names. Save/load originals remain unchanged.
+Fully restart Civ VII after updating and verify the affected save.
+
+## Menu transitions, unit selection and native lenses (version 66)
+
+Native city/diplomacy panels no longer trigger generic mod-button scans.
+Civilization-name rewrites share live names within each mutation batch, reuse
+compiled patterns, ignore their own writes and avoid rescanning descendants on
+unrelated class changes. Save/load names and explicit turn refreshes still work.
+
+Unit-circle presses are captured before bubbling handlers. Their DOM and native
+release/click tails remain owned even if selection moves the cursor or opens
+another UI mode; a fresh press clears suppression.
+
+Selected settlers and replacements show the native red blocked-land, yellow
+legal non-freshwater and green freshwater categories. Traders color destination
+territory green for available routes and red for unavailable routes. Missionaries
+and replacements use native religion-spread destinations; other selected-unit
+action targets mirror the game's available/temporarily-unavailable classifications.
+Discovery units use the native lens selector, and explorer continent tiles reuse
+the native continent classifications and colors. Only revealed tiles appear,
+including when mod fog is disabled; highlights hide during replay or overlays.
+All groups share a 1,170-polygon/262,144-character viewport geometry budget.
+The legend reports truncation and only shows categories supplied by the game:
+no invented yellow category for a native two-category action or trade lens.
+
+Fully restart Civ VII after updating. Automated regressions verify these repairs;
+confirm menu smoothness and selection/highlight behavior in the affected save.
+
+## Country and region label repairs (version 65)
+
+Country names now render as reusable whole text lines instead of individually
+transformed, outlined and shadowed characters. This removes the decorative
+character arch while preserving names, territory-fitting placement, rotation,
+line wrapping and visibility controls. Zoom changes reuse the existing text
+rows, and disabled civilization icons no longer run territory/boundary scans.
+
+Switching Region names back on restores the parent layer's opacity immediately;
+it no longer stays transparent until Map View is reopened. Fog filtering,
+cached region names and townscape-zoom hiding remain unchanged.
+
+The freeze-session renderer log reports command-set exhaustion. These repairs
+remove label rendering pressure and a confirmed visibility bug; retest the
+affected save after fully restarting Civ VII to confirm native stability.
+
+## Zoom-out during turn changes (version 64)
+
+Turn-resume redraws now wait for 250 ms without camera input, including a
+recheck when their timer fires. Turn resume and settled-detail redraws catch up
+to the newest recording before painting, rather than drawing the old turn first.
+Each full map render cancels superseded detail, decoration, scatter, townscape
+and turn-resume callbacks. Historical viewing keeps its selected turn.
+
+This fixes a confirmed scheduling bypass in the reported zoom-out/turn-change
+scenario. Windows recorded the latest failure as an application hang; its
+crash dump was unavailable and the game restart replaced the session logs.
+Native hang elimination still requires retesting the affected save.
+Fully restart Civ VII after installing this update.
+
 ## Connected territory, ornate panels and target-date autoplay (version 63)
 
 Shared river and mountain tiles use a connected central territory core with
@@ -179,10 +318,11 @@ and nine smaller hill glyphs per sampled hill tile; both follow the Natural
 features checkbox. With fog off, **Revealed terrain** displays soft dark-gray
 gradients along unexplored boundaries and light-gray gradients along current
 line-of-sight boundaries. These use a fixed set of retained translucent bands,
-not per-edge gradient resources. Selected scouts, missionaries,
-merchants and settlers highlight native-eligible, revealed destinations;
-freshwater founding sites have their own color. Vector budgets and viewport
-filtering remain in force; the legend reports limited destination drawings.
+not per-edge gradient resources. Selected units and replacements highlight
+native-classified, revealed destinations: settler suitability, trade territory,
+religion spread, discovery/continent lenses and native action targets.
+Colors and categories follow the game; vector budgets are shared across groups
+and viewport filtering remains in force. The legend reports limited drawings.
 
 Townscape decorations span 2-8 feet including their round outlines, using the
 existing 100-mile tile scale. Their size is independent of town population or
@@ -799,8 +939,10 @@ as leagues, confederations or kingdoms. Oligarchic Gauls form a tribe
 or, with four settlements, a tribal alliance; an oligarchic Greece with at
 least four settlements and an Athens or Sparta capital becomes the Delian or
 Peloponnesian League. Greek and Roman names can also derive from their capital.
-Matching civilizations receive directional qualifiers only when they occupy
-the same continent; otherwise continent or capital names distinguish them.
+Only identical fully generated country names receive geographic qualifiers.
+Unique names and distinct government titles do not count as duplicates.
+Colliding names receive directional qualifiers when they occupy the same
+continent; otherwise continent or capital names distinguish them.
 East is to the right and west to the left on the map.
 
 Generated names and historical frames are stored with the game. Older

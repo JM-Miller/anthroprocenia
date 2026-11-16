@@ -144,8 +144,8 @@ test('incremental territory redraw includes every changed partition after neighb
     }
   }
 });
-test('owned and unowned shared river/mountain tiles are completely filled, with an opaque separate base and both civ colors', () => {
-  for (const kind of [2, 10]) for (const own of [false, true]) {
+test('owned and unowned shared mountain tiles are completely filled, with an opaque separate base and both civ colors', () => {
+  for (const kind of [2]) for (const own of [false, true]) {
     const { ctx, frame } = scene(kind, own), base = new Map(), top = new Map();
     ctx.stateFillPush(0, frame, null, base, top);
     assert.deepEqual([...base.values()].flat(), [0], `opaque base: terrain ${kind}, owned ${own}`);
@@ -154,6 +154,18 @@ test('owned and unowned shared river/mountain tiles are completely filled, with 
     assert.ok(top.has('civ0')); assert.ok(top.has('civ1'));
     assert.ok(polygons.every(points => points.every(Number.isFinite)));
     assert.equal(frame.has(0), own, 'visual fill never changes actual ownership');
+  }
+});
+test('rivers retain whole recorded ownership at two/three-civ junctions and inside a single realm', () => {
+  for (const kind of [10, 'minorRiver']) for (const own of [false, true]) for (const sameOwner of [false, true]) {
+    const { ctx, frame } = scene(kind === 'minorRiver' ? 4 : kind, own), base = new Map(), top = new Map();
+    if (kind === 'minorRiver') ctx.readMapFeatureMarkers = () => new Map([[0, 5]]);
+    for (let tile = 1; tile < 7; tile++) frame.set(tile, packed(sameOwner ? 0 : tile % 3));
+    ctx.stateFillPush(0, frame, null, base, top);
+    assert.equal(ctx.territoryClip(0, frame, null), null);
+    assert.deepEqual(JSON.parse(JSON.stringify([...base])), own ? [['civ0', [0]]] : []);
+    assert.equal(top.size, 0);
+    assert.equal(frame.has(0), own, 'no invented ownership or triangular fragments');
   }
 });
 test('neutral terrain, undiscovered neighbors and territory visibility do not acquire phantom ownership colors', () => {

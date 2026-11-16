@@ -71,9 +71,9 @@ export class CivilizationTimeline {
   observe(turn, frame, record, players, discoveryName, warName, extra = {}) {
     if (!record) return;
     const initial = this.turns++ === 0;
-    const add = (text, details) => {
+    const add = (text, details, plots = []) => {
       const date = frame[3] || `recorded turn ${turn + 1}`;
-      this.events.push({ turn, date, details, text: `In ${date} ${text}` });
+      this.events.push({ turn, date, details, plots: [...new Set(plots)], text: `In ${date} ${text}` });
     };
     const all = this.owner === null, beforeIdentities = this.identities;
     if (players && Array.isArray(players.idd)) {
@@ -103,11 +103,11 @@ export class CivilizationTimeline {
     const oldTiles = this.tileCount, oldCounts = all ? new Map(this.tileCounts) : null;
     const beforeTerritory = record.s === 1 ? this.territory : null, changedPlaces = new Map();
     const markTerritoryChange = (owner, plot, direction) => {
-      if (initial || owner === undefined || owner < 0 || !affects(owner) || !extra.placeName) return;
-      const name = extra.placeName(plot);
-      if (!name) return;
-      if (!changedPlaces.has(owner)) changedPlaces.set(owner, { gained: new Set(), lost: new Set() });
-      changedPlaces.get(owner)[direction].add(name);
+      if (initial || owner === undefined || owner < 0 || !affects(owner)) return;
+      const name = extra.placeName && extra.placeName(plot);
+      if (!changedPlaces.has(owner)) changedPlaces.set(owner, { gained: new Set(), lost: new Set(), gainedPlots: [], lostPlots: [] });
+      if (name) changedPlaces.get(owner)[direction].add(name);
+      changedPlaces.get(owner)[`${direction}Plots`].push(plot);
     };
     if (record.s === 1) { this.territory = new Map(); this.tileCount = 0; this.tileCounts.clear(); }
     for (const packed of record.terr || []) {
@@ -139,7 +139,8 @@ export class CivilizationTimeline {
         const location = places.length ? ` in ${places.length > 1 ? `${places.slice(0, -1).join(', ')} and ${places[places.length - 1]}` : places[0]}` : '';
         add(`${civ(owner)} ${gained ? 'expanded their territory' : 'saw their borders recede'}${location}.`,
           gained ? `New lands${location} came under ${civ(owner)} rule, extending the realm beyond its former borders.`
-            : `Lands${location} passed beyond ${civ(owner)} control, narrowing the realm's frontier.`);
+            : `Lands${location} passed beyond ${civ(owner)} control, narrowing the realm's frontier.`,
+          changes ? changes[`${gained ? 'gained' : 'lost'}Plots`] : []);
       }
     }
     const seen = new Set();
@@ -148,7 +149,7 @@ export class CivilizationTimeline {
       seen.add(plot);
       if (row.length === 1) {
         if (previous && affects(previous.owner)) add(`${previous.name} was lost or destroyed.`,
-          `${previous.name} disappeared from the settlements of ${civ(previous.owner)}; its fate is not established by the surviving record.`);
+          `${previous.name} disappeared from the settlements of ${civ(previous.owner)}; its fate is not established by the surviving record.`, [plot]);
         this.settlements.delete(plot); continue;
       }
       const owner = this.territory.get(plot), name = row[1];
@@ -156,28 +157,28 @@ export class CivilizationTimeline {
       if (affects(owner)) {
         if (!previous) add(`${place} ${initial && frame[1] > 1 ? 'was first recorded' : 'was founded'}.`,
           initial && frame[1] > 1 ? `${name} was already a ${row[3]} of ${civ(owner)} when these chronicles began.`
-            : `${name} took its place among the settlements of ${civ(owner)}, beginning a new chapter in the land's history.`);
+            : `${name} took its place among the settlements of ${civ(owner)}, beginning a new chapter in the land's history.`, [plot]);
         else if (previous.owner !== owner) add(`${name} came under ${civ(owner)} control.`,
-          `${name}, formerly held by ${civ(previous.owner)}, became part of ${civ(owner)}. The record does not establish how rule changed.`);
+          `${name}, formerly held by ${civ(previous.owner)}, became part of ${civ(owner)}. The record does not establish how rule changed.`, [plot]);
         else {
           if (previous.name !== name) add(`${previous.name} was renamed ${place}.`,
-            `The settlement once known as ${previous.name} now bore the name ${name} under ${civ(owner)} rule.`);
+            `The settlement once known as ${previous.name} now bore the name ${name} under ${civ(owner)} rule.`, [plot]);
           if (previous.type !== row[3]) add(`${place} became ${row[3]}.`,
-            `${name} changed from ${previous.type} to ${row[3]}, taking on a new standing within ${civ(owner)}.`);
+            `${name} changed from ${previous.type} to ${row[3]}, taking on a new standing within ${civ(owner)}.`, [plot]);
           if (Number.isFinite(previous.population) && row[2] !== previous.population) add(`${place}'s population ${row[2] > previous.population ? 'grew' : 'dwindled'}.`,
-            `${name} ${row[2] > previous.population ? 'became home to a growing community' : 'was home to a smaller community than before'}. Its recorded population changed from ${previous.population} to ${row[2]}.`);
+            `${name} ${row[2] > previous.population ? 'became home to a growing community' : 'was home to a smaller community than before'}. Its recorded population changed from ${previous.population} to ${row[2]}.`, [plot]);
           for (let yieldIndex = 0; yieldIndex < (row[4] || []).length; yieldIndex++) {
             const before = previous.yields && previous.yields[yieldIndex], after = row[4][yieldIndex];
             const threshold = after >= 10 ? 10 * 2 ** Math.floor(Math.log2(after / 10)) : 0;
             if (Number.isFinite(before) && threshold > before) {
               const resource = ['food', 'production', 'gold', 'science', 'culture', 'happiness', 'influence'][yieldIndex] || 'local output';
               const milestone = ['harvests flourished', 'workshops thrived', 'wealth grew', 'scholarship flourished', 'cultural life flourished', 'spirits rose', 'influence grew'][yieldIndex] || 'prosperity grew';
-              add(`${place}'s ${milestone}.`, `${name} reached a new ${resource} milestone, with recorded output rising from ${before} to ${after} per turn.`);
+              add(`${place}'s ${milestone}.`, `${name} reached a new ${resource} milestone, with recorded output rising from ${before} to ${after} per turn.`, [plot]);
             }
           }
         }
       } else if (previous && affects(previous.owner) && owner !== undefined) add(`${name} came under ${civ(owner)} control.`,
-        `${name} passed from ${civ(previous.owner)} to ${civ(owner)}, changing the reach of both realms.`);
+        `${name} passed from ${civ(previous.owner)} to ${civ(owner)}, changing the reach of both realms.`, [plot]);
       this.settlements.set(plot, { name, owner, type: row[3], population: row[2], yields: row[4] });
     }
     // Ownership can change without a settlement-data delta.
@@ -185,7 +186,7 @@ export class CivilizationTimeline {
       const owner = this.territory.get(plot);
       if (!seen.has(plot) && owner !== undefined && owner !== settlement.owner) {
         if (affects(owner) || affects(settlement.owner)) add(`${settlement.name} came under ${civ(owner)} control.`,
-          `${settlement.name} passed from ${civ(settlement.owner)} to ${civ(owner)}, changing the reach of both realms.`);
+          `${settlement.name} passed from ${civ(settlement.owner)} to ${civ(owner)}, changing the reach of both realms.`, [plot]);
         settlement.owner = owner;
       }
       if (record.s === 1 && !seen.has(plot)) this.settlements.delete(plot);
@@ -268,25 +269,25 @@ export class CivilizationTimeline {
           const change = next.filter(type => type === id).length - previous.filter(type => type === id).length;
           if (change) {
             const key = `${owner},${id}`, previous = constructionEvents.get(key);
-            constructionEvents.set(key, { owner, id, count: (previous ? previous.count : 0) + change });
+            constructionEvents.set(key, { owner, id, count: (previous ? previous.count : 0) + change, plots: [...previous && previous.plots || [], plot] });
           }
         }
       }
       if (next.length) buildings.set(plot, next.slice()); else buildings.delete(plot);
     }
     this.buildings = buildings;
-    for (const { owner, id, count } of constructionEvents.values()) if (count) add(
+    for (const { owner, id, count, plots } of constructionEvents.values()) if (count) add(
       `${civ(owner)} ${count > 0 ? 'developed their' : 'lost part of their'} ${buildingName(id)} infrastructure.`,
-      `${civ(owner)} ${count > 0 ? 'gained' : 'lost'} ${Math.abs(count)} ${buildingName(id)} ${Math.abs(count) === 1 ? 'building' : 'buildings'}, ${count > 0 ? 'expanding' : 'diminishing'} the realm's built landscape.`);
+      `${civ(owner)} ${count > 0 ? 'gained' : 'lost'} ${Math.abs(count)} ${buildingName(id)} ${Math.abs(count) === 1 ? 'building' : 'buildings'}, ${count > 0 ? 'expanding' : 'diminishing'} the realm's built landscape.`, plots);
     const wonders = record.s === 1 ? new Map() : this.wonders;
     for (const row of record.won || []) {
       const previous = this.wonders.get(row[0]);
       if (!initial) {
         if (row.length > 1 && affects(row[1]) && (!previous || previous[0] !== row[1])) add(`${civ(row[1])} ${previous ? 'gained control of' : 'completed'} ${wonderName(row[2])}.`,
           previous ? `${wonderName(row[2])} passed from ${civ(previous[0])} to ${civ(row[1])}, bringing the great monument under new rule.`
-            : `${wonderName(row[2])} joined the great monuments of ${civ(row[1])}, leaving a new landmark in the realm's history.`);
+            : `${wonderName(row[2])} joined the great monuments of ${civ(row[1])}, leaving a new landmark in the realm's history.`, [row[0]]);
         if (previous && affects(previous[0]) && (row.length === 1 || row[1] !== previous[0]) && (!all || row.length === 1)) add(`${civ(previous[0])} lost ${wonderName(previous[1])}.`,
-          `${wonderName(previous[1])} no longer stood among the wonders held by ${civ(previous[0])}.`);
+          `${wonderName(previous[1])} no longer stood among the wonders held by ${civ(previous[0])}.`, [row[0]]);
       }
       if (row.length > 1) wonders.set(row[0], row.slice(1)); else wonders.delete(row[0]);
     }
@@ -299,12 +300,26 @@ export class CivilizationTimeline {
         const settlement = this.settlements.get(plot), region = extra.placeName && extra.placeName(plot);
         const location = settlement ? ` at ${settlement.name}` : region ? ` in ${region}` : '';
         add(`${civ(owner)} ${pillaged ? 'suffered pillaging' : 'restored their pillaged lands'}${location}.`,
-          `${pillaged ? 'Pillaging damaged' : 'Restoration renewed'} the built landscape${location} of ${civ(owner)}. ${pillaged ? 'The record does not identify those responsible.' : 'The site was no longer recorded as pillaged.'}`);
+          `${pillaged ? 'Pillaging damaged' : 'Restoration renewed'} the built landscape${location} of ${civ(owner)}. ${pillaged ? 'The record does not identify those responsible.' : 'The site was no longer recorded as pillaged.'}`, [plot]);
       }
       if (pillaged) damaged.add(plot); else damaged.delete(plot);
     }
     this.damaged = damaged;
   }
+}
+
+export function groupTimelineEvents(events) {
+  const groups = [], byDate = new Map();
+  events.forEach((event, index) => {
+    const key = event.date || (Number.isInteger(event.turn) ? `turn:${event.turn}` : `event:${index}`);
+    let group = byDate.get(key);
+    if (!group) {
+      group = { key, date: event.date || '', turn: event.turn, events: [] };
+      byDate.set(key, group); groups.push(group);
+    }
+    group.events.push(event);
+  });
+  return groups;
 }
 
 export class LiveTimelineFeed {

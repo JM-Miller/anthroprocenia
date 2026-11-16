@@ -55,17 +55,29 @@ ${roots} input,${roots} select,${roots} textarea { appearance:none!important;bac
 `;
   document.head.appendChild(style);
   const selector = 'button,[role="button"],fxs-button,fxs-activatable';
-  const owned = button => !!button.closest(`.${rootClass},[id^="anthroprocenia-"]`);
+  const rootSelector = `.${rootClass},[id^="anthroprocenia-"]`;
+  const owned = node => !!(node && typeof node.closest === 'function' && node.closest(rootSelector));
   const scan = node => {
-    if (node.nodeType !== 1) return;
-    if (node.matches(selector) && owned(node)) enhanceModButton(node, compose);
-    if (node.children.length) for (const button of node.querySelectorAll(selector)) if (owned(button)) enhanceModButton(button, compose);
+    if (!node || node.nodeType !== 1 || typeof node.querySelectorAll !== 'function') return;
+    if (!owned(node)) {
+      for (const root of node.querySelectorAll(rootSelector)) if (!owned(root.parentElement)) scan(root);
+      return;
+    }
+    if (typeof node.matches === 'function' && node.matches(selector)) enhanceModButton(node, compose);
+    for (const button of node.querySelectorAll(selector)) enhanceModButton(button, compose);
   };
   scan(document.body);
   const observer = new MutationObserver(records => {
     for (const record of records) {
-      if (record.type === 'attributes') { if (record.target.matches(selector) && owned(record.target)) enhanceModButton(record.target, compose); }
-      else for (const node of record.addedNodes) scan(node.nodeType === 1 ? node : node.parentElement || node);
+      if (record.type === 'attributes') {
+        if (owned(record.target) && typeof record.target.matches === 'function' && record.target.matches(selector)) enhanceModButton(record.target, compose);
+      } else {
+        for (const node of record.addedNodes) if (node.nodeType === 1) scan(node);
+        if (owned(record.target)) {
+          const button = record.target.closest(selector);
+          if (button && owned(button)) enhanceModButton(button, compose);
+        }
+      }
     }
   });
   observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['title', 'aria-label', 'caption'] });

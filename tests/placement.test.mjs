@@ -87,7 +87,7 @@ test('map placement reaches native selection even while its own city overlay hid
   const handler = { onPlotUpdated: loc => calls.push(['hover', loc.x, loc.y]) };
   const context = {
     mapVisible: true, LeaderModelManager: { isLeaderShowing: false },
-    settlementExpansionActive: () => mode === 'INTERFACEMODE_ACQUIRE_TILE', mapPlotSelectionActive: () => true,
+    settlementExpansionActive: () => mode === 'INTERFACEMODE_ACQUIRE_TILE', mapPlotSelectionActive: () => true, mapCameraAction: () => false,
     gameOverlayActive: () => true, overlayShown: true, InputActionStatuses: { FINISH: 2 },
     InterfaceMode: { getCurrent: () => mode, getInterfaceModeHandler: () => handler },
     Cursor: { position: { x: 120, y: 80 } }, FocusManager: { get: () => ({ isWorldFocused: () => true }) },

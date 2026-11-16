@@ -10,10 +10,16 @@ const GLYPHS = {
   pin: 'M7 2H13L12 8L16 12H4L8 8ZM10 12V19',
   move: 'M10 2V18M2 10H18M7 5L10 2L13 5M15 7L18 10L15 13M13 15L10 18L7 15M5 13L2 10L5 7',
   history: 'M3 7A7 7 0 1 1 3 13M3 3V7H7M10 6V10L13 12',
+  regions: 'M2 5L7 2L13 5L18 2V16L13 19L7 16L2 19ZM7 2V16M13 5V19M2 10L7 13L13 10L18 13',
+  people: 'M7 6A3 3 0 1 0 13 6A3 3 0 1 0 7 6M3 18V16A7 5 0 0 1 17 16V18Z',
+  settlement: 'M2 9L10 2L18 9M4 8V18H16V8M8 18V12H12V18',
+  territory: 'M5 19V2M5 3H17L14 7L17 11H5',
+  clear: 'M4 5H16M8 5V3H12V5M5 5L6 17H14L15 5M8 8V14M12 8V14',
+  search: 'M13 13L18 18M14 8A6 6 0 1 1 2 8A6 6 0 1 1 14 8',
 };
-export function uiGlyph(kind, slashed = false) {
+export function uiGlyph(kind, slashed = false, size = 16) {
   if (!GLYPHS[kind]) throw new Error(`Unknown mod UI icon: ${kind}`);
-  return `<svg aria-hidden="true" viewBox="0 0 20 20" style="width:16px;height:16px;pointer-events:none;vertical-align:middle" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="${GLYPHS[kind]}"/>${slashed ? '<path d="M3 3L17 17" stroke="#101722" stroke-width="4"/><path d="M3 3L17 17"/>' : ''}</svg>`;
+  return `<svg aria-hidden="true" viewBox="0 0 20 20" style="width:${size}px;height:${size}px;pointer-events:none;vertical-align:middle" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="${GLYPHS[kind]}"/>${slashed ? '<path d="M3 3L17 17" stroke="#101722" stroke-width="4"/><path d="M3 3L17 17"/>' : ''}</svg>`;
 }
 export function enhanceModButton(button, compose) {
   const caption = button.getAttribute('caption') || button.textContent.trim();
@@ -38,7 +44,7 @@ ${roots} button:hover,${roots} button:focus { border-image-source:url("fs://game
 ${roots} button:active { border-image-source:url("fs://game/base_button-bg-press.png")!important; }
 ${roots} button:disabled,${roots} [aria-disabled="true"] { opacity:0.45;cursor:default; }
 ${roots} input,${roots} select,${roots} textarea { appearance:none!important;background:#101722!important;color:#e5d2ac!important;border:1px solid #8e7c58!important;border-radius:3px;box-sizing:border-box; }
-#anthroprocenia-panel,#anthroprocenia-playback-panel,#anthroprocenia-population-panel,#anthroprocenia-leaders-panel,#anthroprocenia-family-panel,#anthroprocenia-civ-timeline,#anthroprocenia-command-panel,#anthroprocenia-command-menu,#anthroprocenia-clump-panel,#anthroprocenia-skip-ahead-panel {
+#anthroprocenia-panel,#anthroprocenia-playback-panel,#anthroprocenia-population-panel,#anthroprocenia-regions-panel,#anthroprocenia-leaders-panel,#anthroprocenia-family-panel,#anthroprocenia-civ-timeline,#anthroprocenia-command-panel,#anthroprocenia-command-menu,#anthroprocenia-clump-panel,#anthroprocenia-skip-ahead-panel {
   background:linear-gradient(180deg,#223047,#101722)!important;
   border:1px solid #c0a16a!important;border-radius:8px!important;
   box-shadow:inset 0 0 0 3px #101722,inset 0 0 0 4px #65553c,0 6px 24px rgba(0,0,0,0.65)!important;
@@ -51,21 +57,39 @@ ${roots} input,${roots} select,${roots} textarea { appearance:none!important;bac
   color:#f0d9a8!important;font-family:Title,serif!important;letter-spacing:0.6px;
 }
 .${rootClass} .anthro-panel-heading strong,.${rootClass} .anthro-person-panel-header strong { color:#f0d9a8; }
+#anthroprocenia-history-button > svg { display:block;width:76%!important;height:76%!important;flex:0 0 auto; }
+.${rootClass} .anthro-regions-circle { border-image:none!important;border:1px solid #6a88bb!important;background:#1a2638!important;min-height:0; }
+.${rootClass} .anthro-regions-close { background:#c0262d!important; }
+#anthroprocenia-regions-panel button[aria-pressed] { border-image:none!important;border:0!important;border-bottom:1px solid #65553c!important; }
+#anthroprocenia-regions-panel button[aria-pressed="true"] { background:linear-gradient(90deg,rgba(157,135,96,0.42),rgba(22,32,49,0.3))!important;box-shadow:inset 3px 0 #e1c58e; }
+#anthroprocenia-regions-panel button[aria-pressed]:hover,#anthroprocenia-regions-panel button[aria-pressed]:focus { outline:1px solid #c0a16a;outline-offset:-2px; }
 .${rootClass} [role="slider"]:focus { outline:1px solid #e6ce98; }
 `;
   document.head.appendChild(style);
   const selector = 'button,[role="button"],fxs-button,fxs-activatable';
-  const owned = button => !!button.closest(`.${rootClass},[id^="anthroprocenia-"]`);
+  const rootSelector = `.${rootClass},[id^="anthroprocenia-"]`;
+  const owned = node => !!(node && typeof node.closest === 'function' && node.closest(rootSelector));
   const scan = node => {
-    if (node.nodeType !== 1) return;
-    if (node.matches(selector) && owned(node)) enhanceModButton(node, compose);
-    if (node.children.length) for (const button of node.querySelectorAll(selector)) if (owned(button)) enhanceModButton(button, compose);
+    if (!node || node.nodeType !== 1 || typeof node.querySelectorAll !== 'function') return;
+    if (!owned(node)) {
+      for (const root of node.querySelectorAll(rootSelector)) if (!owned(root.parentElement)) scan(root);
+      return;
+    }
+    if (typeof node.matches === 'function' && node.matches(selector)) enhanceModButton(node, compose);
+    for (const button of node.querySelectorAll(selector)) enhanceModButton(button, compose);
   };
   scan(document.body);
   const observer = new MutationObserver(records => {
     for (const record of records) {
-      if (record.type === 'attributes') { if (record.target.matches(selector) && owned(record.target)) enhanceModButton(record.target, compose); }
-      else for (const node of record.addedNodes) scan(node.nodeType === 1 ? node : node.parentElement || node);
+      if (record.type === 'attributes') {
+        if (owned(record.target) && typeof record.target.matches === 'function' && record.target.matches(selector)) enhanceModButton(record.target, compose);
+      } else {
+        for (const node of record.addedNodes) if (node.nodeType === 1) scan(node);
+        if (owned(record.target)) {
+          const button = record.target.closest(selector);
+          if (button && owned(button)) enhanceModButton(button, compose);
+        }
+      }
     }
   });
   observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['title', 'aria-label', 'caption'] });

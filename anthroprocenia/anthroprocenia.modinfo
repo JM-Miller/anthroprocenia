@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Mod id="anthroprocenia_map_history" version="63"
+<Mod id="anthroprocenia_map_history" version="83"
 	xmlns="ModInfo">
 	<Properties>
 		<Name>Anthroprocenia</Name>
@@ -80,6 +80,8 @@
 					<Item>ui/map/anthroprocenia-map-details.js</Item>
 					<Item>ui/map/anthroprocenia-unit-highlights.js</Item>
 					<Item>ui/map/anthroprocenia-ui.js</Item>
+					<Item>ui/map/anthroprocenia-civ-icons.js</Item>
+					<Item>ui/map/anthroprocenia-civ-icon-ui.js</Item>
 					<Item>ui/map/anthroprocenia-timeline.js</Item>
 					<Item>ui/map/anthroprocenia-layout.txt</Item>
 					<Item>ui/map/anthroprocenia-placement.js</Item>
@@ -89,9 +91,11 @@
 					<Item>ui/map/anthroprocenia-crowds.js</Item>
 					<Item>ui/map/anthroprocenia-people.js</Item>
 					<Item>ui/map/anthroprocenia-population-panel.js</Item>
+					<Item>ui/map/anthroprocenia-regions-panel.js</Item>
 					<Item>ui/map/anthroprocenia-demography.js</Item>
 					<Item>ui/map/anthroprocenia-namegen.js</Item>
 					<Item>ui/map/anthroprocenia-townlinks.js</Item>
+					<Item>ui/map/anthroprocenia-river-deltas.js</Item>
 					<Item>ui/map/anthroprocenia-persist.js</Item>
 					<Item>ui/map/anthroprocenia-commands.js</Item>
 					<Item>ui/map/anthroprocenia-linenames.js</Item>

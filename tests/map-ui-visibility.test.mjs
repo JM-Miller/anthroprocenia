@@ -7,6 +7,7 @@ import { loadModule } from './load.mjs';
 const source = await readFile(new URL('../anthroprocenia/ui/map/anthroprocenia-playback.js', import.meta.url), 'utf8');
 const crowds = await loadModule('anthroprocenia-crowds.js');
 const ui = await loadModule('anthroprocenia-ui.js');
+const timeline = await loadModule('anthroprocenia-timeline.js');
 function slice(name) {
   const start = source.indexOf(`function ${name}(`);
   assert.ok(start >= 0, name);
@@ -18,7 +19,9 @@ function slice(name) {
   return source.slice(start, end + 1);
 }
 function context(names, state) {
-  const ctx = vm.createContext({ ...ui, playing: false, syncHistoryFocus() {}, lastMapInputTs: 0, syncWorldScrollbar() {}, syncWorldTimelineHighlights() {}, cmdConsumeInput() {}, historyControlsExpanded: false, townElementVisibility: { walkerDots: true, walkerHats: true }, ...state });
+  if (names.includes('worldTimelineRowsHtml')) names = [...names, 'datedTimelineRowsHtml'];
+  if (names.includes('buildWorldTimelineUi')) names = [...names, 'activateTimelineEvent', 'expandTimelineEvent'];
+  const ctx = vm.createContext({ ...ui, ...timeline, highlightChronicleEvent() {}, playing: false, syncHistoryFocus() {}, lastMapInputTs: 0, syncWorldScrollbar() {}, syncWorldTimelineHighlights() {}, cmdConsumeInput() {}, historyControlsExpanded: false, townElementVisibility: { walkerDots: true, walkerHats: true }, ...state });
   vm.runInContext(names.map(slice).join('\n'), ctx);
   return ctx;
 }
@@ -42,6 +45,27 @@ function element() {
   };
 }
 const event = (type, extra = {}) => ({ type, button: 0, preventDefault() {}, stopPropagation() {}, ...extra });
+
+test('townscale icon circles retain a sixteen-pixel minimum and remain selectable', () => {
+  const slots = [], hits = [];
+  const ctx = context(['placeIcons', 'mapToScreen'], {
+    iconDom: { el: element() }, iconPoints: [{ x: 500, y: 500, s: 0.001, item: { kind: 'building' } }],
+    iconHits: hits, flagHits: [], unitFlagPoints: [], iconSlots: slots, MAX_ICON_SLOTS: 500,
+    columnShiftMarkersStale: false, fogMarkersStale: false,
+    mapPxW: 1000, mapPxH: 1000, mapX: 0, mapY: 0, mapPanX: 0, mapPanY: 0,
+    viewZoom: 204, viewAspectY: 1, window: { innerWidth: 1000, innerHeight: 1000 },
+    iconModeActive: () => true, flagsActive: () => false, townscapeActive: () => true,
+    itemIconCss: () => 'url("building.png")', syncUnitIconHealth() {},
+    iconSlot(index) { return slots[index] || (slots[index] = { el: element(), shown: false }); },
+  });
+  ctx.placeIcons();
+  assert.equal(ctx.iconDom.el.style.display, 'block');
+  assert.equal(slots[0].el.style.display, 'block');
+  assert.equal(slots[0].el.style.width, '16px');
+  assert.equal(slots[0].el.style.backgroundImage, 'url("building.png")');
+  assert.equal(hits.length, 1);
+  assert.equal(hits[0].r * ctx.viewZoom * 2, 16);
+});
 
 test('all three panels start expanded and minimize/restore with window icons without discarding contents', () => {
   const body = element(), head = element();
@@ -287,24 +311,80 @@ test('world ruler pages are horizontal, escaped, tooltip-detailed and bounded to
   assert.equal((html.match(/data-history-turn=/g) || []).length, 40);
   assert.match(html, /data-history-turn="40"/); assert.match(html, /data-history-turn="79"/);
   assert.match(html, /Historical evidence/); assert.match(html, /&quot;quoted&quot;/);
-  assert.match(html, /text-overflow:ellipsis/);
-  assert.match(html, /<span tabindex="0" data-tooltip-content="Historical evidence"[^>]*>Historical evidence<\/span>/);
+  assert.doesNotMatch(html, /text-overflow:ellipsis|max-height:48px/);
+  assert.match(html, /data-history-group="40 BCE" aria-expanded="false"/);
+  assert.match(html, /white-space:pre-wrap[^>]*>Historical evidence<\/div>/);
   assert.doesNotMatch(html, /<script>|data-history-turn="80"/);
 });
 
+test('date groups expand once per press, retain full narratives and never split matching dates across pages', () => {
+  const ctx = context(['worldTimelineRowsHtml', 'activateTimelineEvent'], { ps: n => n, escHtml: String });
+  const events = Array.from({ length: 42 }, (_, turn) => ({ turn, date: `${turn} CE`, text: `Event ${turn}`, details: 'A complete long description without truncation.' }));
+  events.splice(40, 0, { turn: 39, date: '39 CE', text: 'Second event at the same date', details: 'Second full narrative', plots: [9] });
+  const state = {}, header = { getAttribute: () => '39 CE' }, target = { closest: selector => selector === '[data-history-group]' ? header : null };
+  let refreshed = 0;
+  ctx.activateTimelineEvent(event('mouseup', { target }), state, () => { refreshed++; });
+  ctx.activateTimelineEvent(event('click', { target }), state, () => { refreshed++; });
+  assert.equal(refreshed, 1); assert.ok(state.expanded.has('39 CE'));
+  const html = ctx.worldTimelineRowsHtml(events, 0, state.expanded);
+  assert.match(html, /data-history-group="39 CE" aria-expanded="true"/);
+  assert.match(html, /Second full narrative/); assert.match(html, /data-history-plots="9"/);
+  assert.equal((html.match(/data-history-group=/g) || []).length, 40);
+  assert.equal((html.match(/data-history-turn="39"/g) || []).length, 2);
+  assert.doesNotMatch(ctx.worldTimelineRowsHtml(events, 40), /Second event at the same date/);
+  ctx.activateTimelineEvent(event('keydown', { key: 'Enter', target }), state, () => { refreshed++; });
+  assert.equal(state.expanded.has('39 CE'), false);
+});
+test('timeline hover and focus expand a date once, preserving click-to-collapse until the pointer leaves', () => {
+  const ctx = context(['expandTimelineEvent', 'activateTimelineEvent'], {
+    highlightChronicleEvent() {}, pause: () => assert.fail('hover must not seek'), goToIndex: () => assert.fail('hover must not seek'),
+  });
+  const state = {}, header = { getAttribute: () => '39 CE' }, card = { getAttribute: () => '39 CE' };
+  const target = { closest: selector => selector === '[data-history-date]' ? card : selector === '[data-history-group]' ? header : null };
+  let refreshed = 0;
+  const refresh = () => refreshed++;
+  ctx.expandTimelineEvent(event('mouseover', { target }), state, refresh);
+  assert.equal(state.expanded.has('39 CE'), true);
+  assert.equal(refreshed, 1);
+  ctx.expandTimelineEvent(event('mouseover', { target }), state, refresh);
+  assert.equal(refreshed, 1, 'child crossings do not trigger repeated renders');
+  ctx.activateTimelineEvent(event('keydown', { key: 'Enter', target }), state, refresh);
+  assert.equal(state.expanded.has('39 CE'), false);
+  ctx.expandTimelineEvent(event('mouseover', { target }), state, refresh);
+  assert.equal(state.expanded.has('39 CE'), false, 'manual collapse is respected during the same hover');
+  ctx.expandTimelineEvent(null, state);
+  ctx.expandTimelineEvent(event('focusin', { target }), state, refresh);
+  assert.equal(state.expanded.has('39 CE'), true);
+  assert.equal(refreshed, 3);
+});
+test('event hover highlights recorded plots only and clears for nonlocal events, fog and pointer exit', () => {
+  const root = element();
+  const ctx = context(['highlightChronicleEvent'], {
+    chronicleHighlight: null, document: { createElementNS: element, body: root }, mapVisible: true, fogMode: true,
+    visForPos: () => [2, 0], basePos: [{ x: 0, y: 0 }, { x: 10, y: 0 }],
+    hexVert: (i, k) => [i * 10 + k, k], mapToScreen: (x, y) => ({ x: x + 5, y }), sizeScreenSvg() {}, ps: n => n,
+  });
+  const hover = plots => ({ target: { closest: () => ({ getAttribute: () => plots }) } });
+  ctx.highlightChronicleEvent(hover('0,1'));
+  assert.equal(ctx.chronicleHighlight.svg.style.display, 'block');
+  assert.equal((ctx.chronicleHighlight.path.attrs.d.match(/M/g) || []).length, 1);
+  ctx.highlightChronicleEvent(hover('')); assert.equal(ctx.chronicleHighlight.svg.style.display, 'none');
+  ctx.highlightChronicleEvent(hover('0')); assert.equal(root.children.length, 1);
+  ctx.highlightChronicleEvent(null); assert.equal(ctx.chronicleHighlight.svg.style.display, 'none');
+});
 test('Chronicle descriptions show their full text on hover or focus without breaking event seeking', () => {
   const make = () => { const el = element(); el.append = (...children) => children.forEach(child => el.appendChild(child)); return el; };
   const ctx = context(['buildWorldTimelineUi'], {
     document: { createElement: make }, els: { playbackPanel: { getBoundingClientRect: () => ({ left: 20, width: 900, top: 600 }) } },
     ps: n => n, window: { innerHeight: 900 }, buildWorldScrollbar: make,
-    pause() {}, goToIndex: turn => { ctx.sought = turn; }, worldTimelineState: {},
+    pause() {}, syncWorldTimeline() {}, goToIndex: turn => { ctx.sought = turn; }, worldTimelineState: {},
   });
   ctx.buildWorldTimelineUi();
   const rows = ctx.els.worldTimelineRows, tooltip = ctx.els.worldTimelineTooltip;
   const card = element(); card.setAttribute('data-history-turn', '7'); card.setAttribute('data-tooltip-content', 'Title and full description');
   const description = element(), full = 'New lands in Europe came under "The Gauls" & their allies, extending their frontier far beyond its former borders.';
   description.setAttribute('data-tooltip-content', full);
-  description.closest = selector => selector === '[data-history-turn]' ? card : description;
+  description.closest = selector => selector === '[data-history-turn]' ? card : selector === '[data-history-group]' ? null : description;
   rows.events.mousemove(event('mousemove', { target: description }));
   assert.equal(tooltip.textContent, full); assert.equal(tooltip.style.display, 'block');
   assert.equal(description.attrs['aria-describedby'], tooltip.id);
@@ -361,7 +441,6 @@ test('hidden toolbar controls cannot intercept map input while history focus is 
 
 test('playback follows the latest event at the current turn across event pages, including sparse turns, and preserves paused scrolling', () => {
   const events = Array.from({ length: 85 }, (_, i) => ({ turn: i * 2, text: `Event ${i}` }));
-  events[41].turn = events[40].turn;
   const rows = element(); rows.clientWidth = 660; rows.scrollWidth = 8800; rows.scrollLeft = 0;
   const state = { key: '1|200', complete: true, events, start: 0, html: '' };
   const ctx = context(['syncWorldTimeline', 'worldTimelineRowsHtml', 'worldTimelineEventAt'], {
@@ -370,7 +449,7 @@ test('playback follows the latest event at the current turn across event pages, 
     els: { worldTimelineRows: rows, worldTimelinePage: element(), worldTimelinePrev: {}, worldTimelineNext: {} },
   });
   ctx.syncWorldTimeline();
-  assert.equal(state.start, 40, 'turns sharing multiple events choose the last event, not the previous page');
+  assert.equal(state.start, 40, 'the current date group is followed across pages');
   assert.equal(rows.scrollLeft, 0, 'the first two events on a new page remain inside its left viewport edge');
   ctx.pos = 111; ctx.syncWorldTimeline();
   assert.equal(rows.scrollLeft, 3080, 'the last preceding event in a sparse turn is centered');
@@ -451,14 +530,88 @@ test('townscape labels respect checkbox changes immediately even inside a cached
   assert.equal(layer.style.display, 'block'); assert.ok(visible().includes('building'));
 });
 
-test('all non-townscape label layers hide automatically at townscape zoom and restore without altering toggles', () => {
+test('geographic labels remain visible at townscape zoom while country and settlement labels hide', () => {
   let town = true;
   const layers = Object.fromEntries(['countryDom', 'civIconDom', 'settlementDom', 'regionLabelDom', 'geographicLabelDom'].map(name => [name, { el: element() }]));
   const ctx = context(['syncMapLabelVisibility'], { ...layers, townscapeActive: () => town });
   ctx.syncMapLabelVisibility();
-  assert.ok(Object.values(layers).every(layer => layer.el.style.display === 'none'));
+  assert.ok(['countryDom', 'civIconDom', 'settlementDom'].every(name => layers[name].el.style.display === 'none'));
+  assert.ok(['regionLabelDom', 'geographicLabelDom'].every(name => layers[name].el.style.display === ''));
   town = false; ctx.syncMapLabelVisibility();
   assert.ok(Object.values(layers).every(layer => layer.el.style.display === ''));
+});
+
+test('unit health rings reuse geometry, reflect damage and disappear when an icon slot changes kind', () => {
+  let created = 0;
+  const ctx = context(['syncUnitIconHealth'], {
+    document: { createElementNS: () => { created++; return element(); } },
+    err: message => assert.fail(message),
+  });
+
+  test('native city details append the simulated civilian count without changing citizens or repeating parentheses', () => {
+    const count = { textContent: '5 (old population)' }, city = { population: 5, location: {} };
+    const ctx = context(['syncCityDetailsPopulation'], {
+      document: { querySelector: () => ({ querySelector: () => count }) },
+      UI: { Player: { getHeadSelectedCity: () => 'city' } }, Cities: { get: () => city },
+      GameplayMap: { getIndexFromLocation: () => 8 }, frames: [[0, 1]], manifest: { rev: 3 },
+      readManifest: () => ({ rev: 3, frames: [[0, 1]] }),
+      settlementPopulationSnapshot: () => new Map([[8, { population: 1234567 }]]),
+      formatThousands: value => value.toLocaleString('en-US'), err: message => assert.fail(message),
+    });
+    ctx.syncCityDetailsPopulation(); ctx.syncCityDetailsPopulation();
+    assert.equal(count.textContent, '5 (1,234,567)'); assert.equal(city.population, 5);
+  });
+
+  test('geographic camera refresh coalesces pans, waits for settling and invalidates only the label layout', () => {
+    const callbacks = new Map(), cache = { layout: {} }, frame = new Map();
+    let id = 0, draws = 0, now = 1000;
+    const ctx = context(['scheduleGeographyLabelRefresh'], {
+      geographyRefreshTimer: 0, geographyLabelCache: cache, mapVisible: true, curFrame: frame,
+      lastMapInputTs: now, Date: { now: () => now }, fogMode: false,
+      setTimeout: callback => { callbacks.set(++id, callback); return id; }, clearTimeout: key => callbacks.delete(key),
+      drawGeographyLayers: current => { assert.equal(current, frame); draws++; }, err: message => assert.fail(message),
+    });
+    ctx.scheduleGeographyLabelRefresh(); ctx.scheduleGeographyLabelRefresh();
+    assert.equal(callbacks.size, 1);
+    let callback = [...callbacks.values()][0]; callbacks.clear(); callback();
+    assert.equal(draws, 0); assert.equal(callbacks.size, 1);
+    now += 300; callback = [...callbacks.values()][0]; callbacks.clear(); callback();
+    assert.equal(draws, 1); assert.equal(cache.layout, null);
+  });
+  const slot = { el: element() };
+  ctx.syncUnitIconHealth(slot, { kind: 'unit', health: 75 });
+  assert.equal(created, 3); assert.match(slot.healthSvg.attrs['aria-label'], /75%/);
+  ctx.syncUnitIconHealth(slot, { kind: 'unit', health: 20 });
+  assert.equal(created, 3); assert.equal(slot.healthCircle.attrs.stroke, '#df5757');
+  const [length] = slot.healthCircle.attrs['stroke-dasharray'].split(' ').map(Number);
+  assert.ok(Math.abs(length / (2 * Math.PI * 46) - 0.2) < 1e-9);
+  ctx.syncUnitIconHealth(slot, { kind: 'building' });
+  assert.equal(slot.healthSvg.style.display, 'none');
+});
+
+test('movement checkbox explicitly hides retained arrow geometry and fortification and defense paths follow their layers', () => {
+  const paths = Object.fromEntries(['road', 'rail', 'ties', 'roadDim', 'railDim', 'tiesDim', 'move', 'moveUnder', 'moveHead',
+    'fort', 'defense', 'defenseUnder'].map(key => [key, element()]));
+  const ctx = context(['drawRouteLayer', 'syncRouteStatus'], {
+    routePaths: paths, routeDom: { el: element() }, syncRouteWidths() {}, basePos: [{ x: 0, y: 0 }, { x: 20, y: 0 }],
+    neighborsByIndex: [[], []], ensureRoutePaths() {}, readRoutesTurn: () => new Map(), routeKey: '', roadLines: new Map(),
+    hexW: 10, hexH: 10, mapPxW: 200, mapPxH: 100, colShift: 0, pos: 0, viewZoom: 1,
+    frames: [[0, 1]], frameFor: () => new Map([[0, 0], [1, 0]]), riverEdges: new Set(),
+    showUnits: true, showPreviousMovement: true, showNaturalFeatures: false, showSettlements: true, mapVisible: true,
+    readUnitsTurn: () => [[1, 0, 0, 50, 0, 0, 3]],
+    settlementsForPos: () => new Map([[0, ['Roma', 5, 'City', [], [25, 100]]]]),
+    mapToScreen: (x, y) => ({ x, y }), window: { innerWidth: 500, innerHeight: 500 },
+  });
+  ctx.drawRouteLayer(null);
+  assert.ok(paths.move.attrs.d); assert.equal(paths.move.style.display, '');
+  assert.ok(paths.fort.attrs.d); assert.match(paths.defense.attrs.d, /h5.5$/);
+  ctx.showPreviousMovement = false;
+  ctx.drawRouteLayer(null);
+  for (const name of ['move', 'moveUnder', 'moveHead']) assert.equal(paths[name].style.display, 'none');
+  ctx.showUnits = false; ctx.showSettlements = false; ctx.syncRouteStatus(null);
+  for (const name of ['fort', 'defense', 'defenseUnder']) assert.equal(paths[name].style.display, 'none');
+  ctx.showPreviousMovement = true; ctx.showUnits = true; ctx.drawRouteLayer(null);
+  assert.equal(paths.move.style.display, ''); assert.ok(paths.move.attrs.d);
 });
 
 test('display crowds include walkers in route cooldowns and new outdoor arrivals while retaining exemptions', () => {

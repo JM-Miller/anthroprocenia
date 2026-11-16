@@ -440,8 +440,22 @@ function cityYields(city) {
     if (Y && Y.getYield && typeof YieldTypes !== 'undefined') {
       for (const k of YIELD_KEYS) { const t = YieldTypes[k]; let v = 0; try { v = Y.getYield(t); } catch (e) {} out.push(Math.round(v) || 0); }
     }
+
   } catch (e) {}
   return out;
+}
+let cityDefenseApiWarned = false;
+function cityDefenseHealth(city) {
+  try {
+    const districts = Players.get(city.owner)?.Districts;
+    if (!districts || typeof districts.getDistrictHealth !== 'function' || typeof districts.getDistrictMaxHealth !== 'function') {
+      if (!cityDefenseApiWarned) { err('city defense health API unavailable'); cityDefenseApiWarned = true; }
+      return null;
+    }
+    const current = districts.getDistrictHealth(city.location), maximum = districts.getDistrictMaxHealth(city.location);
+    if (!Number.isFinite(current) || !Number.isFinite(maximum)) throw new Error('Invalid city defense health');
+    return maximum > 0 ? [Math.max(0, Math.min(current, maximum)), maximum] : null;
+  } catch (e) { err(`city defense health failed: ${e}`); return null; }
 }
 
 /** Active player settlements this turn → Map(centerPlotIndex -> [name, population, typeLabel, [yields]]). */
@@ -461,7 +475,7 @@ function readSettlements() {
           if (localizedName && !/^LOC_/.test(localizedName)) name = localizedName;
         } catch (e) { err(`settlement name localization: ${e}`); }
         if (!name || /^LOC_/.test(name)) name = 'Settlement';
-        m.set(idx, [name, city.population | 0, settlementType(city), cityYields(city)]);
+        m.set(idx, [name, city.population | 0, settlementType(city), cityYields(city), cityDefenseHealth(city)]);
       }
       if (p.isIndependent && p.Constructibles && p.Constructibles.getConstructibles) {
         for (const con of p.Constructibles.getConstructibles() || []) {
@@ -484,10 +498,11 @@ function readSettlements() {
 function settlementsDelta(snapshot) {
   const cur = readSettlements(), out = [];
   const eq = (a, b) => a && b && a[0] === b[0] && a[1] === b[1] && a[2] === b[2]
-    && a[3].length === b[3].length && a[3].every((v, k) => v === b[3][k]);
-  if (snapshot) { for (const [c, e] of cur) out.push([c, e[0], e[1], e[2], e[3]]); }
+    && a[3].length === b[3].length && a[3].every((v, k) => v === b[3][k])
+    && JSON.stringify(a[4] || null) === JSON.stringify(b[4] || null);
+  if (snapshot) { for (const [c, e] of cur) out.push([c, ...e]); }
   else {
-    for (const [c, e] of cur) if (!eq(e, prevSettlements.get(c))) out.push([c, e[0], e[1], e[2], e[3]]);
+    for (const [c, e] of cur) if (!eq(e, prevSettlements.get(c))) out.push([c, ...e]);
     for (const [c] of prevSettlements) if (!cur.has(c)) out.push([c]);
   }
   prevSettlements = cur;
@@ -1236,7 +1251,7 @@ function scheduleInit(evtName, delay = 750) {
 // Mid-turn captures (a unit moved, a city was founded or claimed tiles). Bursts of events share one capture.
 // The capture is labeled Game.turn and is provisional: every one re-records the same frame, and the next
 // turn-begin overwrites it with the fully-resolved end-of-turn state (record() dedups by (age, turn)).
-const MID_TURN_RECORD_DELAY_MS = 1000;
+const MID_TURN_RECORD_DELAY_MS = 0;
 let midTurnTimer = 0;
 function scheduleMidTurnRecord() {
   if (!started || midTurnTimer) return;
@@ -1315,6 +1330,9 @@ engine.on('LocalPlayerTurnBegin', onTurnBegin);
 engine.on('TurnBegin', () => { if (typeof Autoplay !== 'undefined' && Autoplay.isActive) onTurnBegin(); });
 engine.on('AutoplayEnded', onTurnBegin);
 engine.on('UnitMoved', scheduleMidTurnRecord);                     // capture when a unit moves
+engine.on('UnitMoveComplete', scheduleMidTurnRecord);
+engine.on('UnitDamageChanged', scheduleMidTurnRecord);
+engine.on('DistrictDamageChanged', scheduleMidTurnRecord);
 engine.on('UnitActivityChanged', recordUnitFormationActivity);
 engine.on('PlotOwnershipChanged', scheduleMidTurnRecord);          // capture when a city expands or borders change
 engine.on('CityAddedToMap', scheduleMidTurnRecord);                // capture when a city is founded

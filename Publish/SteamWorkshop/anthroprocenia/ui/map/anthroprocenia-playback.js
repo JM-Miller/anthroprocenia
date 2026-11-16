@@ -33,6 +33,10 @@ import { ComponentID } from '/core/ui/utilities/utilities-component-id.js';
 import { BuildingPlacementManager } from '/base-standard/ui/building-placement/building-placement-manager.js';
 import WorldInput from '/base-standard/ui/world-input/world-input.js';
 import ViewManager from '/core/ui/views/view-manager.js';
+import LensManager from '/core/ui/lenses/lens-manager.js';
+import { createComponent } from '/core/vendor/solid-js/dist/solid.js';
+import { render } from '/core/vendor/solid-js/web/dist/web.js';
+import { PlotTooltipContent, IsPlotTooltipVisible, SetIsPlotTooltipVisible } from '/base-standard/ui-next/tooltips/plot-tooltip/plot-tooltip.js';
 import { getPlacementGroups, placementYields, localCityAtPlot, dispatchPlacementSelection, validCameraAspect, placementYieldScale, siteLabelFontPx, unwrapPathPoints, pathTurnLabels } from './anthroprocenia-placement.js';
 import { siteNamesForTile, siteCategory } from './anthroprocenia-sites.js';
 import { personProfile, personRecord, personName, eraLabel, homePlan, occupationGroupLabel, walkerAction, workFamily, workplaceScore, landMilitaryUnit, leaderRole, leaderFamily, LEADERS_PER_HOME, NAME_LISTS_VERSION, PEOPLE_PROGRESSION_NODES } from './anthroprocenia-people.js';
@@ -43,11 +47,11 @@ import { MAX_RECORD_CHARS, MAX_LIBRARY_ENTRIES, MAX_PLACEMENTS_PER_FRAME, encode
 import { planTownLinks, segmentIntersection, nearestOnSegment, waterfrontLayout, bridgeRoadGaps, deckEdgeAllowed } from './anthroprocenia-townlinks.js';
 import { validBuildingPolygon, buildingGroundClear, clearMinorRoads, buildingDoorPoint, quarterBuildingGroups, approachPath, nearestNodeLookup, majorRoadWidth } from './anthroprocenia-townscape.js';
 import { townLineName, townBuildingName, localFeatureName } from './anthroprocenia-linenames.js';
-import { familyEvents, CivilizationTimeline, LiveTimelineFeed } from './anthroprocenia-timeline.js';
+import { familyEvents, CivilizationTimeline, LiveTimelineFeed, groupTimelineEvents } from './anthroprocenia-timeline.js';
 import { createSkipAheadPanel } from './anthroprocenia-skipahead.js';
 import { realisticCalendarEnabled } from './anthroprocenia-calendar.js';
 import { mapDetailPaths, FOG_FRONTIER_BANDS } from './anthroprocenia-map-details.js';
-import { unitDestinationGroups, destinationPaths } from './anthroprocenia-unit-highlights.js';
+import { unitDestinationGroups, destinationPaths, UNIT_DESTINATION_STYLES } from './anthroprocenia-unit-highlights.js';
 import { uiGlyph, installModUi } from './anthroprocenia-ui.js';
 import { YIELDS, YIELD_LABELS, YIELD_COLORS, GAME_YIELDS, FULL_CROWD, commandMenu, resolveCommand, commandChance, commandsPerTurn, familyActions, ambientActions, familyInteraction, actionFits, yieldTotals, yieldShare, formatYield, meanderPath } from './anthroprocenia-commands.js';
 import { unitNamesForTile, unitSubcategory, estimatedWorldPopulation, parseGameYear, iconPopulation, formatCount, PILLAGED_FACTOR, unitPopulationFactor, settlementDamageFactor, populationWeight, populationVariation } from './anthroprocenia-units.js';
@@ -151,25 +155,43 @@ function cfgGet(k) {
     return v;
   } catch (e) { return null; }
 }
-const unitHighlightState = { key: '', geometry: '', groups: null, paths: {}, legend: null, revision: 0 };
+const unitHighlightState = { key: '', geometry: '', groups: null, paths: {}, legend: null, revision: 0, targets: null, styles: UNIT_DESTINATION_STYLES };
 function syncUnitHighlights() {
   const state = unitHighlightState;
   const visible = mapVisible && cmdLiveTurn() && !gameOverlayActive() && riverDom.el;
-  for (const path of Object.values(state.paths)) path.style.display = visible && path.getAttribute('d') ? 'block' : 'none';
+  for (const [kind, path] of Object.entries(state.paths)) path.style.display = visible && state.groups && state.groups[kind] && path.getAttribute('d') ? 'block' : 'none';
   if (state.legend) state.legend.style.display = 'none';
   if (!visible) return;
   const id = UI.Player.getHeadSelectedUnit();
   const unit = id && ComponentID.isValid(id) ? Units.get(id) : null;
-  const definition = unit && GameInfo.Units.lookup(unit.type), type = definition && definition.UnitType || '';
-  if (!unit || unit.owner !== GameContext.localPlayerID || !/SCOUT|MISSIONARY|MERCHANT|SETTLER/.test(type)) {
+  const definition = unit && GameInfo.Units.lookup(unit.type);
+  if (!unit || !definition || unit.owner !== GameContext.localPlayerID) {
     for (const path of Object.values(state.paths)) path.style.display = 'none';
     state.key = ''; state.groups = null; return;
   }
-  const key = `${ComponentID.toLogString(id)}|${Game.turn}|${manifest && manifest.rev}|${unit.location.x}|${unit.location.y}|${state.revision}`;
+  const lens = LensManager.getLensForUnit(unit);
+  const targets = state.targets && state.targets.id === ComponentID.toLogString(id) ? state.targets : null;
+  if (!definition.FoundCity && !definition.MakeTradeRoute && !(definition.SpreadCharges > 0) &&
+      lens !== 'fxs-discovery-lens' && lens !== 'fxs-continent-lens' && !targets) {
+    for (const path of Object.values(state.paths)) path.style.display = 'none';
+    state.key = ''; state.groups = null; return;
+  }
+  const key = `${ComponentID.toLogString(id)}|${lens}|${Game.turn}|${manifest && manifest.rev}|${unit.location.x}|${unit.location.y}|${state.revision}`;
   if (state.key !== key) {
     state.key = ''; state.groups = null; state.geometry = '';
     for (const path of Object.values(state.paths)) path.style.display = 'none';
-    state.groups = unitDestinationGroups({ unit, type, player: Players.get(unit.owner), map: GameplayMap,
+    let continents = null;
+    if (lens === 'fxs-continent-lens') {
+      const layer = LensManager.layers.get('fxs-continent-layer');
+      if (!layer || !layer.continentsList) throw new Error('The native continent classifications are unavailable.');
+      continents = layer.continentsList.map(continent => ({ ...continent, plotList: continent.plotList.concat(layer.naturalWonderCoords) }));
+    }
+    state.styles = { ...UNIT_DESTINATION_STYLES };
+    if (continents) for (const [index, continent] of continents.entries()) {
+      const color = continent.color;
+      state.styles[`continent${index}`] = { color: `rgb(${color & 255},${color >>> 8 & 255},${color >>> 16 & 255})`, opacity: (color >>> 24) / 255, label: 'Native continent classification' };
+    }
+    state.groups = unitDestinationGroups({ unit, definition, lens, targets, continents, player: Players.get(unit.owner), map: GameplayMap,
       districts: Districts, constructibles: MapConstructibles, cities: Cities, success: TradeRouteStatus.SUCCESS,
       definitions: { wilderness: DistrictTypes.WILDERNESS, rural: DistrictTypes.RURAL,
         getConstructible: component => Constructibles.getByComponentID(component), lookupConstructible: hash => GameInfo.Constructibles.lookup(hash) } });
@@ -186,19 +208,18 @@ function syncUnitHighlights() {
     return center.x + hexW * viewZoom / 2 >= area.x && center.x - hexW * viewZoom / 2 <= area.x + area.w
       && center.y + hexH * viewZoom * viewAspectY / 2 >= area.y && center.y - hexH * viewZoom * viewAspectY / 2 <= area.y + area.h;
   });
-  const colors = { discoveries: '#ffe06e', religion: '#cd9aff', trade: '#f4c078', roads: '#d89d62', settlements: '#fa967d', freshwater: '#61e8ad' };
-  const names = { discoveries: 'Gold: discoveries', religion: 'Purple: religion spread', trade: 'Amber: trade destinations', roads: 'Brown: road connections', settlements: 'Coral: legal settlement sites', freshwater: 'Green: legal freshwater sites' };
   const labels = [];
   for (const [kind, data] of Object.entries(result.paths)) {
+    const style = state.styles[kind];
     let path = state.paths[kind];
     if (!path) {
       path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      path.setAttribute('fill', colors[kind]); path.setAttribute('fill-opacity', '0.30'); path.setAttribute('stroke', colors[kind]);
       path.setAttribute('pointer-events', 'none'); riverDom.el.appendChild(path); state.paths[kind] = path;
     }
+    path.setAttribute('fill', style.color); path.setAttribute('fill-opacity', String(style.opacity)); path.setAttribute('stroke', style.color);
     path.setAttribute('d', data); path.setAttribute('stroke-width', String(Math.max(0.1, hexW * 0.015, ps(1.5) / viewZoom)));
     path.style.display = data ? 'block' : 'none';
-    if (state.groups[kind].length) labels.push(names[kind]);
+    if (state.groups[kind].length && !labels.includes(style.label)) labels.push(style.label);
   }
   if (!state.legend) {
     const legend = document.createElement('div'); legend.classList.add(MAP_CHROME_CLASS);
@@ -794,7 +815,9 @@ function gameOverlayActive() {
 function computeGameOverlayActive() {
   try {
     const screens = ContextManager && ContextManager.screens;
-    if (screens && screens.some(s => s && s.isConnected !== false && !/victor|endgame/i.test(s.tagName || ''))) return true;
+    if (screens && screens.some(s => s && s.isConnected !== false &&
+        !/victor|endgame/i.test(s.tagName || '') &&
+        !/^(?:panel-settler-legend|trade-route-chooser|panel-continents)$/i.test(s.tagName || ''))) return true;
   } catch (e) {}
   try {
     if (typeof ViewManager !== 'undefined' && ViewManager.current) {
@@ -814,6 +837,26 @@ function computeGameOverlayActive() {
   return false;
 }
 let overlayTimer = 0, overlayShown = false, leaderSceneShown = false, historyFocusObserver = null;
+const diplomacyTransition = { token: 0, closing: false };
+function showDiplomacyLoading() {
+  if (!mapVisible) return;
+  const token = ++diplomacyTransition.token;
+  showLoading('Loading Map...');
+  const finish = () => {
+    if (token !== diplomacyTransition.token) return;
+    const manager = LeaderModelManager;
+    const pending = manager.isClosing || manager.isClosingFallback || manager.cameraDollyQueued ||
+      manager.cameraDollyDelayed || manager.leaderSequenceGate?.waitingForForegroundCameraId;
+    if (mapVisible && pending) { nextPaint(finish); return; }
+    if (els.loading && els.loading.textContent === 'Loading Map...' && !building && !mapOpenPending) hideLoading();
+  };
+  nextPaint(finish);
+}
+window.addEventListener('raise-diplomacy', showDiplomacyLoading, true);
+window.addEventListener('diplomacy-dialog-request-close', showDiplomacyLoading, true);
+window.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && LeaderModelManager.isLeaderShowing) showDiplomacyLoading();
+}, true);
 function syncHistoryFocus(active = mapVisible && historyControlsExpanded && !gameOverlayActive() && !LeaderModelManager.isLeaderShowing) {
   if (!document.body) return;
   for (const child of document.body.children) {
@@ -829,7 +872,11 @@ function syncHistoryFocus(active = mapVisible && historyControlsExpanded && !gam
 }
 function syncOverlayState() {
   if (!document.body) return;
+  syncNativePlotTooltip();
   const leader = mapVisible && !!LeaderModelManager.isLeaderShowing;
+  const closing = mapVisible && !!(LeaderModelManager.isClosing || LeaderModelManager.isClosingFallback);
+  if (leader !== leaderSceneShown || closing && !diplomacyTransition.closing) showDiplomacyLoading();
+  diplomacyTransition.closing = closing;
   if (leader !== leaderSceneShown) {
     leaderSceneShown = leader;
     if (leader) {
@@ -878,6 +925,7 @@ let showTradeRoutes = false;
 let showSettlements = true;
 let showBuildingLabels = false;                  // per-building/district/quarter labels, off by default (dense)
 let showRegionLabels = true, showRegionBorders = false, showGeographicLabels = true, showRiverNames = true;
+let showRegionBoundaries = false, showPreviousMovement = true, showLabelArches = true;
 let showTownLabels = true;
 const TOWN_ROOF_PATHS = [...TOWN_CLASSES, 'tents', 'battleBuildings', 'detail', 'tentDetail'];
 const TOWN_ELEMENT_OPTIONS = [
@@ -899,6 +947,7 @@ const DEFAULT_MAP_OPTIONS = {
   territory: true, borders: false, units: true, wonders: true,
   countryLabels: true, civIcons: true,   tradeRoutes: false, settlements: true, buildingLabels: false,
   regionLabels: true, regionBorders: false, geographicLabels: true, riverNames: true, naturalFeatures: true,
+  previousMovement: true, regionBoundaries: false, labelArches: true,
   resources: false, fog: false, townLabels: true,
 };
 let fogMode = false, suppressFog = false;
@@ -1406,6 +1455,7 @@ function applyLayerDepth() {
 }
 function setMapVisible(on) {
   mapVisible = on; ensureMapRoot();
+  syncNativePlotTooltip();
   if (!on) {
     stopPeople();
     resetWorldTimeline();
@@ -1461,7 +1511,7 @@ function setMapVisible(on) {
   if (riverDom.el) riverDom.el.style.opacity = visible ? '1' : '0';
   if (tradeRouteDom.el) tradeRouteDom.el.style.opacity = visible && showTradeRoutes ? '1' : '0';
   if (routeDom.el) routeDom.el.style.opacity = visible ? '1' : '0';
-  if (regionBorderDom.el) regionBorderDom.el.style.opacity = visible && showRegionBorders ? '1' : '0';
+  if (regionBorderDom.el) regionBorderDom.el.style.opacity = visible && (showRegionBorders || showRegionBoundaries) ? '1' : '0';
   if (regionLabelDom.el) regionLabelDom.el.style.opacity = visible && showRegionLabels ? '1' : '0';
   if (geographicLabelDom.el) geographicLabelDom.el.style.opacity = visible && (showGeographicLabels || showRiverNames) ? '1' : '0';
   if (unitDom.el) { unitDom.el.style.opacity = visible ? '1' : '0'; unitDom.el.style.pointerEvents = on ? 'auto' : 'none'; }
@@ -1668,7 +1718,7 @@ function scheduleViewDetailRedraw() {
   viewDetailTimer = setTimeout(() => {
     viewDetailTimer = 0;
     if (mapVisible && Date.now() - lastMapInputTs < 250) { scheduleViewDetailRedraw(); return; }
-    try { if (mapVisible && curFrame) redraw(); }
+    try { if (mapVisible && curFrame && syncToLatestCapture() === false) redraw(); }
     catch (e) { err(`view detail redraw failed: ${e}`); }
   }, 150);
 }
@@ -2143,19 +2193,17 @@ function stopCameraFollow() {
 let captureWatchTimer = 0;
 function syncToLatestCapture() {
   try {
-    if (!mapVisible || building || !manifest || !cellByIndex || Date.now() - lastMapInputTs < 250) return;
-    if (recordedFrameCount() === builtFrameCount) return;
+    if (!mapVisible || building || !manifest || !cellByIndex || Date.now() - lastMapInputTs < 250) return false;
+    if (recordedFrameCount() === builtFrameCount) return false;
     const wasLatest = !frames.length || pos >= frames.length - 1;
     refresh(true);
-    if (!frames.length || !cellByIndex) return;
+    if (!frames.length || !cellByIndex) return false;
     if (wasLatest) pos = frames.length - 1;
     builtFrameCount = recordedFrameCount();
-    if (viewDetailTimer) { clearTimeout(viewDetailTimer); viewDetailTimer = 0; }
-    if (decorRefreshTimer) { clearTimeout(decorRefreshTimer); decorRefreshTimer = 0; }
-    scatterJob = null;
     drawMap(frameFor(pos));
-    updateControls(); 
-  } catch (e) { err(`capture watch: ${e}`); }
+    updateControls();
+    return true;
+  } catch (e) { err(`capture watch: ${e}`); return null; }
 }
 function startCaptureWatch() {
   if (captureWatchTimer) return;
@@ -2728,10 +2776,19 @@ function recycleAllLayers() {   // layout changed / recording changed → per-ag
     L.byAge.clear(); L.el = null;
   }
 }
+function cancelPendingMapDraws() {
+  if (viewDetailTimer) { clearTimeout(viewDetailTimer); viewDetailTimer = 0; }
+  if (decorRefreshTimer) { clearTimeout(decorRefreshTimer); decorRefreshTimer = 0; }
+  if (scatterContinueTimer) { clearTimeout(scatterContinueTimer); scatterContinueTimer = 0; }
+  if (townRender.timer) { clearTimeout(townRender.timer); townRender.timer = 0; }
+  if (townInterturn.timer) { clearTimeout(townInterturn.timer); townInterturn.timer = 0; }
+  scatterJob = null;
+}
 // Redraw the per-turn layers (state then units) over the static background. Background is (re)painted only
 // when layout or fog changes, via ensureBackground.
 function drawMap(frame) {
   if (!bgLayer.ctx || !stateLayer.ctx || !unitDom.el || !basePos || !frame) return;
+  cancelPendingMapDraws();
   HB.draws++;   // HB counter
   ensureBackground();
   const vis = fogMode ? visForPos() : null;
@@ -2800,6 +2857,8 @@ function territoryClip(i, frame, vis) {
   if (!terrain || !basePos[i] || !neighborsByIndex) return null;
   const features = readMapFeatureMarkers();
   const t = terrain[i], river = t === 10 || features.get(i) === 5, mountain = t === 2;
+  // River geometry never invents ownership or cuts holes in recorded territory.
+  if (river) return null;
   if (!river && !mountain) return null;
   const v = frame.get(i);
   if (v !== undefined && (v & 7) >= 2) return null;
@@ -4098,29 +4157,56 @@ function unitIconClickActive(point) {
 }
 function selectMapUnitIcon(item, point) {
   if (unitIconClickActive(point)) return;
-  unitIconPress = { time: Date.now(), x: point.x, y: point.y };
+  unitIconPress = { time: Date.now(), x: point.x, y: point.y, selected: true };
   mapDrag = null;
   selectFlagUnit(item);
+  unitIconPress.time = Date.now();
 }
 function mapUnitIconAt(point) {
   const hit = flagsActive() ? flagAt(point.x, point.y) : iconModeActive() && !townscapeActive() ? iconAt(point.x, point.y) : null;
   return hit && hit.item.kind === 'unit' ? hit : null;
 }
 function mapUnitIconInput(event) {
+  const status = event.detail.status;
   const point = Cursor.position;
+  if (status !== InputActionStatuses.START && Date.now() - unitIconPress.time < 800 &&
+      (unitIconPress.nativeDown || unitIconPress.domDown)) {
+    if (status === InputActionStatuses.FINISH) unitIconPress.nativeDown = false;
+    event.preventDefault(); event.stopImmediatePropagation(); return true;
+  }
   if (!point) return false;
   if (!unitIconClickActive(point)) {
     if (!pointInRect(point.x, point.y, measureArea()) ||
         !expansionWorldTarget(document.elementFromPoint(point.x, point.y)) || overControlPanels(point.x, point.y)) return false;
     const hit = mapUnitIconAt(point);
     if (!hit) return false;
-    if (event.detail.status === InputActionStatuses.FINISH) selectMapUnitIcon(hit.item, point);
+    if (status === InputActionStatuses.START || status === InputActionStatuses.FINISH) selectMapUnitIcon(hit.item, point);
   }
+  if (status === InputActionStatuses.START) unitIconPress.nativeDown = true;
+  if (status === InputActionStatuses.FINISH) unitIconPress.nativeDown = false;
   event.preventDefault(); event.stopImmediatePropagation();
   return true;
 }
+function onUnitIconPress(event) {
+  if (event.button !== 0) return;
+  const paired = Date.now() - unitIconPress.time < 800 && unitIconPress.nativeDown && !unitIconPress.domDown;
+  if (!paired) unitIconPress = { time: -Infinity };
+  if (paired && mapVisible) {
+    unitIconPress.domDown = true;
+    event.preventDefault(); event.stopImmediatePropagation(); return;
+  }
+  if (!mapVisible || LeaderModelManager.isLeaderShowing || settlementExpansionActive() || mapPlotSelectionActive() ||
+      gameOverlayActive() || !pointInRect(event.clientX, event.clientY, measureArea()) ||
+      !expansionWorldTarget(event.target) || overControlPanels(event.clientX, event.clientY)) return;
+  const point = { x: event.clientX, y: event.clientY }, hit = mapUnitIconAt(point);
+  if (!paired && !hit) return;
+  event.preventDefault(); event.stopImmediatePropagation();
+  if (!paired) selectMapUnitIcon(hit.item, point);
+  unitIconPress.domDown = true;
+}
 function onUnitIconConsumedClick(event) {
-  if (event.button || !mapVisible || !unitIconClickActive({ x: event.clientX, y: event.clientY })) return;
+  if (event.button || !mapVisible || Date.now() - unitIconPress.time >= 800 || !unitIconPress.selected) return;
+  if (event.type === 'mouseup') unitIconPress.domDown = false;
   event.preventDefault(); event.stopImmediatePropagation();
 }
 // --- town, encampment and battle layouts under the icon circles when the map is zoomed in extremely far ------------
@@ -4241,8 +4327,11 @@ function setTownInterturn(active) {
   if (active || townInterturn.timer || !mapVisible) return;
   townInterturn.timer = setTimeout(() => {
     townInterturn.timer = 0;
-    if (!townInterturn.active && mapVisible) redraw();
-  }, 0);
+    if (townInterturn.active || !mapVisible) return;
+    if (Date.now() - lastMapInputTs < 250) { setTownInterturn(false); return; }
+    try { if (syncToLatestCapture() === false) redraw(); }
+    catch (e) { err(`turn resume redraw failed: ${e}`); }
+  }, Math.max(0, 250 - (Date.now() - lastMapInputTs)));
 }
 engine.on('LocalPlayerTurnEnd', () => setTownInterturn(true));
 engine.on('LocalPlayerTurnBegin', () => setTownInterturn(false));
@@ -8534,7 +8623,7 @@ function drawRouteLayer(vis) {
   routeDom.el.setAttribute('viewBox', `0 0 ${mapPxW} ${mapPxH}`);
   let routes = frames.length ? readRoutesTurn(pos) : null;
   if (!routes && frames.length && pos === frames.length - 1) routes = liveRoutes();
-  const key = `${pos}|${hexW}|${hexH}|${mapPxW}|${colShift}|${vis ? 1 : 0}|${showUnits ? 1 : 0}|${routes ? routes.size : -1}|${riverEdges.size}|${showNaturalFeatures ? 1 : 0}`;
+  const key = `${pos}|${hexW}|${hexH}|${mapPxW}|${colShift}|${vis ? 1 : 0}|${showUnits ? 1 : 0}|${showPreviousMovement}|${routes ? routes.size : -1}|${riverEdges.size}|${showNaturalFeatures ? 1 : 0}`;
   routeDom.el.style.opacity = mapVisible || miniMapVisible ? '1' : '0';
   if (key === routeKey) return;
   routeKey = key;
@@ -8578,7 +8667,7 @@ function drawRouteLayer(vis) {
   routePaths.tiesDim.setAttribute('stroke-width', String(Math.max(0.3, hexW * 0.012))); routePaths.tiesDim.setAttribute('d', tiesF.join(''));
   // Unit motion: previous tile -> current tile, with an arrowhead at the destination.
   const moveD = [], headD = [], seen = new Set(), head = Math.max(3, hexW * 0.13);
-  if (showUnits && frames.length) {
+  if (showUnits && showPreviousMovement && frames.length) {
     for (const u of readUnitsTurn(pos)) {
       const to = u[0], from = u[4];
       if (!(from >= 0) || from === to || !basePos[to] || !basePos[from]) continue;
@@ -8905,18 +8994,17 @@ function longestRiverStretch(tileIndices, vis) {
   if (angle > 90) angle -= 180; else if (angle <= -90) angle += 180;
   return { x: (a.x + b.x) / 2 + hexW / 2, y: (a.y + b.y) / 2 + hexH / 2, angle, length: Math.hypot(dx, dy) + hexW };
 }
-function placeGeographyLabels(kind, labels, vis, fontScale) {
+function placeGeographyLabels(kind, labels, vis, fontScale, occupied = null) {
   const slots = geographyLabelSlots[kind];
   let count = 0;
-  // Region text may shrink to 1/5 of a map-location label so it fits small regions.
   const locationFont = Math.max(14, Math.min(17, hexW * 0.42)) * (1 / 3) * 1.25 * 0.5;
-  const minRegionFont = locationFont / 5;
-  const REGION_RES = 1;
-  const placedBoxes = kind === 'regions' ? makeLabelBoxIndex(Math.max(16, hexW * 4)) : null;
-  if (kind === 'regions') labels = labels.slice().sort((a, b) => (b.id.startsWith('water:') ? 1 : 0) - (a.id.startsWith('water:') ? 1 : 0));
+  const minRegionFont = Math.max(locationFont / 5, ps(kind === 'regions' ? 11 : 10) / Math.max(0.01, viewZoom * townLabelScale()));
+  const REGION_RES = Math.max(1, labelTier());
+  const placedBoxes = occupied || makeLabelBoxIndex(Math.max(16, hexW * 4));
+  labels = labels.slice().sort((a, b) => (b.tiles || []).length - (a.tiles || []).length);
   for (const label of labels) {
     const index = label.center;
-    if (index == null || !basePos[index] || (kind === 'features' && vis && vis[index] === 0)) continue;   // regions and rivers are placed from their own visible tiles
+    if (index == null || !basePos[index]) continue;
     const text = mapLabelText(label.name);
     if (!text) continue;
     let riverStretch = null;
@@ -8926,21 +9014,20 @@ function placeGeographyLabels(kind, labels, vis, fontScale) {
       if (!riverStretch) continue;
     }
     let geometry = null, tiles = null;
-    if (kind === 'regions') {
-      tiles = (label.tiles || [])
+    if (kind !== 'rivers') {
+      tiles = (label.tiles || [index])
         .filter(tileIndex => basePos[tileIndex] && (!vis || vis[tileIndex] !== 0))
-        .map(tileIndex => ({ x: basePos[tileIndex].x + hexW / 2, y: basePos[tileIndex].y + hexH / 2 }));
+        .map(tileIndex => ({ index: tileIndex, x: basePos[tileIndex].x + hexW / 2, y: basePos[tileIndex].y + hexH / 2 }));
       if (!tiles.length) continue;
       geometry = countryLabelGeometry(tiles);
     }
-    const slot = geographySlot(kind, count++);
     // Long labels may wrap onto two lines (never river names, which follow the river).
     const lines = (kind !== 'rivers' && text.length > (geometry ? 14 : 16)) ? splitLabelLines(text) : [text];
     const longestLine = Math.max(1, ...lines.map(l => l.length));
     const rows = lines.length;
     const initialSize = geometry
       ? Math.max(minRegionFont, Math.min(12, fontScale / 2, geometry.span / Math.max(1, longestLine * 0.68) / 2))
-      : Math.max(11, Math.min(fontScale, hexW * 0.48)) * 1.25;
+      : Math.max(minRegionFont, Math.min(fontScale, hexW * 0.48) * 1.25);
     const metricsFor = size => {
       const characterWidth = geometry ? size * 0.68 : Math.max(9, size * 0.68);
       return {
@@ -8952,7 +9039,7 @@ function placeGeographyLabels(kind, labels, vis, fontScale) {
     };
     let metrics = metricsFor(initialSize);
     const isSeaName = /\ssea$/i.test(text);
-    if (isSeaName) metrics = metricsFor(initialSize * 2 / 3);
+    if (isSeaName) metrics = metricsFor(Math.max(minRegionFont, initialSize * 2 / 3));
     const initialFont = metrics.fontSize;
     let point = geometry ? geometry : {
       x: basePos[index].x + hexW / 2,
@@ -9006,7 +9093,7 @@ function placeGeographyLabels(kind, labels, vis, fontScale) {
       let candidates = [];
       if (geometry) {
         const step = Math.max(1, Math.ceil((label.tiles || []).length / 80));
-        candidates = (label.tiles || []).filter((t, i) => i % step === 0 && basePos[t] && isWaterTile(t));
+        candidates = (label.tiles || []).filter((t, i) => i % step === 0 && basePos[t] && (!vis || vis[t] !== 0) && isWaterTile(t));
       } else {
         const seen = new Set([index]);
         let ring = [index];
@@ -9032,7 +9119,7 @@ function placeGeographyLabels(kind, labels, vis, fontScale) {
         if (geometry) geometry = { ...geometry, x: point.x, y: point.y };
       }
     }
-    if (kind === 'regions') {
+    if (geometry) {
       // Keep region names from overlapping: try the region's own tile centers, then shrink the text and retry.
       // (" sea" names were already moved offshore above.)
       const boxAt = (x, y, m) => ({ x, y, w: m.width, h: m.height, angle: geometry.angle });
@@ -9050,7 +9137,8 @@ function placeGeographyLabels(kind, labels, vis, fontScale) {
             if (clear(candidate)) { found = candidate; foundMetrics = m; break; }
           }
         }
-        if (found) { box = found; metrics = foundMetrics; }
+        if (!found) continue;
+        box = found; metrics = foundMetrics;
       }
       point = { ...geometry, x: box.x, y: box.y };
       placedBoxes.add(box);
@@ -9061,12 +9149,18 @@ function placeGeographyLabels(kind, labels, vis, fontScale) {
       const stretch = riverStretch;
       if (stretch) {
         riverAngle = stretch.angle;
-        const fitted = Math.max(7, Math.min(initialSize, (stretch.length - 8) / Math.max(1, text.length * 0.58)));
+        const available = (stretch.length - 8) / Math.max(1, text.length * 0.68);
+        if (available < minRegionFont) continue;
+        const fitted = Math.min(initialSize, available);
         metrics = metricsFor(fitted);
         const lift = metrics.height / 2 + 1, rad = riverAngle * Math.PI / 180;
         point = { x: stretch.x + Math.sin(rad) * lift, y: stretch.y - Math.cos(rad) * lift, angle: riverAngle };
       }
+      const box = { x: point.x, y: point.y, w: metrics.width, h: metrics.height, angle: riverAngle };
+      if (placedBoxes.overlaps(box)) continue;
+      placedBoxes.add(box);
     }
+    const slot = geographySlot(kind, count++);
     const { fontSize, characterWidth, width, height } = metrics;
     const K = geometry ? REGION_RES : labelTier();
     slot.el.style.left = Math.round(point.x - width * K / 2) + 'px';
@@ -9079,7 +9173,7 @@ function placeGeographyLabels(kind, labels, vis, fontScale) {
     slot.el.style.transform = geometry ? `rotate(${geometry.angle}deg) scale(${tk / K})` : (riverAngle ? `rotate(${riverAngle}deg)${kScale}${tScale}` : ((kScale + tScale).trim() || 'none'));
     slot.el.style.zIndex = kind === 'regions' ? '1' : '2';
     slot.el.style.opacity = '1';
-    const geometryKey = `${lines.join('/')}|${K}|${geometry ? `${width}|${height}|${fontSize}|${geometry.angle}` : (kind === 'rivers' ? fontSize : height)}`;
+    const geometryKey = `${lines.join('/')}|${K}|${showLabelArches}|${geometry ? `${width}|${height}|${fontSize}|${geometry.angle}` : (kind === 'rivers' ? fontSize : height)}`;
     if (slot.text !== geometryKey) {
       slot.el.textContent = '';
       slot.el.style.flexDirection = rows > 1 ? 'column' : 'row';
@@ -9087,7 +9181,8 @@ function placeGeographyLabels(kind, labels, vis, fontScale) {
         // One text run per line, rather than a transformed/shadowed DOM element per glyph.
         slot.el.style.fontSize = (fontSize * K) + 'px';
         slot.el.style.lineHeight = ((rows > 1 ? fontSize + 3 : height) * K) + 'px';
-        if (rows > 1) setPlainLines(slot.el, lines); else slot.el.textContent = text;
+        if (showLabelArches && kind === 'regions') setArchedLines(slot.el, lines, width * K, height * K, fontSize * K);
+        else if (rows > 1) setPlainLines(slot.el, lines); else slot.el.textContent = text;
       }
       slot.text = geometryKey;
     }
@@ -9187,11 +9282,13 @@ function drawCivBorderLabels(frame, vis, placements) {
 }
 function drawGeographyLayers(frame, vis) {
   if (!regionLabelDom.el || !regionBorderPath || !geographicLabelDom.el) return;
+  regionLabelDom.el.style.opacity = (mapVisible || miniMapVisible) && showRegionLabels ? '1' : '0';
   geographicLabelDom.el.style.opacity = (mapVisible || miniMapVisible) && (showGeographicLabels || showRiverNames) ? '1' : '0';
   const service = typeof window !== 'undefined' ? window.AnthroproceniaGeography : null;
   const geography = service && typeof service.getMapData === 'function' ? service.getMapData() : null;
   if (!geography) {
-    geographyLabelCache.regions = geographyLabelCache.rivers = null;
+    drawRegionBoundaries(null, vis);
+    geographyLabelCache.regions = geographyLabelCache.rivers = geographyLabelCache.layout = null;
     for (const kind of ['regions', 'features', 'rivers']) {
       for (const slot of geographyLabelSlots[kind]) if (slot && slot.visible) { slot.el.style.opacity = '0'; slot.visible = false; }
     }
@@ -9200,15 +9297,12 @@ function drawGeographyLayers(frame, vis) {
     placeBorderLabels('continent', new Map());
     return;
   }
-  const placeStaticLabels = (kind, getLabels, fontScale) => {
-    const key = `${hexW}|${hexH}|${colShift}|${labelTier()}|${townLabelScale()}`;
-    const cached = geographyLabelCache[kind];
-    if (cached && cached.geography === geography && cached.positions === basePos &&
-        cached.vis === vis && cached.key === key) return;
-    placeGeographyLabels(kind, getLabels(), vis, fontScale);
-    geographyLabelCache[kind] = { geography, positions: basePos, vis, key };
-  };
-  if (showRegionLabels) placeStaticLabels('regions', () => geography.regions, 15);
+  const labelKey = `${hexW}|${hexH}|${colShift}|${labelTier()}|${townLabelScale()}|${viewZoom}|${showLabelArches}|${showRegionLabels}|${showGeographicLabels}|${showRiverNames}`;
+  const cachedLabels = geographyLabelCache.layout;
+  if (!cachedLabels || cachedLabels.geography !== geography || cachedLabels.positions !== basePos ||
+      cachedLabels.vis !== vis || cachedLabels.frame !== frame || cachedLabels.key !== labelKey) {
+  const occupied = makeLabelBoxIndex(Math.max(16, hexW * 4));
+  if (showRegionLabels) placeGeographyLabels('regions', geography.regions.filter(region => !region.island && !region.id.startsWith('water:')), vis, 15, occupied);
   else {
     geographyLabelCache.regions = null;
     for (const slot of geographyLabelSlots.regions) if (slot && slot.visible) { slot.el.style.opacity = '0'; slot.visible = false; }
@@ -9216,17 +9310,20 @@ function drawGeographyLayers(frame, vis) {
   if (showGeographicLabels) {
     const labels = geography.features.filter(feature => feature.type !== 'river')
       .concat(historicalWarLabels(frame, geography, vis));
-    placeGeographyLabels('features', labels, vis, 12);
+    placeGeographyLabels('features', labels, vis, 12, occupied);
   } else {
     for (const slot of geographyLabelSlots.features) if (slot && slot.visible) { slot.el.style.opacity = '0'; slot.visible = false; }
   }
-  if (showRiverNames) placeStaticLabels('rivers', () => geography.features.filter(feature => feature.type === 'river'), 12);
+  if (showRiverNames) placeGeographyLabels('rivers', geography.features.filter(feature => feature.type === 'river'), vis, 12, occupied);
   else {
     geographyLabelCache.rivers = null;
     for (const slot of geographyLabelSlots.rivers) if (slot && slot.visible) { slot.el.style.opacity = '0'; slot.visible = false; }
   }
+  geographyLabelCache.layout = { geography, positions: basePos, vis, frame, key: labelKey };
+  }
+  drawRegionBoundaries(geography, vis);
   if (!showRegionBorders) {
-    regionBorderDom.el.style.opacity = '0';
+    regionBorderDom.el.style.opacity = (mapVisible || miniMapVisible) && showRegionBoundaries ? '1' : '0';
     regionBorderPath.setAttribute('d', '');
     regionBorderKey = '';
     placeBorderLabels('continent', new Map());
@@ -9342,7 +9439,7 @@ function countryLabelSlot(n) {
     icon.style.cssText = 'position:absolute;pointer-events:none;background-position:center;background-repeat:no-repeat;background-size:100% 100%;mask-position:center;-webkit-mask-position:center;mask-repeat:no-repeat;-webkit-mask-repeat:no-repeat;mask-size:100% 100%;-webkit-mask-size:100% 100%;';
     countryDom.el.appendChild(el);
     civIconDom.el.appendChild(icon);
-    m = { el, icon, op: 1, x: -1, y: -1, geometry: '', iconCiv: '', iconUrl: '', iconColor: '' };
+    m = { el, icon, op: 1, x: -1, y: -1, geometry: '', text: '', iconCiv: '', iconUrl: '', iconColor: '' };
     countryLabelSlots[n] = m;
   }
   return m;
@@ -9394,11 +9491,11 @@ function drawCountryLabelLayer(frame, vis) {
     m.el.style.transformOrigin = '50% 50%';
     m.el.style.transform = `rotate(${geometry.angle}deg) scale(${townLabelScale() / CS})`;
     const civType = minor ? '' : (id[5] || '');
-    const symbol = minor ? '' : civSymbolFor(civType);
+    const symbol = iconsOn && !minor ? civSymbolFor(civType) : '';
     const iconOffset = labelsOn ? height / 2 + 4 : 0;   // icon sits under its label, or at the territory center when labels are off
     const iconTargetX = x - Math.sin(geometry.angle * Math.PI / 180) * iconOffset;
     const iconTargetY = y + Math.cos(geometry.angle * Math.PI / 180) * iconOffset;
-    const iconTile = minor ? null : countryIconTile(tiles, iconTargetX, iconTargetY);
+    const iconTile = symbol ? countryIconTile(tiles, iconTargetX, iconTargetY) : null;
     const desiredIconSize = Math.max(hexW * 2.6, 32);
     const iconSize = iconTile ? Math.min(desiredIconSize, iconTile.maxIconSize) : 0;
     const iconCenterX = iconTile ? iconTile.x : iconTargetX;
@@ -9427,9 +9524,8 @@ function drawCountryLabelLayer(frame, vis) {
     m.op = 1;
     if (!fit) { m.el.style.opacity = '0'; m.geometry = ''; continue; }
     m.el.style.opacity = '1';
-    const geometryKey = `${width}|${height}|${(fit.lines || [text]).join('/')}|${size}|${CS}`;
+    const geometryKey = `${width}|${height}|${(fit.lines || [text]).join('/')}|${size}|${CS}|${showLabelArches}`;
     if (m.geometry !== geometryKey) {
-      m.el.textContent = '';
       m.el.style.display = 'flex';
       m.el.style.alignItems = 'center';
       m.el.style.justifyContent = 'center';
@@ -9456,26 +9552,13 @@ function drawCountryLabelLayer(frame, vis) {
       m.el.style.left = Math.round(x - width * CS / 2) + 'px';
       m.el.style.top = Math.round(y - height * CS / 2) + 'px';
       const lineList = fit.lines || [text];
-      const rowH = size * CS * 1.1;
       m.el.style.flexDirection = 'column';
-      m.el.style.lineHeight = (size * CS) + 'px';
-      for (const lineText of lineList) {
-        const row = document.createElement('div');
-        row.style.cssText = `display:flex;flex-direction:row;align-items:center;justify-content:center;white-space:nowrap;height:${lineList.length > 1 ? rowH : height * CS}px;`;
-        const characters = Array.from(lineText);
-        const rowWidth = characters.length * size * 0.68 * CS;
-        const arch = Math.min(height * 0.12, rowWidth * 0.035 / CS * 0.5 * 2) * CS;
-        for (let i = 0; i < characters.length; i++) {
-          const t = characters.length > 1 ? i / (characters.length - 1) : 0.5;
-          const glyph = document.createElement('span');
-          const characterWidth = size * 0.68 * CS;
-          const angle = characters.length > 1 ? Math.atan2(-4 * arch * (1 - 2 * t), Math.max(1, rowWidth)) * 180 / Math.PI : 0;
-          const rise = 4 * arch * t * (1 - t);
-          glyph.style.cssText = `position:relative;display:block;flex:0 0 ${characterWidth}px;visibility:visible;opacity:1;width:${characterWidth}px;height:${size * CS}px;transform:translateY(${-rise}px) rotate(${angle}deg);transform-origin:center center;text-align:center;line-height:${size * CS}px;font-family:sans-serif;font-size:${size * CS}px;font-weight:700;color:#fff4d2;-webkit-text-stroke:${CS}px #111;text-shadow:0 0 ${CS * 3}px #000,0 ${CS}px ${CS * 2}px #000;white-space:pre;`;
-          glyph.textContent = characters[i];
-          row.appendChild(glyph);
-        }
-        m.el.appendChild(row);
+      m.el.style.lineHeight = (size * CS * 1.1) + 'px';
+      const textKey = lineList.join('\n') + (showLabelArches ? `|arch:${width}|${height}|${size}|${CS}` : '');
+      if (m.text !== textKey) {
+        if (showLabelArches) setArchedLines(m.el, lineList, width * CS, height * CS, size * CS);
+        else setPlainLines(m.el, lineList);
+        m.text = textKey;
       }
       m.geometry = geometryKey;
     }
@@ -9498,8 +9581,7 @@ function countryTerritories(frame, vis) {
   }
   return territories;
 }
-// The map's country name for each major civilization with territory in `territories` (owner -> text). Civilizations sharing a
-// civ are told apart by where they are, so the names depend on which territories are given (e.g. only those seen in the fog).
+// Only colliding unqualified country names need geographic qualifiers.
 function majorCountryNames(frame, territories) {
   const identity = identityForPos();
   const settlementCounts = new Map(), capitals = new Map();
@@ -9516,7 +9598,8 @@ function majorCountryNames(frame, territories) {
     if (ownerMeta(owner).kind !== 'major') continue;
     const id = identity.get(owner);
     if (!id) continue;
-    duplicateEntries.push({ owner, identity: id, continents: territoryContinents(tiles), capital: capitals.get(owner) });
+    duplicateEntries.push({ owner, identity: id, cityCount: settlementCounts.get(owner) || 0,
+      continents: territoryContinents(tiles), capital: capitals.get(owner) });
   }
   const duplicateContexts = duplicateCivContexts(duplicateEntries);
   const names = new Map();
@@ -9566,6 +9649,57 @@ function setPlainLines(el, lines) {
     row.textContent = line;
     el.appendChild(row);
   }
+}
+function setArchedLines(el, lines, width, height, size) {
+  // Coherent cannot reliably render SVG textPath. Bound HTML runs instead of recreating an element per glyph.
+  el.textContent = '';
+  for (const line of lines) {
+    const row = document.createElement('div'), characters = Array.from(line);
+    const chunkSize = Math.max(1, Math.ceil(characters.length / 8));
+    const span = Math.min(width, characters.length * size * 0.68);
+    const arch = Math.min(size * 0.35, height * 0.12, span * 0.035);
+    row.style.cssText = `display:flex;justify-content:center;align-items:center;flex-shrink:0;width:100%;height:${size * 1.15}px;white-space:pre;text-shadow:none;-webkit-text-stroke:${size * 0.045}px #111;`;
+    for (let start = 0; start < characters.length; start += chunkSize) {
+      const chunk = characters.slice(start, start + chunkSize), t = (start + chunk.length / 2) / characters.length;
+      const angle = Math.atan2(-4 * arch * (1 - 2 * t), Math.max(1, span)) * 180 / Math.PI;
+      const run = document.createElement('span');
+      run.style.cssText = `display:block;flex:0 0 auto;white-space:pre;line-height:${size * 1.15}px;transform:translateY(${-4 * arch * t * (1 - t)}px) rotate(${angle}deg);transform-origin:center center;`;
+      run.textContent = chunk.join('');
+      row.appendChild(run);
+    }
+    el.appendChild(row);
+  }
+}
+const regionOutlineState = { path: null, geography: null, positions: null, vis: null, key: '' };
+function drawRegionBoundaries(geography, vis) {
+  const state = regionOutlineState;
+  if (!showRegionBoundaries || !geography) {
+    if (state.path) state.path.style.display = 'none';
+    return;
+  }
+  if (!state.path) {
+    state.path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    state.path.setAttribute('fill', 'none'); state.path.setAttribute('stroke', '#e7d3a6');
+    state.path.setAttribute('pointer-events', 'none'); regionBorderDom.el.appendChild(state.path);
+  }
+  const key = `${hexW}|${hexH}|${colShift}`;
+  if (state.geography !== geography || state.positions !== basePos || state.vis !== vis || state.key !== key) {
+    const edges = [];
+    for (const region of geography.regions) for (const edge of region.boundary || []) {
+      const { index, direction } = edge, neighbor = (neighborsByIndex[index] || [])[direction];
+      if (!basePos[index] || vis && vis[index] === 0) continue;
+      const other = geography.regionForTile.get(neighbor);
+      if (other !== undefined && other !== region.id && neighbor < index && (!vis || vis[neighbor] !== 0)) continue;
+      const vertices = EDGE_VERTS[direction];
+      edges.push({ a: hexVert(index, vertices[0]), b: hexVert(index, vertices[1]) });
+    }
+    state.path.setAttribute('d', connectedBoundaryPaths(edges).join(''));
+    state.geography = geography; state.positions = basePos; state.vis = vis; state.key = key;
+  }
+  state.path.setAttribute('stroke-width', String(Math.max(0.2, ps(1) / Math.max(viewZoom, 0.01))));
+  regionBorderDom.el.setAttribute('viewBox', `0 0 ${mapPxW} ${mapPxH}`);
+  regionBorderDom.el.setAttribute('width', String(mapPxW)); regionBorderDom.el.setAttribute('height', String(mapPxH));
+  state.path.style.display = 'block';
 }
 // Native-language constructible vocabulary per civ (keyed by normalized civ type, then lowercase English name),
 // with native words for "riverside" / "coastal" used as the hyper-local qualifier. Civs/names not listed fall
@@ -10216,6 +10350,113 @@ const CIV_OLIGARCH_LARGE_TEMPLATES = {
   SPAIN: 'The {adj} Crown',
   GREATBRITAIN: 'The {adj} Crown',
 };
+// Alternate roots affect presentation, never the canonical root used for geographic disambiguation.
+const CIV_COUNTRY_ROOTS = {
+  ROME: [['Latium', 'Latin'], ['Roma', 'Roman']],
+  GREECE: [['Hellas', 'Hellenic'], ['Hellenes', 'Hellenic']],
+  EGYPT: [['Kemet', 'Kemetic'], ['Egypt', 'Egyptian']],
+  PERSIA: [['Iran', 'Iranian'], ['Persis', 'Persian']],
+  HAN: [['Huaxia', 'Huaxia'], ['Zhongguo', 'Han']],
+  AKSUM: [['Aksum', 'Aksumite'], ['Axum', 'Axumite']],
+  KHMER: [['Kambuja', 'Kambujan'], ['Kambujadesa', 'Khmer']],
+  MAURYA: [['Magadha', 'Magadhan'], ['Bharata', 'Bharatiya']],
+  MAYA: [['Mayab', 'Maya'], ['Maya Lands', 'Mayan']],
+  MISSISSIPPIAN: [['Misi-ziibi', 'Mississippian'], ['Cahokia', 'Cahokian']],
+  CARTHAGE: [['Qart Hadasht', 'Punic'], ['Carthage', 'Carthaginian']],
+  ASSYRIA: [['Ashshur', 'Assyrian'], ['Assur', 'Assyrian']],
+  BABYLON: [['Babil', 'Babylonian'], ['Babylonia', 'Babylonian']],
+  GAUL: [['Gallia', 'Gallic'], ['Gaul', 'Gaulish']],
+  ABBASID: [['al-Abbasiyyun', 'Abbasid'], ['Abbasid Lands', 'Abbasid']],
+  CHOLA: [['Cola', 'Chola'], ['Cholamandalam', 'Tamil']],
+  MING: [['Da Ming', 'Ming'], ['Zhongguo', 'Ming']],
+  QING: [['Daicing Gurun', 'Manchu'], ['Da Qing', 'Qing']],
+  SONGHAI: [['Songhay', 'Songhay'], ['Gao', 'Songhai']],
+  MONGOLIA: [['Mongol Uls', 'Mongol'], ['Mongolia', 'Mongolian']],
+  NORMAN: [['Normandie', 'Norman'], ['Normandy', 'Norman']],
+  SPAIN: [['Espana', 'Spanish'], ['Hispania', 'Hispanic']],
+  INCA: [['Tawantinsuyu', 'Inca'], ['Tahuantinsuyo', 'Andean']],
+  SHAWNEE: [['Shaawanwaki', 'Shawnee'], ['Shawnee Lands', 'Shawnee']],
+  BUGANDA: [['Buganda', 'Ganda'], ['Baganda', 'Ganda']],
+  HAWAII: [['Hawaii', 'Hawaiian'], ['Hawaiian Islands', 'Hawaiian']],
+  MAJAPAHIT: [['Wilwatikta', 'Javanese'], ['Majapahit', 'Majapahit']],
+  TONGA: [['Tonga', 'Tongan'], ['Tongan Islands', 'Tongan']],
+  AMERICA: [['America', 'American'], ['United States', 'American']],
+  FRANCE: [['France', 'French'], ['Francia', 'Frankish']],
+  GREATBRITAIN: [['Britannia', 'Britannic'], ['Britain', 'British']],
+  ENGLAND: [['England', 'English'], ['Anglia', 'Anglian']],
+  PRUSSIA: [['Preussen', 'Prussian'], ['Prussia', 'Prussian']],
+  RUSSIA: [['Rus', 'Rus'], ['Rossiya', 'Russian']],
+  JAPAN: [['Nihon', 'Japanese'], ['Nippon', 'Yamato']],
+  MEXICO: [['Mexico', 'Mexican'], ['Anahuac', 'Anahuac']],
+  MUGHAL: [['Hindustan', 'Hindustani'], ['Hind', 'Mughal']],
+  NEPAL: [['Nepal', 'Nepali'], ['Nepala', 'Nepalese']],
+  OTTOMANS: [['Osmanli', 'Ottoman'], ['Devlet-i Aliyye', 'Osmanli']],
+  QAJAR: [['Iran', 'Iranian'], ['Qajar Persia', 'Qajar']],
+  SIAM: [['Siam', 'Siamese'], ['Prathet Thai', 'Thai']],
+  KOREA: [['Joseon', 'Joseon'], ['Hanguk', 'Korean']],
+  JOSEON: [['Joseon', 'Joseon'], ['Choson', 'Korean']],
+  GORYEO: [['Goryeo', 'Goryeo'], ['Koryo', 'Korean']],
+  SILLA: [['Silla', 'Silla'], ['Seorabeol', 'Sillan']],
+  ICELAND: [['Island', 'Icelandic'], ['Iceland', 'Icelandic']],
+  DAIVIET: [['Dai Viet', 'Viet'], ['Viet Nam', 'Vietnamese']],
+  BULGARIA: [['Bulgaria', 'Bulgarian'], ['Balgariya', 'Bulgar']],
+  POLAND: [['Polska', 'Polish'], ['Poland', 'Polish']],
+  INDONESIA: [['Nusantara', 'Indonesian'], ['Indonesia', 'Indonesian']],
+  BRAZIL: [['Brasil', 'Brazilian'], ['Brazil', 'Brazilian']],
+  SWEDEN: [['Sverige', 'Swedish'], ['Svea', 'Swedish']],
+  NETHERLANDS: [['Nederland', 'Dutch'], ['Netherlands', 'Netherlandish']],
+  PORTUGAL: [['Portugal', 'Portuguese'], ['Lusitania', 'Lusitanian']],
+};
+const CIV_COUNTRY_ROOT_ALIASES = {
+  ROMAN: 'ROME', GREEK: 'GREECE', EGYPTIAN: 'EGYPT', PERSIAN: 'PERSIA',
+  AKSUMITE: 'AKSUM', MAYAN: 'MAYA', CARTHAGINIAN: 'CARTHAGE', ASSYRIAN: 'ASSYRIA',
+  GAULS: 'GAUL', MONGOL: 'MONGOLIA', SPANISH: 'SPAIN', AMERICAN: 'AMERICA',
+  FRENCH: 'FRANCE', FRENCHEMPIRE: 'FRANCE', BRITAIN: 'GREATBRITAIN', BRITISH: 'GREATBRITAIN',
+  ENGLISH: 'ENGLAND', PRUSSIAN: 'PRUSSIA', RUSSIAN: 'RUSSIA', JAPANESE: 'JAPAN',
+  MEIJI: 'JAPAN', HEIAN: 'JAPAN', SENGOKU: 'JAPAN', MEXICAN: 'MEXICO',
+  OTTOMAN: 'OTTOMANS', THAI: 'SIAM', KOREAN: 'KOREA', VIETNAM: 'DAIVIET',
+  VIETNAMESE: 'DAIVIET', POLISH: 'POLAND', INDONESIAN: 'INDONESIA',
+  BRAZILIAN: 'BRAZIL', SWEDISH: 'SWEDEN', PORTUGUESE: 'PORTUGAL',
+};
+const COUNTRY_NAME_FORMATS = {
+  tribal: ['The {qual}{adj} Clans', 'The {qual}{adj} Peoples', 'The {qual}{adj} Tribal League',
+    'The {qual}Tribes of {native}', 'The {qual}{adj} Chiefdoms', 'The {qual}{adj} Tribal Council'],
+  oligarchy: ['The {qual}{adj} League', 'The {qual}Council of {native}', 'The {qual}{adj} Commonwealth',
+    'The {qual}{adj} Confederation', 'The {qual}League of the {plural}', 'The {qual}{adj} Compact',
+    'The {qual}{adj} Patriciate', 'The {qual}Assembly of {native}'],
+  despotism: ['The {qual}{adj} Principate', 'The {qual}Dominion of {native}', 'The {qual}{adj} Realm',
+    'The {qual}{adj} Autocracy', 'The {qual}State of {native}', 'The {qual}{adj} Dominion'],
+  imperial: ['The {qual}{adj} Empire', 'The {qual}Empire of {native}', 'The {qual}{adj} Imperium',
+    'The {qual}{adj} Hegemony', 'The {qual}Dominion of {native}', 'The {qual}{adj} Realm',
+    'The {qual}Empire of the {plural}', 'The {qual}{adj} Imperial Union'],
+  monarchy: ['The {qual}{adj} Kingdom', 'The {qual}Kingdom of {native}', 'The {qual}Kingdom of the {plural}',
+    'The {qual}{adj} Realm', 'The {qual}Crown of {native}', 'The {qual}{adj} Crownlands',
+    'The {qual}{adj} Principality', 'The {qual}Duchy of {native}', 'The {qual}{adj} Crown',
+    'The {qual}{adj} Dominion'],
+  republic: ['The {qual}{adj} Republic', 'The {qual}Republic of {native}', 'The {qual}Republic of the {plural}',
+    'The {qual}{adj} Commonwealth', 'The {qual}{adj} Federation', 'The {qual}Union of {native}',
+    'The {qual}{adj} Civic League', 'The {qual}{adj} Confederation', 'The {qual}Commonwealth of {native}',
+    'The {qual}{adj} Union'],
+  theocracy: ['The {qual}{adj} Theocracy', 'The {qual}{adj} Temple State', 'The {qual}Covenant of {native}',
+    'The {qual}{adj} Hierocracy', 'The {qual}Sanctuary of {native}', 'The {qual}{adj} Ecclesiarchy',
+    'The {qual}{adj} Temple Council', 'The {qual}{adj} Dominion'],
+  communal: ['The {qual}{adj} Commune', 'The {qual}Union of {native}', 'The {qual}{adj} Cooperative',
+    'The {qual}{adj} Communal Federation', 'The {qual}Commonwealth of the {plural}',
+    'The {qual}{adj} Republic'],
+  authoritarian: ['The {qual}{adj} State', 'The {qual}Directorate of {native}', 'The {qual}{adj} National Union',
+    'The {qual}{adj} Authority', 'The {qual}State of {native}', 'The {qual}{adj} Directorate'],
+};
+const COUNTRY_NAME_QUALIFIERS = {
+  tribal: ['', '', 'United', 'Free', 'Ancestral', 'Allied', 'Kindred', 'Ancient', 'Sovereign', 'Common'],
+  oligarchy: ['', '', 'United', 'Free', 'Allied', 'Civic', 'Patrician', 'Merchant', 'Chartered', 'Sovereign', 'Concordant'],
+  despotism: ['', '', 'Sovereign', 'Great', 'August', 'Grand', 'High', 'United', 'Illustrious', 'Exalted'],
+  imperial: ['', '', 'Great', 'Imperial', 'August', 'Sovereign', 'United', 'Grand', 'Exalted', 'Illustrious'],
+  monarchy: ['', '', 'Royal', 'Crowned', 'United', 'Sovereign', 'High', 'Grand', 'Illustrious', 'August', 'Great', 'Exalted', 'Serene'],
+  republic: ['', '', 'Free', 'United', 'Federal', 'Federated', 'Common', 'Sovereign', 'Popular', 'Civic', 'Constitutional', 'Associated', 'Concordant'],
+  theocracy: ['', '', 'Holy', 'Sacred', 'Divine', 'Consecrated', 'Blessed', 'Devout', 'Hallowed', 'Celestial', 'Sovereign'],
+  communal: ['', '', 'United', 'Popular', "Workers'", 'Communal', 'Federal', 'Collective', 'Social'],
+  authoritarian: ['', '', 'National', 'United', 'Central', 'Sovereign', 'Unified', 'Consolidated'],
+};
 // Capital-city adjectives for a polity: Ravenna -> Ravennan, Antium -> Antian, Corinth -> Corinthian.
 function cityAdjective(name) {
   const words = String(name || '').replace(/\s*-\s*\d+\s*$/, '').trim().split(/\s+/).filter(Boolean);
@@ -10255,7 +10496,7 @@ function normalizeCountryName(name) {
   label = label.replace(/\b(Dynasty|Dynasties)(?:\s+\1\b)+$/gi, '$1');
   return label.replace(/^((?:The\s+)?(Kingdom|Republic|Empire|Confederacy|Confederation)\s+of\s+.+?)\s+\2s?$/i, '$1');
 }
-function countryName(identity, cityCount = 0, duplicateContext = null, eraKey = replayEraKey(), capitalName = '', capitalPopulation) {
+function countryName(identity, cityCount = 0, duplicateContext = null, eraKey = replayEraKey(), capitalName = '', capitalPopulation, owner = null) {
   const civ = nativeCivName(identity, eraKey);
   const civKey = normalizedCivKey(identity[5]);
   const cleanCapital = String(capitalName || '').replace(/\s*-\s*\d+\s*$/, '').trim();
@@ -10308,8 +10549,49 @@ function countryName(identity, cityCount = 0, duplicateContext = null, eraKey = 
   else if (/monarch/i.test(government)) label = `The ${polityAdjective} Kingdom`;
   else if (/republic/i.test(government)) label = `The ${polityAdjective} Republic`;
   else label = `The ${polityAdjective} ${government}`;
+  const preState = !government || /^(?:chiefdom|empire)$/i.test(government);
+  const family = preState ? 'tribal'
+    : /oligarch/i.test(government) ? 'oligarchy'
+    : despotic ? cityCount > 3 ? 'imperial' : 'despotism'
+    : /monarch/i.test(government) ? 'monarchy'
+    : /republic|democra/i.test(government) ? 'republic'
+    : /theocra/i.test(government) ? 'theocracy'
+    : /communis/i.test(government) ? 'communal'
+    : /fascis|dictator|autocra|authoritarian|totalitarian/i.test(government) ? 'authoritarian' : '';
+  const historicalForm = (preState && CIV_PREGOV_TEMPLATES[civKey])
+    || (/oligarch|despot/i.test(government) && (
+      /^(HAN|MING|QING|JOSEON|GORYEO|SILLA)$/.test(civKey)
+      || (capitalBased && cityCount <= 1)
+      || (/oligarch/i.test(government) && /^(GREECE|GREEK)$/.test(civKey)
+        && cityCount > 3 && /^(athens|sparta)$/i.test(cleanCapital))));
+  const formats = COUNTRY_NAME_FORMATS[family];
+  if (formats && !historicalForm && !/^the\b/i.test(adjective)) {
+    const seed = JSON.stringify([owner, civKey, identity[1], identity[2], eraKey, cleanCapital]);
+    const size = cityCount > 3 ? 4 : cityCount > 1 ? 2 : 1;
+    const format = formats[hashString(`${seed}|format|${family}|${size}`) % (formats.length + 1)];
+    if (format) {
+      const roots = CIV_COUNTRY_ROOTS[CIV_COUNTRY_ROOT_ALIASES[civKey] || civKey];
+      const root = roots && !eraName && !(capitalBased && capital && capital.toLowerCase() !== defaultCapital.toLowerCase())
+        ? roots[hashString(`${seed}|root`) % (roots.length + 1)] : null;
+      const native = String(root ? root[0] : capitalBased && capital && capital.toLowerCase() !== defaultCapital.toLowerCase() ? capital : civ)
+        .replace(/^the\s+/i, '');
+      const adj = root ? root[1] : adjective;
+      const loc = locationAdjective ? locationAdjective + ' ' : '';
+      const values = { adj: loc + adj, native: loc + native, plural: loc + pluralizeCivAdjective(adj), qual: '' };
+      const unqualified = fillPolityTemplate(format, values);
+      const qualifiers = COUNTRY_NAME_QUALIFIERS[family].filter(word =>
+        !word || !new RegExp(`\\b${word}\\b`, 'i').test(unqualified));
+      const qualifier = qualifiers[hashString(`${seed}|qualifier|${family}`) % qualifiers.length];
+      values.qual = qualifier ? qualifier + ' ' : '';
+      label = fillPolityTemplate(format, values);
+    }
+  }
   if (/\bEmpire\b/i.test(label) && !(despotic && cityCount > 3)) label = label.replace(/\bEmpire\b/gi, 'Kingdom');
   if (locationAdjective) {
+    if (!label.toLowerCase().includes(locationAdjective.toLowerCase())) {
+      label = label.replace(/^(The\s+)?(Great(?:er)?\s+)?/i, (_, article, greatness) =>
+        `${article || (greatness ? '' : 'The ')}${greatness || ''}${locationAdjective} `);
+    }
     const noun = (label.match(/\b(Kingdom|Republic|Empire|Confederation)$/) || [])[1];
     if (noun && label === `The ${polityAdjective} ${noun}`) {
       let style = 0;
@@ -10323,14 +10605,22 @@ function countryName(identity, cityCount = 0, duplicateContext = null, eraKey = 
 function rememberCountryName(owner, identity, cityCount, duplicateContext, eraKey, capitalName, capitalPopulation) {
   const size = Math.min(cityCount, 4);
   const capitalSize = Number.isFinite(capitalPopulation) ? capitalPopulation <= 2 ? 'small' : 'grown' : null;
-  const key = 'country5:' + JSON.stringify([owner, identity[1], identity[2], identity[5], identity[7], size,
+  const key = 'country8:' + JSON.stringify([owner, identity[1], identity[2], identity[5], identity[7], size,
     duplicateContext || null, eraKey, capitalName, capitalSize]);
-  return rememberName(key, countryName(identity, cityCount, duplicateContext, eraKey, capitalName, capitalPopulation));
+  return rememberName(key, countryName(identity, cityCount, duplicateContext, eraKey, capitalName, capitalPopulation, owner));
 }
 const CIV_SINGULAR_POLITY_NAMES = { CHOLA: 'Chola', KOREA: 'Joseon', KOREAN: 'Joseon' };
 const CONTINENT_DEMONYMS = { ANTARCTICA: 'Antarctic' };
-function duplicateCivKey(identity) {
-  return normalizedCivKey(identity[5] || identity[1] || identity[2]);
+function duplicateCivKey(entry, eraKey) {
+  const capital = entry.capital;
+  const identity = entry.identity, civKey = normalizedCivKey(identity[5]);
+  const capitalDerived = /^(ROME|ROMAN|GREECE|GREEK)$/.test(civKey);
+  const capitalName = capital && capital.name || '';
+  if (capitalName && entry.cityCount === 1 && capital.population <= 2) return `capital:${capitalName.toLowerCase()}`;
+  if (capitalDerived && capitalName && !/^(Rome|Athens)$/i.test(capitalName)) return `root:${cityAdjective(capitalName).toLowerCase()}`;
+  const eraName = eraNameForCiv(civKey, eraKey);
+  const root = CIV_SINGULAR_POLITY_NAMES[civKey] || (eraName && eraName.adjective) || identity[2] || nativeCivName(identity, eraKey);
+  return `root:${String(root).replace(/^(?:(?:the|great|greater|lesser)\s+)+/i, '').toLowerCase()}`;
 }
 function continentTypeForTile(index) {
   if (continentByTile.has(index)) return continentByTile.get(index);
@@ -10414,10 +10704,10 @@ function territoryContinents(tiles) {
 function continentOrder(entries, axis) {
   return entries.slice().sort((a, b) => a[axis] - b[axis] || a.owner - b.owner);
 }
-function duplicateCivContexts(entries) {
+function duplicateCivContexts(entries, eraKey = replayEraKey()) {
   const groups = new Map(), contexts = new Map();
   for (const entry of entries) {
-    const key = duplicateCivKey(entry.identity);
+    const key = duplicateCivKey(entry, eraKey);
     if (!key) continue;
     let group = groups.get(key);
     if (!group) { group = []; groups.set(key, group); }
@@ -10475,7 +10765,7 @@ function pluralizeCivAdjective(value) {
       || /^(khmer|han|qing|ming|tang|zhou|shang|joseon|haudenosaunee|iroquois|aksum|majapahit)$/i.test(adjective)) return adjective;
   if (/^(gaulish|gallic)$/i.test(adjective)) return 'Gauls';
   // Nationality adjectives used collectively without an "s": the Japanese, Spanish, French, Dutch, Welsh, Irish...
-  if (/(ese|ish|ch)$/i.test(adjective)) return adjective;
+  if (/(ese|ish|ch|sh)$/i.test(adjective)) return adjective;
   if (/[^aeiou]y$/i.test(adjective)) return adjective.slice(0, -1) + 'ies';
   if (/(x|z)$/i.test(adjective)) return adjective + 'es';
   return adjective + 's';
@@ -10483,7 +10773,7 @@ function pluralizeCivAdjective(value) {
 const CIV_UI_MAIN_MENU_SELECTOR = 'fxs-main-menu, [id*="main-menu"], [class*="main-menu"], [data-screen-name*="main-menu"]';
 const CIV_UI_SAVE_LOAD_SELECTOR = 'fxs-save-load-screen, fxs-screen-save-load, fxs-save-screen, fxs-load-screen, [id*="save-load"], [class*="save-load"], [id*="save-screen"], [class*="save-screen"], [id*="load-screen"], [class*="load-screen"], [data-screen-name*="save"], [data-screen-name*="load"]';
 const CIV_UI_ATTRIBUTES = ['alt', 'aria-description', 'aria-label', 'caption', 'data-tooltip-content', 'data-tooltip-text', 'placeholder', 'title', 'value'];
-const CIV_POLITY_SUFFIX = '(?:Empire|Kingdom|Republic|Monarchy|Confederation|Commonwealth|Sultanate|Caliphate|Dynasty|Federation|Principality)';
+const CIV_POLITY_SUFFIX = '(?:Empire|Kingdom|Republic|Monarchy|Confederation|Commonwealth|Sultanate|Caliphate|Dynasty|Federation|Principality|Crownlands|Crown|Realm|Duchy|Dominion|League|Council|Compact|Patriciate|Assembly|Principate|Autocracy|Imperium|Hegemony|Union|Theocracy|Temple State|Temple Council|Hierocracy|Sanctuary|Ecclesiarchy|Covenant|Commune|Cooperative|State|Directorate|Authority)';
 let civUiObserver = null;
 function localizedCivName(value) {
   if (typeof value !== 'string' || !value) return '';
@@ -10553,7 +10843,7 @@ function civUiReplacements() {
     const endonym = CIV_ENDONYMS[def.type] || CIV_ENDONYMS[normalizedCivKey(def.name)] || def.name;
     replacements.push({ type: def.type, term: def.name, original: def.name, endonym, adjectiveName: def.adjective, adjective: false });
     if (def.adjective && normalizedCivKey(def.adjective) !== normalizedCivKey(def.name)) {
-      replacements.push({ type: def.type, term: def.adjective, original: def.name, adjective: true });
+      replacements.push({ type: def.type, term: def.adjective, original: def.name, adjectiveName: def.adjective, adjective: true });
     }
   }
   replacements.sort((a, b) => b.term.length - a.term.length);
@@ -10586,24 +10876,31 @@ function insideParentheses(text, index) {
   }
   return depth > 0;
 }
-function translateCivUiText(text, replacements, saveLoad = false) {
-  let result = text;
+function translateCivUiText(text, replacements, saveLoad = false, names = new Map()) {
+  const matches = [];
   for (const entry of replacements) {
-    const original = entry.original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const adjectivePlural = entry.adjective ? 's?' : '';
-    const suffixPattern = entry.adjective ? `(?:\\s+${CIV_POLITY_SUFFIX})?` : '';
-    const pattern = new RegExp(`\\b${entry.term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}${adjectivePlural}\\b${suffixPattern}(?:\\s*\\(${original}\\))?`, 'gi');
-    result = result.replace(pattern, (...args) => {
-      const offset = args[1];
-      const source = args[2];
-      if (insideParentheses(source, offset)) return args[0];
-      if (saveLoad) return entry.original;
-      const generatedName = currentCivUiName(entry);
-      const preserveArticle = /^the\s+/i.test(source.slice(0, offset)) && /^the\s+/i.test(generatedName);
-      return preserveArticle ? generatedName.replace(/^the\s+/i, '') : generatedName;
-    });
+    if (!entry.pattern) {
+      const original = entry.original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const adjectivePlural = entry.adjective ? 's?' : '';
+      const suffixPattern = entry.adjective ? `(?:\\s+(?:(?:Classical|Democratic|Federal|Constitutional)\\s+)?${CIV_POLITY_SUFFIX})?` : '';
+      entry.pattern = new RegExp(`\\b(?:the\\s+)*${entry.term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}${adjectivePlural}\\b${suffixPattern}(?:\\s+Civilization\\b)*(?:\\s*\\(${original}\\))?(?:\\s+Civilization\\b)*`, 'gi');
+    }
+    entry.pattern.lastIndex = 0;
+    let match;
+    while ((match = entry.pattern.exec(text)) !== null) {
+      if (!insideParentheses(text, match.index)) matches.push({ start: match.index, end: entry.pattern.lastIndex, entry });
+    }
   }
-  return result;
+  matches.sort((a, b) => a.start - b.start || b.end - a.end);
+  let end = 0, result = '';
+  for (const match of matches) {
+    if (match.start < end) continue;
+    const entry = match.entry;
+    if (!saveLoad && !names.has(entry.type)) names.set(entry.type, currentCivUiName(entry));
+    result += text.slice(end, match.start) + (saveLoad ? entry.original : names.get(entry.type));
+    end = match.end;
+  }
+  return result + text.slice(end);
 }
 function installCivNameUiOverrides() {
   if (civUiObserver) return;
@@ -10618,6 +10915,7 @@ function installCivNameUiOverrides() {
   if (!replacements.length) return;
   const sourceText = new WeakMap(), lastTextWrite = new WeakMap();
   const sourceAttributes = new WeakMap(), lastAttributeWrites = new WeakMap(), observedRoots = new WeakSet();
+  const scopeModes = new WeakMap(), names = new Map();
   const options = {
     childList: true,
     subtree: true,
@@ -10625,8 +10923,9 @@ function installCivNameUiOverrides() {
     attributes: true,
     attributeFilter: [...CIV_UI_ATTRIBUTES, 'class', 'id', 'data-screen-name'],
   };
-  const rewriteText = node => {
+  const rewriteText = (node, force = false) => {
     if (!node || !node.nodeValue) return;
+    if (!force && lastTextWrite.get(node) === node.nodeValue) return;
     const mode = civUiMode(node);
     if (mode === 'excluded') return;
     let source = sourceText.get(node);
@@ -10635,13 +10934,13 @@ function installCivNameUiOverrides() {
       sourceText.set(node, source);
     }
     if (!source) return;
-    const rewritten = translateCivUiText(source, replacements, mode === 'save-load');
+    const rewritten = translateCivUiText(source, replacements, mode === 'save-load', names);
     if (rewritten !== node.nodeValue) {
       lastTextWrite.set(node, rewritten);
       node.nodeValue = rewritten;
     }
   };
-  const rewriteAttributes = el => {
+  const rewriteAttributes = (el, force = false) => {
     if (!el) return;
     const mode = civUiMode(el);
     if (mode === 'excluded') return;
@@ -10655,10 +10954,11 @@ function installCivNameUiOverrides() {
     for (const name of CIV_UI_ATTRIBUTES) {
       const current = typeof el.getAttribute === 'function' ? el.getAttribute(name) : null;
       if (!current) continue;
+      if (!force && written[name] === current) continue;
       if (written[name] !== current) sources[name] = current;
       const source = sources[name];
       if (!source) continue;
-      const rewritten = translateCivUiText(source, replacements, mode === 'save-load');
+      const rewritten = translateCivUiText(source, replacements, mode === 'save-load', names);
       if (rewritten !== current) {
         written[name] = rewritten;
         el.setAttribute(name, rewritten);
@@ -10672,27 +10972,33 @@ function installCivNameUiOverrides() {
     scan(root);
   };
   const scan = root => {
-    if (root.nodeType === 3) { rewriteText(root); return; }
+    if (root.nodeType === 3) { rewriteText(root, true); return; }
     if (root.nodeType !== 1 && root.nodeType !== 9 && root.nodeType !== 11) return;
     if (root.nodeType === 1) {
       if (isMapDom(root)) return;
-      try { rewriteAttributes(root); } catch (e) { err(`civilization UI attribute rewrite failed: ${e}`); }
+      scopeModes.set(root, civUiMode(root));
+      try { rewriteAttributes(root, true); } catch (e) { err(`civilization UI attribute rewrite failed: ${e}`); }
       if (root.shadowRoot) observeRoot(root.shadowRoot);
     }
     for (const child of root.childNodes) scan(child);
   };
   civUiObserver = new MutationObserver(records => {
+    names.clear();
     for (const record of records) {
       if (record.type === 'characterData') rewriteText(record.target);
       else if (record.type === 'attributes') {
-        try { rewriteAttributes(record.target); } catch (e) { err(`civilization UI attribute rewrite failed: ${e}`); }
-        if (record.attributeName === 'class' || record.attributeName === 'id' || record.attributeName === 'data-screen-name') scan(record.target);
+        if (record.attributeName === 'class' || record.attributeName === 'id' || record.attributeName === 'data-screen-name') {
+          const mode = civUiMode(record.target);
+          if (scopeModes.get(record.target) !== mode) scan(record.target);
+        } else {
+          try { rewriteAttributes(record.target); } catch (e) { err(`civilization UI attribute rewrite failed: ${e}`); }
+        }
       }
       else for (const node of record.addedNodes) scan(node);
     }
   });
   observeRoot(document.body);
-  civUiRescan = () => scan(document.body);
+  civUiRescan = () => { names.clear(); scan(document.body); };
 }
 // Re-translates every civ name already on screen, so names follow government and city-count changes at turn change.
 let civUiRescan = null, civUiRescanTimer = 0;
@@ -10968,6 +11274,7 @@ function rememberMiniMapOptions() {
   miniMapSavedOptions = {
     showTerritory, showBorders, showCountryLabels, showCivIcons, showTradeRoutes, showSettlements, showBuildingLabels, showRegionLabels, showRegionBorders,
     showGeographicLabels, showRiverNames, showNaturalFeatures, showResources, showUnits, showWonders, fogMode,
+    showPreviousMovement, showRegionBoundaries, showLabelArches,
   };
   showBuildingLabels = false;
   showNaturalFeatures = true;
@@ -10984,11 +11291,13 @@ function rememberMiniMapOptions() {
   showResources = true;
   showUnits = true;
   showWonders = true;
+  showPreviousMovement = false; showRegionBoundaries = false; showLabelArches = false;
 }
 function restoreMiniMapOptions() {
   if (!miniMapSavedOptions) return;
   ({ showTerritory, showBorders, showCountryLabels, showCivIcons, showTradeRoutes, showSettlements, showBuildingLabels, showRegionLabels, showRegionBorders,
-    showGeographicLabels, showRiverNames, showNaturalFeatures, showResources, showUnits, showWonders, fogMode } = miniMapSavedOptions);
+    showGeographicLabels, showRiverNames, showNaturalFeatures, showResources, showUnits, showWonders, fogMode,
+    showPreviousMovement, showRegionBoundaries, showLabelArches } = miniMapSavedOptions);
   miniMapSavedOptions = null;
 }
 function resetMapOptions() {
@@ -11006,6 +11315,7 @@ function resetMapOptions() {
   showBuildingLabels = DEFAULT_MAP_OPTIONS.buildingLabels;
   showRegionLabels = DEFAULT_MAP_OPTIONS.regionLabels;
   showRegionBorders = DEFAULT_MAP_OPTIONS.regionBorders;
+  showPreviousMovement = DEFAULT_MAP_OPTIONS.previousMovement; showRegionBoundaries = DEFAULT_MAP_OPTIONS.regionBoundaries; showLabelArches = DEFAULT_MAP_OPTIONS.labelArches;
   showGeographicLabels = DEFAULT_MAP_OPTIONS.geographicLabels;
   showRiverNames = DEFAULT_MAP_OPTIONS.riverNames;
   showNaturalFeatures = DEFAULT_MAP_OPTIONS.naturalFeatures;
@@ -11016,7 +11326,8 @@ function resetMapOptions() {
     territory: showTerritory, borders: showBorders, units: showUnits, wonders: showWonders,
     countryLabels: showCountryLabels, civIcons: showCivIcons, tradeRoutes: showTradeRoutes,
     settlements: showSettlements, buildingLabels: showBuildingLabels, regionLabels: showRegionLabels, regionBorders: showRegionBorders,
-    riverNames: showRiverNames,     townLabels: showTownLabels, naturalFeatures: showNaturalFeatures, resources: showResources, fog: fogMode, fogFootprint: showFogFootprint, ...townElementVisibility,
+    previousMovement: showPreviousMovement, regionBoundaries: showRegionBoundaries, labelArches: showLabelArches,
+    geographicLabels: showGeographicLabels, riverNames: showRiverNames,     townLabels: showTownLabels, naturalFeatures: showNaturalFeatures, resources: showResources, fog: fogMode, fogFootprint: showFogFootprint, ...townElementVisibility,
   };
   if (els.mapToggleCheckboxes) {
     suppressFog = true;
@@ -11439,6 +11750,19 @@ function onRawMapInput(name, status, x, y) {
 }
 function mapGamepadAction(event) {
   if (!mapVisible || !event.detail) return;
+  if (event.detail.name === 'mousebutton-left' && typeof unitIconPress !== 'undefined') {
+    if (event.detail.status === InputActionStatuses.START) {
+      if (typeof unitIconPress !== 'undefined' && !(unitIconPress.domDown && !unitIconPress.nativeDown && Date.now() - unitIconPress.time < 800)) unitIconPress = { time: -Infinity };
+      else {
+        unitIconPress.nativeDown = true;
+        event.preventDefault(); event.stopImmediatePropagation(); return;
+      }
+    } else if (typeof unitIconPress !== 'undefined' && Date.now() - unitIconPress.time < 800 &&
+        (unitIconPress.domDown || unitIconPress.nativeDown)) {
+      if (event.detail.status === InputActionStatuses.FINISH) unitIconPress.nativeDown = false;
+      event.preventDefault(); event.stopImmediatePropagation(); return;
+    }
+  }
   if (LeaderModelManager.isLeaderShowing) return;
   // Placement itself opens a city overlay; translate its map clicks before the generic overlay guard.
   if (settlementExpansionActive() || mapPlotSelectionActive()) { prepareExpansionSelection(event); return; }
@@ -12079,7 +12403,8 @@ function tooltipForHex(i) {
 // We render OUR OWN tooltip rather than the game's: the native controller keys on the element under the
 // cursor, so with our single canvas it caches content and add/remove of data-tooltip-content flashes it
 // hide/show. Our div updates content IN PLACE (no flash) and follows the cursor, styled to look native.
-function ensureTip() {
+function ensureTip(native = false) {
+  if (!native) clearMapPlotTip();
   if (!els.tip) {
     els.tip = document.createElement('div'); els.tip.className = 'font-body';
     // font-size matches the native tooltip (rem, so it scales with the game's UI, not our px scale).
@@ -12087,6 +12412,43 @@ function ensureTip() {
     document.body.appendChild(els.tip);
   }
   return els.tip;
+}
+const mapPlotTip = { dispose: null, key: '', nativeVisible: null };
+function syncNativePlotTooltip() {
+  if (mapVisible) {
+    if (mapPlotTip.nativeVisible === null) mapPlotTip.nativeVisible = IsPlotTooltipVisible();
+    SetIsPlotTooltipVisible(false);
+  } else if (mapPlotTip.nativeVisible !== null) {
+    SetIsPlotTooltipVisible(mapPlotTip.nativeVisible); mapPlotTip.nativeVisible = null;
+    clearMapPlotTip();
+  }
+}
+function clearMapPlotTip() {
+  if (mapPlotTip.dispose) mapPlotTip.dispose();
+  mapPlotTip.dispose = null; mapPlotTip.key = '';
+}
+function showMapPlotTip(index, event) {
+  if (index < 0 || !frames.length || pos !== frames.length - 1) return false;
+  const coord = GameplayMap.getLocationFromIndex(index);
+  const visibility = GameplayMap.getRevealedState(GameContext.localObserverID, coord.x, coord.y);
+  if (visibility === 0) { hideTip(); return true; }
+  const tip = ensureTip(true), key = `${index}|${manifest && manifest.rev}|${Game.turn}`;
+  if (mapPlotTip.key !== key) {
+    clearMapPlotTip(); tip.textContent = '';
+    const cityID = GameplayMap.getOwningCityFromXY(coord.x, coord.y);
+    try {
+      mapPlotTip.dispose = render(() => createComponent(PlotTooltipContent, {
+        plotCoord: coord, owningCity: cityID ? Cities.get(cityID) : null,
+      }), tip);
+      mapPlotTip.key = key;
+    } catch (error) {
+      clearMapPlotTip(); tip.style.display = 'none';
+      err(`map plot tooltip failed for ${index}: ${error}`);
+      return true;
+    }
+  }
+  tip.style.display = 'block'; positionTip(tip, event);
+  return true;
 }
 // Lines prefixed with RAW_MARK are already stylized HTML (e.g. the yields line's icon markup) and must
 // bypass escaping; all other lines are plain text and get HTML-escaped.
@@ -12556,7 +12918,7 @@ function popCivInfo(owner, stats) {
     const identity = identityForPos().get(owner), s = stats.get(owner);
     let name = '';
     if (identity) {
-      try { name = countryName(identity, s ? s.count : 0, null, replayEraKey(), s ? s.capital : '', s && s.capitalPopulation >= 0 ? s.capitalPopulation : undefined); }
+      try { name = countryName(identity, s ? s.count : 0, null, replayEraKey(), s ? s.capital : '', s && s.capitalPopulation >= 0 ? s.capitalPopulation : undefined, owner); }
       catch (e) { name = ''; }
     }
     return { id: 'o' + owner, name: name || civAdjective(owner) };
@@ -14522,19 +14884,65 @@ function civTimelineEvents(state = civTimelineState, first = 0, owner = cmdLocal
   if (frames[target]) current.observe(target, frames[target], readTurnCached(target), readPlayersRec(target), discoveryName, civTimelineWarName, civTimelineExtras(target));
   return current.events;
 }
-function worldTimelineRowsHtml(events, start) {
-  const rows = events.slice(start, start + 40);
-  if (!rows.length) return '<div style="padding:12px;">No world events recorded yet.</div>';
-  return '<div role="list" aria-label="World events ruler" style="display:flex;flex-direction:row;align-items:stretch;width:100%;min-width:100%;">' + rows.map(event => {
-    const detail = escHtml(`${event.text}\nRecorded turn ${event.turn + 1}. ${event.details || ''}`).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    const description = escHtml(event.details || event.text).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    return `<div role="listitem" style="flex:0 0 ${ps(220)}px;width:${ps(220)}px;box-sizing:border-box;border-bottom:1px solid #9d8760;">`
-      + `<div role="button" tabindex="0" data-history-turn="${event.turn}" data-tooltip-content="${detail}" title="${detail}" aria-label="${detail}" style="position:relative;height:${ps(128)}px;padding:${ps(8)}px ${ps(12)}px ${ps(18)}px;box-sizing:border-box;cursor:pointer;border-left:1px solid rgba(157,135,96,0.2);">`
-      + `<strong style="display:block;color:#e5d2ac;font:${ps(12)}px Title,serif;margin-bottom:${ps(4)}px;">${escHtml(event.date || '')}</strong>`
-      + `<span style="display:block;max-height:${ps(48)}px;overflow:hidden;white-space:normal;color:#d4deeb;font:${ps(12)}px sans-serif;line-height:${ps(16)}px;">${escHtml(event.text)}</span>`
-      + `<span tabindex="0" data-tooltip-content="${description}" title="${description}" aria-label="${description}" style="display:block;margin-top:${ps(6)}px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:#b8aa91;font:${ps(11)}px sans-serif;line-height:${ps(16)}px;">${escHtml(event.details || event.text)}</span>`
-      + `<span aria-hidden="true" style="position:absolute;left:${ps(12)}px;bottom:0;height:${ps(13)}px;border-left:2px solid #e5d2ac;"></span></div></div>`;
+function worldTimelineRowsHtml(events, start, expanded = new Set()) {
+  return datedTimelineRowsHtml(events, start, 40, expanded, true);
+}
+function datedTimelineRowsHtml(events, start, count, expanded, horizontal) {
+  const groups = groupTimelineEvents(events).slice(start, start + Math.min(40, count));
+  const escape = value => escHtml(String(value)).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  if (!groups.length) return '<div>No events recorded yet.</div>';
+  return `<div role="list" aria-label="Dated events" style="display:flex;flex-direction:${horizontal ? 'row' : 'column'};align-items:stretch;">` + groups.map(group => {
+    const open = expanded.has(group.key);
+    return `<div role="listitem" style="${horizontal ? `flex:0 0 ${ps(220)}px;width:${ps(220)}px;` : ''}box-sizing:border-box;border:1px solid #9d8760;padding:${ps(6)}px;">`
+      + `<button type="button" data-history-group="${escape(group.key)}" aria-expanded="${open}" style="width:100%;text-align:left;white-space:normal;color:#e5d2ac;background:#172031;border:0;padding:${ps(6)}px;cursor:pointer;">${open ? '-' : '+'} ${escape(group.date || 'Recorded events')} (${group.events.length})</button>`
+      + `<div style="display:${open ? 'block' : 'none'};">` + group.events.map(event => {
+        const detail = `${event.text}\n${Number.isInteger(event.turn) ? `Recorded turn ${event.turn + 1}. ` : ''}${event.details || ''}`;
+        const plots = (event.plots || []).filter(Number.isInteger).join(',');
+        return `<div tabindex="0" role="button" ${Number.isInteger(event.turn) ? `data-history-turn="${event.turn}"` : ''} data-history-plots="${plots}" data-tooltip-content="${escape(detail)}" title="${escape(detail)}" style="padding:${ps(8)}px;border-top:2px solid #6a88bb;white-space:normal;overflow-wrap:break-word;cursor:pointer;">`
+          + `<strong style="display:block;color:#d4deeb;">${escape(event.text)}</strong>`
+          + `<div style="display:block;white-space:pre-wrap;color:#b8aa91;margin-top:${ps(6)}px;line-height:1.4;">${escape(event.details || event.text)}</div></div>`;
+      }).join('') + '</div></div>';
   }).join('') + '</div>';
+}
+function activateTimelineEvent(event, state, refresh) {
+  if (event.button || event.type === 'keydown' && (event.repeat || !['Enter', ' '].includes(event.key))) return;
+  const group = event.target.closest('[data-history-group]'), target = event.target.closest('[data-history-turn]');
+  if (!group && !target) return;
+  event.preventDefault(); event.stopPropagation();
+  if (event.type === 'click' && state.releaseClick) { state.releaseClick = false; return; }
+  state.releaseClick = event.type === 'mouseup';
+  if (group) {
+    highlightChronicleEvent(null);
+    if (!state.expanded) state.expanded = new Set();
+    const key = group.getAttribute('data-history-group');
+    if (state.expanded.has(key)) state.expanded.delete(key); else state.expanded.add(key);
+    state.renderKey = ''; state.html = ''; refresh(); return;
+  }
+  highlightChronicleEvent(null); pause(); goToIndex(Number(target.getAttribute('data-history-turn')));
+}
+let chronicleHighlight = null;
+function highlightChronicleEvent(event) {
+  const target = event && event.target.closest('[data-history-plots]');
+  const plots = target ? target.getAttribute('data-history-plots').split(',').filter(Boolean).map(Number) : [];
+  const vis = fogMode ? visForPos() : null, paths = [];
+  if (mapVisible) for (const index of plots.slice(0, 1170)) {
+    if (!Number.isInteger(index) || !basePos[index] || vis && vis[index] === 0) continue;
+    let path = '';
+    for (let k = 0; k < 6; k++) {
+      const vertex = hexVert(index, k), point = mapToScreen(vertex[0], vertex[1]);
+      path += `${k ? 'L' : 'M'}${point.x.toFixed(2)},${point.y.toFixed(2)}`;
+    }
+    paths.push(path + 'Z');
+  }
+  if (!paths.length) { if (chronicleHighlight) chronicleHighlight.svg.style.display = 'none'; return; }
+  if (!chronicleHighlight) {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'), path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    svg.classList.add('anthro-map-render-layer');
+    svg.style.cssText = 'position:fixed;left:0;top:0;pointer-events:none;z-index:100044;';
+    path.setAttribute('fill', 'rgba(255,215,100,0.28)'); path.setAttribute('stroke', '#ffd764'); path.setAttribute('stroke-width', String(ps(3)));
+    svg.appendChild(path); document.body.appendChild(svg); chronicleHighlight = { svg, path };
+  }
+  sizeScreenSvg(chronicleHighlight.svg); chronicleHighlight.path.setAttribute('d', paths.join('')); chronicleHighlight.svg.style.display = 'block';
 }
 function worldTimelineEventAt(events, turn) {
   if (!events.length) return -1;
@@ -14643,18 +15051,19 @@ function syncWorldTimeline() {
       state.events = last >= 0 ? civTimelineEvents(state, 0, null, target) : [];
       state.complete = target === last; state.key = key; state.errorLogged = false;
     }
-    const following = playing && !state.scrollDrag ? worldTimelineEventAt(state.events, pos) : -1;
+    const groups = groupTimelineEvents(state.events);
+    const following = playing && !state.scrollDrag ? worldTimelineEventAt(groups, pos) : -1;
     if (following >= 0) state.start = Math.floor(following / 40) * 40;
-    state.start = Math.max(0, Math.min(state.start, Math.floor(Math.max(0, state.events.length - 1) / 40) * 40));
-    const html = worldTimelineRowsHtml(state.events, state.start);
-    if (html !== state.html) { els.worldTimelineRows.innerHTML = html; state.html = html; }
+    state.start = Math.max(0, Math.min(state.start, Math.floor(Math.max(0, groups.length - 1) / 40) * 40));
+    const html = worldTimelineRowsHtml(state.events, state.start, state.expanded || new Set());
+    if (html !== state.html) { highlightChronicleEvent(null); els.worldTimelineRows.innerHTML = html; state.html = html; }
     syncWorldTimelineHighlights();
     if (following >= 0) {
       const rows = els.worldTimelineRows;
       const left = Math.max(0, Math.min(rows.scrollWidth - rows.clientWidth, (following - state.start + 0.5) * ps(220) - rows.clientWidth / 2));
       if (Math.abs(rows.scrollLeft - left) > 0.5) rows.scrollLeft = left;
     }
-    const count = state.events.length, page = `${count ? state.start + 1 : 0}-${Math.min(count, state.start + 40)} / ${count}`;
+    const count = groups.length, page = `${count ? state.start + 1 : 0}-${Math.min(count, state.start + 40)} / ${count}`;
     els.worldTimelinePage.textContent = state.complete ? `World events: ${page}` : `Building world events: ${page} (frame ${state.next + 1}/${frames.length})`;
     els.worldTimelinePrev.disabled = state.start === 0;
     els.worldTimelineNext.disabled = state.start + 40 >= count;
@@ -14684,12 +15093,18 @@ function buildWorldTimelineUi() {
   rows.setAttribute('role', 'region'); rows.setAttribute('aria-label', 'Combined civilization events');
   rows.id = 'anthroprocenia-world-events-ruler';
   rows.setAttribute('tabindex', '0');
-  rows.style.cssText = `width:100%;max-width:100%;overflow-x:hidden;overflow-y:hidden;min-height:${ps(70)}px;`;
-  rows.addEventListener('wheel', event => { event.preventDefault(); event.stopPropagation(); rows.scrollLeft += event.deltaX || event.deltaY; syncWorldScrollbar(); }, { passive: false });
+  rows.style.cssText = `width:100%;max-width:100%;overflow-x:hidden;overflow-y:auto;max-height:45vh;min-height:${ps(70)}px;`;
+  rows.addEventListener('wheel', event => {
+    event.preventDefault(); event.stopPropagation();
+    if (!event.shiftKey && !event.deltaX && rows.scrollHeight > rows.clientHeight) rows.scrollTop += event.deltaY;
+    else rows.scrollLeft += event.deltaX || event.deltaY;
+    syncWorldScrollbar();
+  }, { passive: false });
   const tooltip = document.createElement('div');
   tooltip.id = 'anthroprocenia-world-event-tooltip'; tooltip.setAttribute('role', 'tooltip');
   tooltip.style.cssText = `display:none;position:fixed;left:50%;transform:translateX(-50%);box-sizing:border-box;width:90%;max-width:${ps(560)}px;padding:${ps(12)}px;border:1px solid #9d8760;border-radius:${ps(6)}px;background:#101722;color:#e5d2ac;white-space:pre-line;font:${ps(13)}px sans-serif;pointer-events:none;z-index:100060;`;
   const showTooltip = event => {
+    highlightChronicleEvent(event);
     const target = event.target.closest('[data-tooltip-content]');
     if (!target) { tooltip.style.display = 'none'; return; }
     const rect = els.playbackPanel.getBoundingClientRect();
@@ -14699,18 +15114,9 @@ function buildWorldTimelineUi() {
     target.setAttribute('aria-describedby', tooltip.id);
   };
   rows.addEventListener('mousemove', showTooltip); rows.addEventListener('focusin', showTooltip);
-  for (const type of ['mouseleave', 'focusout']) rows.addEventListener(type, () => { tooltip.style.display = 'none'; });
-  let release = false;
-  const seek = event => {
-    if (event.button || (event.type === 'keydown' && (event.repeat || !['Enter', ' '].includes(event.key)))) return;
-    const target = event.target.closest('[data-history-turn]');
-    if (!target) return;
-    event.preventDefault(); event.stopPropagation();
-    if (event.type === 'click' && release) { release = false; return; }
-    release = event.type === 'mouseup';
-    pause(); goToIndex(Number(target.getAttribute('data-history-turn')));
-  };
-  rows.addEventListener('mousedown', () => { release = false; });
+  for (const type of ['mouseleave', 'focusout']) rows.addEventListener(type, () => { tooltip.style.display = 'none'; highlightChronicleEvent(null); });
+  const seek = event => activateTimelineEvent(event, worldTimelineState, syncWorldTimeline);
+  rows.addEventListener('mousedown', () => { worldTimelineState.releaseClick = false; });
   for (const type of ['mouseup', 'click', 'keydown']) rows.addEventListener(type, seek);
   wrapper.append(header, rows, buildWorldScrollbar(rows), tooltip);
   els.worldTimelineRows = rows; els.worldTimelinePage = page; els.worldTimelineTooltip = tooltip;
@@ -14724,7 +15130,7 @@ function buildCivTimelineUi() {
   header.style.cssText = 'display:flex;align-items:center;padding:8px;gap:8px;';
   title.textContent = 'Civilization Events Timeline'; title.style.flex = '1';
   const close = document.createElement('button'); close.textContent = 'X'; close.setAttribute('aria-label', 'Close civilization timeline');
-  close.addEventListener('click', event => { event.stopPropagation(); civTimelineState.open = false; panel.style.display = 'none'; });
+  close.addEventListener('click', event => { event.stopPropagation(); highlightChronicleEvent(null); civTimelineState.open = false; panel.style.display = 'none'; });
   header.append(title, close);
   addPanelMinimize(panel, header, 'Civilization Events Timeline');
   const rows = document.createElement('div'), paging = document.createElement('div'), page = document.createElement('span');
@@ -14734,12 +15140,16 @@ function buildCivTimelineUi() {
     const button = document.createElement('button'); button.textContent = text;
     button.addEventListener('click', event => {
       event.stopPropagation();
-      civTimelineState.start = Math.max(0, Math.min(Math.floor(Math.max(0, civTimelineState.events.length - 1) / 40) * 40, civTimelineState.start + step));
+      civTimelineState.start = Math.max(0, Math.min(Math.floor(Math.max(0, groupTimelineEvents(civTimelineState.events).length - 1) / 40) * 40, civTimelineState.start + step));
       syncCivTimeline(true);
     });
     paging.appendChild(button);
   }
   paging.appendChild(page); panel.append(header, rows, paging);
+  rows.addEventListener('mousedown', () => { civTimelineState.releaseClick = false; });
+  for (const type of ['mouseup', 'click', 'keydown']) rows.addEventListener(type, event => activateTimelineEvent(event, civTimelineState, () => syncCivTimeline(true)));
+  for (const type of ['mousemove', 'focusin']) rows.addEventListener(type, highlightChronicleEvent);
+  for (const type of ['mouseleave', 'focusout']) rows.addEventListener(type, () => highlightChronicleEvent(null));
   for (const type of ['mousedown', 'wheel', 'mousewheel']) panel.addEventListener(type, event => event.stopPropagation());
   document.body.appendChild(panel);
   els.civTimelinePanel = panel; els.civTimelineRows = rows; els.civTimelinePage = page;
@@ -14752,11 +15162,13 @@ function syncCivTimeline(show) {
   if (!els.civTimelinePanel) buildCivTimelineUi();
   const state = civTimelineState, key = `${manifest && manifest.rev}|${frames.length}|${pos}|${cmdLocalPlayer()}`;
   if (state.key !== key) { state.events = civTimelineEvents(); state.key = key; }
-  const start = state.start = Math.max(0, Math.min(state.start, Math.floor(Math.max(0, state.events.length - 1) / 40) * 40));
+  const groups = groupTimelineEvents(state.events);
+  const start = state.start = Math.max(0, Math.min(state.start, Math.floor(Math.max(0, groups.length - 1) / 40) * 40));
   const renderKey = `${key}|${start}`;
   if (state.renderKey !== renderKey) {
-    els.civTimelineRows.innerHTML = timelineRowsHtml(state.events, start);
-    els.civTimelinePage.textContent = `${state.events.length ? start + 1 : 0}-${Math.min(state.events.length, start + 40)} / ${state.events.length}`;
+    highlightChronicleEvent(null);
+    els.civTimelineRows.innerHTML = timelineRowsHtml(state.events, start, 40, state.expanded || new Set());
+    els.civTimelinePage.textContent = `${groups.length ? start + 1 : 0}-${Math.min(groups.length, start + 40)} / ${groups.length}`;
     state.renderKey = renderKey;
   }
   const area = measureArea(), width = Math.min(ps(560), (window.innerWidth || 1920) - ps(24));
@@ -14803,26 +15215,16 @@ function popFamilyObservations(node, rows) {
   }
   return history.events;
 }
-function timelineRowsHtml(events, start = 0, count = 40) {
-  const rows = events.slice(start, start + Math.min(40, count));
-  if (!rows.length) return '<div>No events recorded yet.</div>';
-  return `<div role="list" aria-label="Events ruler" style="border-left:${ps(2)}px solid #8fb8ff;margin-left:${ps(20)}px;">` + rows.map(event => {
-    const date = event.date || '';
-    const record = Number.isInteger(event.turn) ? `Recorded turn ${event.turn + 1}. ` : '';
-    const detail = `${event.text}\n${record}${event.details || ''}`.trim();
-    const tooltip = escHtml(detail).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    return `<div role="listitem" tabindex="0" title="${tooltip}" style="position:relative;min-height:${ps(54)}px;padding:${ps(8)}px ${ps(12)}px ${ps(12)}px ${ps(18)}px;box-sizing:border-box;">`
-      + `<span aria-hidden="true" style="position:absolute;left:${ps(-10)}px;top:${ps(17)}px;width:${ps(22)}px;border-top:${ps(2)}px solid #cfe3ff;"></span>`
-      + `<strong style="display:block;color:#9fc6dd;font-size:${ps(11)}px;">${escHtml(date)}</strong>`
-      + `<span style="display:block;white-space:normal;">${escHtml(event.text)}</span></div>`;
-  }).join('') + '</div>';
+function timelineRowsHtml(events, start = 0, count = 40, expanded = new Set()) {
+  return datedTimelineRowsHtml(events, start, count, expanded, false);
 }
 function syncFamilyTimeline(node, rows) {
   const events = node ? familyEvents(rows, member => popFamilyMemberName(node, member), lifeTimelineNow().years, frames.slice(0, pos + 1), popFamilyObservations(node, rows)) : [];
   familyState.events = events;
-  familyState.eventStart = Math.max(0, Math.min(familyState.eventStart || 0, Math.floor(Math.max(0, events.length - 1) / 40) * 40));
-  els.familyEvents.innerHTML = timelineRowsHtml(events, familyState.eventStart);
-  els.familyEventPage.textContent = `${events.length ? familyState.eventStart + 1 : 0}-${Math.min(events.length, familyState.eventStart + 40)} / ${events.length}`;
+  const count = groupTimelineEvents(events).length;
+  familyState.eventStart = Math.max(0, Math.min(familyState.eventStart || 0, Math.floor(Math.max(0, count - 1) / 40) * 40));
+  els.familyEvents.innerHTML = timelineRowsHtml(events, familyState.eventStart, 40, familyState.expanded || new Set());
+  els.familyEventPage.textContent = `${count ? familyState.eventStart + 1 : 0}-${Math.min(count, familyState.eventStart + 40)} / ${count}`;
 }
 function popFamilyData(node, index) {
   const start = Math.floor(index / FAMILY_COHORT_SIZE) * FAMILY_COHORT_SIZE;
@@ -15051,12 +15453,15 @@ function buildFamilyUi() {
     const button = document.createElement('button'); button.textContent = text;
     button.addEventListener('click', event => {
       event.stopPropagation();
-      familyState.eventStart = Math.max(0, Math.min(Math.floor(Math.max(0, (familyState.events || []).length - 1) / 40) * 40, (familyState.eventStart || 0) + step));
+      familyState.eventStart = Math.max(0, Math.min(Math.floor(Math.max(0, groupTimelineEvents(familyState.events || []).length - 1) / 40) * 40, (familyState.eventStart || 0) + step));
       familyState.key = ''; syncFamilyPanel(true);
     });
     paging.appendChild(button);
   }
   paging.appendChild(page); eventsBody.append(eventRows, paging);
+  eventRows.addEventListener('mousedown', () => { familyState.releaseClick = false; });
+  for (const type of ['mouseup', 'click', 'keydown']) eventRows.addEventListener(type, event =>
+    activateTimelineEvent(event, familyState, () => { familyState.key = ''; syncFamilyPanel(true); }));
   eventsBody.addEventListener('wheel', event => event.stopPropagation());
   eventsBody.addEventListener('mousewheel', event => event.stopPropagation());
   panel.append(header, body, eventsBody, hint); document.body.appendChild(panel);
@@ -15957,8 +16362,17 @@ function stopSelectionIndicator() {
   for (const arrow of tileArrows) hideTileArrow(arrow);
 }
 try {
-  engine.on('UnitSelectionChanged', data => { invalidateGameOverlayCache(); if (data && data.selected) selectionKind = 'unit'; });
-  for (const event of ['UnitMoved', 'PlotVisibilityChanged', 'ConstructibleAddedToMap', 'CityReligionChanged', 'TradeRouteAddedToMap', 'TradeRouteRemovedFromMap', 'CityAddedToMap', 'ConstructibleRemovedFromMap']) engine.on(event, () => { unitHighlightState.revision++; });
+  engine.on('UnitSelectionChanged', data => { invalidateGameOverlayCache(); unitHighlightState.targets = null; unitHighlightState.revision++; if (data && data.selected) selectionKind = 'unit'; });
+  window.addEventListener('update-operation-target', event => {
+    try {
+      const id = UI.Player.getHeadSelectedUnit();
+      if (!id || !ComponentID.isValid(id)) { unitHighlightState.targets = null; unitHighlightState.revision++; return; }
+      if (!event.detail || !Array.isArray(event.detail.plots) || typeof event.detail.canStart !== 'boolean') throw new Error('Invalid native operation-target classification.');
+      unitHighlightState.targets = { id: ComponentID.toLogString(id), plots: event.detail.plots.slice(), canStart: event.detail.canStart };
+      unitHighlightState.revision++;
+    } catch (error) { unitHighlightState.targets = null; unitHighlightState.revision++; err(`native action highlights failed: ${error}`); }
+  });
+  for (const event of ['UnitMoved', 'UnitMoveComplete', 'UnitMovementPointsCleared', 'InteractUnitDataUpdated', 'PlotVisibilityChanged', 'ConstructibleAddedToMap', 'CityReligionChanged', 'TradeRouteAddedToMap', 'TradeRouteRemovedFromMap', 'CityAddedToMap', 'CityInitialized', 'ConstructibleRemovedFromMap']) engine.on(event, () => { unitHighlightState.revision++; });
   engine.on('CitySelectionChanged', data => { invalidateGameOverlayCache(); if (data && data.selected) selectionKind = 'city'; });
   window.addEventListener(InterfaceModeChangedEventName, invalidateGameOverlayCache);
 } catch (e) { err(`selection indicator events unavailable: ${e}`); }
@@ -15996,7 +16410,7 @@ function updateHoverOutline(idx) {
   hoverDots.setAttribute('stroke-dasharray', `${0.1 / zoom} ${5 / zoom}`);
   hoverUnder.setAttribute('points', s); hoverDots.setAttribute('points', s);
   hoverSvg.style.display = 'block';
-}function hideTip() { hideHoverOutline(); if (lastHoverIdx !== -2 || lastTipText) { lastHoverIdx = -2; lastTipText = ''; if (els.tip) els.tip.style.display = 'none'; } }
+}function hideTip() { clearMapPlotTip(); hideHoverOutline(); if (els.tip) els.tip.style.display = 'none'; lastHoverIdx = -2; lastTipText = ''; }
 // The townscape highlight lasts only while its building (or icon) is under the cursor: every other path through the
 // hover handler, and the cursor leaving the window, clears it.
 let townHoverKeep = false, lastHoverPoint = null, popHoverNext = null;
@@ -16111,12 +16525,8 @@ function onMapHoverInner(e) {
   updateHoverOutline(idx);
   updateAttackArrow(idx);
   if (idx >= 0) popHoverNext = { person: '', home: '', tile: idx };
-  // At the newest recording the game's own tile tooltip (shown because the cursor is over the world) is the right
-  // one; the map's historical tooltip is only needed while looking back at an earlier turn.
-  if (frames.length && pos >= frames.length - 1) {
-    if (lastHoverIdx !== -2 || lastTipText) { lastHoverIdx = -2; lastTipText = ''; if (els.tip) els.tip.style.display = 'none'; }
-    return;
-  }
+  if (showMapPlotTip(idx, e)) return;
+  clearMapPlotTip();
   if (idx !== lastHoverIdx) {   // hex changed → update content in place (no hide/show)
     lastHoverIdx = idx;
     lastTipText = idx >= 0 ? tooltipForHex(idx) : '';
@@ -16143,7 +16553,7 @@ function onMapDragStart(e) {
     return;
   }
   const unitIcon = mapUnitIconAt({ x: e.clientX, y: e.clientY });
-  if (unitIcon) { e.preventDefault(); selectMapUnitIcon(unitIcon.item, { x: e.clientX, y: e.clientY }); return; }
+  if (unitIcon) { e.preventDefault(); e.stopImmediatePropagation(); selectMapUnitIcon(unitIcon.item, { x: e.clientX, y: e.clientY }); unitIconPress.domDown = true; return; }
   // A walking person's dot (shown with the townscapes): open the Population Panel at that person. The click is theirs
   // alone: it never falls through to the settlement underneath (see personClickActive).
   if (peopleActive() && !gameOverlayActive()) {
@@ -16260,6 +16670,7 @@ try {
   window.addEventListener('click', onCmdConsumedClick, true);
   window.addEventListener('mouseup', onUnitIconConsumedClick, true);
   window.addEventListener('click', onUnitIconConsumedClick, true);
+  window.addEventListener('mousedown', onUnitIconPress, true);
   window.addEventListener('contextmenu', e => { if (cmdRightActive()) { e.preventDefault(); e.stopPropagation(); } }, true);
   window.addEventListener('keydown', e => { if (cmdState.menu && (e.key === 'Escape' || e.keyCode === 27)) { e.preventDefault(); e.stopPropagation(); cmdCloseMenu(); } }, true);
   window.addEventListener('mousedown', onMapDragStart);
@@ -16554,6 +16965,7 @@ function syncMapScale() {
 }
 let visibilityControlsExpanded = true, historyControlsExpanded = false;
 function resetWorldTimeline() {
+  highlightChronicleEvent(null);
   Object.assign(worldTimelineState, { key: '', model: null, next: 0, events: [], start: 0, complete: false, html: '', errorLogged: false, scrollDrag: null });
   if (els.worldTimelineTooltip) els.worldTimelineTooltip.style.display = 'none';
 }
@@ -16669,7 +17081,11 @@ function buildPanel() {
   els.fogToggleWrap = fog;
   const rsrc = mkToggle('Resources', showResources, (on) => { showResources = on; redraw(); });
   const regionLabels = mkToggle('Region names', showRegionLabels, on => { showRegionLabels = on; redraw(); });
+  const geographicLabels = mkToggle('Island, water and mountain names', showGeographicLabels, on => { showGeographicLabels = on; redraw(); });
   const regionBorders = mkToggle('Continent boundaries', showRegionBorders, on => { showRegionBorders = on; redraw(); });
+  const regionBoundaries = mkToggle('Region Boundaries', showRegionBoundaries, on => { showRegionBoundaries = on; redraw(); });
+  const previousMovement = mkToggle('Unit previous movement arrows', showPreviousMovement, on => { showPreviousMovement = on; redraw(); });
+  const labelArches = mkToggle('Country/region text arching', showLabelArches, on => { showLabelArches = on; redraw(); });
   const riverNames = mkToggle('River names', showRiverNames, on => { showRiverNames = on; redraw(); });
   const townLabels = mkToggle('Townscape labels', showTownLabels, on => { showTownLabels = on; redraw(); });
   const naturalFeatures = mkToggle('Natural features', showNaturalFeatures, on => { showNaturalFeatures = on; if (!on) hideNaturalMarkers(); redraw(); });
@@ -16693,7 +17109,11 @@ function buildPanel() {
     settlements: settlements.querySelector('fxs-checkbox'),
     buildingLabels: buildingLabels.querySelector('fxs-checkbox'),
     regionLabels: regionLabels.querySelector('fxs-checkbox'),
+    geographicLabels: geographicLabels.querySelector('fxs-checkbox'),
     regionBorders: regionBorders.querySelector('fxs-checkbox'),
+    regionBoundaries: regionBoundaries.querySelector('fxs-checkbox'),
+    previousMovement: previousMovement.querySelector('fxs-checkbox'),
+    labelArches: labelArches.querySelector('fxs-checkbox'),
     riverNames: riverNames.querySelector('fxs-checkbox'),
     townLabels: townLabels.querySelector('fxs-checkbox'),
     naturalFeatures: naturalFeatures.querySelector('fxs-checkbox'),
@@ -16702,7 +17122,7 @@ function buildPanel() {
     fogFootprint: fogFootprint.querySelector('fxs-checkbox'),
     ...Object.fromEntries(TOWN_ELEMENT_OPTIONS.map(([name], i) => [name, townToggles[i].querySelector('fxs-checkbox')])),
   };
-  const toggleCols = [[terr, bord, regionBorders, fog, fogFootprint], [countries, civIcons, settlements, naturalFeatures], [unit, wond, rsrc, tradeRoutes], [regionLabels, riverNames, buildingLabels, townLabels], townToggles.slice(0, 5), townToggles.slice(5)];
+  const toggleCols = [[terr, bord, regionBorders, regionBoundaries, fog, fogFootprint], [countries, civIcons, settlements, naturalFeatures, labelArches], [unit, previousMovement, wond, rsrc, tradeRoutes], [regionLabels, geographicLabels, riverNames, buildingLabels, townLabels], townToggles.slice(0, 5), townToggles.slice(5)];
   els.visibilityGrid = visibilityToggleGrid(toggleCols);
   controlRow.append(els.visibilityGrid);
   const centerGroup = document.createElement('div'); centerGroup.style.cssText = `display:flex;align-items:center;justify-content:center;flex-wrap:wrap;padding:0 ${ps(10)}px;`;

@@ -150,17 +150,17 @@ test('the playback builds a walk graph that joins roads, avoids rivers and trees
 test('people are only calculated while the townscapes are visible', async () => {
   const playback = await readFile(new URL('../anthroprocenia/ui/map/anthroprocenia-playback.js', import.meta.url), 'utf8');
   assert.match(playback, /function peopleActive\(\) \{\s*return townscapeActive\(\);/);
-  assert.match(playback, /function syncPeople\(entries\) \{\s*if \(!peopleActive\(\)\) \{ stopPeople\(\); return; \}/);
+  assert.match(playback, /function syncPeople\(entries, preparedWorld = null\) \{\s*if \(!peopleActive\(\)\) \{ stopPeople\(\); return; \}/);
   assert.match(playback, /if \(!peopleActive\(\) \|\| !townLayer \|\| !peopleSvg \|\| !townWorld\) \{ stopPeople\(\); return; \}/);
-  assert.match(playback, /if \(unitIcon\) \{ e\.preventDefault\(\); selectMapUnitIcon\(unitIcon\.item,/);
-  assert.match(playback, /scale = \(origin \? origin\.population \/ 50 : 1\) \/ 5 \* populationWeight\(populationClassFor\(item\)\) \* populationVariation\(seed\);/);
+  assert.match(playback, /if \(unitIcon\) \{ e\.preventDefault\(\); e\.stopImmediatePropagation\(\); selectMapUnitIcon\(unitIcon\.item,/);
+  assert.match(playback, /homePopulation\(estimatedWorldPopulation\(currentMapYear\(\)\), entityCountForPos\(\), seed,/);
 });
 
 test('the townscape highlight is cleared whenever the hover handler does not keep it', async () => {
   const playback = await readFile(new URL('../anthroprocenia/ui/map/anthroprocenia-playback.js', import.meta.url), 'utf8');
   assert.match(playback, /function onMapHover\(e\) \{\s*townHoverKeep = false;[\s\S]*?finally \{ if \(!townHoverKeep\) \{ try \{ setTownHighlight\(null\); \}/);
   assert.match(playback, /townHoverKeep = true;/);
-  assert.match(playback, /document\.addEventListener\('mouseleave', \(\) => \{ lastHoverPoint = null; try \{ setTownHighlight\(null\)/);
+  assert.match(playback, /document\.addEventListener\('mouseleave', \(\) => \{ hideRegionHover\(true\); lastHoverPoint = null; try \{ setTownHighlight\(null\)/);
   assert.match(playback, /townLayer\.style\.display = 'block';\s*syncTownElementVisibility\(\);\s*syncTownCompass\(\);\s*revalidateTownHover\(\);/);
   // The extracted highlight logic behaves: set, keep, then clear.
   const start = playback.indexOf('function setTownHighlight(key) {'), end = playback.indexOf('function townBuildingAt', start);

@@ -15,7 +15,8 @@ test('map input handlers are defined in the intact module scope', () => {
     'skipAheadSnapshot', 'toggleSkipAhead', 'sharedTerritoryClaim', 'territoryClip', 'splitTerritoryFill',
     'syncCivNotices', 'civTimelineExtras', 'drawMapDetails', 'syncUnitHighlights', 'buildMapScaleControls',
     'worldTimelineRowsHtml', 'syncWorldTimeline', 'buildWorldTimelineUi', 'toggleMapHistory', 'resetWorldTimeline', 'worldTimelineEventAt', 'normalizeCountryName',
-    'syncWorldScrollbar', 'buildWorldScrollbar', 'syncWorldTimelineHighlights', 'syncMapSvgViewport', 'syncHistoryFocus', 'syncMapDetailVisibility'];
+    'syncWorldScrollbar', 'buildWorldScrollbar', 'syncWorldTimelineHighlights', 'syncMapSvgViewport', 'syncHistoryFocus', 'syncMapDetailVisibility',
+    'setArchedLines', 'drawRegionBoundaries'];
   const result = spawnSync(process.execPath, ['--experimental-vm-modules', '-e',
     "new (require('node:vm').SourceTextModule)(require('node:fs').readFileSync(0,'utf8'));"],
   { input: `${source}\nexport { ${exports.join(', ')} };`, encoding: 'utf8' });
@@ -28,9 +29,9 @@ test('the intact playback module initializes state, exposes Map View and attache
     (async () => {
       const { loadModule } = await import(${JSON.stringify(new URL('./load.mjs', import.meta.url).href)});
       const hooks = [], ready = [], errors = [], nodes = new Map();
-      const element = () => ({ nodeType: 1, childNodes: [], style: {}, classList: { add() {} }, setAttribute() {}, addEventListener() {},
+      const element = () => ({ nodeType: 1, childNodes: [], style: {}, classList: { add() {} }, setAttribute() {}, setAttributeNS() {}, addEventListener() {},
         appendChild(child) { this.childNodes.push(child); child.parentNode = this; if (child.id) nodes.set(child.id, child); } });
-      const document = { body: null, head: element(), getElementById: id => nodes.get(id), createElement: element,
+      const document = { body: null, head: element(), getElementById: id => nodes.get(id), createElement: element, createElementNS: element,
         querySelector: selector => selector === '.mini-map__image' ? { getBoundingClientRect: () => ({ width: 200, height: 100 }) } : null,
         querySelectorAll: () => [], addEventListener(name, fn) { hooks.push(name); if (name === 'DOMContentLoaded') ready.push(fn); } };
       const window = { addEventListener: name => hooks.push(name), innerWidth: 1920, innerHeight: 1080 };
@@ -43,7 +44,7 @@ test('the intact playback module initializes state, exposes Map View and attache
       const imports = new Map([...source.matchAll(/import ([^\\n]+?) from '([^']+)'/g)]
         .map(([, names, path]) => [path, names]));
       const modules = new Map();
-      const playback = new vm.SourceTextModule(source, { context });
+      const playback = new vm.SourceTextModule(source + '\\nexport { setArchedLines, drawRegionBoundaries };', { context });
       await playback.link(async path => {
         if (modules.has(path)) return modules.get(path);
         let exports;
@@ -60,6 +61,9 @@ test('the intact playback module initializes state, exposes Map View and attache
         modules.set(path, module); return module;
       });
       await playback.evaluate();
+      const label = element();
+      playback.namespace.setArchedLines(label, ['Arcadia'], 160, 30, 18);
+      assert.equal(label.childNodes[0].childNodes.map(run => run.textContent).join(''), 'Arcadia');
       assert.equal(typeof window.AnthroproceniaReplay.show, 'function');
       assert.equal(typeof window.AnthroproceniaReplay.hide, 'function');
       assert.equal(window.AnthroproceniaReplay.isVisible(), false);
@@ -92,16 +96,70 @@ function context(functions, state) {
   vm.runInContext(functions.map(slice).join('\n'), ctx);
   return ctx;
 }
+test('live map tooltips use map coordinates and native content, dispose old mounts and restore native visibility', () => {
+  let visible = true, mounts = 0, disposed = 0, revealed = 2, region = 'Italia';
+  const element = () => ({ style: {}, children: [], _text: '',
+    set textContent(value) { this._text = value; this.children = []; },
+    get textContent() { return this._text; }, appendChild(child) { this.children.push(child); } });
+  const tip = element(), content = props => props;
+  const ctx = context(['showMapPlotTip', 'syncNativePlotTooltip', 'clearMapPlotTip', 'regionNameForHex', 'mapLabelText'], {
+    mapPlotTip: { dispose: null, key: '', nativeVisible: null }, mapVisible: true, frames: [0], pos: 0,
+    document: { createElement: element },
+    window: { AnthroproceniaGeography: { getMapData: () => ({ regionForTile: new Map([[3, 0], [4, 0]]), regions: [{ id: 0, name: region }] }) } },
+    manifest: { rev: 1 }, Game: { turn: 4 }, GameContext: { localObserverID: 0 },
+    GameplayMap: { getLocationFromIndex: index => ({ x: index + 10, y: 20 }), getRevealedState: () => revealed, getOwningCityFromXY: () => 7 },
+    Cities: { get: () => 'Owning city' }, PlotTooltipContent: content, createComponent: (component, props) => component(props),
+    render: (make, container) => {
+      assert.equal(container, tip.children[0], 'native reactive content owns its own container, not the added region row');
+      ctx.props = make(); mounts++; return () => { disposed++; };
+    },
+    IsPlotTooltipVisible: () => visible, SetIsPlotTooltipVisible: on => { visible = on; },
+    ensureTip: () => tip, positionTip() {}, err: assert.fail,
+    hideTip: () => { ctx.clearMapPlotTip(); tip.style.display = 'none'; },
+  });
+  ctx.syncNativePlotTooltip(); assert.equal(visible, false);
+  ctx.showMapPlotTip(3, {}); assert.equal(ctx.props.plotCoord.x, 13); assert.equal(ctx.props.owningCity, 'Owning city');
+  assert.equal(tip.children[1].textContent, 'Region: Italia');
+  ctx.showMapPlotTip(3, {}); assert.equal(mounts, 1, 'same-tile movement repositions without remounting');
+  ctx.showMapPlotTip(4, {}); assert.equal(disposed, 1); assert.equal(mounts, 2);
+  region = 'Anatolia'; ctx.showMapPlotTip(4, {});
+  assert.equal(mounts, 3); assert.equal(disposed, 2);
+  assert.equal(tip.children[1].textContent, 'Region: Anatolia', 'geography becoming available or changing refreshes a retained tooltip');
+  revealed = 0; ctx.showMapPlotTip(5, {}); assert.equal(tip.style.display, 'none'); assert.equal(disposed, 3);
+  ctx.mapVisible = false; ctx.syncNativePlotTooltip(); assert.equal(visible, true);
+  visible = false; ctx.mapVisible = true; ctx.syncNativePlotTooltip(); ctx.mapVisible = false; ctx.syncNativePlotTooltip();
+  assert.equal(visible, false, 'previously hidden native tooltip stays hidden');
+  ctx.pos = -1; assert.equal(ctx.showMapPlotTip(3, {}), false, 'historical frames use recorded tooltips instead');
+});
+test('historical tile tooltips include their region even on unclaimed land, escape names, and respect fog', () => {
+  let lookups = 0;
+  const geography = { regionForTile: new Map([[0, 0], [1, 1], [2, 2]]),
+    regions: [{ id: 0, name: 'Italia' }, { id: 1, name: 'Hidden Region' }, { id: 2, name: 'Coast & <Isles>' }] };
+  const ctx = context(['tooltipForHex', 'regionNameForHex', 'mapLabelText', 'tipHtml'], {
+    curFrame: new Map(), fogMode: true, visForPos: () => [2, 0, 1],
+    window: { AnthroproceniaGeography: { getMapData: () => { lookups++; return geography; } } },
+    settlementLineForHex: index => index === 0 ? 'Roma' : '', wonderNameForHex: () => '',
+    buildingsLinesForHex: () => ({}), resourceNameForHex: () => '', unitsLinesForHex: () => ['Unit'],
+    escHtml: text => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'), RAW_MARK: '\x01',
+  });
+  assert.equal(ctx.tooltipForHex(0), 'Roma[N]Region: Italia[N]Unit');
+  assert.equal(ctx.tooltipForHex(1), '');
+  assert.equal(lookups, 1, 'hidden tiles never query or expose region metadata');
+  assert.equal(ctx.tooltipForHex(2), 'Region: Coast & <Isles>', 'revealed but unseen tiles retain geography without units');
+  assert.equal(ctx.tipHtml(ctx.tooltipForHex(2)), '<div>Region: Coast &amp; &lt;Isles&gt;</div>');
+  ctx.window.AnthroproceniaGeography = null;
+  assert.equal(ctx.tooltipForHex(0), 'Roma[N]Unit', 'older maps without geography retain their existing tooltip content');
+});
 
 test('unit circle selection owns both DOM and native click routes without selecting twice or falling through', () => {
   let time = 1000, selected = 0, flag = true, icons = false;
   const surface = {}, point = { x: 50, y: 50 }, item = { kind: 'unit', owner: 0 };
-  const ctx = context(['mapGamepadAction', 'mapUnitIconAt', 'mapUnitIconInput', 'selectMapUnitIcon', 'unitIconClickActive', 'onUnitIconConsumedClick', 'onMapDragStart'], {
+  const ctx = context(['mapGamepadAction', 'mapUnitIconAt', 'mapUnitIconInput', 'selectMapUnitIcon', 'unitIconClickActive', 'onUnitIconPress', 'onUnitIconConsumedClick', 'onMapDragStart'], {
     unitIconPress: { time: -Infinity }, Date: { now: () => time }, ps: n => n,
     mapVisible: true, LeaderModelManager: { isLeaderShowing: false }, els: {}, mapDrag: null,
     Cursor: { position: point }, InputActionStatuses: { START: 0, FINISH: 2 },
     document: { body: surface, documentElement: {}, elementFromPoint: () => surface },
-    settlementExpansionActive: () => false, mapPlotSelectionActive: () => false,
+    settlementExpansionActive: () => false, mapPlotSelectionActive: () => false, mapCameraAction: () => false,
     gameOverlayActive: () => false, mapUiInput: () => false, personClickActive: () => false,
     cmdInputActive: () => false, townscapeActive: () => false, peopleActive: () => false,
     flagsActive: () => !icons, flagAt: () => flag ? { item } : null,
@@ -122,10 +180,10 @@ test('unit circle selection owns both DOM and native click routes without select
   });
   for (const useIcons of [false, true]) {
     icons = useIcons; time += 1000;
+    const count = selected;
     const start = native(0); ctx.mapGamepadAction(start);
     assert.equal(start.stopped, true, 'the native world does not process the initial press');
-    const count = selected;
-    ctx.onMapDragStart(dom());
+    ctx.onUnitIconPress(dom());
     const finish = native(2); ctx.mapGamepadAction(finish);
     assert.equal(finish.stopped, true);
     assert.equal(selected, count + 1, 'one unit selection for the complete gesture');
@@ -140,6 +198,26 @@ test('unit circle selection owns both DOM and native click routes without select
   flag = false; point.x = 100;
   const background = native(2); ctx.mapGamepadAction(background);
   assert.equal(background.defaultPrevented, undefined, 'a different world click retains normal native behavior');
+  time += 1000; flag = true; point.x = 50;
+  ctx.selectFlagUnit = () => { selected++; time += 1500; ctx.Cursor.position = null; ctx.gameOverlayActive = () => true; ctx.mapPlotSelectionActive = () => true; };
+  const press = dom(); ctx.onUnitIconPress(press);
+  assert.equal(press.stopped, true, 'DOM capture prevents native deselection before bubbling handlers run');
+  assert.equal(selected, 4);
+  const pairedStart = native(0); ctx.mapGamepadAction(pairedStart);
+  assert.equal(pairedStart.stopped, true, 'native press belongs to the captured DOM gesture even after UI/cursor changes');
+  const delayedFinish = native(2); ctx.mapGamepadAction(delayedFinish);
+  assert.equal(delayedFinish.stopped, true, 'native tail is consumed before the new placement/overlay guards');
+  const relocatedRelease = { ...dom(), type: 'mouseup', clientX: 900, clientY: 800 };
+  ctx.onUnitIconConsumedClick(relocatedRelease);
+  assert.equal(relocatedRelease.stopped, true);
+  const relocatedClick = { ...relocatedRelease, type: 'click', stopped: false };
+  ctx.onUnitIconConsumedClick(relocatedClick);
+  assert.equal(relocatedClick.stopped, true);
+  const fresh = { ...dom(), clientX: 900, clientY: 800 };
+  ctx.onUnitIconPress(fresh);
+  assert.equal(fresh.stopped, undefined, 'a new panel/placement press is not swallowed');
+  const freshRelease = { ...fresh, type: 'mouseup' }; ctx.onUnitIconConsumedClick(freshRelease);
+  assert.equal(freshRelease.stopped, undefined, 'old suppression ends on a fresh press');
 });
 
 test('townscape zoom blocks all plain city click routes and deferred item UI while preserving plot placement', () => {
@@ -150,6 +228,7 @@ test('townscape zoom blocks all plain city click routes and deferred item UI whi
     mapVisible: true, LeaderModelManager: { isLeaderShowing: false }, mapDrag: null, els: {},
     settlementExpansionActive: () => false, mapPlotSelectionActive: () => false,
     prepareExpansionSelection: () => placements++, setTimeout: () => timers++,
+    mapCameraAction: () => false,
     hexAt: () => 1, localCityAt: () => 'city', lastMapCitySelection: { index: -1, time: 0 },
     Date: { now: () => 3000 }, frames: [], nowMs: () => 0,
     UI: { Player: { selectCity: () => cities++ } }, err: e => assert.fail(e),
@@ -200,7 +279,7 @@ test('zoom immediately hides civ-coloured shapes without hiding the map input su
   let visible = true, parked = 0;
   const paths = { outer: { style: {} }, inner: { style: {} } }, input = { style: { display: 'none' } };
   const ctx = context(['syncTownscapes'], {
-    syncMapLabelVisibility() {}, syncTownVisibility() {}, townRender: { timer: 0 },
+    syncMapLabelVisibility() {}, syncTownVisibility() {}, syncRiverDeltas() {}, townRender: { timer: 0 },
     terrainMarkerPaths: new Map([['primary|secondary', paths]]), unitDom: { el: input }, unitSlots: [{}],
     parkSlot: () => parked++, townscapeActive: () => visible, dotDom: { el: { style: {} } }, wonDom: { el: { style: {} } },
     mapVisible: true, showWonders: true, bgLayer: {}, townLayer: null,

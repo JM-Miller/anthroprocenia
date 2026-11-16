@@ -50,6 +50,28 @@ test('a bridge spans the river along the road, with a rail on each side', () => 
   assert.ok(bridge.rails.every(rail => rail.length === 2));
 });
 
+test('dense bridge preparation yields before work and preserves the complete synchronous result', () => {
+  const roads = Array.from({ length: 120 }, (_, i) => {
+    const y = i * 0.0001;
+    return { pts: [{ x: -2, y }, { x: -1, y }], towns: [i] };
+  });
+  roads.push({ pts: [{ x: 2, y: 0 }, { x: 1, y: 0 }], towns: ['right'] });
+  let queries = 0;
+  const options = { width: 0.1, maxSpan: 3, isWet: x => { queries++; return Math.abs(x) < 0.8; } };
+  const steps = links.bridgeRoadGaps(roads, { ...options, incremental: true });
+  assert.equal(queries, 0);
+  assert.equal(steps.next().done, false);
+  assert.equal(queries, 0, 'initial call leaves input and painting unblocked');
+  let result, yields = 1;
+  do { result = steps.next(); yields++; } while (!result.done);
+  assert.ok(yields > roads.length * 2, 'dense candidate comparisons also yield');
+  assert.ok(result.value.bridges.length > 0);
+  assert.deepEqual(result.value, links.bridgeRoadGaps(roads, options));
+  const failing = links.bridgeRoadGaps(roads, { ...options, incremental: true, isWet() { throw new Error('wet lookup failed'); } });
+  failing.next();
+  assert.throws(() => failing.next(), /wet lookup failed/);
+});
+
 test('adjacent townscapes are joined by a road between their gates', () => {
   const towns = [townAt('a', 0, 0), townAt('b', 15, 0)];
   const plan = planTownLinks({ towns, width: 1 });
@@ -60,6 +82,24 @@ test('adjacent townscapes are joined by a road between their gates', () => {
   assert.equal(plan.linksByTown.get('a').length, 1);
   assert.equal(plan.linksByTown.get('b').length, 1);
   assert.deepEqual(plan.linksByTown.get('a')[0].pts, road.pts, 'the people of each can walk it');
+});
+
+test('blocked town pairs are checked once while the remaining dry component still connects', () => {
+  const towns = Array.from({ length: 12 }, (_, i) => townAt(String(i), i * 10, 0, 1, { tile: 0 }));
+  const checks = new Map();
+  const plan = planTownLinks({
+    towns, width: 0.1, minGap: 100,
+    allow(a, b) {
+      const i = Math.round(a.x / 10), j = Math.round(b.x / 10), key = [i, j].sort((a, b) => a - b).join('|');
+      checks.set(key, (checks.get(key) || 0) + 1);
+      return i !== 0 && j !== 0;
+    },
+  });
+  assert.deepEqual(plan.disconnectedTiles, [0], 'water-separated town remains explicitly disconnected');
+  assert.equal(plan.roads.length, towns.length - 2, 'the dry towns still form a connected component');
+  const blocked = [...checks].filter(([key]) => key.startsWith('0|'));
+  assert.equal(blocked.length, towns.length - 1);
+  assert.ok(blocked.every(([, count]) => count === 1), 'reverse and later component passes do not resample the same rejected crossing');
 });
 
 test('townscapes that overlap or are far apart are not joined, and each joins only its nearest few', () => {
@@ -255,6 +295,47 @@ test('unloaded nearby towns supply compact road endpoints even with no visible r
   vm.runInContext(slice('planEntryLinks'), ctx);
   const plan = ctx.planEntryLinks([]);
   assert.ok(plan.roads.some(road => road.kind === 'tile-side'));
+});
+
+test('town link planning reads only indexed scene tiles and passes only reachable rivers', () => {
+  class IndexedMap extends Map {
+    reads = [];
+    get(tile) { this.reads.push(tile); return super.get(tile); }
+    values() { assert.fail('must not scan the world'); }
+    [Symbol.iterator]() { assert.fail('must not scan the world'); }
+  }
+  const road = { pts: [{ x: 5, y: 50 }, { x: 210, y: 90 }, { x: 135, y: 50 }], half: 1 };
+  const roads = new IndexedMap([[0, [road]], [1, [road]]]);
+  const rivers = new IndexedMap([[1, [
+    { x1: -20, y1: -10, x2: -20, y2: 10, hw: 1 },
+    { x1: 0, y1: 1000, x2: 0, y2: 1100, hw: 1 },
+  ]]]);
+  for (let tile = 2; tile < 20000; tile++) {
+    roads.set(tile, [road]);
+    rivers.set(tile, rivers.get(1));
+  }
+  rivers.reads.length = 0;
+  rivers.set(2, [{ x1: -50, y1: 20, x2: -50, y2: 50, hw: 1 }]);
+  let inputs;
+  const ctx = vm.createContext({
+    ...links, hexW: 100, hexH: 100, mapPxW: 1000,
+    roadLines: roads, riverTileSegs: rivers,
+    basePos: [{ x: 0, y: 0 }, { x: 100, y: 0 }, { x: 200, y: 0 }], neighborsByIndex: [[1], [0, 2], [1]],
+    townLinkTile: () => 0,
+    iconPoints: [{ x: 10, y: 50, item: { index: 0, kind: 'building' } }, { x: 130, y: 50, item: { index: 1, kind: 'building' } }],
+    fogMode: false, segmentTouchesWater: () => false, townTileWalls: () => [],
+    planTownLinks: options => { inputs = options; return links.planTownLinks(options); },
+    err: () => {},
+  });
+  vm.runInContext(slice('planEntryLinks'), ctx);
+  const plan = ctx.planEntryLinks([]);
+  assert.deepEqual(roads.reads, [0, 1]);
+  assert.deepEqual(rivers.reads, [0, 1, 2], 'river context includes the indexed road endpoint neighbor');
+  assert.equal(inputs.mapRoads.length, 1, 'shared indexed road is deduplicated');
+  assert.equal(inputs.rivers.length, 2, 'off-scene river is excluded but road-bend crossings are retained');
+  assert.equal(plan.rivers.length, 2);
+  assert.ok(plan.bridges.length >= 2, 'rivers beyond roof bounds still have bridge crossings');
+  assert.ok(plan.roads.length, 'local roads and neighboring terminals are retained');
 });
 
 test('townscapes are drawn opaque, with thin streets, link roads and creeks', () => {

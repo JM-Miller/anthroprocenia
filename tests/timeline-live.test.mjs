@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadModule } from './load.mjs';
-const { CivilizationTimeline, LiveTimelineFeed, familyEvents } = await loadModule('anthroprocenia-timeline.js');
+const { CivilizationTimeline, LiveTimelineFeed, familyEvents, groupTimelineEvents } = await loadModule('anthroprocenia-timeline.js');
 const territory = (plot, owner) => plot * 1024 + (owner + 1) * 8;
 test('combined history shares one world model, covers every recorded civilization, and does not duplicate wars or invent contacts', () => {
   const model = new CivilizationTimeline(null), date = turn => [0, turn + 1, turn ? 0 : 1, '4999 BCE'];
@@ -35,7 +35,37 @@ test('recorded milestones include construction, wonders, growth, yields, pillagi
   assert.ok(model.events.every(event => event.details && !event.details.startsWith('Source:')), 'each milestone has its own narrative description');
   assert.ok(new Set(model.events.map(event => event.details)).size > 10, 'descriptions vary with the observed event');
   assert.equal(initial.events.length, 1); assert.equal(initial.tileCount, 1);
+  for (const event of model.events.filter(event => /population|became City|harvests|infrastructure|Pyramids|pillaging/.test(event.text))) assert.deepEqual(event.plots, [0]);
+  assert.deepEqual(model.events.find(event => /expanded their territory/.test(event.text)).plots, [1]);
+  for (const event of model.events.filter(event => /first contact|celebration|crisis|suzerain|friendly|mastered/.test(event.text))) assert.deepEqual(event.plots, [], 'nonlocal events never invent plot locations');
   assert.deepEqual(initial.buildings.get(0), [1]); assert.equal(initial.wonders.size, 0);
+});
+test('date groups retain every same-date event in order, never merging distinct undated events', () => {
+  const events = [
+    { turn: 0, date: '4000 BCE', text: 'Founded', plots: [8] },
+    { turn: 0, date: '4000 BCE', text: 'Contact' },
+    { turn: 1, date: '3999 BCE', text: 'Construction', details: 'Full narrative' },
+    { text: 'Unknown date' }, { text: 'Another unknown date' },
+  ];
+  const groups = groupTimelineEvents(events);
+  assert.equal(groups.length, 4); assert.deepEqual(groups[0].events, events.slice(0, 2));
+  assert.equal(groups[1].events[0], events[2]); assert.notEqual(groups[2].key, groups[3].key);
+});
+
+test('yield changes report gained and lost occupations rather than raw yield values', () => {
+  const model = new CivilizationTimeline(0), date = turn => [0, turn + 1, turn === 0 ? 1 : 0, '1 AD'];
+  const counts = [[100], [250], [80]];
+  const extra = { occupationCounts: (plot, turn) => counts[turn] };
+  for (const [turn, yieldValue] of [5, 8, 3].entries()) {
+    model.observe(turn, date(turn), { s: turn === 0 ? 1 : 0, terr: turn === 0 ? [territory(0, 0)] : [],
+      set: [[0, 'York', 2, 'City', [yieldValue]]] }, turn === 0 ? { idd: [[0, 'Leader', 'Romans', 'Roman']] } : null,
+      String, () => 'War', extra);
+  }
+  const details = model.events.filter(event => /harvests|food-related/.test(event.text)).map(event => event.details);
+  assert.equal(details.length, 2);
+  assert.match(details[0], /gained 150/); assert.match(details[0], /100 to 250/);
+  assert.match(details[1], /lost 170/); assert.match(details[1], /250 to 80/);
+  assert.ok(details.every(detail => !/\byields?:? [538]\b/i.test(detail)));
 });
 test('territorial narratives describe the lands that actually changed in deltas and snapshots without inventing geography', () => {
   for (const owner of [0, null]) {

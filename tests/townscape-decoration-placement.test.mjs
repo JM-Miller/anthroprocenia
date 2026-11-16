@@ -18,7 +18,10 @@ function slice(name) {
   return source.slice(start, i + 1);
 }
 function context(names, state) {
-  const ctx = vm.createContext({ pos: 0, fogMode: false, hexH: 115, colShift: 0, ...state });
+  const ctx = vm.createContext({ pos: 0, fogMode: false, hexH: 115, colShift: 0, walkerCrowdsActive: () => false, ...state });
+  ctx.peopleCameraKey = () => `${ctx.viewZoom}|${ctx.viewAspectY}|${ctx.mapPanX}|${ctx.mapPanY}`;
+  ctx.mapToScreen = (x, y) => ({ x, y });
+  ctx.syncTownDecorationVisibility = () => {};
   vm.runInContext(names.map(slice).join('\n'), ctx);
   return ctx;
 }
@@ -146,7 +149,7 @@ test('small camera pans reuse the scene and SVG attributes; larger pans update o
   let placements = 0, renders = 0, writes = 0;
   const scene = { key: '', placements: [], rect: null };
   const ctx = context(['syncTownDecorations'], {
-    townElementVisibility: { townDecorations: true }, townDecoActive: () => true, walkerCrowdsActive: () => false, DECO_GROUPS: town.DECO_GROUPS,
+    townElementVisibility: { townDecorations: true }, townDecoActive: () => true, walkerCrowdsActive: () => true, DECO_GROUPS: town.DECO_GROUPS,
     townPaths: Object.fromEntries(town.DECO_GROUPS.map(k => [k, { style: {}, setAttribute: () => { writes++; } }])),
     townDecoScene: scene, townKey: 'one', townPlan: {},
     townDecoTiles: () => [], tileDecoPlacements: () => [],
@@ -329,7 +332,8 @@ test('dense scene rendering diagnoses detail limiting once, preserves placements
   assert.equal((paths.decoFurniture.d.match(/M/g) || []).length, 4096, 'early townscape zoom shows eight times the previous 512 previews');
   ctx.walkerCrowdsActive = () => false; ctx.syncTownDecorations([home]);
   assert.equal(ctx.townDecoScene.placements.length, 6144, 'closer zoom upgrades detail even inside the same padded scene');
-  assert.equal((paths.decoFurniture.d.match(/M/g) || []).length, 4096);
+  const detailed = (paths.decoFurniture.d.match(/Z/g) || []).length;
+  assert.ok(detailed >= 512 && detailed <= 1024, 'closer zoom spends the unchanged command budget on complete silhouettes');
   ctx.mapPanX = 2000; ctx.syncTownDecorations([home]);
   assert.ok(Object.values(paths).every(path => path.d === ''), 'no stale decorative geometry after panning offscreen');
   assert.ok(Object.values(paths).every(path => path.style.display === 'none'), 'empty retained SVG paths are explicitly hidden');
@@ -360,6 +364,102 @@ test('early decoration previews are visible at townscape entry, transition to ph
   const first = [...dense.decoBushes.matchAll(/[ML](-?[\d.]+),(-?[\d.]+)/g)].slice(0, 2);
   const feet = Math.hypot(+first[1][1] - +first[0][1], +first[1][2] - +first[0][2]) / unit + town.DECORATION_STROKE_FEET;
   assert.ok(Math.abs(feet - 8) < 0.0001, 'dense close-zoom fallback retains the physical span');
+});
+
+test('crowd dispersal immediately submits readable full decoration artwork within native budgets', () => {
+  const unit = 100 / (100 * 5280), home = entry();
+  home.decorations = Array.from({ length: 6144 }, (_, i) => ({
+    x: i % 20 / 100, y: Math.floor(i / 20) / 100, unit, pad: unit * 10,
+    deco: { kind: ['bush', 'plant', 'cart'][i % 3], size: 8, a: 0.4 },
+  }));
+  const physical = home.decorations.map(placed => [placed.unit, placed.pad]);
+  const paths = Object.fromEntries(town.DECO_GROUPS.map(k => [k, { style: {}, setAttribute(name, value) { this[name] = value; } }]));
+  let indexing = 0;
+  const ctx = context(['walkerCrowdsActive', 'peopleCameraKey', 'mapToScreen', 'syncTownDecorations', 'townDecoPaths'], {
+    ...town, CLUMP_SPLIT_SCREENS: 24, maxViewZoom: () => 1920, TAG: '[test]', console: { warn() {} },
+    townElementVisibility: { townDecorations: true }, townDecoActive: () => true, townPaths: paths,
+    townDecoScene: { key: '', placements: [], rect: null }, townKey: 'boundary', townPlan: emptyPlan(),
+    townDecoTiles: () => [], tileDecoPlacements: () => [],
+    townDecorationIndex() { indexing++; return { circle() {} }; }, hashString: () => 1, viewportVegetation: function* () {},
+    mapPxW: 0, mapPxH: 0, mapX: 0, mapY: 0, mapPanX: 0, mapPanY: 0, hexW: 100, hexH: 100,
+    viewZoom: 287, viewAspectY: 0.5, window: { innerWidth: 1000, innerHeight: 600 },
+  });
+  ctx.syncTownDecorations([home]);
+  assert.equal(ctx.walkerCrowdsActive(), true);
+  assert.equal((paths.decoBushes.d.match(/Z/g) || []).length, 0, 'crowd zoom retains lightweight previews');
+  for (const [aspect, zoom] of [[0.5, 288], [0.001, 1920]]) {
+    ctx.viewAspectY = aspect; ctx.viewZoom = zoom;
+    assert.equal(ctx.walkerCrowdsActive(), false);
+    ctx.syncTownDecorations([home]);
+    assert.ok(paths.decoBushes.d.includes('Z'), 'closed bush silhouettes are submitted at the exact split');
+    assert.ok(paths.decoFurniture.d.includes('Z'), 'furniture is not reduced to preview dashes');
+    const vertices = [...paths.decoBushes.d.matchAll(/[ML](-?[\d.]+),(-?[\d.]+)/g)].slice(0, 7);
+    let diameter = 0;
+    for (const a of vertices) for (const b of vertices) diameter = Math.max(diameter, Math.hypot(+a[1] - +b[1], +a[2] - +b[2]));
+    assert.ok(diameter >= 2.9 && diameter <= 3.1, 'full artwork has a readable screen-space span even at compressed maximum zoom');
+    const d = town.DECO_GROUPS.map(group => paths[group].d).join('');
+    assert.ok((d.match(/M/g) || []).length > 512, 'mixed close-up decorations are more numerous than the previous 512-shape ceiling');
+    assert.ok((d.match(/[MLHVQCTSAZ]/gi) || []).length <= 8192);
+    assert.ok(d.length <= 262144);
+  }
+  assert.equal(indexing, 2, 'a contained split transition reuses physical placements instead of restarting obstacle work');
+  assert.deepEqual(home.decorations.map(placed => [placed.unit, placed.pad]), physical, 'rendering does not enlarge physical collision footprints');
+});
+
+test('incremental decoration preparation yields even when every candidate is rejected', () => {
+  const ctx = context(['townDecorationIndex', 'townDecoPlacements', 'tileDecoPlacements'], {
+    ...town, hexW: 100, hexH: 115, layoutCols: 1, basePos: [{ x: 0, y: 0 }],
+    tileDecoCandidates: new Map(), tileAtMapPoint: () => 0, isWaterAt: () => false, hashString: () => 1,
+  });
+  const home = entry(), rect = { x0: -100, x1: 100, y0: -100, y1: 100 };
+  home.obstacles.circles = Array.from({ length: 2000 }, (_, x) => ({ x, y: 0, r: 0.1 }));
+  const steps = ctx.townDecorationIndex([home], emptyPlan(), rect, true);
+  assert.equal(steps.next().done, false, 'index construction is deferred');
+  let index;
+  for (let result = steps.next(); ; result = steps.next()) {
+    if (result.done) { index = result.value; break; }
+  }
+  assert.deepEqual(index.recordsInBox(rect), ctx.townDecorationIndex([home], emptyPlan(), rect).recordsInBox(rect));
+  home.decoCandidates = town.townDecorations(1, 2000);
+  for (const prepare of [
+    blocked => ctx.townDecoPlacements(home, blocked, rect, 1, true),
+    blocked => ctx.tileDecoPlacements([0], rect, blocked, 1, true),
+  ]) {
+    let probes = 0;
+    const iterator = prepare({ blocks() { probes++; return true; }, circle() { assert.fail('blocked candidates must not be accepted'); } });
+    for (let i = 0; i < 128; i++) {
+      const before = probes;
+      assert.equal(iterator.next().done, false);
+      assert.ok(probes - before <= 1, 'a single step cannot scan the entire rejected candidate list');
+    }
+    iterator.return();
+  }
+});
+
+test('native incremental decoration preparation publishes the same complete artwork as synchronous preparation', () => {
+  function prepare() {
+    const paths = Object.fromEntries(town.DECO_GROUPS.map(k => [k, { style: {}, setAttribute(name, value) { this[name] = value; } }]));
+    const ctx = context(['townDecorationIndex', 'townDecoPlacements', 'tileDecoPlacements', 'syncTownDecorations', 'townDecoPaths'], {
+      ...town, TAG: '[test]', console: { warn() {} }, hexW: 100, isWaterAt: () => false, hashString: () => 41,
+      townElementVisibility: { townDecorations: true }, townDecoActive: () => true, townPaths: paths,
+      townDecoScene: { key: '', placements: [], rect: null }, townKey: 'parity', townPlan: emptyPlan(),
+      townDecoTiles: () => [], mapPxW: 0, mapPxH: 0, mapX: 0, mapY: 0, mapPanX: 0, mapPanY: 0,
+      viewZoom: 288, viewAspectY: 0.5, window: { innerWidth: 600, innerHeight: 600 },
+    });
+    const home = entry(); home.radius = 5;
+    return { ctx, paths, home };
+  }
+  const sync = prepare(), incremental = prepare();
+  sync.ctx.syncTownDecorations([sync.home]);
+  const iterator = incremental.ctx.syncTownDecorations([incremental.home], true);
+  let yields = 0;
+  for (let result = iterator.next(); !result.done; result = iterator.next()) {
+    yields++;
+    assert.ok(Object.values(incremental.paths).every(path => path.d === undefined), 'partial SVG geometry is not published');
+  }
+  assert.ok(yields > 64, 'native preparation really requires multiple batches');
+  assert.equal(JSON.stringify(incremental.paths), JSON.stringify(sync.paths));
+  assert.equal(incremental.ctx.townDecoScene.placements.length, sync.ctx.townDecoScene.placements.length);
 });
 
 test('close-zoom vegetation is much denser across the viewport without retaining a dense town-wide array', () => {

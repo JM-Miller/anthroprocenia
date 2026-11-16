@@ -3,11 +3,26 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 import { loadModule as load } from './load.mjs';
-const { personProfile, faithFlavor, eraLabel, PEOPLE_CIVS, civNameLists, personRecord, personName, personTraits, homePlan, occupationGroupLabel, PERSONALITY_TRAITS, NAME_LISTS_VERSION } = await load('anthroprocenia-people.js');
+const { personProfile, faithFlavor, eraLabel, PEOPLE_CIVS, civNameLists, personRecord, personName, personTraits, homePlan, occupationGroupLabel, occupationYieldIndex, PERSONALITY_TRAITS, NAME_LISTS_VERSION } = await load('anthroprocenia-people.js');
 const { packPerson, unpackPerson, NAME_ID_LIMIT, TRAIT_ID_LIMIT } = await load('anthroprocenia-persist.js');
 const { SITE_CIV_KEYS } = await load('anthroprocenia-sites.js');
 
 const base = { civKey: 'ROME', religion: '', age: 0, lvl: 1, seed: 's1', category: 'farm', form: 'rect', unit: null };
+
+test('yield-related occupation shares increase and decrease, including negative yields, without creating people', () => {
+  const count = (plan, yieldIndex) => plan.groups.filter(group => occupationYieldIndex(group.title) === yieldIndex).reduce((sum, group) => sum + group.count, 0);
+  for (let yieldIndex = 0; yieldIndex < 7; yieldIndex++) {
+    const plans = [-10, 0, 30].map(value => {
+      const yields = Array(7).fill(0); yields[yieldIndex] = value;
+      return homePlan({ ...base, form: '', category: 'generic', yields, turn: 5 }, 'same-home', 1_000_000);
+    });
+    assert.ok(count(plans[0], yieldIndex) < count(plans[1], yieldIndex));
+    assert.ok(count(plans[1], yieldIndex) < count(plans[2], yieldIndex));
+    for (const plan of plans) assert.equal(plan.groups.reduce((sum, group) => sum + group.count, 0), 1_000_000);
+  }
+  const military = { ...base, unit: { sub: 'infantry', base: 'Warrior' } };
+  assert.deepEqual(homePlan(military, 'army', 10000).groups, homePlan({ ...military, yields: [100, 100, 100] }, 'army', 10000).groups);
+});
 
 test('every civilization has names for its people', () => {
   for (const civ of SITE_CIV_KEYS) assert.ok(PEOPLE_CIVS.includes(civ), civ);

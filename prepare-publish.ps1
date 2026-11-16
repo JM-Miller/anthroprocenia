@@ -56,6 +56,7 @@ New-Item -ItemType Directory -Force -Path $wsMod | Out-Null
 & robocopy $modSrc $wsMod /MIR /XD .git node_modules tests .claude /XF deploy.sh *.disabled *.log *.swp *~ .DS_Store /NFL /NDL /NJH /NJS /NP | Out-Null
 if ($LASTEXITCODE -ge 8) { Fail "robocopy failed with exit code $LASTEXITCODE" }
 Copy-Item -LiteralPath (Join-Path $root 'README.md') -Destination (Join-Path $wsMod 'README.md') -Force
+Copy-Item -LiteralPath (Join-Path $root 'MODDING_GUIDE.txt') -Destination (Join-Path $wsMod 'MODDING_GUIDE.txt') -Force
 Copy-Item -LiteralPath (Join-Path $root 'LICENSE') -Destination (Join-Path $wsMod 'LICENSE.txt') -Force
 
 foreach ($ext in 'png', 'jpg') {

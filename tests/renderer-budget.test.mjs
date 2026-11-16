@@ -15,7 +15,7 @@ function slice(name) {
   return source.slice(start, end + 1);
 }
 function context(names, state) {
-  const ctx = vm.createContext(state);
+  const ctx = vm.createContext({ syncGeographyLabelViewport() {}, hideRegionHover() {}, ...state });
   vm.runInContext(names.map(slice).join('\n'), ctx);
   return ctx;
 }
@@ -172,7 +172,7 @@ test('camera crossing the fringe threshold schedules a state repaint even within
     naturalDecorActive: () => true, showNaturalFeatures: true, labelTierShown: 1, fringeTierShown: 1,
     iconModeShown: false, townscapeShown: false, naturalDetailShown: true, naturalDecorShown: true,
     scheduleViewDetailRedraw: () => redraws++, selectionIndicatorLastUpdate: Infinity, tileArrows: [],
-    scheduleDecorRefresh() {},
+    scheduleDecorRefresh() {}, routePaths: null, scheduleGeographyLabelRefresh() {},
     showTerritory: true, showBorders: true, showResources: true, showWonders: true, fogMode: false,
     showSettlements: true, showBuildingLabels: true, err: message => assert.fail(message),
   });

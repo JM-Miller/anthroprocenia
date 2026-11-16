@@ -50,12 +50,14 @@ test('rapid camera input defers turn capture and pending detail drawing, then ca
   const drawn = [];
   Object.assign(ctx, {
     Date: { now: () => now }, building: false, manifest: {}, cellByIndex: [0], frames: [0, 1, 2, 3, 4], pos: 4,
-    builtFrameCount: 5, recordedFrameCount: () => available, curFrame: new Map(), scatterJob: null, viewDetailTimer: 0, decorRefreshTimer: 2,
+    builtFrameCount: 5, recordedFrameCount: () => available, curFrame: new Map(), scatterJob: null,
+    viewDetailTimer: 0, decorRefreshTimer: 2, scatterContinueTimer: 0, townRender: { timer: 0 }, townInterturn: { timer: 0 },
     refresh() { captures++; ctx.frames = Array.from({ length: available }, (_, i) => i); },
-    frameFor: pos => pos, drawMap: frame => drawn.push(frame), updateControls() {}, redraw: () => details++,
+    frameFor: pos => pos, drawMap(frame) { ctx.cancelPendingMapDraws(); drawn.push(frame); },
+    updateControls() {}, redraw: () => details++,
     setTimeout: fn => { pending = fn; return 1; }, err: message => { throw new Error(message); },
   });
-  vm.runInContext(['syncToLatestCapture', 'scheduleViewDetailRedraw'].map(slice).join('\n'), ctx);
+  vm.runInContext(['syncToLatestCapture', 'scheduleViewDetailRedraw', 'cancelPendingMapDraws'].map(slice).join('\n'), ctx);
   ctx.scheduleGameCameraSync(); ctx.scheduleViewDetailRedraw();
   for (now = 1020; now < 1500; now += 20) {
     ctx.scheduleGameCameraSync(); ctx.syncToLatestCapture(); pending();
@@ -71,6 +73,92 @@ test('rapid camera input defers turn capture and pending detail drawing, then ca
   ctx.pos = 1; available = 7; now = 1800; ctx.scheduleGameCameraSync(); ctx.syncToLatestCapture();
   now = 2050; ctx.syncToLatestCapture();
   assert.equal(ctx.pos, 1); assert.deepEqual(drawn, [5, 1], 'historical viewing stays on its selected turn');
+});
+
+for (const first of ['turn', 'detail', 'capture']) test(`zooming out across turn activation coalesces ${first}-first rendering and cancels superseded jobs`, () => {
+  let now = 1000, sequence = 0, available = 5, captures = 0;
+  const timers = new Map(), drawn = [];
+  const ctx = vm.createContext({
+    Date: { now: () => now },
+    setTimeout(fn, delay) { const id = ++sequence; timers.set(id, { fn, at: now + delay }); return id; },
+    clearTimeout(id) { timers.delete(id); },
+    mapVisible: true, miniMapVisible: false, lastMapInputTs: now, viewZoom: 100,
+    townInterturn: { active: true, timer: 0 }, townRender: { timer: 0 },
+    viewDetailTimer: 0, decorRefreshTimer: 0, scatterContinueTimer: 0, scatterJob: null,
+    building: false, manifest: {}, cellByIndex: [0], basePos: [{}],
+    frames: [0, 1, 2, 3, 4], pos: 4, builtFrameCount: 5, recordedFrameCount: () => available,
+    refresh() { captures++; ctx.frames = Array.from({ length: available }, (_, i) => i); },
+    frameFor: pos => pos, curFrame: 4, updateControls() {},
+    bgLayer: { ctx: {} }, stateLayer: { ctx: {} }, unitDom: { el: {} }, HB: { draws: 0 },
+    fogMode: false, showWonders: false, columnShiftCanvasStale: false,
+    ensureBackground() {}, drawStateLayer(frame) { drawn.push(frame); },
+    syncLayerDisplays() {}, drawDotLayer() {}, drawRiverLayer() {}, drawMapDetails() {},
+    drawUnitLayer() {}, drawTradeRouteLayer() {}, drawRouteLayer() {}, drawGeographyLayers() {},
+    drawCountryLabelLayer() {}, drawSettlementLabelLayer() {}, err: message => assert.fail(message),
+  });
+  vm.runInContext(['setTownInterturn', 'scheduleViewDetailRedraw', 'syncToLatestCapture', 'cancelPendingMapDraws', 'drawMap', 'redraw']
+    .map(slice).join('\n'), ctx);
+  const advance = ms => {
+    now += ms;
+    for (const [id, task] of [...timers]) {
+      if (timers.has(id) && task.at <= now) { timers.delete(id); task.fn(); }
+    }
+  };
+  ctx.setTownInterturn(false);
+  for (let i = 0; i < 10; i++) {
+    ctx.viewZoom *= 0.6; ctx.lastMapInputTs = now;
+    available++;
+    ctx.scheduleViewDetailRedraw(); ctx.syncToLatestCapture();
+    advance(20);
+    assert.equal(ctx.HB.draws, 0, 'turn activation must not bypass the navigation delay');
+  }
+  for (const key of ['decorRefreshTimer', 'scatterContinueTimer']) {
+    ctx[key] = ctx.setTimeout(() => assert.fail('superseded marker job ran'), 500);
+  }
+  ctx.townRender.timer = ctx.setTimeout(() => assert.fail('superseded town job ran'), 500);
+  ctx.scatterJob = { frame: 'old turn' };
+  advance(229);
+  assert.equal(ctx.HB.draws, 0, 'wait the full 250 ms since the last zoom input');
+  now++;
+  if (first === 'capture') ctx.syncToLatestCapture();
+  else {
+    const timer = first === 'turn' ? ctx.townInterturn.timer : ctx.viewDetailTimer;
+    const task = timers.get(timer);
+    timers.delete(timer); task.fn();
+  }
+  advance(150);
+  assert.deepEqual(drawn, [available - 1], 'turn resume and detail refresh share one current-frame render');
+  assert.equal(captures, 1);
+  assert.equal(ctx.pos, available - 1);
+  assert.equal(ctx.scatterJob, null);
+  assert.equal(timers.size, 0, 'no stale full-map, marker or town callbacks survive the commit');
+  advance(1000);
+  assert.equal(ctx.HB.draws, 1);
+
+  ctx.setTownInterturn(true);
+  ctx.lastMapInputTs = now;
+  ctx.setTownInterturn(false);
+  ctx.setTownInterturn(true);
+  advance(1000);
+  assert.equal(ctx.HB.draws, 1, 'a superseded turn-resume callback cannot draw during the next interturn');
+  ctx.mapVisible = false; ctx.setTownInterturn(false); advance(1000);
+  assert.equal(ctx.HB.draws, 1, 'closing the map does not restart rendering');
+});
+
+test('a failed capture refresh is reported without redrawing an obsolete frame', () => {
+  const { ctx } = world(), errors = [];
+  let pending;
+  Object.assign(ctx, {
+    building: false, manifest: {}, cellByIndex: [0], builtFrameCount: 1, recordedFrameCount: () => 2,
+    frames: [0], pos: 0, curFrame: new Map(), viewDetailTimer: 0, scatterJob: null,
+    refresh() { throw new Error('capture unavailable'); },
+    setTimeout: fn => { pending = fn; return 1; }, err: message => errors.push(message),
+    redraw: () => assert.fail('must not paint the old frame after a failed capture refresh'),
+  });
+  vm.runInContext(['syncToLatestCapture', 'scheduleViewDetailRedraw'].map(slice).join('\n'), ctx);
+  ctx.scheduleViewDetailRedraw(); pending();
+  assert.deepEqual(errors, ['capture watch: Error: capture unavailable']);
+  assert.equal(ctx.builtFrameCount, 1, 'the capture watcher can retry the failed refresh');
 });
 
 test('repeated whole-map zoom-out, zoom-in and pan never send native zoom or camera movement requests', () => {

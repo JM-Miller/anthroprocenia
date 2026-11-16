@@ -38,10 +38,11 @@ function world(count = 40) {
     hexW: 12, hexH: 14, window: { innerWidth: 1000, innerHeight: 800 },
     naturalRender: { viewKey: '', budgetReported: false, loggedTier: '' },
     naturalMarkerGroup: null, naturalMarkerPaths: new Map(), terrainMarkerPaths: new Map(), isletMarkerPaths: new Map(),
-    showNaturalFeatures: true, markerRendered: false, markerRenderedVis: null,
+    showNaturalFeatures: true, showResources: true, showSettlements: true, showUnits: true,
+    markerRendered: false, markerRenderedVis: null,
     fogMarkersStale: false, columnShiftMarkersStale: false, naturalDetailActive: () => true,
     naturalDecorActive: () => true, hideNaturalMarkers() {}, labelTier: () => 3, detailD: 3,
-    syncMapDetailVisibility() {},
+    syncMapDetailVisibility() {}, syncGeographyLabelViewport() {}, hideRegionHover() {},
     iconModeActive: () => false, townscapeActive: () => false, fogMode: false,
     unitMapFor: () => markers, scatterJob: null, decorPendingRect: null, decorDrawnRect: null,
     tileLayoutSig: (_, group) => 'same|' + group.length, scatterCache: new Map(), SCATTER_BUDGET_MS: 14,
@@ -153,6 +154,78 @@ test('interrupted scatter jobs from old zooms cannot restore outdated natural pa
   assert.equal(ctx.scatterJob, null);
   assert.equal(ctx.naturalRender.viewKey, ctx.naturalViewKey());
   assert.equal(ctx.naturalMarkerGroup.style.display, 'block');
+});
+
+test('ordinary refreshes finish the existing scatter job and publish real townscape icon anchors', () => {
+  const { ctx, frame, advance } = world();
+  ctx.iconModeActive = () => true;
+  ctx.townscapeActive = () => true;
+  let scans = 0, layouts = 0, commits = 0;
+  ctx.unitMapFor = () => {
+    scans++;
+    return Array.from({ length: 4 }, (_, index) => ({
+      index, radius: 1, kind: 'unit', shape: 'building', cols: '#111111|#999999',
+      item: { kind: 'building', index, typeIndex: 0 },
+    }));
+  };
+  ctx.scatterTileMarkers = group => {
+    layouts++; advance(20);
+    return group.map(marker => ({ x: marker.index * 12 + 6, y: 7 }));
+  };
+  ctx.syncTownscapes = () => { commits++; assert.equal(ctx.iconPoints.length, 4); };
+  assert.equal(ctx.drawUnitLayer(frame, null), false);
+  const job = ctx.scatterJob;
+  ctx.scheduleDecorRefresh();
+  assert.equal(ctx.scatterJob, job, 'a missing decoration rectangle cannot discard an item layout');
+  for (let pass = 0; pass < 3; pass++) ctx.drawUnitLayer(frame, null);
+  assert.equal(ctx.scatterJob, null);
+  assert.equal(scans, 1, 'generic redraws do not regenerate and restart the world marker list');
+  assert.equal(layouts, 4);
+  assert.equal(commits, 1);
+  assert.equal(ctx.iconPoints.length, 4);
+});
+
+test('a fog restriction or checkbox change rebuilds an in-progress item layout', () => {
+  const { ctx, frame, advance } = world();
+  const visible = [2, 2, 2, 2], restricted = [0, 2, 2, 2];
+  ctx.unitMapFor = (_, vis) => Array.from({ length: 4 }, (_, index) => ({
+    index, radius: 1, kind: 'unit', cols: '#111111|#999999', item: { kind: 'unit', index },
+  })).filter(marker => vis[marker.index] === 2 && ctx.showUnits);
+  ctx.scatterTileMarkers = group => { advance(20); return group.map(() => ({ x: 1, y: 1 })); };
+  ctx.drawUnitLayer(frame, visible);
+  const original = ctx.scatterJob;
+  ctx.drawUnitLayer(frame, restricted);
+  assert.notEqual(ctx.scatterJob, original);
+  assert.ok(ctx.scatterJob.markers.every(marker => marker.index !== 0));
+  ctx.showUnits = false;
+  assert.equal(ctx.drawUnitLayer(frame, restricted), true);
+  assert.equal(ctx.scatterJob, null);
+  assert.equal(ctx.unitFlagPoints.length, 0);
+});
+
+test('townscale layout generates only viewport and adjacent-tile item markers on a dense world', t => {
+  const { ctx, frame } = world();
+  const count = 8192;
+  ctx.basePos = Array.from({ length: count }, (_, index) => ({ x: (index % 128) * 12, y: Math.floor(index / 128) * 14 }));
+  ctx.terrain = Array(count).fill(8);
+  ctx.frames = [frame]; ctx.manifest = { unitTypes: [['UNIT_TEST', 'Test', 0]], buildingTypes: [['BUILDING_TEST', 'Test', 0]] };
+  ctx.showResources = false; ctx.showNaturalFeatures = false;
+  ctx.townscapeActive = () => true; ctx.iconModeActive = () => true;
+  ctx.MAP_MARKER_SCALE = 1; ctx.MOUNTAIN_MARKERS_PER_TILE = 10; ctx.DOTS_PER_ITEM = 10;
+  ctx.readMapFeatureMarkers = () => new Map();
+  ctx.buildingsForPos = () => new Map(Array.from({ length: count }, (_, index) => [index, [0]]));
+  ctx.readUnitsTurn = () => Array.from({ length: count }, (_, index) => [index, 0, 0, 100]);
+  ctx.playerBorderColor = () => '#112233'; ctx.unitColor = () => '#445566';
+  ctx.decorViewRect = () => ({ x0: 606, x1: 607, y0: 455, y1: 456 });
+  vm.runInContext(slice('unitMapFor'), ctx);
+  assert.equal(ctx.drawUnitLayer(frame, null), true);
+  assert.equal(ctx.iconPoints.length, 180, 'nine local/adjacent tiles, with ten building and ten unit markers each');
+  assert.equal(ctx.scatterCache.size, 9, 'offscreen world tiles are never scattered');
+  assert.ok(ctx.iconPoints.some(point => point.item.index === 32 * 128 + 50));
+  const vis = Array(count).fill(2); vis[32 * 128 + 50] = 0;
+  ctx.drawUnitLayer(frame, vis);
+  assert.ok(ctx.iconPoints.every(point => point.item.index !== 32 * 128 + 50));
+  t.diagnostic(`${count * 20} world item markers reduced to 180 local item markers before placement`);
 });
 
 test('a detail-tier redraw firing during active zoom cannot reveal or rebuild natural geometry early', () => {
@@ -307,7 +380,7 @@ test('the real camera update hides natural paths before transforming and restore
     syncExpansionOverlay() {}, refreshSiteLabels() {}, pathPreview: {}, flagsActive: () => false, flagHits: [],
     syncMapScale() {}, fringeTier: () => 1, fringeNeedsRefresh: () => false, fringeTierShown: 1, iconModeShown: false, townscapeShown: false,
     labelTierShown: 3, naturalDetailShown: true, naturalDecorShown: true, tileArrows: [],
-    selectionIndicatorLastUpdate: Infinity,
+    selectionIndicatorLastUpdate: Infinity, routePaths: null, scheduleGeographyLabelRefresh() {},
   });
   for (const name of ['dotDom', 'wonDom', 'riverDom', 'tradeRouteDom', 'routeDom', 'regionBorderDom', 'regionLabelDom',
     'civIconDom', 'countryDom', 'settlementDom', 'geographicLabelDom']) ctx[name] = {};

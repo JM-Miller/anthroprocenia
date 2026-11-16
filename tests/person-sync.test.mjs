@@ -84,7 +84,7 @@ test('a map dot and the panel row are the same person', () => {
     ...panel, personProfile, homePlan, personRecord, ageCategory, JSON, Map, pos: 5,
     popState: { profiles: new Map(), plans: new Map(), era: { age: 1, lvl: 2 }, eraKey: '5|9|0', selectedPerson: '' },
     popModelKey: () => '5|9|0', townEraNow: () => ({ age: 0, lvl: 0 }), popOwnerContext: owner => owners.get(owner) || { civKey: '', religion: '' },
-    popLife: () => null, err: () => {}, popLeaderRole: () => '', popLeaderHousehold: () => false, cmdNoteLeader: () => {},
+    popLife: () => null, err: () => {}, popLeaderRole: () => '', popLeaderHousehold: () => false, cmdNoteLeader: () => {}, nearestSettlement: () => null,
   });
   vm.runInContext(['popEraNow', 'popHomePlan', 'lifeSeed', 'popProfile', 'popPerson'].map(name => slice(playback, name)).join('\n'), context);
   const node = { id: 'c:o1|k:3|t:77|g:b4|i:b4.0.2', total: 40, icon: { owner: 1, category: 'farm', unit: null } };

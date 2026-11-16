@@ -207,7 +207,11 @@ test('dense entrance planning keeps collision queries bounded while preserving a
     walkEdgeCost: (...args) => { costCalls++; return town.walkEdgeCost(...args); },
   });
   const start = performance.now();
-  ctx.townAccessRoads([e]);
+  const steps = ctx.townAccessRoads([e], true);
+  assert.equal(e.accessRoads, undefined, 'creating a resumable plan does not route the entire town');
+  for (let i = 0; i < 64; i++) assert.equal(steps.next().done, false);
+  assert.equal(e.accessRoads, undefined, 'collision-index construction also yields before routing starts');
+  for (const step of steps) {}
   console.log(`Dense entrance fixture: ${e.final.length} roofs, ${queries} queries, ${(performance.now() - start).toFixed(1)} ms, ${e.accessRoads.length} approaches`);
   assert.ok(e.accessRoads.length > e.final.length);
   assert.ok(queries < 16500, `collision queries: ${queries}`);
@@ -216,6 +220,14 @@ test('dense entrance planning keeps collision queries bounded while preserving a
   assert.equal(graph.doorBuildings.size, e.final.length);
   assert.ok(graph.nodes.length < e.accessRoads.length * 4.1, `shared approach nodes: ${graph.nodes.length}`);
   assert.equal(costCalls, graph.adj.reduce((n, list) => n + list.length, 0) / 2, 'score each undirected edge once');
+  const graphSteps = ctx.buildWalkGraph(e, true);
+  const before = queries;
+  assert.equal(graphSteps.next().done, false);
+  assert.equal(queries, before, 'the first graph step leaves collision work to later batches');
+  let graphResult;
+  do { graphResult = graphSteps.next(); } while (!graphResult.done);
+  for (const key of ['nodes', 'adj', 'cost', 'destinations'])
+    assert.deepEqual(graphResult.value[key], graph[key], `incremental ${key}`);
   const buildingsToAvoid = e.final.map(b => ({ poly: b.poly, box: b.box, door: [...graph.doorBuildings].find(([, ref]) => ref.sourceIndex === b.sourceIndex)?.[0] }));
   for (let i = 0; i < graph.adj.length; i++) for (let k = 0; k < graph.adj[i].length; k++) {
     const j = graph.adj[i][k];

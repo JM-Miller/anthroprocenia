@@ -1,6 +1,57 @@
 Anthroprocenia changelog
 (Newest first. Paste the latest entry into the Workshop change notes and the CivFanatics update.)
 
+Version 70
+- Map native direction enums explicitly to Map View's E/W/NE/NW/SE/SW hex edges. This fixes misplaced region boundaries and incorrect seam detection.
+- Normalize detached region inputs into connected components; subdivide with graph-distance seeds and connected floods rather than assigning unreachable tiles by straight-line distance. Preserve complete, nonoverlapping coverage, even when connectivity requires more regions than the target.
+- Replace SVG text-path country/region arches with game-compatible HTML runs. Cap each line at eight runs, retain complete text and remove SVG paths responsible for missing labels/stray diagonal rendering.
+- Greatly expand government-compatible country formats, descriptive qualifiers and alternate cultural roots. Keep choices deterministic by country/era/capital/size bucket and retain historical pre-state/dynastic forms, era names and canonical-root geographic disambiguation. Invalidate older country-name caches.
+- Add native direction/seam, winding/wrapped/all-water partition, disconnected-input, bounded HTML arch, output-diversity, era/capital-root and naming-stability regressions. Fully restart Civ VII and verify in the affected save.
+
+Version 69
+- Restore module-scope curve and region-outline helpers; their accidental nesting prevented live callers from resolving them. Enable country/region curves by default while retaining the visibility checkbox and bounded whole-line SVG text paths.
+- Generate connected mainland subregions independently of water-body counts. Preserve continent boundaries, islands and distinct lake/ocean/sea/river components, and partition every tile exactly once, including lakes not flagged as ordinary water.
+- Name lake features as well as islands, oceans, seas/gulfs, rivers and mountain ranges. Keep island/lake feature names consistent with their regions and distinguish repeated native Earth region names.
+- Share collision reservations across region, feature and river labels. Move names within visible feature tiles or omit unplaceable names instead of drawing overlaps; keep readable text sizes and invalidate combined layout caches when toggles change.
+- Add the Island, water and mountain names visibility checkbox and avoid duplicate region/feature labels for islands and water bodies.
+- Add complete-map partition/connectedness, naming determinism, all-feature naming, collision rejection, and intact-module curve regressions. Validate curved text and nonoverlapping labels in the browser. Fully restart Civ VII and verify in the affected save.
+
+Version 68
+- Show the fullscreen Loading Map... placard during native diplomacy camera transitions.
+- Render native plot tooltip information at live Map View hover coordinates, suppress the original world tooltip and dispose replaced mounts. Keep recorded tooltips for replay and hide unrevealed plots.
+- Preserve actual river-tile ownership as whole tiles, eliminating synthetic river wedges and internal holes without changing recorded ownership or mountain partitions.
+- Keep region text at least eleven screen pixels high. Add independent Region Boundaries, Unit previous movement arrows and Country/region text arching visibility controls; default arching off and use bounded whole-line SVG text paths.
+- Group World Chronicle, civilization and family timeline events into expandable date boxes with full descriptions. Page by forty date groups without splitting a date, retain expansion state and highlight recorded event plots on hover/focus.
+- Compare country roots across government/grandeur variants. Preserve distinct capital roots and insert qualifiers into fixed titles, including The Western Han, The Central Han Dynasty and Great Eastern Han. Invalidate older name caches.
+- Add focused regressions for transitions, tooltip lifecycle, river junctions/interiors, readable regions, independent boundaries/movement arrows, bounded arch geometry, date grouping/expansion, event plot metadata and shared country roots. Fully restart Civ VII and verify in the affected save.
+
+Version 67
+- Keep selected-unit tile lenses visible while native settler legends, trade choosers and continent panels are open. These lens contexts are not full-screen menus; actual menus, replay and deselection still hide live highlights.
+- Compare complete unqualified generated country names before adding geographic qualifiers. Capital-derived names and different government titles already distinguish countries, including those sharing a civilization type. Invalidate older country-name caches.
+- Replace native UI civilization names in a single pass over original text. Consume repeated adjacent articles and native Civilization suffixes without translating inserted names again; preserve save/load originals.
+- Add repeated lens-panel polling, actual-menu hiding/restoration, exact-name collision, UI article/suffix, attribute and native-text-update regressions. Fully restart Civ VII and verify in the affected save.
+
+Version 66
+- Scope mod-button enhancement to mod-owned UI and guard native nodes without Element APIs. Avoid rescanning city/diplomacy panels for native text additions.
+- Cache generated civilization names within each observer batch and compile replacement patterns once. Ignore self-written mutations and unrelated class changes while preserving save/load originals and turn-refresh renaming.
+- Capture unit-circle presses and consume both native and DOM gesture tails before overlay/placement guards, including cursor relocation and slow selection. Clear suppression on fresh presses.
+- Match native settler red/yellow/green suitability, trade available/unavailable territory, missionary destinations, generic native action-target classifications and selected discovery/continent lenses. Detect replacements using native capabilities/selectors, not type-name substrings.
+- Keep every highlight revealed-only and live-map-only, reuse native continent colors, and share the 1,170-polygon/262,144-character viewport geometry budget across categories. Native two-category lenses do not gain invented suitability categories.
+- Add menu-batch, gesture-tail, replacement-unit, native-color, territory, action-target, continent-cache and shared-budget regressions. Fully restart Civ VII; live-save validation of menu smoothness is still required.
+
+Version 65
+- Render country names as reusable whole text lines, not individually transformed/stroked/shadowed glyph elements. Remove the decorative character arch while retaining names, territory containment, rotation and wrapping; reuse text rows across zoom tiers.
+- Skip territory/boundary icon placement when civilization icons are disabled or have no symbol. Preserve territory-constrained placement for enabled icons.
+- Restore the region-label parent opacity on every geography redraw so switching Region names back on works without reopening Map View. Preserve fog filtering, cached text and townscape-zoom visibility.
+- Add 64-country long-name/zoom regressions with a four-element-per-country ceiling, icon-toggle checks, and region on/off/re-enable, fog and minimap checks.
+- The affected renderer log shows command-set exhaustion. Fully restart Civ VII and retry the affected save; native freeze elimination still requires live-game validation.
+
+Version 64
+- Fix turn-resume redraws bypassing camera settling: wait for 250 ms without navigation input and recheck when the callback fires.
+- Coalesce turn resume, detail redraw and capture catch-up into one current-frame render. Cancel superseded detail, decoration, scatter, townscape and turn-resume timers before a full map render; retain historical playback position.
+- Cover zoom-out across turn activation with turn-first, detail-first and capture-first callback ordering, cancellation, map closure and explicit capture errors.
+- Windows classified the latest failure as an application hang. Its dump was unavailable and restart replaced the session logs; this confirmed scheduling repair still needs affected-save validation. Fully restart Civ VII.
+
 Version 63
 - Replace vertex-only shared-territory wedges with a connected core and side-joined edge pieces. Anchor borrowed colors to solid neighboring territory instead of swapping colors between adjacent split tiles. Preserve actual ownership, fog, wrapping, shared-tile coverage and incremental repaint behavior; use at most seven polygons per shared tile.
 - Give mod panels a shared Chronicle-inspired navy/gold frame, inset gilding, ornamental headers and serif titles.

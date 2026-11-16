@@ -1,5 +1,5 @@
-﻿Anthroprocenia version 63 (anthroprocenia_map_history)
-Built: 2026-11-14 12:46
+﻿Anthroprocenia version 70 (anthroprocenia_map_history)
+Built: 2026-11-14 21:38
 Files: 47
 
 anthroprocenia.modinfo

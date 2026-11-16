@@ -27,7 +27,7 @@ function fixture() {
     ...town, townRender: { viewKey: '', zoomKey: '', inputKey: '', changedAt: 0, pending: false, geometryRetained: false, timer: 0, logged: false, limitReported: false },
     townLayer: null, townDecorationLayer: null, townPaths: null, townKey: '', townSizeKey: '', townHighlightKey: null, townHits: [], townPeople: null,
     townRoofScene: {}, TOWN_ROOF_PATHS: [...town.TOWN_CLASSES, 'tents', 'battleBuildings', 'detail', 'tentDetail'],
-    townInterturn: { active: false }, lastMapInputTs: 0,
+    townInterturn: { active: false }, lastMapInputTs: 0, scatterJob: null,
     mapVisible: true, miniMapVisible: false, miniMapScale: 1, colShift: 0,
     mapX: 0, mapY: 0, mapPanX: 0, mapPanY: 0, mapPxW: 1000, mapPxH: 1000,
     viewZoom: 10, viewAspectY: 1, hexW: 100, hexH: 115, pos: 0, detailD: 4, fogMode: false,
@@ -35,14 +35,16 @@ function fixture() {
     measureArea: () => ({ x: 0, y: 0, w: ctx.window.innerWidth, h: ctx.window.innerHeight }),
     document: { createElementNS: element, body: element() },
     townscapeActive: () => ctx.mapVisible && ctx.viewZoom >= 1,
-    syncMapLabelVisibility() {}, syncTownCompass() {}, townLinkTile: () => 0, iconPoints: [], terrainMarkerPaths: new Map(), unitDom: {}, unitSlots: [], dotDom: {}, wonDom: {},
+    syncMapLabelVisibility() {}, syncRiverDeltas() {}, syncTownCompass() {}, townLinkTile: () => 0, iconPoints: [], terrainMarkerPaths: new Map(), unitDom: {}, unitSlots: [], dotDom: {}, wonDom: {},
     bgLayer: { el: { style: {} } }, columnShiftMarkersStale: false, fogMarkersStale: false,
     townDecoScene: {}, townPanScene: {}, hideTownLabels() {}, revalidateTownHover() {},
     townSceneEntries() { scenes++; return []; }, releaseTownSceneEntries() {}, townWaterfronts: () => [],
     planEntryLinks: () => ({ roads: [], water: [], bridges: [], tileWalls: [] }),
-    townDryRoads() {}, townBridgeRoads() {}, townBuildingGround: () => ({ clear: () => true }),
-    townMinorRoads() {}, townAccessRoads() {}, prepareTownLeisure() {},
+    townDryRoads: function* () {}, townBridgeRoads: function* () {}, townBuildingGround: function* () { return { clear: () => true }; },
+    townMinorRoads: function* () {}, townAccessRoads: function* () {}, prepareTownLeisure() {},
+    townWorld: null, peopleActive: () => false, buildTownWorld: function* (entries, plan, incremental, key) { return { key }; },
     syncTownDecorations() { decorations++; }, syncTownLabels() {},
+    advanceTownDecorations(entries) { ctx.syncTownDecorations(entries); },
     syncPeople() { assert.equal(ctx.townRender.pending, false); people++; },
     peopleSvg: { style: {} }, peopleDotPaths: [], peopleClumpPaths: [], peopleHeadwearPaths: [], cmdPickRings: [],
     peopleRing: null, peopleRingUnder: null, stopPeople() {},
@@ -62,17 +64,79 @@ function fixture() {
     flush() { const queued = [...timers.values()]; timers.clear(); for (const fn of queued) fn(); } };
 }
 
-test('decoration previews appear four times farther away without building town scenes or walkers, and hide on map closure', () => {
+test('decoration batches preserve visible roads and roofs, cancel obsolete camera work, and honor step/time budgets', () => {
+  const h = fixture(), { ctx } = h;
+  vm.runInContext(slice('advanceTownDecorations'), ctx);
+  ctx.walkerCrowdsActive = () => true;
+  let steps = 0, commits = 0;
+  ctx.syncTownDecorations = function* (entries, incremental) {
+    assert.equal(incremental, true);
+    for (let i = 0; i < 200; i++) { steps++; yield; }
+    commits++;
+  };
+  ctx.syncTownscapes();
+  assert.equal(steps, 64);
+  assert.equal(ctx.townLayer.style.display, 'block');
+  assert.equal(ctx.townRender.pending, false, 'decorations do not gate static geometry');
+  const obsolete = ctx.townRender.decoJob;
+  ctx.mapPanX = 10;
+  ctx.advanceTownDecorations([]);
+  assert.notEqual(ctx.townRender.decoJob, obsolete);
+  for (let i = 0; i < 5 && ctx.townRender.decoJob; i++) { h.advance(300); h.flush(); }
+  assert.equal(commits, 1, 'the canceled iterator never publishes its geometry');
+  let timedSteps = 0;
+  ctx.syncTownDecorations = function* () {
+    for (let i = 0; i < 100; i++) { timedSteps++; h.advance(3); yield; }
+  };
+  ctx.advanceTownDecorations([]);
+  assert.equal(timedSteps, 3, 'the eight-millisecond budget stops before the fourth work item');
+  ctx.mapVisible = false; ctx.syncTownscapes();
+  assert.equal(ctx.townRender.decoJob, null);
+  assert.equal(ctx.townDecorationLayer.style.display, 'none');
+});
+
+test('failed decoration preparation discards partial cache state without hiding the committed townscape', () => {
+  const { ctx } = fixture();
+  vm.runInContext(slice('advanceTownDecorations'), ctx);
+  ctx.walkerCrowdsActive = () => true;
+  ctx.syncTownDecorations = function* () { throw new Error('decoration failure'); };
+  ctx.townDecoScene.key = 'partial';
+  assert.throws(() => ctx.syncTownscapes(), /decoration failure/);
+  assert.equal(ctx.townRender.decoJob, null);
+  assert.equal(ctx.townDecoScene.key, '');
+  assert.equal(ctx.townLayer.style.display, 'block');
+  assert.equal(ctx.townRender.pending, false);
+});
+
+test('full decoration artwork uses a screen-sized SVG and hides obsolete camera projections', () => {
+  const { ctx } = fixture();
+  ctx.walkerCrowdsActive = () => false;
+  vm.runInContext(['peopleCameraKey', 'sizeScreenSvg'].map(slice).join('\n'), ctx);
+  ctx.ensureTownscapeLayer();
+  ctx.townDecoScene.fullDetail = true;
+  ctx.townDecoScene.screenKey = ctx.peopleCameraKey();
+  ctx.syncTownDecorationVisibility();
+  assert.equal(ctx.townDecorationLayer.style.display, 'block');
+  assert.equal(ctx.townDecorationLayer.attrs.viewBox, '0 0 100 100');
+  ctx.mapPanX += 1; ctx.syncTownDecorationVisibility();
+  assert.equal(ctx.townDecorationLayer.style.display, 'none', 'old screen positions are never painted at the new camera');
+  ctx.townDecoScene.screenKey = ctx.peopleCameraKey(); ctx.syncTownDecorationVisibility();
+  assert.equal(ctx.townDecorationLayer.style.display, 'block');
+  ctx.townDecoScene.fullDetail = false; ctx.syncTownDecorationVisibility();
+  assert.notEqual(ctx.townDecorationLayer.attrs.viewBox, '0 0 100 100', 'crowd previews restore the map-space viewport');
+});
+
+test('decoration previews appear eight times farther away without building town scenes or walkers, and hide on map closure', () => {
   const f = fixture(), { ctx } = f;
-  ctx.window.innerWidth = 1600; ctx.window.innerHeight = 900; ctx.viewZoom = 4;
+  ctx.window.innerWidth = 1600; ctx.window.innerHeight = 900; ctx.viewZoom = 2;
   vm.runInContext(['iconModeActive', 'townscapeActive'].map(slice).join('\n'), ctx);
   assert.equal(ctx.townscapeActive(), false); assert.equal(ctx.townDecoActive(), true);
   ctx.syncTownscapes(); f.advance(250); f.flush();
   assert.equal(f.counts().scenes, 0); assert.equal(f.counts().people, 0);
   assert.equal(f.counts().decorations, 1); assert.equal(ctx.townDecorationLayer.style.display, 'block');
   assert.notEqual(ctx.townLayer.style.display, 'block'); assert.match(ctx.townLayer.style.cssText, /display:none/);
-  ctx.viewZoom = 3.99; ctx.syncTownscapes(); assert.equal(ctx.townDecorationLayer.style.display, 'none');
-  ctx.viewZoom = 4; ctx.syncTownscapes(); f.advance(250); f.flush();
+  ctx.viewZoom = 1.99; ctx.syncTownscapes(); assert.equal(ctx.townDecorationLayer.style.display, 'none');
+  ctx.viewZoom = 2; ctx.syncTownscapes(); f.advance(250); f.flush();
   ctx.mapVisible = false; ctx.syncTownscapes();
   assert.equal(ctx.townDecorationLayer.style.display, 'none'); assert.equal(f.timers.size, 0);
 });
@@ -106,6 +170,161 @@ test('continuous townscape zoom retains transformed roads and roofs and coalesce
   assert.deepEqual(counts(), { scenes: 2, decorations: 2, people: 2 });
   assert.equal(timers.size, 0);
   assert.ok(slice('applyMapView').indexOf('syncTownVisibility()') < slice('applyMapView').indexOf('el.style.transform ='));
+});
+
+test('large entrance plans resume in bounded batches without rebuilding the scene or blocking navigation', () => {
+  const f = fixture(), { ctx } = f;
+  const entries = [];
+  let plans = 0, starts = 0, targets = 0;
+  let continuationDelay = 0;
+  const schedule = ctx.setTimeout;
+  ctx.setTimeout = (fn, delay) => { continuationDelay = delay; return schedule(fn, delay); };
+  ctx.townSceneEntries = () => entries;
+  ctx.planEntryLinks = () => { plans++; return { roads: [], water: [], bridges: [], tileWalls: [] }; };
+  ctx.townAccessRoads = function* () { starts++; for (let i = 0; i < 180; i++) { yield; targets++; } };
+  ctx.syncTownscapes();
+  assert.equal(ctx.townRender.pending, true);
+  assert.ok(targets < 64);
+  assert.equal(continuationDelay, 16, 'leave time for native input and painting between routing batches');
+  assert.equal(ctx.townRender.geometryRetained, false);
+  f.advance(250); f.flush();
+  assert.equal(ctx.townRender.pending, true);
+  f.flush();
+  assert.equal(targets, 180);
+  assert.equal(starts, 1); assert.equal(plans, 1);
+  assert.equal(ctx.townRender.pending, false);
+  assert.equal(ctx.townRender.accessJob, null);
+  assert.equal(ctx.townLayer.style.display, 'block');
+  ctx.pos++;
+  ctx.syncTownscapes(); f.advance(250); f.flush();
+  assert.ok(ctx.townRender.accessJob);
+  ctx.mapVisible = false; ctx.syncTownscapes();
+  assert.equal(ctx.townRender.accessJob, null);
+  assert.equal(f.timers.size, 0);
+});
+
+test('entrance batches yield at the time budget and discard a failed iterator rather than publishing partial roads', () => {
+  const f = fixture(), { ctx } = f, entries = [];
+  let targets = 0;
+  ctx.townSceneEntries = () => entries;
+  ctx.townAccessRoads = function* () {
+    for (let i = 0; i < 20; i++) { yield; targets++; f.advance(5); }
+  };
+  ctx.syncTownscapes();
+  assert.equal(targets, 2, 'stop after crossing eight milliseconds, well before the 64-step cap');
+  assert.equal(ctx.townRender.pending, true);
+  ctx.pos++;
+  ctx.townAccessRoads = function* () { yield; throw new Error('injected entrance failure'); };
+  ctx.syncTownscapes();
+  f.advance(250); f.flush();
+  assert.equal(ctx.townRender.accessJob, null);
+  assert.equal(ctx.townRender.geometryRetained, false);
+  assert.match(f.errors[0], /injected entrance failure/);
+  ctx.townAccessRoads = function* () {};
+  ctx.syncTownscapes();
+  assert.equal(ctx.townLayer.style.display, 'block');
+});
+
+test('dry-road and bridge phases retain progress, yield to input, and discard failed preparation', () => {
+  const f = fixture(), { ctx } = f, entries = [];
+  let dryStarts = 0, bridgeStarts = 0, completed = 0;
+  ctx.townSceneEntries = () => entries;
+  ctx.townDryRoads = function* (actualEntries, plan, incremental) {
+    assert.equal(actualEntries, entries); assert.equal(incremental, true);
+    dryStarts++;
+    for (let i = 0; i < 100; i++) { yield; completed++; f.advance(1); }
+  };
+  ctx.townBridgeRoads = function* () { bridgeStarts++; yield; throw new Error('bridge preparation failed'); };
+  ctx.syncTownscapes();
+  assert.ok(completed <= 8);
+  assert.equal(ctx.townRender.accessJob.phase, 'dry roads');
+  const job = ctx.townRender.accessJob;
+  f.advance(250);
+  for (let i = 0; i < 20 && ctx.townRender.accessJob; i++) f.flush();
+  assert.equal(completed, 100);
+  assert.equal(dryStarts, 1); assert.equal(bridgeStarts, 1);
+  assert.equal(job.done, false);
+  assert.equal(ctx.townRender.accessJob, null);
+  assert.equal(ctx.townRender.geometryRetained, false);
+  assert.match(f.errors[0], /bridge preparation failed/);
+});
+
+test('town geometry appears while walking-network preparation resumes and only completed networks reach people', () => {
+  const f = fixture(), { ctx } = f, entries = [];
+  let starts = 0, edges = 0, published = null;
+  ctx.townSceneEntries = () => entries;
+  ctx.peopleActive = () => true;
+  ctx.buildTownWorld = function* (actualEntries, plan, incremental, key) {
+    starts++;
+    assert.equal(actualEntries, entries); assert.equal(incremental, true);
+    for (let i = 0; i < 160; i++) { yield; edges++; f.advance(1); }
+    return { key, complete: true };
+  };
+  ctx.syncPeople = (actualEntries, world) => { assert.equal(actualEntries, entries); published = world; ctx.townWorld = world; };
+  ctx.syncTownscapes();
+  assert.ok(edges <= 8);
+  assert.ok(ctx.townRender.walkJob);
+  assert.equal(ctx.townRender.accessJob, null);
+  assert.equal(ctx.townRender.geometryRetained, true);
+  assert.equal(ctx.townLayer.style.display, 'block');
+  assert.equal(ctx.townRender.pending, false, 'the static scene does not wait for walkers');
+  assert.equal(published, null);
+  f.advance(250);
+  for (let i = 0; i < 30 && ctx.townRender.walkJob; i++) f.flush();
+  assert.equal(edges, 160); assert.equal(starts, 1);
+  assert.equal(published.complete, true);
+  assert.equal(published.key, ctx.townKey);
+  assert.equal(ctx.townRender.pending, false);
+  const runningWorld = published;
+  ctx.pos++;
+  ctx.buildTownWorld = function* () { yield; throw new Error('walking network failed'); };
+  ctx.syncTownscapes(); f.advance(250); f.flush();
+  assert.equal(ctx.townRender.walkJob, null);
+  assert.match(f.errors[0], /walking network failed/);
+  assert.equal(published, runningWorld, 'do not publish a failed replacement');
+  assert.equal(ctx.townLayer.style.display, 'block', 'a walker failure cannot hide town geometry');
+});
+
+test('the first townscape waits for its markers and then submits visible roads and roofs', () => {
+  const { ctx, counts } = fixture();
+  ctx.scatterJob = { nextTile: 1 };
+  ctx.syncTownscapes();
+  assert.equal(counts().scenes, 0);
+  assert.equal(ctx.townRender.geometryRetained, false);
+  assert.equal(ctx.townRender.pending, true);
+  const poly = [[452, 452], [456, 452], [456, 456], [452, 456]];
+  const entry = {
+    item: { kind: 'building', index: 0 }, pathKey: 'visible-home', kind: 'town',
+    center: { x: 454, y: 454 }, radius: 4,
+    polys: [{ poly, box: town.polygonBounds(poly), parts: [], detail: [], form: 'rect', group: 'house', sourceIndex: 0 }],
+    paths: { accents: '', mainStreets: 'M451,453L457,453' },
+    minorRoadPath: 'M453,451L453,457', dryMainRoadPath: 'M451,453L457,453',
+  };
+  ctx.townSceneEntries = () => [entry];
+  ctx.scatterJob = null;
+  ctx.iconPoints.push({ x: 454, y: 454, item: entry.item });
+  ctx.syncTownscapes();
+  assert.equal(ctx.townRender.pending, false);
+  assert.equal(ctx.townLayer.style.display, 'block');
+  assert.equal(ctx.townRender.geometryRetained, true);
+  assert.match(ctx.townPaths.house.attrs.d, /^M/);
+  assert.match(ctx.townPaths.mainStreets.attrs.d, /^M/);
+  assert.ok(entry.final.length > 0);
+});
+
+test('oversized accepted footprints cannot enumerate unbounded empty grid cells during town preparation', () => {
+  const { ctx } = fixture();
+  const poly = [[-1e9, -1e9], [1e9, -1e9], [1e9, 1e9], [-1e9, 1e9]];
+  const entry = {
+    item: { kind: 'building', index: 0 }, pathKey: 'large-footprint', kind: 'town',
+    center: { x: 0, y: 0 }, radius: 1, paths: { accents: '' },
+    polys: [{ poly, box: town.polygonBounds(poly), parts: [], detail: [], form: 'rect', group: 'house', sourceIndex: 0 }],
+  };
+  ctx.townSceneEntries = () => [entry];
+  vm.runInContext('syncTownscapes()', ctx, { timeout: 1000 });
+  assert.equal(ctx.townRender.pending, false);
+  assert.equal(entry.final.length, 4);
+  assert.equal(ctx.townLayer.style.display, 'block');
 });
 
 test('townscape and river SVG viewports stay screen-sized at the actual maximum zoom and map points correctly through pan and aspect changes', () => {
@@ -274,6 +493,12 @@ test('walker simulation pauses for pending town geometry without destroying peop
   ctx.peopleTick();
   assert.equal(ctx.peopleLoop, 0);
   assert.equal(ctx.peopleLast, 123);
+  assert.equal(ctx.townWorld, world);
+  ctx.townRender.pending = false;
+  ctx.townRender.walkJob = {};
+  ctx.peopleLoop = 1;
+  ctx.peopleTick();
+  assert.equal(ctx.peopleLoop, 0, 'old-world walkers pause while the new network is being built');
   assert.equal(ctx.townWorld, world);
 });
 

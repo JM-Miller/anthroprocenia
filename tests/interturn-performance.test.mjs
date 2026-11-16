@@ -15,12 +15,43 @@ function slice(source, name) {
   }
   return source.slice(start, end + 1);
 }
+
+test('movement captures run without a debounce delay, coalesce event bursts and retain resolved-turn bookkeeping', () => {
+  const callbacks = [], captures = [];
+  const ctx = vm.createContext({
+    started: true, lastTurnRecorded: 6, Game: { age: 0, turn: 8 },
+    localRecordingTurn: () => true, frameIndex: () => 1, window: { AnthroproceniaReplay: { isVisible: () => true } },
+    setTimeout: (callback, delay) => { assert.equal(delay, 0); callbacks.push(callback); return callbacks.length; },
+    record: turn => { captures.push(turn); ctx.lastTurnRecorded = turn; },
+    err: message => assert.fail(message),
+  });
+  vm.runInContext(recorder.slice(recorder.indexOf('const MID_TURN_RECORD_DELAY_MS'), recorder.indexOf('window.AnthroproceniaRequestCapture')), ctx);
+  ctx.scheduleMidTurnRecord(); ctx.scheduleMidTurnRecord();
+  assert.equal(callbacks.length, 1); callbacks.shift()();
+  assert.deepEqual(captures, [8]); assert.equal(ctx.lastTurnRecorded, 6);
+  ctx.scheduleMidTurnRecord(); callbacks.shift()();
+  assert.deepEqual(captures, [8, 8]);
+});
+
+test('recorded defense health is bounded and a missing native API reports once without losing settlements', () => {
+  const errors = [], districts = { getDistrictHealth: () => 25, getDistrictMaxHealth: () => 100 };
+  const ctx = vm.createContext({ Players: { get: () => ({ Districts: districts }) }, err: message => errors.push(message) });
+  vm.runInContext("let cityDefenseApiWarned = false;\n" + slice(recorder, 'cityDefenseHealth'), ctx);
+  const city = { owner: 0, location: { x: 1, y: 1 } };
+  assert.deepEqual([...ctx.cityDefenseHealth(city)], [25, 100]);
+  districts.getDistrictHealth = () => 150;
+  assert.deepEqual([...ctx.cityDefenseHealth(city)], [100, 100]);
+  districts.getDistrictHealth = undefined;
+  assert.equal(ctx.cityDefenseHealth(city), null); assert.equal(ctx.cityDefenseHealth(city), null);
+  assert.equal(errors.length, 1);
+});
 test('AI processing stops decorative simulation and scene rebuilds without destroying the walking scene', () => {
   const world = {}, scene = {}, tasks = [];
   let redraws = 0;
   const ctx = vm.createContext({
     townInterturn: { active: true, timer: 0 }, mapVisible: true,
-    townRender: { pending: false }, syncTownVisibility() {},
+    lastMapInputTs: 0, syncToLatestCapture: () => false,
+    townRender: { pending: false }, syncTownVisibility() {}, syncRiverDeltas() {},
     setTimeout: fn => { tasks.push(fn); return tasks.length; }, redraw: () => redraws++,
     peopleLoop: 1, syncCrowdVisibility() {}, peopleActive: () => true,
     townLayer: scene, peopleSvg: {}, townWorld: world, peopleLast: 0, nowMs: () => 123,

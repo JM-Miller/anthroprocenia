@@ -204,6 +204,27 @@ test('loading backdrop covers the entire game view only for the loading/error pl
     els: {}, ps: n => n, measureArea: () => ({ x: 100, y: 50, w: 800, h: 600 }),
     document: { body, createElement: () => ({ style: {}, setAttribute() {} }) },
   });
+  test('diplomacy loading stays through native camera transitions, releases when ready and preserves newer errors', () => {
+    const paints = [], manager = { cameraDollyQueued: true }, body = { appendChild() {} };
+    const ctx = context(['showDiplomacyLoading', 'showLoading', 'hideLoading'], {
+      mapVisible: true, diplomacyTransition: { token: 0 }, LeaderModelManager: manager, building: false, mapOpenPending: false,
+      els: {}, ps: n => n, measureArea: () => ({ x: 0, y: 0, w: 800, h: 600 }),
+      document: { body, createElement: () => ({ style: {}, setAttribute() {} }) },
+      nextPaint: fn => paints.push(fn),
+    });
+    ctx.showDiplomacyLoading();
+    assert.equal(ctx.els.loading.textContent, 'Loading...');
+    assert.equal(ctx.els.loadingBackdrop.style.display, 'block');
+    paints.shift()(); assert.equal(ctx.els.loadingBackdrop.style.display, 'block');
+    manager.cameraDollyQueued = false; manager.isClosing = true;
+    paints.shift()(); assert.equal(ctx.els.loadingBackdrop.style.display, 'block');
+    manager.isClosing = false; paints.shift()();
+    assert.equal(ctx.els.loading.style.display, 'none'); assert.equal(ctx.els.loadingBackdrop.style.display, 'none');
+    ctx.showDiplomacyLoading(); ctx.showLoading('Map failed');
+    paints.shift()(); assert.equal(ctx.els.loading.textContent, 'Map failed'); assert.equal(ctx.els.loadingBackdrop.style.display, 'block');
+    ctx.mapVisible = false; ctx.hideLoading(); ctx.showDiplomacyLoading();
+    assert.equal(paints.length, 0); assert.equal(ctx.els.loading.style.display, 'none');
+  });
   ctx.showLoading();
   const { loading, loadingBackdrop } = ctx.els;
   assert.match(loadingBackdrop.style.cssText, /position:fixed;left:0;top:0;width:100%;height:100%;background:#000/);

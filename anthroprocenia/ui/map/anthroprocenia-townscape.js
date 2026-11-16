@@ -821,7 +821,8 @@ export function* quarterBuildingGroups(buildings) {
     const box = b.box || polygonBounds(b.poly);
     return (box.x1 - box.x0) * (box.y1 - box.y0);
   });
-  const largest = Math.max(0, ...areas);
+  let largest = 0;
+  for (const area of areas) if (area > largest) largest = area;
   const clip = (poly, axis, boundary, sign) => {
     const out = [];
     for (let i = 0; i < poly.length; i++) {

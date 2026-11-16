@@ -273,6 +273,18 @@ function unitOptions(o) {
 export function landMilitaryUnit(unit) {
   return !!unit && ['infantry', 'ranged', 'cavalry', 'siege', 'armor', 'commander', 'scout'].includes(unit.sub);
 }
+export function occupationYieldIndex(title) {
+  const patterns = [
+    /farmer|farmhand|field hand|reaper|shepherd|herdsman|rancher|planter|picker|fisherman|hunter|miller|baker|agronomist|plowman|granary/i,
+    /artisan|craftsman|smith|weaver|potter|tanner|cooper|glassblower|machinist|welder|mechanic|miner|mason|stonecutter|quarry|woodcutter|sawyer|carpenter|lumberjack|factory|engineer|builder|laborer/i,
+    /merchant|trader|peddler|banker|stallkeeper|moneychanger|shopkeeper|salesman|accountant/i,
+    /scholar|researcher|professor|teacher|scientist|alchemist|librarian|philosopher|technician/i,
+    /artist|musician|actor|sculptor|poet|archivist|antiquarian|archaeologist/i,
+    /entertainer|bath attendant|gardener|groundskeeper|usher|innkeeper|clergyman|priest|priestess|acolyte|chaplain|temple keeper/i,
+    /diplomat|courtier|herald|civil servant|steward|chamberlain|notary|scribe|clerk|aide/i,
+  ];
+  return patterns.findIndex(pattern => pattern.test(title));
+}
 export function occupationOptions(opts) {
   const age = Math.max(0, Math.min(2, opts.age | 0)), flavor = faithFlavor(opts.religion);
   const shares = new Map(), add = (title, share) => shares.set(title, (shares.get(title) || 0) + share);
@@ -301,6 +313,16 @@ export function occupationOptions(opts) {
   if (unlocked.length) {
     for (const [title, share] of shares) shares.set(title, share * 0.7);
     for (const row of unlocked) add(row[1], 0.3 / unlocked.length);
+  }
+  if (!opts.unit && Array.isArray(opts.yields)) {
+    const representatives = ['Farmer', 'Artisan', 'Trader', 'Scholar', 'Artist', 'Entertainer', 'Diplomat'];
+    representatives.forEach(title => { if (!shares.has(title)) add(title, 0.01); });
+    for (const [title, share] of shares) {
+      const index = occupationYieldIndex(title), value = opts.yields[index];
+      if (index >= 0 && Number.isFinite(value)) shares.set(title, share * (value >= 0 ? 1 + value / 10 : 1 / (1 - value / 10)));
+    }
+    const total = [...shares.values()].reduce((sum, share) => sum + share, 0);
+    for (const [title, share] of shares) shares.set(title, share / total);
   }
   return [...shares];
 }

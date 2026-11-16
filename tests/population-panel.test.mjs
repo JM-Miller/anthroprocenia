@@ -30,6 +30,47 @@ test('totals roll up through tiles, continents and civilizations, largest first'
   assert.equal(tree[0].children[0].children[0].children.length, 1, 'icons with no population are left out');
 });
 
+test('geographic divisions sit below continents without changing saved tile and person identities', () => {
+  const original = entry('a', 'k', 10, 'x', 100), second = entry('a', 'k', 11, 'y', 50);
+  const before = buildPopulationTree([original])[0].children[0].children[0].children[0].children[0];
+  const tree = buildPopulationTree([
+    { ...original, region: { id: 'scandinavia', name: 'Scandinavia', type: 'region' } },
+    { ...second, region: { id: 'scandinavia', name: 'Scandinavia', type: 'region' } },
+  ]);
+  const continent = tree[0].children[0], region = continent.children[0], icon = region.children[0].children[0].children[0];
+  assert.equal(region.kind, 'region'); assert.equal(region.label, 'Scandinavia'); assert.equal(region.total, 150);
+  assert.equal(continent.total, 150); assert.equal(icon.id, before.id);
+  assert.deepEqual(ancestorIds(icon.id, tree), [tree[0].id, continent.id, region.id, region.children[0].id, region.children[0].children[0].id]);
+});
+
+test('recorded settlement population and occupations share home plans without mutating the viewed turn', async () => {
+  const playback = await read('anthroprocenia-playback.js');
+  const source = playback.slice(playback.indexOf('const settlementPopulationSnapshots'), playback.indexOf('let cityDetailsTimer'));
+  const units = await load('anthroprocenia-units.js'), people = await load('anthroprocenia-people.js');
+  const frame = new Map([[0, 0]]), settlement = ['Roma', 5, 'Capital', [0, 0, 0, 0, 0, 0, 0]];
+  const context = vm.createContext({
+    ...units, homePlan, occupationYieldIndex: people.occupationYieldIndex, iconNodeId: panel.iconNodeId,
+    manifest: { rev: 1, w: 10, buildingTypes: [[0, 0, 0]] }, frames: [[0, 1, 1, '1 AD']], pos: 99,
+    basePos: null, mapPxW: 10, DOTS_PER_ITEM: 10, PEOPLE_PROGRESSION_NODES: [],
+    reconstructSettlements: () => new Map([[0, settlement]]), reconstructBuildings: () => new Map([[0, [0]]]),
+    reconstructWonders: () => new Map(), reconstructDamaged: () => new Map(), reconstructIdentity: () => new Map(),
+    readUnitsTurn: () => [], frameFor: () => frame, readPlayersRec: () => null,
+    ageEraKey: () => 'ANTIQUITY', townEra: () => ({ age: 0 }), cmdPopulationDelta: () => 0,
+    popIconTraits: () => ({ category: 'generic' }), personBaseId: id => id, continentTypeForTile: () => 1,
+  });
+  vm.runInContext(source, context);
+  const first = vm.runInContext('settlementPopulationSnapshot(0).get(0)', context);
+  const denominator = units.populationWeight('center') + 5 * units.populationWeight('specialist');
+  const expected = Array.from({ length: 10 }, (_, dot) => units.homePopulation(units.estimatedWorldPopulation(1), denominator,
+    `0|b|0|${dot}`, 5, units.populationWeight('center'))).reduce((sum, value) => sum + value, 0)
+    + units.homePopulation(units.estimatedWorldPopulation(1), denominator, '0|s', 5, units.populationWeight('specialist'));
+  assert.equal(first.population, expected); assert.equal(context.pos, 99);
+  settlement[3][0] = 40; context.manifest.rev = 2;
+  const changed = vm.runInContext('settlementPopulationSnapshot(0).get(0)', context);
+  assert.equal(changed.population, first.population); assert.ok(changed.occupations[0] > first.occupations[0]);
+  assert.ok(changed.occupations.reduce((sum, value) => sum + value, 0) <= changed.population);
+});
+
 test('everything starts collapsed and expanding shows exactly one level more', () => {
   const tree = sample(), expanded = new Set(), shown = new Map();
   assert.equal(visibleRows(tree, expanded, shown).length, 2);
@@ -313,6 +354,7 @@ test('the model builder and renderer run end to end against stubbed game data', 
     siteNameForItem: item => { collected++; return `The Brutii ${item.typeIndex}-${item.dot}`; },
     siteNamesForTile: (civ, index, items) => items.map(it => [`The ${civ} ${it.base}`]),
     populationForItem: item => 40 + (item.dot || 0),
+    nearestSettlement: () => null,
     unitNameForItem: () => 'The First Roma Slingers', unitTypeName: () => 'Warrior', unitSubcategory: () => 'infantry', unitTypeKey: () => 'UNIT_WARRIOR',
     townEraNow: () => ({ age: 0, lvl: 1 }), personProfile, escHtml: s => String(s),
     els: { popRows: { innerHTML: '' }, popTotal: { textContent: '' }, popTrack: styleBox(), popThumb: styleBox(), popView: styleBox(), popPanel: styleBox() },
@@ -375,7 +417,7 @@ test('the model builder and renderer run end to end against stubbed game data', 
   assert.equal(state.builtKey, '', 'waits for the view to settle');
   state.bgSince = Date.now() - 3000;
   vm.runInContext('popBackgroundSave()', context);
-  assert.equal(state.builtKey, '0|1|0');
+  assert.equal(state.builtKey, '0|1|0|0');
   assert.deepEqual(saves, ['pop0a']);
 
   const civ = state.tree[0];
@@ -458,7 +500,7 @@ test('the model builder and renderer run end to end against stubbed game data', 
   state.turnChanged = true;
   context.pos = 1;
   assert.equal(vm.runInContext('popRefreshModel(false)', context), false, 'a changed turn waits for things to settle first');
-  assert.equal(state.pendingKey, '1|1|0');
+  assert.equal(state.pendingKey, '1|1|0|0');
 });
 
 test('search finds levels by name and people by name, occupation or age, within a budget', () => {

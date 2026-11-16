@@ -165,6 +165,35 @@ test('a river between townscapes is crossed only where a bridge was built', () =
   assert.ok(graphRoute(bridged.graph, bridged.parts.get('a').destinations[0], bridged.parts.get('b').destinations[0]), 'over the bridge');
 });
 
+test('incremental world construction retains every node, edge, cost and river restriction without publishing early', () => {
+  const ctx = world([]), c = centre(ctx, 8);
+  const entries = [entry('a', 8, c.x - 30, c.y, 100, 0.1), entry('b', 8, c.x + 10, c.y, 100, 0.1)];
+  const plan = { roads: [], water: [], rivers: [{ x1: c.x, y1: c.y - 30, x2: c.x, y2: c.y + 30, clear: 1 }], bridges: [] };
+  const expected = ctx.buildTownWorld(entries, plan);
+  const steps = ctx.buildTownWorld(entries, plan, true, 'next-scene');
+  assert.equal(steps.next().done, false);
+  let result, yields = 1;
+  do { result = steps.next(); yields++; } while (!result.done);
+  assert.ok(yields > 400, 'node copying and edge checks yield within each dense local network');
+  const actual = result.value;
+  assert.equal(actual.key, 'next-scene');
+  for (const name of ['nodes', 'adj', 'cost', 'destinations', 'roadEnds'])
+    assert.deepEqual(actual.graph[name], expected.graph[name], name);
+  assert.equal(actual.graph.edgeAllowed({ x: c.x - 10, y: c.y }, { x: c.x + 10, y: c.y }), false);
+  assert.equal(ctx.townWorld, null, 'preparation does not replace the running world');
+});
+
+test('people reuse the completed walking network and reject a stale prepared scene', () => {
+  const ctx = world([]), c = centre(ctx, 8), entries = [entry('a', 8, c.x, c.y)];
+  const prepared = ctx.buildTownWorld(entries, null);
+  ctx.buildTownWorld = () => assert.fail('must not rebuild a prepared walking network synchronously');
+  ctx.syncPeople(entries, prepared);
+  assert.equal(ctx.townWorld, prepared);
+  ctx.townKey = 'new-scene';
+  assert.throws(() => ctx.syncPeople(entries, prepared), /stale townscape scene/);
+  assert.equal(ctx.townWorld, prepared, 'a stale replacement cannot overwrite the running network');
+});
+
 test('townscapes separated by water are not joined, even on the same tile', () => {
   const context = world([8]), c = centre(context, 8);
   context.terrain[8] = 5;
