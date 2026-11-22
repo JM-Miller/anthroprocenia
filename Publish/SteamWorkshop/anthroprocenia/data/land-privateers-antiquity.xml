@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Database>
+  <Types>
+    <Row Type="UNIT_ANTHRO_RAIDER" Kind="KIND_UNIT" />
+  </Types>
+  <Units>
+    <Row UnitType="UNIT_ANTHRO_RAIDER" Name="LOC_UNIT_ANTHRO_RAIDER_NAME" Description="LOC_UNIT_ANTHRO_RAIDER_DESCRIPTION" Tier="2" Maintenance="2" BaseSightRange="2" BaseMoves="3" UnitMovementClass="UNIT_MOVEMENT_CLASS_FOOT" Domain="DOMAIN_LAND" CoreClass="CORE_CLASS_MILITARY" FormationClass="FORMATION_CLASS_LAND_COMBAT" ZoneOfControl="true" CanPurchase="true" MustPurchase="true" PurchaseYield="YIELD_GOLD" />
+  </Units>
+  <Unit_Stats>
+    <Row UnitType="UNIT_ANTHRO_RAIDER" Combat="22" />
+  </Unit_Stats>
+  <Unit_Costs>
+    <Row UnitType="UNIT_ANTHRO_RAIDER" YieldType="YIELD_PRODUCTION" Cost="70" />
+  </Unit_Costs>
+  <TypeTags>
+    <Row Type="UNIT_ANTHRO_RAIDER" Tag="UNIT_CLASS_COMBAT" />
+    <Row Type="UNIT_ANTHRO_RAIDER" Tag="UNIT_CLASS_MELEE" />
+    <Row Type="UNIT_ANTHRO_RAIDER" Tag="UNIT_CLASS_INFANTRY" />
+    <Row Type="UNIT_ANTHRO_RAIDER" Tag="UNIT_CLASS_ANTHRO_LAND_PRIVATEER" />
+  </TypeTags>
+  <Unit_Abilities>
+    <Row UnitType="UNIT_ANTHRO_RAIDER" UnitAbilityType="ABILITY_ANTHRO_PIRATE" />
+  </Unit_Abilities>
+  <Unit_Advisories>
+    <Row UnitType="UNIT_ANTHRO_RAIDER" AdvisoryClassType="ADVISORY_CLASS_MILITARY" />
+  </Unit_Advisories>
+  <ProgressionTreeNodeUnlocks>
+    <Row ProgressionTreeNodeType="NODE_TECH_AQ_BRONZE_WORKING" TargetType="UNIT_ANTHRO_RAIDER" TargetKind="KIND_UNIT" UnlockDepth="1" />
+  </ProgressionTreeNodeUnlocks>
+</Database>

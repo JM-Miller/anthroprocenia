@@ -103,13 +103,12 @@ export function unwrapPathPoints(points, period) {
   return out;
 }
 
-// Where turn numbers go on a movement path: the last tile of each turn and the destination, or every tile when asked.
-export function pathTurnLabels(plots, turns, everyTile) {
+// Label the first tile reached in a different movement turn.
+export function pathTurnLabels(plots, turns) {
   const labels = [];
   if (!Array.isArray(plots) || !Array.isArray(turns)) return labels;
   for (let i = 1; i < plots.length; i++) {
-    if (!Number.isFinite(turns[i])) continue;
-    if (everyTile || i === plots.length - 1 || turns[i] !== turns[i + 1]) labels.push({ i, turn: turns[i] });
+    if (Number.isFinite(turns[i]) && turns[i] !== turns[i - 1]) labels.push({ i, turn: turns[i] });
   }
   return labels;
 }

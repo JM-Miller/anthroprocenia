@@ -2,44 +2,83 @@ import { formatThousands } from './anthroprocenia-population-panel.js';
 import { uiGlyph } from './anthroprocenia-ui.js';
 
 export function regionRows(geography, frame, settlements, tree, visibility, ownerName) {
-  const rows = new Map(), populations = new Map(), stack = [...tree];
+  const rows = new Map(), named = new Map(), populations = new Map(), stack = [...tree];
+  const continentForTile = new Map();
+  for (const continent of geography.continents || []) {
+    for (const index of continent.tiles || []) continentForTile.set(index, continent.name);
+  }
   while (stack.length) {
     const node = stack.pop();
     if (node.kind === 'tile') populations.set(node.tile, (populations.get(node.tile) || 0) + node.total);
     else stack.push(...(node.children || []));
   }
-  for (const region of geography.regions) rows.set(region.id, {
-    id: region.id, name: region.name, type: region.island ? 'Island' : region.water ? 'Water' : 'Region',
-    tiles: 0, population: 0, settlements: [], owners: new Map(),
-  });
+  const add = (record, type, collection) => {
+    let row = named.get(record.name);
+    if (!row) {
+      row = { id: record.id, name: record.name, type, types: [], regionIds: [], featureIds: [], continentIds: [],
+        indices: new Set(), tiles: 0, population: 0, settlements: [], owners: new Map() };
+      named.set(record.name, row);
+    }
+    if (!row.types.includes(type)) row.types.push(type);
+    row[collection].push(record.id);
+    for (const index of record.tiles || []) row.indices.add(index);
+    return row;
+  };
+  for (const region of geography.regions) {
+    const type = region.island ? 'Island' : region.water ? 'Water' : 'Region';
+    const row = add(region, type, 'regionIds');
+    rows.set(region.id, row);
+  }
   for (const [index, id] of geography.regionForTile) {
-    if (visibility && (visibility[index] || 0) === 0) continue;
     const row = rows.get(id);
-    if (!row) continue;
-    row.tiles++; row.population += populations.get(index) || 0;
-    const settlement = settlements.get(index);
-    if (settlement) row.settlements.push({ name: settlement[0] || 'Settlement', citizens: settlement[1] });
-    const value = frame.get(index);
-    if (value !== undefined) {
-      const owner = (value >> 3) & 63, name = ownerName(owner);
-      if (name) {
-        const previous = row.owners.get(owner);
-        row.owners.set(owner, { name, tiles: (previous ? previous.tiles : 0) + 1 });
-      }
+    if (row) row.indices.add(index);
+  }
+  for (const feature of geography.features || []) {
+    if (feature.type === 'river' || feature.type === 'mountains') {
+      add(feature, feature.type === 'river' ? 'River' : 'Mountains', 'featureIds');
     }
   }
-  return [...rows.values()].filter(row => row.tiles).sort((a, b) => a.name.localeCompare(b.name)).map(row => ({
+  for (const continent of geography.continents || []) add(continent, 'Continent', 'continentIds');
+  for (const row of named.values()) {
+    row.tileIndices = [];
+    const membership = new Map();
+    for (const index of row.indices) {
+      if (visibility && (visibility[index] || 0) === 0) continue;
+      row.tileIndices.push(index);
+      const continent = continentForTile.get(index);
+      if (continent) membership.set(continent, (membership.get(continent) || 0) + 1);
+      row.tiles++; row.population += populations.get(index) || 0;
+      const settlement = settlements.get(index);
+      if (settlement) row.settlements.push({ name: settlement[0] || 'Settlement', citizens: settlement[1] });
+      const value = frame.get(index);
+      if (value !== undefined) {
+        const owner = (value >> 3) & 63, name = ownerName(owner);
+        if (name) {
+          const previous = row.owners.get(owner);
+          row.owners.set(owner, { name, tiles: (previous ? previous.tiles : 0) + 1 });
+        }
+      }
+    }
+    row.continent = [...membership].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0] || null;
+    delete row.indices;
+  }
+  return [...named.values()].filter(row => row.tiles).sort((a, b) => a.name.localeCompare(b.name)).map(row => ({
     ...row, settlements: row.settlements.sort((a, b) => a.name.localeCompare(b.name)),
     owners: [...row.owners.values()].sort((a, b) => b.tiles - a.tiles || a.name.localeCompare(b.name)),
   }));
 }
 
 const PAGE = 40;
+const REGION_TYPES = [['Region', 'Regions', 'regions'], ['Island', 'Islands', 'island'], ['Water', 'Water', 'water'],
+  ['Mountains', 'Mountains', 'mountains'], ['River', 'Rivers', 'river'], ['Continent', 'Continents', 'continent']];
 export class RegionsPanel {
   constructor({ document, scale, className, onHighlight }) {
     this.document = document; this.scale = scale; this.onHighlight = onHighlight;
-    this.open = false; this.visible = false; this.hover = null; this.selected = null; this.highlight = null;
+    this.open = false; this.visible = false; this.hover = null; this.selected = null; this.highlight = null; this.highlightSelection = null;
     this.rows = []; this.slots = []; this.query = ''; this.page = 0; this.populationStatus = '';
+    this.expanded = new Set();
+    this.searchCollapsed = new Set();
+    this.types = new Set(REGION_TYPES.map(([type]) => type)); this.typeButtons = [];
     const make = (tag, css, text) => {
       const element = document.createElement(tag);
       element.style.cssText = css;
@@ -76,6 +115,19 @@ export class RegionsPanel {
     this.search.setAttribute('placeholder', 'Search regions, settlements or countries');
     this.search.setAttribute('aria-label', 'Search regions, settlements or countries');
     searchBar.append(searchIcon, this.search);
+    const filters = make('div', `display:flex;flex-wrap:wrap;gap:${p(6)}px;padding:0 ${p(8)}px ${p(8)}px;`);
+    filters.setAttribute('role', 'group'); filters.setAttribute('aria-label', 'Region types');
+    for (const [type, label, icon] of REGION_TYPES) {
+      const button = make('button', `${buttonCss}flex:1;padding:${p(6)}px;white-space:nowrap;`);
+      button.innerHTML = glyph(icon) + ' ' + label;
+      button.setAttribute('aria-label', `Include ${label.toLowerCase()}`);
+      button.setAttribute('title', `Show or hide ${label.toLowerCase()}`);
+      this.activate(button, () => {
+        if (this.types.has(type)) this.types.delete(type); else this.types.add(type);
+        this.page = 0; this.render();
+      });
+      this.typeButtons.push({ type, button }); filters.appendChild(button);
+    }
     this.status = make('div', `padding:0 ${p(8)}px ${p(6)}px;color:#cfe3ff;`);
     this.list = make('div', 'flex:1;min-height:0;overflow-y:auto;');
     this.list.setAttribute('role', 'list');
@@ -86,14 +138,14 @@ export class RegionsPanel {
     this.next.innerHTML = 'Next ' + glyph('next');
     this.counter = make('span', 'flex:1;text-align:center;');
     footer.append(this.previous, this.counter, this.next);
-    this.panel.append(header, searchBar, this.status, this.list, footer);
+    this.panel.append(header, searchBar, filters, this.status, this.list, footer);
     for (const element of [this.button, this.panel]) { element.classList.add(className); document.body.appendChild(element); }
     this.activate(this.button, () => this.setOpen(!this.open));
     this.activate(this.close, () => this.setOpen(false));
     this.activate(this.clear, () => { this.selected = null; this.hover = null; this.paintSelection(); this.syncHighlight(); });
     this.activate(this.previous, () => { this.page = Math.max(0, this.page - 1); this.render(); });
     this.activate(this.next, () => { this.page++; this.render(); });
-    this.search.addEventListener('input', () => { this.query = this.search.value.trim().toLowerCase(); this.page = 0; this.render(); });
+    this.search.addEventListener('input', () => { this.query = this.search.value.trim().toLowerCase(); this.searchCollapsed.clear(); this.page = 0; this.render(); });
     this.panel.addEventListener('mouseleave', () => { this.hover = null; this.syncHighlight(); });
   }
   activate(element, run) {
@@ -116,7 +168,8 @@ export class RegionsPanel {
   }
   syncHighlight() {
     const id = this.visible && this.open ? (this.hover !== null ? this.hover : this.selected) : null;
-    if (id === this.highlight) return;
+    if (id === this.highlight && this.selected === this.highlightSelection) return;
+    this.highlightSelection = this.selected;
     this.highlight = id; this.onHighlight(id);
   }
   sync(show, anchor, area) {
@@ -149,7 +202,31 @@ export class RegionsPanel {
   }
   render() {
     const hover = this.hover, hovered = this.slots.find(slot => slot.row && slot.row.id === hover);
-    const rows = this.rows.filter(row => !this.query || [row.name, ...row.settlements.map(city => city.name), ...row.owners.map(owner => owner.name)].join(' ').toLowerCase().includes(this.query));
+    for (const { type, button } of this.typeButtons) button.setAttribute('aria-pressed', String(this.types.has(type)));
+    const matches = row => (row.types || [row.type]).some(type => this.types.has(type)) &&
+      (!this.query || [row.name, ...row.settlements.map(city => city.name), ...row.owners.map(owner => owner.name)].join(' ').toLowerCase().includes(this.query));
+    const continents = this.rows.filter(row => (row.types || [row.type]).includes('Continent'));
+    let rows;
+    if (continents.length) {
+      const groups = continents.map(row => ({ ...row, group: true, children: [] }));
+      const byName = new Map(groups.map(group => [group.name, group]));
+      const other = { id: 'geography:unassigned', name: 'Water and other areas', type: 'Group', group: true,
+        tiles: 0, population: 0, settlements: [], owners: [], children: [] };
+      for (const row of this.rows) {
+        if (continents.includes(row)) continue;
+        const group = byName.get(row.continent) || other;
+        if (matches(row) || this.query && group !== other && group.name.toLowerCase().includes(this.query) &&
+          (row.types || [row.type]).some(type => this.types.has(type))) group.children.push(row);
+      }
+      rows = [];
+      for (const group of [...groups.sort((a, b) => a.name.localeCompare(b.name)), other]) {
+        if (!group.children.length && (group === other || !matches(group))) continue;
+        group.expanded = this.query ? !this.searchCollapsed.has(group.id) : this.expanded.has(group.id);
+        group.children.sort((a, b) => b.population - a.population || a.name.localeCompare(b.name));
+        rows.push(group);
+        if (group.expanded) rows.push(...group.children);
+      }
+    } else rows = this.rows.filter(matches);
     this.page = Math.max(0, Math.min(this.page, Math.ceil(rows.length / PAGE) - 1));
     const shown = rows.slice(this.page * PAGE, (this.page + 1) * PAGE), p = this.scale;
     for (let i = 0; i < shown.length; i++) {
@@ -167,25 +244,44 @@ export class RegionsPanel {
         });
         lines[0].style.fontWeight = '700';
         slot = { button, lines, row: null }; this.slots.push(slot); this.list.appendChild(button);
-        this.activate(button, () => { if (slot.row) { this.selected = this.selected === slot.row.id ? null : slot.row.id; this.paintSelection(); this.syncHighlight(); } });
-        for (const type of ['mouseenter', 'focus']) button.addEventListener(type, () => { if (slot.row) { this.hover = slot.row.id; this.syncHighlight(); } });
+        this.activate(button, () => {
+          if (!slot.row) return;
+          if (slot.row.group) {
+            const state = this.query ? this.searchCollapsed : this.expanded;
+            if (state.has(slot.row.id)) state.delete(slot.row.id); else state.add(slot.row.id);
+            this.render();
+          } else {
+            this.selected = this.selected === slot.row.id ? null : slot.row.id;
+            this.paintSelection(); this.syncHighlight();
+          }
+        });
+        for (const type of ['mouseenter', 'focus']) button.addEventListener(type, () => {
+          if (slot.row && slot.row.type !== 'Group') { this.hover = slot.row.id; this.syncHighlight(); }
+        });
         for (const type of ['mouseleave', 'blur']) button.addEventListener(type, () => { if (slot.row && this.hover === slot.row.id) { this.hover = null; this.syncHighlight(); } });
       }
       const row = shown[i]; slot.row = row; slot.button.style.display = 'block';
-      slot.lines[0].textContent = `${row.name} (${row.type})`;
+      slot.button.style.paddingLeft = p(row.group || !continents.length ? 8 : 24) + 'px';
+      slot.button.setAttribute('aria-expanded', row.group ? String(row.expanded) : 'false');
+      slot.lines[0].textContent = row.group ? `${row.expanded ? '-' : '+'} ${row.name} (${row.children.length} areas)`
+        : `${row.name} (${(row.types || [row.type]).join(', ')})`;
       slot.lines[1].textContent = `${formatThousands(row.tiles)} known tiles; population: ${this.populationStatus || formatThousands(row.population)}`;
       slot.lines[2].textContent = `Settlements (${row.settlements.length}): ${row.settlements.map(city => `${city.name} (${city.citizens} citizens)`).join(', ') || 'None'}`;
       slot.lines[3].textContent = `Territory: ${row.owners.map(owner => `${owner.name} (${formatThousands(owner.tiles)} tiles)`).join(', ') || 'No civilization territory'}`;
+      if (row.type === 'Group') {
+        slot.lines[1].textContent = 'Areas without a known continent';
+        slot.lines[2].textContent = ''; slot.lines[3].textContent = '';
+      }
       const label = slot.lines.map(line => line.textContent).join('; ');
       slot.button.setAttribute('aria-label', label); slot.button.setAttribute('title', label);
     }
     for (let i = shown.length; i < this.slots.length; i++) { this.slots[i].button.style.display = 'none'; this.slots[i].row = null; }
     this.hover = hovered && hovered.row && hovered.row.id === hover ? hover : null;
-    this.status.textContent = this.rows.length ? 'Hover to highlight. Click to select; click again or Clear selection to release.' : 'No known regions available.';
+    this.status.textContent = !this.rows.length ? 'No known regions available.' : !rows.length ? 'No regions match these filters.' : 'Expand a continent to browse areas by population. Hover to highlight; click an area to select.';
     this.counter.textContent = `${rows.length ? this.page * PAGE + 1 : 0}-${this.page * PAGE + shown.length} of ${rows.length}`;
     this.previous.disabled = this.page === 0; this.next.disabled = (this.page + 1) * PAGE >= rows.length;
     this.list.scrollTop = 0;
     this.paintSelection(); this.syncHighlight();
   }
-  reset() { this.setOpen(false); this.rows = []; this.query = ''; this.search.value = ''; this.page = 0; this.key = ''; this.geography = null; this.tree = null; this.render(); }
+  reset() { this.setOpen(false); this.rows = []; this.expanded.clear(); this.searchCollapsed.clear(); this.query = ''; this.search.value = ''; this.types = new Set(REGION_TYPES.map(([type]) => type)); this.page = 0; this.key = ''; this.geography = null; this.tree = null; this.render(); }
 }

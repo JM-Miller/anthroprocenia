@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadModule } from './load.mjs';
-const { SkipAheadController, skipDuration, skipTargetTurn, createSkipAheadPanel } = await loadModule('anthroprocenia-skipahead.js');
+const { SkipAheadController, skipDuration, skipTargetTurn, createSkipAheadPanel, installSkipAheadDiplomacy } = await loadModule('anthroprocenia-skipahead.js');
 
 function harness(overrides = {}) {
   const handlers = new Map(), calls = [], changes = [];
@@ -31,6 +31,15 @@ test('duration converts whole years, seasons and months into actual turns and re
   assert.throws(() => skipDuration('calendar', 'AGE_MODERN', 0, 0, 12));
   assert.throws(() => skipDuration('calendar', 'unknown', 0, 1, 0));
 });
+test('accelerated date and duration targets round forward to reachable simulation turns', () => {
+  for (const factor of [2,3,4,5,6]) {
+    assert.equal(skipDuration('calendar', 'AGE_MODERN', 0, 2, 11, factor), Math.ceil(35 / factor));
+    assert.equal(skipTargetTurn('AGE_MODERN', '1751 CE', 5, factor), Math.ceil(17 / factor) + 1);
+    assert.equal(skipTargetTurn('AGE_ANTIQUITY', '1 CE', 0, factor), Math.ceil(4000 / factor) + 1);
+    assert.equal(skipDuration('turns', '', 50, 0, 0, factor), 50);
+  }
+  assert.throws(() => skipTargetTurn('AGE_MODERN', '1949 CE', 11, 6), /last turn/);
+});
 test('native simulation targets exactly fifty real turns and restores the original player and observer', () => {
   const h = harness();
   h.controller.begin(50);
@@ -54,6 +63,37 @@ test('pause and resume preserve the target; cancellation unpauses native autopla
   assert.equal(h.controller.state.phase, 'stopped'); assert.equal(h.controller.state.elapsed, 5);
   assert.deepEqual(h.calls.slice(-2), [['pause', false], ['active', false]]);
   assert.equal(h.changes.filter(s => !s.active).length, 1);
+});
+test('diplomacy waits for paused autoplay ownership restoration and coalesces repeated requests', async () => {
+  const h = harness(), opened = [], errors = [], waits = [];
+  const manager = { raiseDiplomacyHub(player) { opened.push([this, player]); return 'native result'; } };
+  installSkipAheadDiplomacy({ manager, getController: () => h.controller, getState: () => h.state,
+    reportError: error => errors.push(error), wait: () => new Promise(resolve => waits.push(resolve)) });
+  assert.equal(manager.raiseDiplomacyHub(4), 'native result');
+  opened.length = 0;
+  h.controller.begin(50); h.controller.togglePause(); h.state.player = -1;
+  const pending = manager.raiseDiplomacyHub(4);
+  assert.equal(h.api.isActive, false); assert.deepEqual(opened, []);
+  manager.raiseDiplomacyHub(8);
+  waits.shift()(); await Promise.resolve();
+  assert.deepEqual(opened, [], 'AutoplayEnded alone does not confirm ownership');
+  h.state.player = 3; waits.shift()(); await pending;
+  assert.deepEqual(opened, [[manager, 8]]); assert.deepEqual(errors, []);
+  assert.match(h.controller.state.message, /Stopped Skip Ahead to open diplomacy/);
+});
+test('diplomacy does not open with missing ownership, native stop failures or a changed Age', async () => {
+  for (const failure of ['ownership', 'stop', 'age']) {
+    const h = harness(), opened = [], errors = [];
+    const manager = { raiseDiplomacyHub(player) { opened.push(player); } };
+    installSkipAheadDiplomacy({ manager, getController: () => h.controller, getState: () => h.state,
+      reportError: error => errors.push(error), wait: async () => {} });
+    h.controller.begin(50); h.state.player = -1;
+    if (failure === 'stop') h.api.setPause = () => { throw new Error('stop failed'); };
+    if (failure === 'age') h.state.age = 'AGE_EXPLORATION';
+    await manager.raiseDiplomacyHub(4);
+    assert.deepEqual(opened, []); assert.equal(errors.length, 1);
+    assert.match(errors[0], /Unable to open diplomacy/);
+  }
 });
 test('Age endings, local defeat, victory and session changes stop rather than crossing player choices', () => {
   for (const name of ['GameAgeEnded', 'TeamVictory', 'LoadComplete', 'GameStarted', 'PlayerDefeat']) {
@@ -130,11 +170,13 @@ test('target-year input and season slider synchronize, begin exact native autopl
   input.value = '401 CE'; h.fire(input, 'input'); h.fire(season, 'keydown', { key: 'End' });
   assert.equal(season.getAttribute('aria-valuetext'), 'Winter');
   assert.equal(input.value, '401 CE');
+  assert.equal(h.byId('anthro-skip-target-year').getAttribute('aria-valuetext'), '401 CE (Turn 8)');
+  assert.ok(h.panel.element.children[1].children.some(element => element.textContent === 'Target: Winter 401 CE (Turn 8). 7 real turns.'));
   h.fire(h.byLabel('Begin Autoplay'), 'keydown', { key: 'Enter' });
   assert.equal(h.panel.controller.state.requested, 7);
   assert.equal(h.panel.element.children[1].style.display, 'none');
   assert.equal(h.byLabel('Restore Skip Ahead').getAttribute('aria-expanded'), 'false');
-  assert.equal(h.byLabel('Stop').style.display, 'inline-block');
+  assert.equal(h.byLabel('Stop').style.display, 'block');
   assert.equal(h.panel.pauseElement.style.display, 'flex'); assert.equal(input.disabled, true);
   h.fire(h.panel.pauseElement, 'keydown', { key: 'Enter' }); assert.equal(h.panel.controller.state.paused, true);
   h.fire(h.byLabel('Stop'), 'keydown', { key: 'Enter' });
@@ -164,6 +206,29 @@ test('month and year sliders support keyboard and dragging; invalid or past cust
   assert.equal(h.panel.controller.state.phase, 'complete'); assert.equal(input.disabled, false);
   assert.equal(h.byLabel('Begin Autoplay').getAttribute('aria-disabled'), 'true', 'the completed target cannot run again');
   assert.ok(!h.errors.some(message => /later than/.test(message)), 'successful completion does not report a past-date error');
+});
+test('accelerated panel sliders and custom years display reachable dates and request actual engine turns', () => {
+  const previous = globalThis.GameInfo;
+  try {
+    for (const factor of [2,3,4,5,6]) {
+      globalThis.GameInfo = { GlobalParameters: { lookup: name => name === 'ANTHRO_REALISTIC_SPEED_FACTOR' ? { Value: String(factor) } : undefined } };
+      const h = panelHarness({ age: 'AGE_MODERN' }), input = h.byId('anthro-skip-custom-year'), month = h.byId('anthro-skip-target-part');
+      h.fire(month, 'keydown', { key: 'Home' });
+      input.value = '1751 CE'; h.fire(input, 'input');
+      h.fire(month, 'keydown', { key: 'Home' });
+      assert.equal(input.value, '1751 CE');
+      const expectedMonths = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      assert.equal(month.getAttribute('aria-valuetext'), expectedMonths[(Math.ceil(12 / factor) * factor) % 12]);
+      h.fire(h.byLabel('Begin Autoplay'), 'keydown', { key: 'Enter' });
+      assert.equal(h.panel.controller.state.requested, Math.ceil(12 / factor));
+      h.state.turn = 1 + Math.ceil(12 / factor); h.emit('TurnBegin');
+      assert.equal(h.panel.controller.state.phase, 'complete');
+      assert.deepEqual(h.errors, []);
+    }
+  } finally {
+    if (previous === undefined) delete globalThis.GameInfo;
+    else globalThis.GameInfo = previous;
+  }
 });
 test('annual targets hide the part slider and BCE/CE transitions skip year zero', () => {
   const h = panelHarness({ turn: 4000 }), year = h.byId('anthro-skip-target-year'), input = h.byId('anthro-skip-custom-year');

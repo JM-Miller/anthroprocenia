@@ -65,7 +65,7 @@ function group(count = 64, military = false, id = 'home') {
     id: i, key: `${id}#${i}`, node: 0, target: 99, x: 0, y: 0, fade: 1, wait: 0, leg: 0, t: 0,
     speed: 1 + i % 3, baseSpeed: 1 + i % 3,
   }));
-  return { people: members, byId: new Map(members.map(person => [person.id, person])), military, nodeId: id,
+  return { people: members, byId: new Map(members.map(person => [person.id, person])), military, battleReady: military, nodeId: id,
     entry: { pathKey: id, item: { owner: id } }, streetNodes: [99, 50, 25] };
 }
 

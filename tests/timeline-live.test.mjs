@@ -31,7 +31,7 @@ test('recorded milestones include construction, wonders, growth, yields, pillagi
   model.observe(1, date(1), { terr: [territory(1, 0)], set: [[0, 'York', 2, 'City', [22]]], bld: [[0, [1, 2]]], won: [[0, 0, 1]], dmg: [[0, [2]]] },
     { met: [0, 1], soc: [[0, [1], true, true]], rel: [[0, 1, 1]] }, name, war, extra([[5, 0]]));
   const text = model.events.map(e => e.text).join('\n');
-  for (const pattern of [/expanded their territory/, /population grew/, /became City/, /harvests flourished/, /developed their Granary infrastructure/, /completed Pyramids/, /suffered pillaging/, /first contact/, /began a celebration/, /entered an Age crisis/, /became suzerain/, /became friendly/]) assert.match(text, pattern);
+  for (const pattern of [/expanded their territory/, /population grew/, /became City/, /food-related workforce changed/, /developed their Granary infrastructure/, /completed Pyramids/, /suffered pillaging/, /first contact/, /began a celebration/, /entered an Age crisis/, /became suzerain/, /became friendly/]) assert.match(text, pattern);
   assert.ok(model.events.every(event => event.details && !event.details.startsWith('Source:')), 'each milestone has its own narrative description');
   assert.ok(new Set(model.events.map(event => event.details)).size > 10, 'descriptions vary with the observed event');
   assert.equal(initial.events.length, 1); assert.equal(initial.tileCount, 1);
@@ -52,20 +52,47 @@ test('date groups retain every same-date event in order, never merging distinct 
   assert.equal(groups[1].events[0], events[2]); assert.notEqual(groups[2].key, groups[3].key);
 });
 
-test('yield changes report gained and lost occupations rather than raw yield values', () => {
+test('occupation narratives name the country and exact hires or losses, following workers rather than yield direction', () => {
   const model = new CivilizationTimeline(0), date = turn => [0, turn + 1, turn === 0 ? 1 : 0, '1 AD'];
   const counts = [[100], [250], [80]];
   const extra = { occupationCounts: (plot, turn) => counts[turn] };
-  for (const [turn, yieldValue] of [5, 8, 3].entries()) {
+  for (const [turn, yieldValue] of [5, 8, 3.5].entries()) {
     model.observe(turn, date(turn), { s: turn === 0 ? 1 : 0, terr: turn === 0 ? [territory(0, 0)] : [],
       set: [[0, 'York', 2, 'City', [yieldValue]]] }, turn === 0 ? { idd: [[0, 'Leader', 'Romans', 'Roman']] } : null,
       String, () => 'War', extra);
   }
-  const details = model.events.filter(event => /harvests|food-related/.test(event.text)).map(event => event.details);
+  const details = model.events.filter(event => /new farmers|lost.*farmers/.test(event.text)).map(event => event.details);
   assert.equal(details.length, 2);
-  assert.match(details[0], /gained 150/); assert.match(details[0], /100 to 250/);
-  assert.match(details[1], /lost 170/); assert.match(details[1], /250 to 80/);
+  assert.match(details[0], /York \(Romans\) hired 150 new farmers/);
+  assert.match(details[1], /York \(Romans\) lost 170 farmers/);
+  assert.match(details[0], /\(\+3 Food\)/);
+  assert.match(details[1], /\(-4\.5 Food\)/);
   assert.ok(details.every(detail => !/\byields?:? [538]\b/i.test(detail)));
+});
+
+test('science hires use simulated counts in summaries and details, omit zero changes, and read each workforce once per settlement', () => {
+  for (const owner of [0, null]) {
+    const model = new CivilizationTimeline(owner), calls = [];
+    const counts = [[100, 100, 100, 100, 100, 100, 100], [100, 90, 150, 600, 200, 300, 400]];
+    const extra = {
+      occupationCounts(plot, turn) { calls.push([plot, turn]); return counts[turn]; },
+      civilizationName(identity, id) { assert.equal(id, 0); return 'Roman Republic'; },
+    };
+    model.observe(0, [0, 1, 1, '4000 BCE'], { s: 1, terr: [territory(0, 0)], set: [[0, 'Roma', 1, 'City', Array(7).fill(2)]] },
+      { idd: [[0, 'Leader', 'Romans', 'Roman']] }, String, () => 'War', extra);
+    model.observe(1, [0, 2, 0, '3999 BCE'], { set: [[0, 'Roma', 1, 'City', Array(7).fill(3)]] },
+      null, String, () => 'War', extra);
+    assert.deepEqual(calls, [[0, 0], [0, 1]], 'not two full snapshot lookups per changed yield');
+    const hiring = model.events.find(event => /scholars/.test(event.text));
+    assert.equal(hiring.text, 'In 3999 BCE (Turn 2) Roma (Roman Republic) hired 500 new scholars.');
+    assert.match(hiring.details, /Roma \(Roman Republic\) hired 500 new scholars/);
+    assert.match(hiring.details, /\(\+1 Science\)/);
+    assert.doesNotMatch(hiring.details, /simulated occupation counts, not changes/i);
+    assert.deepEqual(hiring.plots, [0]);
+    assert.ok(model.events.some(event => /lost 10 artisans/.test(event.text)), 'yield gains cannot imply hiring when workers declined');
+    assert.ok(!model.events.some(event => /farmers/.test(event.text)), 'no zero-person hiring notices');
+    assert.ok(model.events.every(event => !/increased.*science|from 2 to 3/.test(event.text + event.details)));
+  }
 });
 test('territorial narratives describe the lands that actually changed in deltas and snapshots without inventing geography', () => {
   for (const owner of [0, null]) {
@@ -101,6 +128,20 @@ test('live event feed suppresses old history and replay, deduplicates provisiona
   for (const expected of events) assert.equal(feed.take(), expected);
   assert.equal(feed.take(), null); assert.equal(feed.pending.length, 0);
   feed.accept([event(1, 'past')], 1); assert.equal(feed.take(), null);
+});
+
+test('live feed seeks recent records rather than scanning a long completed history', () => {
+  const feed = new LiveTimelineFeed(), history = Array.from({ length: 100000 }, (_, turn) => ({ turn, text: `Event ${turn}` }));
+  let reads = 0;
+  const events = new Proxy(history, { get(target, key) { if (/^\d+$/.test(String(key))) reads++; return target[key]; } });
+  feed.accept(events, 99999);
+  assert.equal(feed.take(), null);
+  assert.ok(reads < 32, `${reads} history entries read for baseline`);
+  reads = 0;
+  history.push({ turn: 99999, text: 'New hires' });
+  feed.accept(events, 99999);
+  assert.equal(feed.take().text, 'New hires'); assert.equal(feed.take(), null);
+  assert.ok(reads < 32, `${reads} history entries read for a provisional update`);
 });
 test('family milestones use recorded lifespans, include both parents and widowhood, and omit future or posthumous adulthood', () => {
   const members = [{ id: 'a', born: 0 }, { id: 'b', born: 1, parents: ['a'] },

@@ -9,7 +9,8 @@ const calm = homeHazard({ size: 5, prevSize: 5, food: 5, era: 1, wounds: [], out
 
 test('ages fall into Child, Youth, Adult and Elder', () => {
   assert.deepEqual(AGE_CATEGORIES, ['Child', 'Youth', 'Adult', 'Elder']);
-  assert.deepEqual([0, 14.9, 15, 24, 25, 59, 60, 90].map(ageCategory), ['Child', 'Child', 'Youth', 'Youth', 'Adult', 'Adult', 'Elder', 'Elder']);
+  assert.deepEqual([0, 12.999, 13, 15, 15.999, 16, 59.999, 60, 90].map(ageCategory),
+    ['Child', 'Child', 'Youth', 'Youth', 'Youth', 'Adult', 'Adult', 'Elder', 'Elder']);
   assert.equal(ageCategory('nonsense'), 'Child');
 });
 

@@ -5,10 +5,25 @@ export const REALISTIC_AGES = {
 };
 const SEASONS = ['Spring', 'Summer', 'Autumn', 'Winter'];
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-export function realisticDate(age, turn) {
+export function calendarDateLabel(date, turn, lastTurn = turn) {
+  const label = date ? String(date).replace(/\bBC\b/g, 'BCE').replace(/\bAD\b/g, 'CE') : 'Date unknown';
+  return `${label} (${turn === lastTurn ? `Turn ${turn}` : `Turns ${turn}-${lastTurn}`})`;
+}
+export function realisticSpeedMultiplier() {
+  const row = typeof GameInfo !== 'undefined' ? GameInfo.GlobalParameters.lookup('ANTHRO_REALISTIC_SPEED_FACTOR') : null;
+  const factor = row ? Number(row.Value) : 1;
+  if (!Number.isInteger(factor) || factor < 1 || factor > 6) throw new Error(`Invalid realistic speed multiplier: ${row?.Value}`);
+  return factor;
+}
+export function realisticAgeTurns(age) {
   const config = REALISTIC_AGES[age];
-  if (!config || !Number.isFinite(turn)) throw new Error(`Invalid realistic calendar date: ${age}, ${turn}`);
-  const index = Math.max(0, Math.floor(turn) - 1);
+  if (!config) throw new Error(`Unknown realistic calendar age: ${age}`);
+  return Math.ceil(config.turns / realisticSpeedMultiplier());
+}
+export function realisticDate(age, turn, factor = realisticSpeedMultiplier()) {
+  const config = REALISTIC_AGES[age];
+  if (!config || !Number.isFinite(turn) || !Number.isInteger(factor) || factor < 1 || factor > 6) throw new Error(`Invalid realistic calendar date: ${age}, ${turn}, ${factor}`);
+  const index = Math.max(0, Math.floor(turn) - 1) * factor;
   if (age === 'AGE_ANTIQUITY') {
     const year = index < 4000 ? index - 4000 : index - 3999;
     return year < 0 ? `${-year} BCE` : `${year} CE`;

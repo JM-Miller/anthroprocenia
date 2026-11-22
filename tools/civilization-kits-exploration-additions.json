@@ -1,0 +1,727 @@
+{
+  "LAKHOTA": {
+    "ability": [["plot", "FOOD", 1, "pasture"], ["growth", 15]],
+    "buildings": [[["connected", "HAPPINESS", 2], ["yield", "CULTURE", 2]], [["worker", "PRODUCTION", 2], ["resource", 1]]],
+    "quarter": [["connected", "CULTURE", 2], ["growth", 15]],
+    "military": [["move", 1], ["combat", 5, "defend"]],
+    "scout": [["move", 1], ["sight", 2]],
+    "improvement": ["Seasonal Camp", "MONASTERY", "FOOD", 3, ["plot", "PRODUCTION", 1, "pasture"]],
+    "civics": [
+      ["Seasonal Camps", [], [["growth", 15]]],
+      ["Bison Provisioning", [1], [["plot", "FOOD", 1, "pasture"]]],
+      ["Prairie Paths", [1], [["connected", "GOLD", 2]]],
+      ["Skilled Hidework", [2], [["worker", "PRODUCTION", 2]]],
+      ["Camp Relationships", [3], [["connected", "HAPPINESS", 2]]],
+      ["Kinship Across the Plains", [4, 5], [["settlements", 1], ["connected", "CULTURE", 2]]]
+    ],
+    "traditions": [
+      ["Shared Provisions", 2, [["growth", 10], ["yield", "FOOD", 2]]],
+      ["Prairie Knowledge", 3, [["connected", "GOLD", 2]]],
+      ["Skilled Hidework", 4, [["worker", "PRODUCTION", 2]]],
+      ["Kinship Obligations", 5, [["connected", "HAPPINESS", 2]]]
+    ],
+    "history": "Lakota communities are part of the broader related peoples often grouped under the name Sioux, but are not interchangeable with Dakota or Nakota communities. Movement westward and the adoption of horses transformed relationships with the northern Plains during the eighteenth century. Bison provided food and materials, while mobile households, seasonal gatherings, exchange, and social obligations connected distinct camps. Tipis and the organization of camp life supported mobility without implying that communities lacked sophisticated institutions. The Black Hills occupy an enduring place in Lakota relationships with the land. Nineteenth-century invasion, warfare, broken agreements, and dispossession cannot be treated as the end of Lakota history: communities continue to maintain political, cultural, and linguistic life. This kit emphasizes provision and relationships rather than reducing a living people to warfare. Its geographic labels and generic mounted upgrades are gameplay conventions, not a reconstruction of eight contemporary cities or standardized armored regiments.",
+    "elementHistory": {
+      "building1": "Camp Council represents deliberation within and between communities. It is a descriptive gameplay institution, not a claim that every Lakota camp contained a permanent monumental council building.",
+      "building2": "Preparing hides required extensive knowledge and labor. Hideworking Lodge evokes that household production without assigning an invented Indigenous title to a specialized public factory.",
+      "quarter": "Camp Circle evokes the social and spatial organization of a mobile gathering. It does not turn a tipi camp into an urban quarter or reproduce sacred ceremonial designs.",
+      "improvement": "Seasonal Camp represents households adjusting movement to resources and relationships. Its permanent rural placement is a gameplay approximation rather than a claim of fixed settlement patterns.",
+      "military": "Plains Rider evokes the importance of horses in later Exploration-period mobility and defense. Native armored cavalry models do not reproduce Lakota dress or establish that European armor was used.",
+      "scout": "Prairie Pathfinder represents practical knowledge of routes, water, and neighboring camps. The descriptive label is not a claimed historical military office."
+    },
+    "civicHistory": [
+      "Seasonal movement connected household needs with available resources. Different communities adapted their movements to local conditions.",
+      "Bison sustained foodways and supplied materials for household work. Provision involved knowledge, cooperation, and obligations beyond hunting alone.",
+      "Routes linked waters, gathering places, and neighboring peoples. These relationships changed over time rather than forming a permanent imperial road system.",
+      "Hide preparation and the making of useful objects depended on skilled labor. Domestic production was central to the functioning of mobile communities.",
+      "Relationships within and between camps involved visiting, exchange, counsel, and shared obligations. English labels do not replace distinct Indigenous institutions with invented terminology.",
+      "Lakota communities sustained cultural and political life through adaptation and severe colonial disruption. Their history does not end with nineteenth-century warfare."
+    ],
+    "sources": ["https://www.nps.gov/media/video/view.htm?id=1A2F500E-C630-A335-01070F737BCD894C", "https://www.nps.gov/teachers/classrooms/territorial-ranges.htm"]
+  },
+  "NAVAJO": {
+    "ability": [["plot", "FOOD", 1, "farm"], ["resource", 2]],
+    "buildings": [[["growth", 15], ["yield", "HAPPINESS", 3]], [["worker", "CULTURE", 2], ["resource", 2]]],
+    "quarter": [["worker", "CULTURE", 2], ["connected", "GOLD", 2]],
+    "military": [["combat", 5, "defend"], ["heal", 10]],
+    "scout": [["move", 1], ["sight", 2]],
+    "improvement": ["Canyon Garden", "MONASTERY", "FOOD", 3, ["plot", "CULTURE", 1, "farm"]],
+    "civics": [
+      ["Canyon Fields", [], [["plot", "FOOD", 1, "farm"]]],
+      ["Household Foodways", [1], [["growth", 15]]],
+      ["Pastoral Resources", [1], [["resource", 2]]],
+      ["Weaving Knowledge", [2], [["worker", "CULTURE", 2]]],
+      ["Regional Exchange", [3], [["connected", "GOLD", 2]]],
+      ["Households of Dinetah", [4, 5], [["connected", "HAPPINESS", 2], ["worker", "CULTURE", 2]]]
+    ],
+    "traditions": [
+      ["Dryland Knowledge", 2, [["plot", "FOOD", 1, "farm"], ["growth", 10]]],
+      ["Pastoral Stewardship", 3, [["resource", 2]]],
+      ["Skilled Weaving", 4, [["worker", "CULTURE", 2]]],
+      ["Household Reciprocity", 5, [["connected", "GOLD", 2]]]
+    ],
+    "history": "The Navajo, who also call themselves Dine, are a living people with homelands across the Southwest. Communities developed changing relationships with farming, hunting, neighboring Pueblo peoples, and wider regional exchange. The introduction of sheep through colonial contact contributed to pastoral economies and the development of wool weaving, without replacing every earlier practice or making all households identical. Hogans and dispersed household landscapes connect domestic life with particular places. Canyon fields and plateau resources therefore provide a deliberately varied Exploration setting rather than a single centralized state. The forced Long Walk and confinement at Bosque Redondo in the nineteenth century belong to a later era and must not be treated as a founding event for all Navajo history. The present Navajo Nation and its institutions also cannot be projected unchanged into earlier centuries. This kit combines household prosperity, craft knowledge, and regional relationships, while acknowledging that native donor buildings and military upgrades are visual gameplay approximations rather than reconstructed Navajo architecture or equipment.",
+    "elementHistory": {
+      "building1": "Hogan names a Navajo dwelling whose forms and construction vary. Its gameplay yields evoke household well-being, not a public temple or a single standardized architectural plan.",
+      "building2": "Weaving House is an English functional label for textile production. The wool economy developed through changing pastoral and regional relationships rather than one timeless centralized workshop system.",
+      "quarter": "Household Cluster represents relationships among nearby homes and working places. It is not an attested Navajo urban administrative district.",
+      "improvement": "Canyon Garden represents cultivation informed by local soils and water. The label avoids fabricating an Indigenous institutional title or prescribing one field design across the homeland.",
+      "military": "Dine Bow Defender is descriptive rather than a named historical regiment. Native archer assets and their statistical tiers are gameplay abstractions, not authenticated Navajo military models.",
+      "scout": "Canyon Wayfinder represents knowledge of routes, water, and communities. It is a descriptive role, not a historical office borrowed from another Indigenous nation."
+    },
+    "civicHistory": [
+      "Cultivation joined other household food sources. Local conditions shaped how fields and water were used.",
+      "Households maintained practical knowledge and reciprocal responsibilities. These practices varied across communities and generations.",
+      "Sheep husbandry expanded through colonial-era contact. It became important without making all earlier foodways disappear.",
+      "Weaving connects skilled labor with changing materials and exchange. Textile traditions developed rather than remaining fixed throughout history.",
+      "Exchange connected Navajo communities with neighboring peoples. Such relations included negotiation and adaptation, not a single empire controlling every route.",
+      "Household landscapes connect people with particular places. Modern governmental structures should not be projected unchanged onto Exploration-era communities."
+    ],
+    "sources": ["https://www.navajo-nsn.gov/History", "https://www.nps.gov/cach/index.htm"]
+  },
+  "ZIMBABWE": {
+    "ability": [["plot", "GOLD", 1, "pasture"], ["resource", 2]],
+    "buildings": [
+      [["wonder", 25], ["worker", "CULTURE", 1]],
+      [["connected", "GOLD", 2], ["resource", 2]]
+    ],
+    "quarter": [["wonder", 25], ["plot", "PRODUCTION", 1, "pasture"]],
+    "military": [["combat", 6, "defend"], ["heal", 10]],
+    "scout": [["sight", 2], ["ignore", "SAGEBRUSH_STEPPE"]],
+    "improvement": ["Dry-Stone Residence", "KASBAH", "CULTURE", 3, ["plot", "FOOD", 1, "pasture"]],
+    "civics": [
+      ["Plateau Husbandry", [], [["plot", "FOOD", 1, "pasture"]]],
+      ["Stoneworking Knowledge", [1], [["wonder", 20]]],
+      ["Gold Routes", [1], [["resource", 2]]],
+      ["Enclosed Residences", [2], [["worker", "CULTURE", 1], ["yield", "HAPPINESS", 3]]],
+      ["Indian Ocean Connections", [3], [["trade", 1], ["connected", "GOLD", 1]]],
+      ["Plateau Centers", [4, 5], [["settlements", 1], ["wonder", 20], ["resource", 1]]]
+    ],
+    "traditions": [
+      ["Cattle Wealth", 2, [["plot", "FOOD", 1, "pasture"], ["yield", "GOLD", 2]]],
+      ["Stoneworking Knowledge", 3, [["wonder", 25]]],
+      ["Gold Routes", 4, [["resource", 2], ["connected", "GOLD", 1]]],
+      ["Plateau Craftsmanship", 5, [["worker", "PRODUCTION", 2]]]
+    ],
+    "history": "Great Zimbabwe developed into a major southern African center between approximately the eleventh and fifteenth centuries. Its builders worked granite into imposing dry-stone enclosures while most residents occupied houses made from less durable materials. Farming, cattle keeping, metalworking, and gold exchange sustained a differentiated society connected through regional intermediaries to Indian Ocean trade. Imported beads and ceramics place the plateau within those wider circuits without diminishing local production or indigenous political agency. The precise functions of some monumental spaces, the organization of leadership, and aspects of the settlement's decline remain debated. Mapungubwe supplies an important predecessor, while Khami represents a later development associated with the Torwa dynasty. Other listed sites belong to related regional or successor traditions, not a single simultaneous kingdom. Colonial denials of African authorship were racist inventions, not a legitimate alternative interpretation of the archaeological evidence.",
+    "elementHistory": {
+      "building1": "Great Zimbabwe's monumental walls were assembled without mortar from carefully selected stone. Enclosed spaces served changing residential, political, and ceremonial purposes. Dry-Stone Court represents this architectural achievement while avoiding certainty about functions that cannot be read directly from the surviving walls alone. English labels avoid assigning unverified contemporary institutional titles throughout.",
+      "building2": "Gold from southern African production zones traveled through inland networks toward Swahili coastal ports. Imported objects testify to the reach of exchange, not necessarily direct visits by overseas merchants. Gold Exchange is a functional abstraction rather than an excavated institution with a known indigenous title.",
+      "quarter": "Stone enclosures formed only part of a much larger inhabited landscape containing domestic structures and working spaces. Zimbabwe Enclosure evokes the concentration of authority and display within that setting. It does not imply that every resident lived inside a monumental stone-walled palace.",
+      "improvement": "Khami's terraced platforms and patterned retaining walls show later developments in the Zimbabwe architectural tradition. Elite residences occupied a carefully structured landscape. Dry-Stone Residence draws on this broader history while acknowledging that related sites differed in chronology, political affiliation, and the precise use of enclosed spaces.",
+      "military": "Ironworking and regional political competition make armed defense historically plausible, but a named standardized Great Zimbabwe army is not documented. Plateau Spearman is therefore descriptive. The native infantry sequence supplies gameplay progression without claiming that European-style armor belonged to plateau soldiers.",
+      "scout": "Trade across the plateau required knowledge of routes, water, settlements, and the people controlling access. Plateau Trade Guide represents those intermediaries rather than an attested court office. Connections to the coast were usually layered through regional networks, not one uninterrupted royal road."
+    },
+    "civicHistory": [
+      "Cattle and crops underpinned wealth and subsistence. Imported luxuries should not obscure the importance of everyday agricultural work.",
+      "Dry-stone construction demanded skilled labor and material knowledge. Monumental walls expressed local achievement rather than outside colonization.",
+      "Gold moved through inland exchanges to coastal commercial networks. The precise mechanisms of royal involvement are not fully recoverable.",
+      "Enclosures organized access and displayed distinctions within settlement. Their functions changed, and some interpretations remain contested.",
+      "Beads and imported ceramics connect plateau centers with Indian Ocean commerce. Much of that contact operated through regional intermediaries.",
+      "Khami and other successors transformed inherited traditions. They were not simply unchanged extensions of Great Zimbabwe under different site names."
+    ],
+    "sources": ["https://unesdoc.unesco.org/ark:/48223/pf0000393930.locale=en", "https://whc.unesco.org/en/list/365", "https://whc.unesco.org/en/list/364"]
+  },
+  "BYZANTIUM": {
+    "ability": [["worker", "SCIENCE", 2], ["resource", 1]],
+    "buildings": [
+      [["worker", "CULTURE", 2], ["wonder", 15]],
+      [["worker", "GOLD", 2], ["resource", 2]]
+    ],
+    "quarter": [["worker", "SCIENCE", 2], ["connected", "CULTURE", 1]],
+    "military": [["combat", 6, "attack"], ["heal", 10]],
+    "scout": [["move", 1], ["sight", 1]],
+    "improvement": ["Metochion", "MONASTERY", "SCIENCE", 3, ["plot", "CULTURE", 1, "farm"]],
+    "civics": [
+      ["Roman Administration", [], [["yield", "HAPPINESS", 3]]],
+      ["Legal Compilations", [1], [["worker", "SCIENCE", 1]]],
+      ["Silk Workshops", [1], [["resource", 2]]],
+      ["Imperial Scholarship", [2], [["worker", "SCIENCE", 1], ["worker", "CULTURE", 1]]],
+      ["Ceremonial Diplomacy", [3], [["connected", "GOLD", 1], ["trade", 1]]],
+      ["Roman Renewal", [4, 5], [["wonder", 25], ["connected", "HAPPINESS", 1]]]
+    ],
+    "traditions": [
+      ["Legal Compilations", 2, [["worker", "SCIENCE", 2]]],
+      ["Court Ceremony", 3, [["connected", "CULTURE", 2]]],
+      ["Silk Diplomacy", 4, [["resource", 2], ["yield", "GOLD", 3]]],
+      ["Monastic Libraries", 5, [["worker", "CULTURE", 1], ["worker", "SCIENCE", 1]]]
+    ],
+    "history": "The people conventionally called Byzantines understood their empire as Roman. Centered on Constantinople, it preserved and transformed Roman government through major territorial, linguistic, and religious changes from late antiquity to 1453. Cities, fiscal institutions, armies, monasteries, and the imperial court sustained a society whose influence reached far beyond its changing frontiers. Justinian's Hagia Sophia exemplifies ambitious architectural patronage, while silk production reveals the relationship between skilled labor, regulation, and prestige. Manuscript copying preserved learning but also created new scholarship rather than merely storing an ancient inheritance. Political and religious conflict, including iconoclasm, repeatedly reshaped institutions and images. This kit selects themes from a millennium of history instead of claiming an unchanged Byzantine constitution. Specific cavalry formations and the degree of state control over crafts varied by period, and surviving legal prescriptions should not automatically be treated as descriptions of everyday practice.",
+    "elementHistory": {
+      "building1": "Hagia Sophia, meaning Holy Wisdom, was dedicated under Justinian in the sixth century. Its monumental dome and elaborate liturgical setting expressed exceptional imperial patronage. The historical name identifies a particular church, not a standardized plan shared by every Byzantine religious building.",
+      "building2": "Ergasterion is an attested Byzantine Greek term for a workshop, retail premises, or their combination. This example represents silk weaving and sale, associated with prestigious textiles and changing regulation. The term is broader than silk production and does not imply a permanent imperial monopoly over every workshop.",
+      "quarter": "Augustaion names the enclosed open space south of Hagia Sophia in Constantinople, joining important ceremonial and administrative settings. Its form and use changed over time. The historical place name replaces a generic forum label without making every Byzantine city a copy of the capital's center.",
+      "improvement": "Metochion denotes a monastic dependency rather than an independent monastery. Such holdings could connect religious communities with agricultural resources and neighboring settlements. The attested Greek term is used cautiously: the size, activities, and relationship to a parent monastery varied, and not every dependency maintained a library.",
+      "military": "Kataphraktos refers to a heavily equipped cavalryman, but the term and associated formations changed across Byzantine history. Military manuals describe specialized arrangements that were not universal across the army. The unit evokes armored mounted combat without turning every imperial horseman into the same elite formation.",
+      "scout": "Mandator is an attested middle Byzantine designation for a subordinate official employed on special missions. Ninth- and tenth-century lists distinguish imperial mandatores from those serving senior officials. The unit selects their communication and information duties, not a standardized combat regiment or the entirety of the imperial post."
+    },
+    "civicHistory": [
+      "Roman institutions supplied a durable language of legitimacy. Administrative practice nevertheless changed with territorial losses, fiscal demands, and new political circumstances.",
+      "Legal compilation organized authoritative texts and shaped later jurisprudence. Written law and local practice were related but not identical.",
+      "Silk production connected specialized labor with elite consumption. Both regulation and regional manufacturing changed across the empire's long history.",
+      "Scholars copied, commented upon, and reworked inherited texts. Their activity involved choices and innovation rather than passive preservation alone.",
+      "Court ritual and prestigious gifts helped order relations with foreign rulers. Diplomacy also required negotiation, subsidy, and accommodation.",
+      "Imperial renewal took different forms after military and political crises. Architectural patronage could assert continuity while institutions adapted substantially."
+    ],
+    "sources": ["https://whc.unesco.org/en/list/356/", "https://www.metmuseum.org/exhibitions/listings/2012/byzantium-and-islam/blog/material-matters/posts/woven-silk", "https://www.metmuseum.org/toah/ht/06/eusb", "https://www.doaks.org/newsletter/monasteries-beyond-the-cloisters", "https://www.oxfordreference.com/view/10.1093/oi/authority.20110803095756415", "https://www.oxfordreference.com/display/10.1093/oi/authority.20110803100130137", "https://www.oxfordreference.com/display/10.1093/oi/authority.20110803095434223"]
+  },
+  "AYUTTHAYA": {
+    "ability": [["plot", "GOLD", 1, "river"], ["trade", 1]],
+    "buildings": [
+      [["wonder", 20], ["yield", "HAPPINESS", 4]],
+      [["resource", 2], ["connected", "GOLD", 1]]
+    ],
+    "quarter": [["growth", 20], ["connected", "CULTURE", 2]],
+    "military": [["combat", 5, "defend"], ["move", 1]],
+    "scout": [["sight", 2], ["ignore", "RAINFOREST"]],
+    "improvement": ["Khlong", "LO_I_KALO", "FOOD", 3, ["plot", "PRODUCTION", 1, "river"]],
+    "civics": [
+      ["Rice and Waterways", [], [["plot", "FOOD", 1, "river"]]],
+      ["Canal Communities", [1], [["growth", 15]]],
+      ["Royal Monasteries", [1], [["wonder", 15]]],
+      ["River Customs", [2], [["resource", 2], ["connected", "GOLD", 1]]],
+      ["Port Communities", [3], [["trade", 1], ["connected", "CULTURE", 1]]],
+      ["Embassies and Markets", [4, 5], [["connected", "HAPPINESS", 2], ["worker", "SCIENCE", 1]]]
+    ],
+    "traditions": [
+      ["Canal Stewardship", 2, [["plot", "FOOD", 1, "river"]]],
+      ["Monastic Patronage", 3, [["wonder", 20], ["yield", "CULTURE", 2]]],
+      ["Port Communities", 4, [["resource", 2], ["yield", "GOLD", 3]]],
+      ["Embassy Hospitality", 5, [["connected", "CULTURE", 1], ["yield", "HAPPINESS", 3]]]
+    ],
+    "history": "Founded in the mid-fourteenth century, Ayutthaya became the center of a powerful Siamese kingdom until its destruction by Burmese forces in 1767. Its island setting at a confluence of waterways linked rice-producing hinterlands with maritime exchange. Monasteries, reliquary towers, palaces, canals, and commercial neighborhoods shaped a capital whose wealth attracted merchants and envoys from across Asia and farther afield. Royal power depended on labor obligations and relationships with provincial rulers as well as commerce. Its territorial reach shifted repeatedly, and tributary ties should not be mistaken for modern uniform sovereignty. Surviving chronicles were compiled and revised under changing political circumstances, so details of early reigns require caution. The kit emphasizes water management, Buddhist patronage, and cosmopolitan trade without reducing the kingdom to a European encounter story or claiming that all communities participated equally in its prosperity and political authority.",
+    "elementHistory": {
+      "building1": "Prang is the established Thai architectural term for the tall sanctuary or reliquary towers prominent at Ayutthaya. Their forms drew on regional inheritances and royal patronage. The local term avoids an invented title while recognizing that tower functions and surrounding complexes varied.",
+      "building2": "Krom Phra Khlang was the treasury department involved in procuring goods, managing royal revenues, and dealing with foreign traders. Its responsibilities connected commerce with diplomacy. The building represents an attested institution, not one standardized customs-house plan, and should not be confused with the minister's personal residence.",
+      "quarter": "Yan is an attested Thai term for a neighborhood or district, used in historical discussions of Ayutthaya's trading and production areas. This quarter evokes communities linked by waterways and commerce. The local term does not impose a modern administrative ward or claim an identical layout for every neighborhood.",
+      "improvement": "Khlong is the Thai term for a canal, appearing in historical place names around Ayutthaya. Channels supported transport, settlement access, and cultivation within a seasonal floodplain. The reused irrigated-field donor is an approximation, not a claim that Siamese farmers operated Hawaiian taro systems.",
+      "military": "Ayutthayan rulers mobilized infantry alongside elephant forces, cavalry, and later gunpowder weapons. Royal Spear Guard is a descriptive gameplay formation rather than a documented regiment name. Spears remained useful, but they do not represent the full diversity or changing organization of the kingdom's armies.",
+      "scout": "Pilots needed detailed knowledge of currents, channels, changing water levels, and approaches to landing places. River Pilot represents this expertise at the junction of inland and maritime movement. It is not a named bureaucratic rank or a claim that every route was navigable year-round."
+    },
+    "civicHistory": [
+      "Rice-producing landscapes and waterways sustained the capital. The same channels that carried food also moved people and commercial cargo.",
+      "Canals shaped urban access and daily labor. Their practical use cannot be separated from seasonal flooding and the surrounding agricultural landscape.",
+      "Royal Buddhist foundations made patronage visible through large monasteries and reliquary towers. Their construction also required substantial labor and resources.",
+      "Commercial revenues strengthened the court, but merchants operated under changing rules. Royal involvement in trade was neither absent nor uniformly comprehensive.",
+      "Foreign communities participated in the capital's economy while maintaining varied institutions and relationships. Cosmopolitanism did not erase hierarchy or conflict.",
+      "Embassies connected Ayutthaya to many courts. European missions were one part of a much wider Asian diplomatic and commercial world."
+    ],
+    "sources": ["https://whc.unesco.org/en/list/576/", "https://www.mfa.go.th/en/content/5d5bce9615e39c3060016359?cate=5d5bcb4e15e39c3060006850", "https://www.ayutthaya-history.com/Historical_Sites_RoyalStorehouses.html", "https://digital.nlt.go.th/dlib/items/show/5064"]
+  },
+  "AZTEC": {
+    "ability": [["plot", "PRODUCTION", 1, "farm"], ["connected", "GOLD", 1]],
+    "buildings": [
+      [["worker", "SCIENCE", 2], ["worker", "CULTURE", 1]],
+      [["resource", 3], ["yield", "GOLD", 4]]
+    ],
+    "quarter": [["production", "LAND", 30], ["worker", "CULTURE", 1]],
+    "military": [["combat", 6, "attack"], ["heal", 5]],
+    "scout": [["sight", 2], ["move", 1]],
+    "improvement": ["Chinampa", "LO_I_KALO", "FOOD", 4, ["growth", 15]],
+    "civics": [
+      ["Lake Cultivation", [], [["plot", "FOOD", 1, "farm"]]],
+      ["Calmecac Education", [1], [["worker", "SCIENCE", 1]]],
+      ["Merchant Networks", [1], [["trade", 1]]],
+      ["Warrior Distinction", [2], [["production", "LAND", 20]]],
+      ["Tribute Records", [3], [["resource", 2], ["connected", "GOLD", 1]]],
+      ["Triple Alliance", [4, 5], [["settlements", 1], ["connected", "PRODUCTION", 1]]]
+    ],
+    "traditions": [
+      ["Chinampa Husbandry", 2, [["plot", "FOOD", 1, "farm"], ["growth", 10]]],
+      ["Market Standards", 3, [["resource", 2], ["yield", "GOLD", 3]]],
+      ["Warrior Distinction", 4, [["production", "LAND", 25]]],
+      ["Painted Records", 5, [["worker", "SCIENCE", 1], ["worker", "CULTURE", 1]]]
+    ],
+    "history": "The empire commonly called Aztec grew from the alliance of Tenochtitlan, Texcoco, and Tlacopan in 1428, with Mexica rulers of Tenochtitlan acquiring increasing predominance. Its power rested on warfare, tribute, negotiated relationships, and the labor of many distinct communities. Markets circulated food, craft goods, and valuables alongside imperial exactions. In the southern lake zone, chinampa agriculture supported intensive cultivation on fixed raised plots separated by canals; these were not floating gardens. Schools, temples, and painted records organized knowledge, ceremony, and authority. The cities named here include allied and subordinate altepetl rather than settlements founded by one people. Much surviving narrative evidence was recorded after the Spanish invasion, often through Indigenous testimony shaped by new colonial circumstances. Scholars continue to debate institutional details and numerical claims. The kit therefore links agriculture, commerce, and military distinction without presenting imperial domination as universally welcomed or reducing Mexica society to warfare alone.",
+    "elementHistory": {
+      "building1": "Calmecac education trained pupils for demanding religious, intellectual, and political responsibilities. Accounts associate these schools especially with elite preparation, though the social boundaries were not necessarily absolute. The building evokes instruction and discipline without treating a calmecac as a modern secular university or a monastery.",
+      "building2": "Tianquiztli denotes a marketplace, with Tlatelolco providing the best-known large example in early accounts. Sellers offered varied foods and manufactured goods under rules and supervision. The institution was commercial and social, not simply a warehouse where imperial tribute was collected.",
+      "quarter": "Major ceremonial precincts combined temples, open spaces, schools, and facilities connected with ritual authority. The Tenochtitlan precinct developed through repeated construction. Ceremonial Precinct groups these functions without assuming that every altepetl copied the capital's scale or shared an identical arrangement of sacred buildings.",
+      "improvement": "Chinampas were built-up cultivation plots in shallow lake environments, stabilized and separated by canals. Farmers managed soil, moisture, and repeated planting with considerable expertise. Their development preceded Mexica imperial rule, so the improvement celebrates regional agricultural knowledge rather than an invention attributable solely to Tenochtitlan.",
+      "military": "Cuauhpilli is attested for a nobleman elevated through martial deeds or other personal merit rather than descent. The name therefore represents earned distinction, not a securely reconstructed uniform eagle-warrior regiment. The native infantry sequence is a gameplay chassis, not an authentic reconstruction of costume or weaponry.",
+      "scout": "Pochteca were long-distance merchants whose travel could also produce political intelligence. Their institutions and privileges differed from those of ordinary market sellers. The attested Nahuatl plural names this group without asserting that all merchants were spies or that their journeys were primarily military reconnaissance."
+    },
+    "civicHistory": [
+      "Lake agriculture required coordinated work and detailed environmental knowledge. Raised fields and canals connected cultivation with urban provisioning.",
+      "Schools transmitted ritual, historical, and practical knowledge. Colonial descriptions preserve important testimony but also reflect the circumstances in which it was recorded.",
+      "Long-distance merchants moved valuable goods across political boundaries. Their activities complemented rather than replaced dense local and regional markets.",
+      "Martial achievement could confer prestige and privileges. Categories of warrior distinction should not automatically be equated with modern regimental structures.",
+      "Painted records and officials helped organize tribute obligations. Imperial extraction varied among subject communities and could generate deep resentment.",
+      "The Triple Alliance was unequal and historically changing. Its expansion depended on local alliances as well as the threat and use of force."
+    ],
+    "sources": ["https://whc.unesco.org/en/list/412/", "https://nahuatl.wired-humanities.org/content/cuauhpilli", "https://nahuatl.wired-humanities.org/content/calmecac", "https://nahuatl.wired-humanities.org/content/tianquiztli", "https://nahuatl.wired-humanities.org/content/pochtecatl", "https://nahuatl.wired-humanities.org/content/chinamitl"]
+  },
+  "MOHAWK": {
+    "ability": [["connected", "FOOD", 1], ["connected", "HAPPINESS", 1]],
+    "buildings": [
+      [["growth", 20], ["yield", "HAPPINESS", 4]],
+      [["connected", "CULTURE", 2], ["worker", "SCIENCE", 1]]
+    ],
+    "quarter": [["plot", "PRODUCTION", 1, "farm"], ["production", "LAND", 20]],
+    "military": [["combat", 5, "defend"], ["ignore", "FOREST"], ["move", 1]],
+    "scout": [["sight", 2], ["ignore", "FOREST"], ["heal", 5]],
+    "improvement": ["Village Maize Field", "FARM", "FOOD", 3, ["growth", 20]],
+    "civics": [
+      ["Longhouse Families", [], [["growth", 15]]],
+      ["Valley Fields", [1], [["plot", "FOOD", 1, "farm"]]],
+      ["Councils and Clans", [1], [["connected", "HAPPINESS", 1]]],
+      ["Village Renewal", [2], [["settlements", 1], ["connected", "PRODUCTION", 1]]],
+      ["Eastern Door Diplomacy", [3], [["trade", 1], ["connected", "CULTURE", 1]]],
+      ["Relationships Renewed", [4, 5], [["connected", "FOOD", 1], ["connected", "HAPPINESS", 1]]]
+    ],
+    "traditions": [
+      ["Shared Hearths", 2, [["growth", 15], ["yield", "HAPPINESS", 3]]],
+      ["Women Tending Fields", 3, [["plot", "FOOD", 1, "farm"], ["plot", "PRODUCTION", 1, "farm"]]],
+      ["Condolence and Counsel", 4, [["connected", "CULTURE", 2]]],
+      ["Valley Neighbors", 5, [["connected", "FOOD", 1], ["connected", "PRODUCTION", 1]]]
+    ],
+    "history": "Kanienkehaka communities, known in English as Mohawk, occupied the Mohawk River Valley and neighboring landscapes before colonial displacement and the development of later communities elsewhere. Archaeological villages such as Garoga, Klock, and Smith-Pagerie preserve longhouse plans, palisades, and material traces of household work. Recent radiocarbon research has revised their occupation sequences, warning against timelines based too confidently on the presence of European goods. Matrilineal relationships, women's agricultural responsibilities, and councils sustained social and political life. As keepers of the Eastern Door, Mohawk people participated in the Haudenosaunee Confederacy alongside distinct partner nations. Confederacy traditions are therefore not presented as exclusively Mohawk inventions, and its founding chronology remains debated. The kit focuses on village networks and reciprocal obligations rather than generic woodland stereotypes. Modern archaeological labels are retained where original village names are uncertain; successive sites are not represented as eight simultaneously occupied capitals.",
+    "elementHistory": {
+      "building1": "Kanonhsésne is the longhouse term used by the New York State Museum's Mohawk-focused interpretation. Bark-covered structures accommodated related families around shared hearths. The name acknowledges living language rather than inventing an ancestral title, while excavated plans and historical descriptions reveal variation rather than one universal interior.",
+      "building2": "Councils provided settings for deliberation within wider relationships among families, clans, and nations. Village Council House is a functional abstraction, not proof that each excavated Mohawk settlement contained a separate building of that name. Other unverified local institutional titles likewise remain English, avoiding invented Kanienkeha terminology.",
+      "quarter": "Palisades surrounded many ancestral Mohawk villages, sometimes in multiple rows. Longhouses and working areas occupied the enclosed space. Palisaded Village represents an inhabited community rather than a purely military installation, and defensive arrangements changed as settlements moved and relations with neighbors shifted.",
+      "improvement": "Women played central roles in cultivating maize and other crops around Mohawk villages. Fields required sustained labor, local knowledge, and decisions about planting and renewal. Village Maize Field highlights that work without claiming that all Haudenosaunee agricultural practices were uniquely Mohawk or remained unchanged over centuries.",
+      "military": "Bows were important weapons before firearms transformed regional warfare through colonial trade. Mohawk Bow Warrior is descriptive, not an attested permanent military rank. The donor progression moves into later equipment for gameplay and should not be read as a literal visual reconstruction of ancestral archers.",
+      "scout": "Messengers maintained relationships between dispersed communities through travel, formal speech, and knowledge of routes. Valley Messenger represents this work within a particular Mohawk landscape. It does not merge all Haudenosaunee diplomatic offices into one invented Mohawk scouting institution or reduce communication to military intelligence."
+    },
+    "civicHistory": [
+      "Longhouse households linked architecture with kinship and shared labor. Matrilineal relationships organized responsibilities without making every family or village identical.",
+      "Cultivated fields sustained village life alongside hunting, fishing, and gathering. Women's agricultural authority was central rather than incidental to community survival.",
+      "Councils operated within clan and national relationships. Mohawk participation in the Confederacy did not erase the distinct identities of its partner nations.",
+      "Villages were relocated and rebuilt over generations. Revised radiocarbon chronologies caution against assuming a simple sequence based on European objects alone.",
+      "Eastern Door responsibilities placed Mohawk communities within a wider diplomatic structure. Confederacy institutions should not be relabeled exclusively Mohawk achievements.",
+      "Reciprocal speech and condolence helped repair relationships after loss and conflict. Descriptions must respect living traditions and uncertainty about their precise early historical forms."
+    ],
+    "sources": ["https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0258555", "https://exhibitions.nysm.nysed.gov/iroquoisvillage/villagetwo.html", "https://www.haudenosauneeconfederacy.com/historical-life-as-a-haudenosaunee/family-structure/", "https://nysm.nysed.gov/mohawk-haudenosaunee-village/haudenosaunee-longhouse"]
+  },
+  "FRANKS": {
+    "ability": [["connected", "PRODUCTION", 1], ["plot", "FOOD", 1, "farm"]],
+    "buildings": [
+      [["worker", "SCIENCE", 1], ["wonder", 20]],
+      [["production", "LAND", 25], ["growth", 15]]
+    ],
+    "quarter": [["connected", "FOOD", 2], ["worker", "CULTURE", 1]],
+    "military": [["combat", 5, "attack"], ["heal", 10]],
+    "scout": [["move", 1], ["sight", 2]],
+    "improvement": ["Monastic Estate", "MONASTERY", "SCIENCE", 3, ["plot", "PRODUCTION", 1, "farm"]],
+    "civics": [
+      ["Royal Households", [], [["plot", "FOOD", 1, "farm"]]],
+      ["Estate Provisioning", [1], [["connected", "PRODUCTION", 1]]],
+      ["Monastic Learning", [1], [["worker", "SCIENCE", 1]]],
+      ["Mounted Retainers", [2], [["production", "LAND", 25]]],
+      ["Correctio", [3], [["worker", "CULTURE", 1], ["worker", "SCIENCE", 1]]],
+      ["Carolingian Governance", [4, 5], [["settlements", 1], ["connected", "HAPPINESS", 1]]]
+    ],
+    "traditions": [
+      ["Estate Provisioning", 2, [["connected", "FOOD", 2]]],
+      ["Correctio", 3, [["worker", "SCIENCE", 2]]],
+      ["Retainer Service", 4, [["production", "LAND", 25]]],
+      ["Palatine Patronage", 5, [["wonder", 20], ["yield", "CULTURE", 2]]]
+    ],
+    "history": "Frankish power developed through the transformation of the western Roman world, especially under the Merovingian dynasty associated with Clovis. Its realms incorporated diverse populations, inherited institutions, and competing aristocratic households. The Carolingians later expanded royal and imperial authority, with Charlemagne crowned emperor in 800. Royal estates, military service, ecclesiastical alliances, and assemblies helped sustain a court that moved between important centers. Aachen's palace chapel expressed imperial ambition through architecture drawing on late antique and Mediterranean precedents. Scholars and religious reformers promoted correction of texts, education, and disciplined Christian practice, although the reach of these programs varied. The kit joins estate provisioning to learned and monumental patronage without equating early Frankish armies with later feudal knighthood. Documentary categories and ideal royal instructions require interpretation; they do not prove uniform government across the realm. Divisions and succession struggles were enduring political realities, not merely interruptions to a naturally unified nation.",
+    "elementHistory": {
+      "building1": "Pfalzkapelle is the established modern German name for Charlemagne's palace chapel at Aachen. Its architecture borrowed prestigious late antique and Mediterranean ideas within a royal setting. The local name identifies this historical monument, not an attested Old Frankish word or a standard plan for ordinary churches.",
+      "building2": "Fiscus is attested in Carolingian sources for a royal administrative estate unit, potentially comprising several productive properties. Provisioning relied on agricultural labor and resources rather than one warehouse. The institutional name replaces a generic store label without claiming identical management or a universal building plan.",
+      "quarter": "Palatium is an attested Latin designation for a Carolingian royal palace, including centers such as Attigny. Residence, assembly, worship, and access to estate resources could coincide there. Rulers moved among such places, and the term does not make every palatium a permanently occupied modern capital.",
+      "improvement": "Monasteries held lands, organized production, maintained religious communities, and sometimes supported scriptoria and schools. Their roles varied greatly by wealth and location. Monastic Estate represents these connections without treating every dependent worker as a monk or every monastic property as a center of manuscript production.",
+      "military": "Mounted followers became important within Frankish warfare, especially in the Carolingian period, but armies also relied heavily on infantry. Frankish Mounted Retainer is a descriptive composite. It avoids projecting fully developed medieval chivalry, tournaments, or universally hereditary knightly status into the reign of Clovis.",
+      "scout": "Missus dominicus is the Latin designation for an envoy commissioned by the ruler. Carolingian missi communicated and investigated royal business, often working in pairs. The unit selects their traveling information role rather than reducing this attested institution to military scouting or projecting it unchanged into Merovingian times."
+    },
+    "civicHistory": [
+      "Rulers governed through households and relationships with elites. The realm's institutions incorporated Roman inheritances as well as new political arrangements.",
+      "Estates helped provision a mobile court and military activity. Prescriptive documents reveal ambitions for management rather than perfect administrative uniformity.",
+      "Religious houses cultivated learning and preserved texts, though resources differed. Literacy also served practical government and communication.",
+      "Mounted service was one component of an army assembled through varied obligations. Later images of feudal knights obscure that diversity.",
+      "Carolingian correctio sought to improve texts, conduct, and religious practice. Its effects depended on local teachers, resources, and political cooperation.",
+      "Assemblies, envoys, and written orders linked rulers to distant communities. Succession partitions repeatedly reshaped the geography of that authority."
+    ],
+    "sources": ["https://whc.unesco.org/en/list/3/", "https://www.ebsco.com/research-starters/history/franks-and-holy-roman-empire", "https://books.openedition.org/psorbonne/10452", "https://www.aachen.de/in-aachen-leben/planen-bauen/denkmalpflege-und-archaeologie/der-aachener-dom/", "https://www.jstor.org/stable/pdf/42959823.pdf?addFooter=false"]
+  },
+  "SELJUK": {
+    "ability": [["trade", 1], ["plot", "GOLD", 1, "pasture"]],
+    "buildings": [
+      [["worker", "SCIENCE", 2], ["yield", "HAPPINESS", 2]],
+      [["connected", "GOLD", 2], ["resource", 1]]
+    ],
+    "quarter": [["connected", "PRODUCTION", 2], ["worker", "SCIENCE", 1]],
+    "military": [["move", 1], ["combat", 4, "attack"], ["sight", 1]],
+    "scout": [["move", 1], ["sight", 2]],
+    "improvement": ["Sultan Han", "CARAVANSERAI", "GOLD", 4, ["resource", 2]],
+    "civics": [
+      ["Pastures and Courts", [], [["plot", "FOOD", 1, "pasture"]]],
+      ["Mounted Service", [1], [["production", "LAND", 20]]],
+      ["Protected Caravans", [1], [["resource", 2]]],
+      ["Road Hospitality", [2], [["connected", "HAPPINESS", 1], ["connected", "FOOD", 1]]],
+      ["Madrasa Patronage", [3], [["worker", "SCIENCE", 1], ["trade", 1]]],
+      ["Sultanic Road Networks", [4, 5], [["connected", "GOLD", 2], ["connected", "PRODUCTION", 1]]]
+    ],
+    "traditions": [
+      ["Road Hospitality", 2, [["connected", "HAPPINESS", 1], ["resource", 1]]],
+      ["Mounted Service", 3, [["production", "LAND", 25]]],
+      ["Scholarly Endowments", 4, [["worker", "SCIENCE", 2]]],
+      ["Caravan Revenues", 5, [["connected", "GOLD", 2]]]
+    ],
+    "history": "Seljuk dynasties emerged from Oghuz Turkish political and military networks and established major states across Iran, Iraq, and Anatolia from the eleventh century. Great Seljuk rulers operated within Persianate administrative and Islamic scholarly traditions while maintaining relationships with mobile military households. The Anatolian Sultanate of Rum developed its own cities, court culture, and commercial infrastructure. Its surviving caravanserais reveal ambitious investment in routes linking inland centers and ports, often through monumental stone buildings offering protected stopping places. Madrasas and other endowed institutions connected patronage with religious and intellectual life. This kit deliberately draws from both Great Seljuk and Rum settings, not one state with an unchanged capital and administration. The balance between rulers, pastoral groups, urban communities, and military dependents varied. Architectural inscriptions provide valuable evidence, but broader claims about guaranteed safety or universal services along every road should be treated cautiously rather than repeated as timeless policy.",
+    "elementHistory": {
+      "building1": "Ince Minareli Medrese is the Turkish name of a thirteenth-century teaching foundation in Konya, commissioned by the vizier Sahib Ata. Its carved portal and domed courtyard exemplify Anatolian Seljuk patronage. The historical name identifies a particular institution, not a universal model for every school.",
+      "building2": "Bazar is the established Persian term for an interconnected commercial setting of shops, passageways, and associated facilities. This example evokes urban exchange in the Persianate Seljuk world. It is not a named excavated building or a claim that later Ottoman covered-market institutions already existed unchanged.",
+      "quarter": "Chahar su is an attested Persian expression for a four-way intersection, associated with markets along intersecting streets in Iranian and Central Asian urban descriptions. The quarter models that commercial setting, not a standardized Seljuk administrative ward or a specific securely reconstructed street plan in every listed city.",
+      "improvement": "Sultan Han is an attested name shared by major Anatolian Seljuk caravanserais, including examples on the Konya-Aksaray and Kayseri-Sivas routes. Courts and covered spaces sheltered travelers, animals, and goods. These buildings developed an institution with earlier precedents rather than inventing roadside hospitality from nothing.",
+      "military": "Mounted archery was important in Seljuk warfare alongside armored cavalry and varied supporting troops. Recruitment and obligations differed between mobile groups and other military households. Seljuk Mounted Archer describes this tactical heritage, while the reused melee cavalry chassis does not actually reconstruct ranged mounted combat.",
+      "scout": "Caravan travel required information about water, road conditions, and political security. Caravan Outrider represents a practical advance traveler rather than a documented uniform Seljuk rank. Knowledge came from local communities and experienced travelers, not solely from a centralized royal mapping or intelligence service."
+    },
+    "civicHistory": [
+      "Pastoral groups and urban courts interacted through service, negotiation, and conflict. Neither can stand for the whole social world of Seljuk rule.",
+      "Mounted forces drew on different recruiting relationships. Their mobility was important, but Seljuk armies were not composed exclusively of horse archers.",
+      "Caravanserais invested resources in commercial routes. Surviving buildings reveal regional variation and patronage rather than a perfectly standardized network.",
+      "Shelter and provisions could support travelers and exchange. Specific services and their availability should be distinguished from idealized accounts of universal hospitality.",
+      "Endowed teaching institutions helped shape learned communities. Patronage involved religious authority and political legitimacy as well as intellectual ambition.",
+      "Rum Seljuk routes linked plateau cities with ports. Great Seljuk and Anatolian systems developed in related but distinct historical circumstances."
+    ],
+    "sources": ["https://whc.unesco.org/en/tentativelists/1403/", "https://whc.unesco.org/en/tentativelists/5907/", "https://iranicaonline.org/articles/bazar-index/bazar-i/"]
+  },
+  "RUS": {
+    "ability": [["plot", "GOLD", 1, "river"], ["connected", "PRODUCTION", 1]],
+    "buildings": [
+      [["worker", "CULTURE", 2], ["worker", "SCIENCE", 1]],
+      [["resource", 2], ["connected", "FOOD", 1]]
+    ],
+    "quarter": [["production", "LAND", 20], ["connected", "GOLD", 2]],
+    "military": [["combat", 5, "defend"], ["heal", 10]],
+    "scout": [["sight", 1], ["ignore", "FOREST"], ["ignore", "TAIGA"]],
+    "improvement": ["Timber Gorodishche", "ENCAMPMENT", "PRODUCTION", 3, ["plot", "GOLD", 1, "river"]],
+    "civics": [
+      ["River Portages", [], [["plot", "PRODUCTION", 1, "river"]]],
+      ["Princely Households", [1], [["production", "LAND", 15]]],
+      ["River Trading Courts", [1], [["resource", 2]]],
+      ["Retinue Counsel", [2], [["connected", "HAPPINESS", 1]]],
+      ["Christian Book Culture", [3], [["worker", "SCIENCE", 1], ["worker", "CULTURE", 1]]],
+      ["Princely City Networks", [4, 5], [["trade", 1], ["connected", "GOLD", 2]]]
+    ],
+    "traditions": [
+      ["Portage Cooperation", 2, [["plot", "PRODUCTION", 1, "river"]]],
+      ["Retinue Counsel", 3, [["connected", "HAPPINESS", 2]]],
+      ["Written Memory", 4, [["worker", "SCIENCE", 2]]],
+      ["River Commerce", 5, [["resource", 1], ["connected", "GOLD", 1]]]
+    ],
+    "history": "Medieval Rus developed through river trade, tribute, warfare, and the interaction of Slavic, Scandinavian, Finnic, and other communities. Kyiv became a major princely center, while Novgorod, Polotsk, Chernihiv, and many other cities maintained changing relationships within a dynastic political world. River passages and portages connected the Baltic, Black Sea, and interior regions. Volodymyr's conversion in 988 became a defining reference point for Christian institutions, though religious change was gradual and uneven. Churches, monasteries, writing, and legal traditions transformed urban culture without eliminating older social practices. Saint Sophia in Kyiv exemplifies the combination of Byzantine models and local patronage. The chronology and interpretation of early narratives remain debated, especially where later chronicles describe much earlier events. This kit treats Rus as a diverse medieval network, not the exclusive origin or possession of one modern nation, and does not replace its complicated principalities with a later Muscovite imperial state.",
+    "elementHistory": {
+      "building1": "Sofiia Kyivska is the modern Ukrainian name for Kyiv's Saint Sophia, whose medieval mosaics and frescoes preserve exceptional evidence of Rus patronage. The local name identifies this particular cathedral, not a reconstructed Old East Slavic institutional title or the later monastic buildings surrounding it.",
+      "building2": "Torg is the attested local designation for a market, notably Novgorod's trading area near Yaroslav's Court. Shops, stores, and waterfront landings connected merchants with urban consumers. The term names commercial activity and space, not a standardized princely office or proof that trade was always peaceful.",
+      "quarter": "Detinets conventionally denotes a fortified inner urban area associated with important residences and institutions. Its form varied considerably between cities. The quarter evokes this defended core without equating it with a later stone Muscovite kremlin or assuming all Rus settlements possessed monumental masonry defenses.",
+      "improvement": "Gorodishche commonly identifies the remains of a fortified settlement in archaeological usage. Timber and earthworks were important defensive materials in Rus landscapes. Timber Gorodishche represents an inhabited fortified place, not an exact contemporary administrative term or evidence that every labeled site belonged to the same dynasty.",
+      "military": "Druzhina refers to a ruler's armed companions or retinue, whose roles extended beyond fighting into counsel and administration. Equipment and mounted participation varied. Druzhina Retainer emphasizes personal service without claiming a uniform infantry regiment or treating every retainer as an exclusively Scandinavian warrior.",
+      "scout": "Portages connected river systems where continuous navigation was impossible. Guides needed local knowledge of terrain, water conditions, and political access. River Portage Guide represents that labor and expertise without inventing a standardized princely scouting rank or implying that travel was effortless across all seasons."
+    },
+    "civicHistory": [
+      "River movement depended on portages, labor, and local relationships. Waterways connected distant regions without forming one uninterrupted easy highway.",
+      "Princely households combined military followers, kin, and administrative activity. Their authority relied on negotiation as well as dynastic claims.",
+      "Commercial courts linked regional goods to wider exchanges. The roles of tribute, trade, and coercion often overlapped.",
+      "Retainers could advise rulers and undertake governmental tasks. Their social position changed across cities and centuries.",
+      "Christian institutions supported writing, art, and learning. Conversion was a process, not an instantaneous transformation of every household in 988.",
+      "Dynastic partitions and rival urban centers reshaped Rus repeatedly. Shared cultural practices did not eliminate political competition or local identities."
+    ],
+    "sources": ["https://whc.unesco.org/en/list/527/", "https://sofiia-kyivska.ua/unesco/", "https://novgorodmuseum.ru/muzei/yaroslavovo-dvorishche?ysclid=lxun4p4imx984090820"]
+  },
+  "LOMBARDS": {
+    "ability": [["connected", "HAPPINESS", 1], ["worker", "PRODUCTION", 1]],
+    "buildings": [
+      [["production", "LAND", 20], ["resource", 1]],
+      [["worker", "CULTURE", 2], ["wonder", 15]]
+    ],
+    "quarter": [["connected", "PRODUCTION", 2], ["yield", "HAPPINESS", 4]],
+    "military": [["combat", 5, "defend"], ["heal", 10], ["sight", 1]],
+    "scout": [["move", 1], ["ignore", "FOREST"]],
+    "improvement": ["Lombard Monastic Foundation", "MONASTERY", "CULTURE", 3, ["connected", "HAPPINESS", 1]],
+    "civics": [
+      ["Ducal Settlements", [], [["production", "LAND", 15]]],
+      ["Written Lombard Law", [1], [["yield", "HAPPINESS", 3]]],
+      ["Royal Foundations", [1], [["wonder", 15]]],
+      ["Gastaldal Administration", [2], [["connected", "PRODUCTION", 1], ["resource", 1]]],
+      ["Monastic Networks", [3], [["worker", "CULTURE", 1], ["worker", "SCIENCE", 1]]],
+      ["Italian Political Synthesis", [4, 5], [["connected", "CULTURE", 2], ["connected", "HAPPINESS", 1]]]
+    ],
+    "traditions": [
+      ["Public Obligations", 2, [["production", "LAND", 20], ["yield", "PRODUCTION", 2]]],
+      ["Recorded Judgment", 3, [["connected", "HAPPINESS", 2]]],
+      ["Monastic Networks", 4, [["connected", "CULTURE", 2]]],
+      ["Ducal Workshops", 5, [["worker", "PRODUCTION", 2]]]
+    ],
+    "history": "Lombard groups entered Italy in 568 and established a kingdom alongside powerful duchies and territories that remained under Byzantine control. Pavia became the royal center, while dukes and local officials exercised authority through relationships that were not always harmonious. Written law, beginning with Rothari's edict in 643, preserves important evidence for royal ambitions and social distinctions, though interpreting its categories requires care. Churches and monasteries reveal a creative interaction of northern traditions, Roman inheritances, and Byzantine forms. The kingdom fell to Charlemagne in 774, but southern Lombard polities continued for centuries, eventually including the principality of Salerno. This kit therefore distinguishes the northern kingdom from later southern developments rather than ending all Lombard history with one conquest. Ethnic identity, legal status, and material culture did not map neatly onto one another. Monumental patronage and surviving texts illuminate elite priorities more clearly than the daily experiences of every rural household.",
+    "elementHistory": {
+      "building1": "Curtis ducalis is an attested Latin term for the estate or fiscal organization collecting resources for Lombard dukes. It replaces a generic court label without inventing a Lombard-language word. The building represents administration and provisioning, not a securely reconstructed universal palace plan or wholly independent ducal government.",
+      "building2": "San Salvatore in Brescia was a major Lombard royal monastic foundation associated with King Desiderius and Queen Ansa. Its historical dedication supplies the name rather than an invented Lombard translation. The complex's surviving fabric includes later transformations, which should not all be assigned to its founders.",
+      "quarter": "Gastaldaga is the conventional local name for the Cividale area associated with the gastald's administrative setting and the surviving Lombard Tempietto. It replaces a generic English ward label without claiming that every town possessed an identically organized district or that all surviving structures share one date.",
+      "improvement": "Monastic foundations helped connect patrons, estates, religious communities, and routes through Italy. Their buildings could synthesize classical, Byzantine, and northern forms. Lombard Monastic Foundation represents this varied patronage without confusing early medieval Lombard work with the later Romanesque style sometimes labeled Lombard.",
+      "military": "Arimannus is associated with free status and public or military obligations in Lombard contexts, but its precise implications are debated. Lombard Arimannus is not a recovered standardized regiment. The unit avoids equating a complex legal and social category with one universally identical armored infantryman.",
+      "scout": "Ducal and royal government required messengers to carry instructions and maintain relationships between dispersed centers. Ducal Messenger is descriptive rather than an attested uniform office. Travel crossed a politically divided peninsula, where Byzantine territories and independent local interests could complicate routes and access."
+    },
+    "civicHistory": [
+      "Ducal power helped establish Lombard rule but could challenge royal cohesion. Italy remained politically divided rather than becoming a single uniformly governed kingdom.",
+      "Rothari's edict recorded law in Latin in 643. Its prescriptions require interpretation and should not be treated as a complete picture of everyday practice.",
+      "Royal and aristocratic patrons used religious building to express status and devotion. Women also played significant roles in founding and supporting institutions.",
+      "Officials managed property and local responsibilities within changing relationships of authority. Administrative titles did not guarantee identical duties everywhere.",
+      "Monasteries linked landholding, worship, and cultural production. Their architectural synthesis reflects exchange rather than one isolated ethnic style.",
+      "Southern Lombard polities continued after 774. Their later histories should be distinguished from the northern kingdom rather than treated as unchanged survivals."
+    ],
+    "sources": ["https://whc.unesco.org/en/list/1318/", "https://whc.unesco.org/en/list/1318/maps/", "https://www.treccani.it/enciclopedia/curtis/"]
+  },
+  "TIMURIDS": {
+    "ability": [["worker", "SCIENCE", 1], ["wonder", 20], ["production", "LAND", 15]],
+    "buildings": [
+      [["worker", "SCIENCE", 2], ["wonder", 15]],
+      [["worker", "CULTURE", 2], ["worker", "PRODUCTION", 1]]
+    ],
+    "quarter": [["worker", "SCIENCE", 2], ["worker", "CULTURE", 2]],
+    "military": [["combat", 5, "attack"], ["move", 1]],
+    "scout": [["sight", 2], ["move", 1]],
+    "improvement": ["Chaharbagh", "SAQIYA", "CULTURE", 3, ["worker", "SCIENCE", 1]],
+    "civics": [
+      ["Turco-Mongol Households", [], [["production", "LAND", 20]]],
+      ["Court Workshops", [1], [["worker", "PRODUCTION", 1]]],
+      ["Monumental Patronage", [1], [["wonder", 20]]],
+      ["Manuscript Arts", [2], [["worker", "CULTURE", 2]]],
+      ["Astronomical Tables", [3], [["worker", "SCIENCE", 2]]],
+      ["Timurid Learned Courts", [4, 5], [["wonder", 20], ["resource", 2]]]
+    ],
+    "traditions": [
+      ["Mounted Households", 2, [["production", "LAND", 25]]],
+      ["Manuscript Arts", 3, [["worker", "CULTURE", 2]]],
+      ["Measured Heavens", 4, [["worker", "SCIENCE", 2]]],
+      ["Architectural Patronage", 5, [["wonder", 25]]]
+    ],
+    "history": "Timur established his rule in Transoxiana in 1370 and made Samarkand the center of a rapidly expanding dominion. His campaigns caused immense destruction, while coerced transfers of skilled people contributed to the transformation of court cities. Successors governed a less unified political landscape but sustained influential centers of Persianate literary, artistic, and architectural patronage. Herat became especially important under later rulers, while Ulugh Beg's Samarkand supported mathematical astronomy and monumental educational foundations. Women, including Gawhar Shad, were significant patrons rather than peripheral spectators. Manuscripts, tilework, gardens, and large religious complexes emerged from the labor of many makers under unequal conditions. The kit acknowledges this relationship between conquest and cultural concentration rather than celebrating monuments without their human costs. Attributions of particular workshop products and some details of court institutions remain debated. Later buildings at famous sites should not automatically be assigned to the Timurids simply because the dynasty once ruled there.",
+    "elementHistory": {
+      "building1": "Ulugh Beg Madrasa names the ruler's historical foundation at Samarkand, an important setting for learned patronage. Its teaching institution and his observatory were related but distinct. The unit's scientific theme does not put an observatory inside every madrasa or attribute collaborative scholarship to one princely genius.",
+      "building2": "Kitabkhana, literally house of books, denotes a library and manuscript-production setting in Persianate court culture. Timurid patrons supported calligraphers, painters, and other makers, notably at Herat. The term identifies an institution rather than guaranteeing a secure workshop attribution for every surviving decorated manuscript.",
+      "quarter": "Registan is the historical name of Samarkand's prominent square, associated with Ulugh Beg's Timurid madrasa and changing urban activity. The quarter evokes its earlier learned and public setting. It does not assign the entire surviving architectural ensemble to the Timurids; major neighboring madrasas belong to later dynasties.",
+      "improvement": "Chaharbagh, a Persian term conventionally rendered four gardens, occurs in discussions of Timurid garden making. Such settings served residence, ceremony, and display as well as cultivation. Their plans and textual meanings varied, so the name does not assert that every garden followed one rigid later Mughal layout.",
+      "military": "Timurid armies combined mobile mounted forces with diverse contingents and siege capabilities. Their organization drew on Turco-Mongol traditions while adapting to campaigns across settled regions. Timurid Cavalry remains descriptive English because no single attested corps represents them all; native melee models only approximate mounted archery's tactical importance.",
+      "scout": "Tavachi names an attested Timurid military official involved in transmitting orders, mustering troops, and maintaining organization. This reconnaissance representation selects the traveling information role rather than claiming tavachis were ordinary scouts. Their senior responsibilities extended beyond message delivery, and the office was not identical to a postal relay."
+    },
+    "civicHistory": [
+      "Timur's authority developed within Turco-Mongol political relationships. His armies also drew resources and personnel from many conquered settled regions.",
+      "Court production concentrated skilled makers, including people moved by force. Artistic achievement does not erase the coercion behind some transfers.",
+      "Large foundations expressed piety, dynastic memory, and authority. Monumental scale depended on sustained labor and access to resources.",
+      "Manuscript making joined calligraphy, painting, binding, and scholarly work. Patronage in Herat became particularly influential under later Timurid rulers.",
+      "Ulugh Beg's astronomical program involved instruments, observation, and collaboration. Its tables emerged from an institutional and intellectual setting larger than one ruler.",
+      "Timurid courts were competitive centers rather than one permanently unified empire. Their cultural influence extended beyond the dynasty's political survival."
+    ],
+    "sources": ["https://whc.unesco.org/en/list/603/", "https://www.metmuseum.org/en/essays/the-art-of-the-timurid-period-ca-1370-1507", "https://www.metmuseum.org/learn/educators/curriculum-resources/art-of-the-islamic-world/unit-five/chapter-three/making-a-royal-manuscript", "https://iranicaonline.org/articles/baysongor-gia-al-din-b/", "https://jhr.ui.ac.ir/article_16543_en.html", "https://dergipark.org.tr/tr/pub/gabakademi/issue/89728/1530582"]
+  },
+  "VENICE": {
+    "ability": [["plot", "GOLD", 2, "fishing"], ["trade", 1]],
+    "buildings": [
+      [["worker", "PRODUCTION", 2], ["connected", "PRODUCTION", 1]],
+      [["resource", 3], ["connected", "GOLD", 1]]
+    ],
+    "quarter": [["connected", "GOLD", 2], ["plot", "PRODUCTION", 1, "fishing"]],
+    "military": [["combat", 6, "coast"], ["move", 1], ["heal", 5]],
+    "scout": [["sight", 2], ["move", 1]],
+    "improvement": ["Traghetto", "TRADING_FACTORY", "GOLD", 4, ["plot", "FOOD", 1, "fishing"]],
+    "civics": [
+      ["Lagoon Communities", [], [["plot", "FOOD", 1, "fishing"]]],
+      ["Arsenal Labor", [1], [["worker", "PRODUCTION", 1]]],
+      ["Fondaco Commerce", [1], [["resource", 2]]],
+      ["Convoy Contracts", [2], [["trade", 1], ["connected", "GOLD", 1]]],
+      ["Lagoon Stewardship", [3], [["plot", "PRODUCTION", 1, "fishing"]]],
+      ["Maritime Dominion", [4, 5], [["settlements", 1], ["connected", "CULTURE", 1]]]
+    ],
+    "traditions": [
+      ["Lagoon Stewardship", 2, [["plot", "FOOD", 1, "fishing"]]],
+      ["Convoy Contracts", 3, [["resource", 2], ["connected", "GOLD", 1]]],
+      ["Arsenal Labor", 4, [["worker", "PRODUCTION", 2]]],
+      ["Mercantile Commissions", 5, [["connected", "CULTURE", 2]]]
+    ],
+    "history": "Venice emerged from communities within a northern Adriatic lagoon and developed into a powerful maritime republic. Its political institutions, commercial arrangements, and relationship with Byzantium changed substantially over the medieval centuries. Merchants, shipbuilders, sailors, and laborers supported connections across the Adriatic and eastern Mediterranean, while governing elites increasingly restricted access to political power. Overseas possessions supplied strategic ports and resources but also involved coercion, warfare, and unequal relationships with local populations. Within the lagoon, navigation, fishing, building foundations, and management of waterways tied urban life to a fragile environment. The Arsenal became an important concentration of state-directed naval work, not an isolated miracle of industrial production. Stories of Venice's origins and exceptional constitutional harmony often reflect later civic mythology. This kit treats the republic as both a commercial network and a territorial power, using historical Venetian place labels without implying permanent ownership or erasing the identities of subject communities.",
+    "elementHistory": {
+      "building1": "Arsenale is the Italian historical name of Venice's public shipbuilding and maintenance complex. Its workshops concentrated skilled labor, stores, and administration. The attested name does not justify claims of a fully modern medieval assembly line, and many merchant vessels were constructed outside this state establishment.",
+      "building2": "A fondaco could combine accommodation, storage, supervision, and commercial functions for merchant communities. Venetian examples embodied both access and regulation. Fondaco is not a synonym for an unrestricted free market, and different merchant groups encountered different rules, privileges, and constraints within the republic.",
+      "quarter": "Fondamenta is the Venetian term for a street running beside a canal at the foot of buildings. Such waterfronts connected residences, workshops, landings, and commerce. The attested local word names an urban form rather than a standardized administrative ward or a single master-planned mercantile district.",
+      "improvement": "Traghetto is an attested Italian term for a crossing, including Venetian canal locations served by boats carrying people across. The improvement represents that landing and service rather than a deep-water harbor. It does not impose modern ferry machinery or claim every lagoon landing had identical arrangements.",
+      "military": "Galea sottile is an attested Italian designation for a slender galley used in Venetian warfare. Oars and sails supported different conditions and tactical needs. Native cog, carrack, and galleon donors provide age-active naval progression but do not reproduce the historical vessel's hull or rowing arrangements.",
+      "scout": "Pedota is an attested older Italian form for a pilot, also reflected in Venetian maritime vocabulary. The unit evokes knowledge of shallow channels and safe approaches. It does not claim a uniform medieval military pilot corps or identical techniques for lagoon and open-sea navigation."
+    },
+    "civicHistory": [
+      "Lagoon communities depended on waterborne movement and local ecological knowledge. Their development preceded the fully formed maritime republic.",
+      "Arsenal work joined specialized crafts with state demands. Its celebrated efficiency changed over time and relied on a large laboring population.",
+      "Fondachi facilitated and regulated merchant activity. Access to commerce could coexist with close supervision and unequal treatment.",
+      "Convoys coordinated shipping, investment, and protection. Commercial success remained exposed to war, piracy, weather, and political bargaining.",
+      "Managing channels and building sites linked urban growth with environmental consequences. The lagoon was an active working landscape, not merely a defensive moat.",
+      "Overseas dominion connected ports but subjected communities to unequal rule. Venice's commercial history cannot be separated from imperial coercion."
+    ],
+    "sources": ["https://whc.unesco.org/en/list/394", "https://www.treccani.it/vocabolario/pedota/", "https://www.treccani.it/vocabolario/peota/", "https://www.treccani.it/enciclopedia/l-arsenale-di-venezia-e-i-cantieri-navali-della-marina_%28Il-Contributo-italiano-alla-storia-del-Pensiero:-Tecnica%29/", "https://www.treccani.it/vocabolario/fondamenta/", "https://www.treccani.it/vocabolario/traghetto/"]
+  },
+  "ALMOHADS": {
+    "ability": [["plot", "FOOD", 1, "river"], ["wonder", 15]],
+    "buildings": [
+      [["worker", "CULTURE", 2], ["wonder", 20]],
+      [["growth", 20], ["plot", "PRODUCTION", 1, "farm"]]
+    ],
+    "quarter": [["connected", "PRODUCTION", 2], ["yield", "HAPPINESS", 3]],
+    "military": [["combat", 5, "attack"], ["heal", 10]],
+    "scout": [["sight", 2], ["ignore", "SAGEBRUSH_STEPPE"]],
+    "improvement": ["Reservoir Orchard", "SAQIYA", "FOOD", 3, ["growth", 20]],
+    "civics": [
+      ["Atlas Communities", [], [["production", "LAND", 15]]],
+      ["Caliphal Cities", [1], [["connected", "CULTURE", 1]]],
+      ["Reservoir Stewardship", [1], [["growth", 15]]],
+      ["Congregational Patronage", [2], [["wonder", 20], ["worker", "CULTURE", 1]]],
+      ["Orchards and Fields", [3], [["plot", "GOLD", 1, "farm"]]],
+      ["Western Caliphal Networks", [4, 5], [["settlements", 1], ["connected", "FOOD", 1]]]
+    ],
+    "traditions": [
+      ["Mountain Solidarity", 2, [["production", "LAND", 20], ["yield", "PRODUCTION", 2]]],
+      ["Urban Patronage", 3, [["worker", "CULTURE", 2]]],
+      ["Water Stewardship", 4, [["growth", 20]]],
+      ["Garden Revenues", 5, [["plot", "GOLD", 1, "farm"]]]
+    ],
+    "history": "The Almohad movement began among Atlas communities under Ibn Tumart and developed into a caliphate under Abd al-Mumin and his successors. From the twelfth century it displaced Almoravid power and ruled extensive territories in North Africa and al-Andalus. Marrakesh remained a major center, while projects at Rabat and Seville expressed caliphal ambitions through fortifications, mosques, and urban works. Agricultural production and management of water supported court cities and cultivated estates, often building on older infrastructure. The movement's reforming claims accompanied coercive religious policies, so its history should not be reduced to an uncomplicated celebration of tolerance. Relations among rulers, tribal constituencies, urban populations, and provincial elites changed over time. The attribution and dating of particular waterworks can be uncertain, and later alterations complicate surviving monuments. This kit distinguishes Almohad institutions from their Almoravid predecessors and successor dynasties while emphasizing regional integration, cultivation, and architectural patronage.",
+    "elementHistory": {
+      "building1": "Koutoubia is the established local name of Marrakesh's major Almohad congregational mosque, associated with the booksellers' trade in its naming tradition. Its monumental minaret expressed religious and political authority. Surviving fabric and decoration require chronological care rather than automatic attribution to a single construction campaign.",
+      "building2": "Agdal names Marrakesh's extensive enclosed garden landscape, whose reservoirs and cultivated plots served production and elite use. Almohad foundations were altered by later patrons. The historical place name replaces a conjectural irrigation-office title without assigning every visible pavilion, channel, and orchard arrangement to the twelfth century.",
+      "quarter": "A kasbah could concentrate political residence, military security, and administrative functions within a city. Almohad projects at Marrakesh provide an important setting for this idea. Caliphal Kasbah does not imply that all western Islamic citadels were Almohad inventions or followed one identical internal plan.",
+      "improvement": "Reservoirs and orchards formed productive and prestigious landscapes around western Islamic cities. Almohad patrons enlarged or reorganized some such settings while inheriting established hydraulic knowledge. Reservoir Orchard represents that combination without assuming that every surviving garden layout or irrigation channel dates to the twelfth century.",
+      "military": "Almohad armies drew on different communities and included infantry, cavalry, and supporting contingents. Almohad Spear Infantry remains descriptive English rather than borrowing a famous corps from another polity. No verified local title is assigned to this composite formation, which represents only part of a changing military system.",
+      "scout": "Dalil is an attested Classical Arabic word for a guide or one who directs another. Here it describes local knowledge of Atlas routes, water, and neighboring communities. It is a lexical translation, not a claimed uniform Almohad rank or an exclusively Arabic identity for the region's diverse guides."
+    },
+    "civicHistory": [
+      "Atlas communities supplied the movement's initial setting and support. Later imperial government depended on wider constituencies as well as these origins.",
+      "Caliphal cities expressed political ambition through monumental works. Many important centers were inherited rather than founded by the dynasty.",
+      "Water storage and distribution supported cultivation around urban centers. Attribution of particular channels to one period can remain uncertain.",
+      "Large mosques made reforming religious claims visible. Patronage must be understood alongside coercion and the demands of imperial rule.",
+      "Orchards and fields connected urban wealth with agricultural labor. Gardens could be productive estates as well as elite settings for display.",
+      "The caliphate integrated territories across the strait unevenly. Succession problems, local resistance, and military reverses exposed the limits of that integration."
+    ],
+    "sources": ["https://whc.unesco.org/en/list/331/", "https://next.archnet.org/sites/4742", "https://www.laneslexicon.com/word/%D8%AF%D9%84%D9%8A%D9%84"]
+  },
+  "KHWARAZMIANS": {
+    "ability": [["plot", "PRODUCTION", 1, "river"], ["resource", 2]],
+    "buildings": [
+      [["plot", "FOOD", 1, "farm"], ["growth", 15]],
+      [["worker", "SCIENCE", 2], ["connected", "GOLD", 1]]
+    ],
+    "quarter": [["resource", 3], ["connected", "GOLD", 2]],
+    "military": [["combat", 5, "attack"], ["heal", 10], ["sight", 1]],
+    "scout": [["sight", 2], ["ignore", "SAGEBRUSH_STEPPE"]],
+    "improvement": ["Oxus Caravanserai", "CARAVANSERAI", "GOLD", 3, ["connected", "FOOD", 1]],
+    "civics": [
+      ["Lower Oxus Canals", [], [["plot", "FOOD", 1, "river"]]],
+      ["Oasis Markets", [1], [["resource", 2]]],
+      ["Military Households", [1], [["production", "LAND", 20]]],
+      ["Caravan Revenues", [2], [["trade", 1], ["connected", "GOLD", 1]]],
+      ["Persian Chancery", [3], [["worker", "SCIENCE", 1], ["worker", "GOLD", 1]]],
+      ["Khwarazmshah Dominion", [4, 5], [["settlements", 1], ["resource", 2]]]
+    ],
+    "traditions": [
+      ["Canal Maintenance", 2, [["plot", "FOOD", 1, "river"], ["growth", 10]]],
+      ["Oasis Markets", 3, [["resource", 2], ["yield", "GOLD", 3]]],
+      ["Military Households", 4, [["production", "LAND", 25]]],
+      ["Chancery Expertise", 5, [["worker", "SCIENCE", 1], ["worker", "GOLD", 1]]]
+    ],
+    "history": "The Anushteginid Khwarazmshahs rose from service under the Seljuks to command a rapidly expanding empire in the twelfth and early thirteenth centuries. Their core lay in Khwarazm around the lower Amu Darya, where irrigated agriculture and cities such as Gurganj supported commerce and political power. Rulers including Atsiz, Tekish, and Muhammad extended their independence and authority through alliances, conquest, and competition with neighboring powers. Persian officials staffed important administrative positions, while Turkish military networks helped sustain and complicate royal rule. The empire's spectacular expansion did not guarantee cohesion, and Mongol invasion exposed serious fractures. Surviving chancery collections illuminate elite government, but many details of internal administration remain uncertain. This kit distinguishes the Anushteginids from earlier Khwarazmian dynasties and from the much earlier scholar al-Khwarizmi. Archaeological monuments at Kunya-Urgench also span later centuries, so not every surviving structure can be assigned to these rulers.",
+    "elementHistory": {
+      "building1": "Divan is an attested Persian administrative term for an office, chancery, register, or related governmental institution. Khwarazmian rulers employed Persian officials within inherited administrative traditions. Here it represents coordination of an irrigated economy, not a securely attested specialist canal department or a standardized excavated office building.",
+      "building2": "Gurganj supported learned and religious activity within a wealthy urban setting. Khwarazmian Madrasa represents patronage of instruction rather than one securely reconstructed school plan. It does not appropriate the ninth-century mathematician al-Khwarizmi as a servant of an Anushteginid dynasty that arose centuries later.",
+      "quarter": "Shahristan is an attested Persian urban term for the inner city, distinguished from outer settlement in descriptions of Central Asian towns. The quarter evokes Gurganj's inhabited commercial core, not a recovered named district. Its surviving monuments span several periods rather than one intact Anushteginid construction program.",
+      "improvement": "Caravanserais provided enclosed stopping and storage places along commercial routes across the region. Oxus Caravanserai represents this familiar infrastructure within Khwarazmian exchange. It is not a claim that the dynasty invented the institution or that one particular surviving caravanserai gate has a universally accepted construction date.",
+      "military": "Khwarazmian rulers relied on mounted forces connected to Turkish military households and steppe relationships, alongside other contingents. Khwarazmian Cavalry is descriptive, not a documented named regiment. Shifting loyalties and competing power centers mattered as much as equipment in the cohesion of the army.",
+      "scout": "Travel around the lower Oxus required knowledge of channels, crossings, water supplies, and routes through dry country. Oxus Route Guide represents practical expertise rather than a formal military office. River courses and political access changed, preventing a simple assumption of permanently stable commercial roads."
+    },
+    "civicHistory": [
+      "Irrigated cultivation supported the lower Oxus urban landscape. Its maintenance demanded labor and coordination whose precise administrative forms are incompletely documented.",
+      "Oasis cities connected local production with long-distance exchange. Their wealth depended on hinterlands as well as passing caravans.",
+      "Military households helped rulers expand but could also sustain rival interests. Dynastic authority was not equivalent to effortless command over every mounted contingent.",
+      "Caravan commerce contributed to urban prosperity and political revenue. Routes remained vulnerable to conflict, shifting alliances, and environmental change.",
+      "Persian chancery officials produced sophisticated correspondence. Surviving collections reveal elite practice while leaving much ordinary administration obscure.",
+      "Rapid conquest enlarged the empire without erasing its internal divisions. The Mongol invasion struck a political structure whose cohesion was already difficult to maintain."
+    ],
+    "sources": ["https://iranicaonline.org/articles/khwarazmshah/iii-the-line-of-anustigin/", "https://whc.unesco.org/en/list/1199/", "https://iranicaonline.org/articles/divan/", "https://iranicaonline.org/articles/bazar-index/bazar-i/"]
+  },
+  "PAPAL_STATES": {
+    "ability": [["worker", "CULTURE", 1], ["wonder", 20], ["connected", "HAPPINESS", 1]],
+    "buildings": [
+      [["worker", "GOLD", 2], ["worker", "SCIENCE", 1]],
+      [["wonder", 20], ["worker", "CULTURE", 2]]
+    ],
+    "quarter": [["connected", "CULTURE", 2], ["resource", 2]],
+    "military": [["combat", 5, "defend"], ["heal", 10]],
+    "scout": [["move", 1], ["sight", 2]],
+    "improvement": ["Ospizio", "MONASTERY", "HAPPINESS", 4, ["connected", "GOLD", 1]],
+    "civics": [
+      ["Patrimonies and Communes", [], [["yield", "HAPPINESS", 3]]],
+      ["Chancery Government", [1], [["worker", "GOLD", 1], ["worker", "SCIENCE", 1]]],
+      ["Pilgrim Routes", [1], [["connected", "FOOD", 1]]],
+      ["Temporal Administration", [2], [["resource", 2], ["connected", "PRODUCTION", 1]]],
+      ["Civic and Sacred Patronage", [3], [["wonder", 20], ["worker", "CULTURE", 1]]],
+      ["Territorial Papal Government", [4, 5], [["trade", 1], ["connected", "HAPPINESS", 2]]]
+    ],
+    "traditions": [
+      ["Notarial Practice", 2, [["worker", "SCIENCE", 1], ["worker", "GOLD", 1]]],
+      ["Pilgrim Hospitality", 3, [["connected", "HAPPINESS", 2]]],
+      ["Civic Commissions", 4, [["wonder", 20], ["yield", "CULTURE", 2]]],
+      ["Legatine Administration", 5, [["resource", 2], ["connected", "PRODUCTION", 1]]]
+    ],
+    "history": "The Papal States were territories governed under papal sovereignty, principally in central Italy, whose conventional historical span runs from the eighth century to 1870. Their origins involved existing church patrimonies, the weakening of Byzantine power, and Frankish intervention associated with the Donation of Pepin. Actual control varied sharply as communes, noble families, imperial claimants, and neighboring rulers contested authority. Papal government therefore required finance, law, officials, diplomacy, and armed force as well as religious legitimacy. Rome and other centers received major artistic and architectural commissions, while pilgrimage supported institutions of hospitality and exchange. Avignon adds an important non-Italian possession and court setting, but its relationship to the territorial state changed over time. The kit emphasizes medieval and Renaissance administration and patronage without confusing the polity with the worldwide Catholic Church or modern Vatican City. Claims of sovereignty and everyday effective government must be distinguished, and particular foundations often served several overlapping purposes.",
+    "elementHistory": {
+      "building1": "Cancelleria Apostolica is the Italian name of the apostolic chancery, which produced and authenticated papal documents. Its functions served wider ecclesiastical responsibilities as well as territorial affairs. The name does not imply that every document concerned the Papal States or that its Renaissance palace housed the institution throughout the Middle Ages.",
+      "building2": "San Lorenzo in Damaso is the historical basilica incorporated into the Renaissance Cancelleria complex. Its earlier foundations and later rebuilding connect worship with changing urban patronage. The attested dedication names a particular institution rather than inventing a generic translated title for all papally sponsored churches.",
+      "quarter": "Curia Romana is the established Latin name for the institutions assisting papal government, whose organization developed substantially over time. The quarter spatially abstracts that administrative setting, including responsibilities beyond territorial rule. It is neither modern Vatican City projected backward nor proof of uniform control over provincial communes.",
+      "improvement": "Ospizio is an attested Italian term for an institution offering hospitality or assistance, including medieval foundations serving pilgrims. Patrons and arrangements varied considerably. This use emphasizes shelter along routes to Rome without claiming direct papal ownership of every hospice or equating medieval hospitality with a modern specialized hospital.",
+      "military": "Condottiere is the attested Italian term for a military contractor or captain, associated with negotiated service in medieval and Renaissance warfare. Papal rulers employed such commanders. The mounted unit is not the Swiss Guard and does not imply that every papal soldier served under the same contractual arrangement.",
+      "scout": "Corriere is the Italian term for a courier carrying letters and messages between places. The unit represents communication supporting papal government and legatine activity. It is not itself a legate or cardinal, and the attested word does not establish one standardized medieval papal reconnaissance rank."
+    },
+    "civicHistory": [
+      "Church property and Frankish intervention contributed to territorial sovereignty. Later papal claims did not translate into equally effective government everywhere.",
+      "Documentary procedures supported administration and legal authority. The chancery also served ecclesiastical responsibilities extending far beyond the territorial state.",
+      "Pilgrimage connected Rome and other centers with travelers and charitable institutions. Hospitality involved local patrons and communities as well as papal initiatives.",
+      "Officials negotiated with communes, nobles, and provincial interests. Territorial consolidation was contested and uneven rather than the automatic consequence of religious obedience.",
+      "Commissions reshaped churches and public spaces through the work of many artists and laborers. Patronage could serve devotion, prestige, and political authority simultaneously.",
+      "The secular polity ended with the loss of Rome in 1870. Vatican City's creation in 1929 belongs to a different territorial and legal settlement."
+    ],
+    "sources": ["https://www.britannica.com/place/Papal-States", "https://whc.unesco.org/en/list/91/", "https://www.treccani.it/enciclopedia/cancelleria_%28Enciclopedia-Italiana%29/", "https://www.treccani.it/enciclopedia/ospizio_%28Enciclopedia-Italiana%29/", "https://www.treccani.it/vocabolario/corriere/", "https://www.treccani.it/vocabolario/condottiero/", "https://www.treccani.it/enciclopedia/curia/"]
+  },
+  "TAINO_EXPLORATION": {
+    "ability": [["plot", "GOLD", 1, "fishing"], ["connected", "CULTURE", 1]],
+    "buildings": [
+      [["growth", 25], ["yield", "FOOD", 3]],
+      [["worker", "CULTURE", 2], ["connected", "HAPPINESS", 1]]
+    ],
+    "quarter": [["connected", "GOLD", 2], ["worker", "HAPPINESS", 1]],
+    "military": [["combat", 6, "defend"], ["ignore", "RAINFOREST"], ["heal", 5]],
+    "scout": [["sight", 2], ["ignore", "RAINFOREST"], ["heal", 10]],
+    "improvement": ["Conuco", "FARM", "FOOD", 4, ["growth", 15]],
+    "civics": [
+      ["Conuco Husbandry", [], [["plot", "FOOD", 1, "farm"]]],
+      ["Household Reciprocity", [1], [["connected", "FOOD", 1]]],
+      ["Areito Gatherings", [1], [["worker", "CULTURE", 1]]],
+      ["Canoe Relationships", [2], [["trade", 1], ["resource", 1]]],
+      ["Ceremonial Authority", [3], [["connected", "HAPPINESS", 1], ["worker", "CULTURE", 1]]],
+      ["Cacicazgo Relationships", [4, 5], [["connected", "CULTURE", 2], ["plot", "GOLD", 1, "fishing"]]]
+    ],
+    "traditions": [
+      ["Cassava Knowledge", 2, [["plot", "FOOD", 1, "farm"], ["growth", 10]]],
+      ["Areito Memory", 3, [["worker", "CULTURE", 2]]],
+      ["Canoe Reciprocity", 4, [["resource", 2], ["connected", "GOLD", 1]]],
+      ["Gathering Places", 5, [["connected", "HAPPINESS", 2]]]
+    ],
+    "history": "Taíno is a broad designation for related Indigenous Caribbean communities whose languages, institutions, and regional identities were diverse. During the centuries before European invasion, villages and chiefly polities linked cultivation, fishing, craft production, and travel by canoe. Cassava gardens, palm-thatched houses, ceremonial plazas, carved objects, and traditions of performance reveal a rich social world rather than an empty prelude to colonization. Archaeological sites such as Caguana illuminate ceremonial landscapes, while early colonial accounts preserve useful but partial descriptions shaped by conquest and missionary expectations. The meanings of particular objects and the boundaries of named cacicazgos remain subjects of research. The settlement list therefore combines regional and archaeological labels without inventing a unified island empire. Spanish invasion brought catastrophic violence, enslavement, disease, and displacement, but did not make Indigenous ancestry and cultural life disappear. Contemporary Taíno communities and movements challenge the misleading historical narrative of complete extinction.",
+    "elementHistory": {
+      "building1": "Bohio is an established Caribbean term for a thatched dwelling built from local materials, with forms varying across communities and accounts. It represents household life and stored possessions rather than a purpose-built public granary. The unaccented spelling retains a familiar documented term without inventing extinct-language vocabulary.",
+      "building2": "Caney is used in descriptions of a larger chiefly house, associated with leadership and ceremonial activity. Historical accounts differ in their treatment of house shapes and functions. The name is retained as an attested term, not proof of one standardized royal architectural plan across the Caribbean.",
+      "quarter": "Yucayeque is a conventional rendering for a Taíno village or settlement. Houses and open gathering spaces formed a lived community rather than a purely ceremonial monument. The quarter uses the documented term cautiously, since spellings and the scale of settlements described in colonial sources vary.",
+      "improvement": "Conuco denotes a cultivated garden or field in Caribbean usage. Mounded cultivation could support cassava and other crops through skilled soil management. The term has a longer and changing history beyond one polity, so the improvement does not claim that every conuco used an identical agricultural layout.",
+      "military": "Macana names a wooden club associated with Indigenous Caribbean and mainland fighting equipment. Macana Bearer remains descriptive English because no securely documented uniform Taíno troop title is available. The native infantry sequence supplies gameplay progression, not authentic European metal armor for pre-invasion island warriors.",
+      "scout": "Canoes enabled travel, visiting, exchange, and communication between Caribbean communities. Canoe Messenger is descriptive English rather than an invented indigenous office name. It represents experienced travelers and their route knowledge without assuming that every island maintained a centralized military courier service or identical canoe designs."
+    },
+    "civicHistory": [
+      "Cassava cultivation depended on planting knowledge and careful processing. Gardens worked alongside fishing and other food sources rather than forming an isolated subsistence monoculture.",
+      "Households sustained reciprocal obligations through labor, visiting, and exchange. Those relationships differed across islands and social ranks.",
+      "Areito performances joined movement, music, and remembered narratives. Colonial descriptions are valuable but do not preserve a complete indigenous account of their meanings.",
+      "Canoe travel connected communities across channels. Interisland links involved changing local relationships rather than one Caribbean state controlling every route.",
+      "Chiefly authority was expressed through gathering places, objects, and ceremony. Archaeology and colonial accounts leave important uncertainties about the organization of particular polities.",
+      "Distinct cacicazgos negotiated, cooperated, and fought. Their descendants and cultural legacies survived colonial catastrophe, contradicting narratives of total Indigenous disappearance."
+    ],
+    "sources": ["https://americanindian.si.edu/explore/exhibitions/item?id=966", "https://www.caneycircle.org/bohio-2/", "https://npgallery.nps.gov/GetAsset/13028e15-be57-4528-8404-8d8d349bd154"]
+  }
+}

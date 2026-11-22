@@ -23,6 +23,63 @@ test('region statistics aggregate people, settlements and each territorial civil
   assert.equal(regionRows(geography, frame, settlements, tree, null, owner => String(owner)).length, 4);
 });
 
+test('same-named disconnected regions share one row with combined known statistics and all highlight targets', () => {
+  const geography = {
+    regions: [{ id: 10, name: 'New Zealand', island: true }, { id: 11, name: 'New Zealand', island: true },
+      { id: 12, name: 'New Zealand', island: true }, { id: 13, name: 'Italia' }],
+    regionForTile: new Map([[0, 10], [1, 11], [2, 12], [3, 13]]),
+  };
+  const frame = new Map([[0, 1], [1, 1], [2, 9], [3, 9]]);
+  const settlements = new Map([[0, ['Wellington', 4]], [1, ['Auckland', 6]], [2, ['Hidden town', 12]]]);
+  const tree = [{ children: [100, 200, 10000, 50].map((total, tile) => ({ kind: 'tile', tile, total })) }];
+  const rows = regionRows(geography, frame, settlements, tree, [2, 1, 0, 2], owner => ['Roman Republic', 'The Greek Kingdom'][owner]);
+  assert.deepEqual(rows.map(row => row.name), ['Italia', 'New Zealand']);
+  const group = rows[1];
+  assert.deepEqual(group.regionIds, [10, 11, 12]);
+  assert.equal(group.tiles, 2); assert.equal(group.population, 300);
+  assert.deepEqual(group.settlements.map(city => city.name), ['Auckland', 'Wellington']);
+  assert.deepEqual(group.owners, [{ name: 'Roman Republic', tiles: 2 }]);
+  assert.equal(group.type, 'Island');
+});
+
+test('all exact matching region names share one panel row without merging physical partitions', () => {
+  const geography = {
+    regions: [{ id: 'a', name: 'Central Asia' }, { id: 'b', name: 'Central Asia' },
+      { id: 'c', name: 'Pacific Ocean', water: true }, { id: 'd', name: 'Pacific Ocean', water: true }],
+    regionForTile: new Map([[0, 'a'], [1, 'b'], [2, 'c'], [3, 'd']]),
+  };
+  const rows = regionRows(geography, new Map(), new Map(), [], null, () => '');
+  assert.equal(rows.length, 2);
+  assert.deepEqual(rows.map(row => row.regionIds), [['a', 'b'], ['c', 'd']]);
+  assert.ok(rows.every(row => row.tiles === 2));
+  assert.equal(geography.regions.length, 4);
+});
+
+test('rivers, mountains and continents aggregate unique known tiles and preserve feature highlight targets', () => {
+  const geography = {
+    regions: [{ id: 'water', name: 'Nile', water: true, tiles: [0, 1] }],
+    regionForTile: new Map([[0, 'water'], [1, 'water']]),
+    features: [{ id: 'river', name: 'Nile', type: 'river', tiles: [1, 2, 2, 3] },
+      { id: 'range', name: 'Atlas', type: 'mountains', tiles: [2, 3] },
+      { id: 'secret', name: 'Unknown range', type: 'mountains', tiles: [3] }],
+    continents: [{ id: 'continent:0', name: 'Africa', tiles: [0, 1, 2, 3] }],
+  };
+  const rows = regionRows(geography, new Map([[0, 1], [1, 1], [2, 1], [3, 9]]),
+    new Map([[2, ['Memphis', 5]], [3, ['Secret city', 9]]]),
+    [0, 1, 2, 3].map(tile => ({ kind: 'tile', tile, total: 10 })), [2, 1, 2, 0],
+    owner => { assert.equal(owner, 0); return 'Roman Republic'; });
+  assert.deepEqual(rows.map(row => row.name), ['Africa', 'Atlas', 'Nile']);
+  const nile = rows[2];
+  assert.equal(nile.tiles, 3); assert.equal(nile.population, 30);
+  assert.deepEqual(nile.tileIndices, [0, 1, 2]);
+  assert.deepEqual(nile.regionIds, ['water']); assert.deepEqual(nile.featureIds, ['river']);
+  assert.deepEqual(nile.types, ['Water', 'River']);
+  assert.deepEqual(nile.settlements, [{ name: 'Memphis', citizens: 5 }]);
+  assert.deepEqual(nile.owners, [{ name: 'Roman Republic', tiles: 3 }]);
+  assert.equal(rows[0].type, 'Continent'); assert.deepEqual(rows[0].continentIds, ['continent:0']);
+  assert.equal(rows[1].type, 'Mountains'); assert.equal(rows[1].tiles, 1);
+});
+
 function element() {
   return { style: {}, attrs: {}, children: [], events: {}, value: '', classList: { add() {} },
     setAttribute(key, value) { this.attrs[key] = value; }, appendChild(child) { this.children.push(child); },
@@ -56,6 +113,11 @@ test('regions panel toolbar placement, hover/selection precedence, paging and li
   assert.equal(panel.highlight, 0, 'selection survives leaving its row');
   fire(panel.slots[1].button, 'mouseenter'); assert.equal(panel.highlight, 1);
   fire(panel.slots[1].button, 'mouseleave'); assert.equal(panel.highlight, 0, 'leaving another hovered row restores selection');
+  fire(panel.slots[1].button, 'mouseenter');
+  const beforeSelection = changes.length;
+  time += 400; fire(panel.slots[1].button, 'click');
+  assert.equal(changes.length, beforeSelection + 1, 'selecting the already-hovered row immediately refreshes persistent map shading');
+  time += 400; fire(panel.slots[0].button, 'click'); fire(panel.slots[1].button, 'mouseleave');
   time += 400; fire(panel.slots[0].button, 'click'); assert.equal(panel.highlight, null, 'clicking a selected row deselects it');
   fire(panel.slots[1].button, 'focus'); assert.equal(panel.highlight, 1);
   fire(panel.slots[1].button, 'keydown', { key: 'Enter' }); fire(panel.slots[1].button, 'blur');
@@ -74,4 +136,127 @@ test('regions panel toolbar placement, hover/selection precedence, paging and li
   time += 400; fire(panel.close, 'click'); assert.equal(panel.open, false); assert.equal(panel.panel.style.display, 'none');
   panel.reset(); assert.equal(panel.rows.length, 0); assert.equal(panel.search.value, ''); assert.equal(body.children.length, 2);
   assert.ok(changes.includes(0) && changes.includes(1) && changes.includes(null));
+});
+
+test('region-type toggles compose with search, reset paging and preserve selection without retaining stale hover', t => {
+  let time = 1000;
+  t.mock.method(Date, 'now', () => time);
+  const panel = new RegionsPanel({
+    document: { body: element(), createElement: element }, scale: n => n, className: 'chrome', onHighlight() {},
+  });
+  panel.sync(true, { getBoundingClientRect: () => ({ left: 500, top: 20, bottom: 56 }) }, { x: 0, y: 0, w: 1000, h: 800 });
+  panel.setOpen(true);
+  const rows = Array.from({ length: 95 }, (_, id) => ({ id, name: `Place ${id}`,
+    type: ['Region', 'Island', 'Water'][id % 3], tiles: 10, population: 100,
+    settlements: [{ name: id === 4 || id === 5 ? 'Port' : 'Town', citizens: 2 }], owners: [] }));
+  panel.update(rows);
+  fire(panel.slots[0].button, 'click');
+  fire(panel.next, 'click'); assert.equal(panel.page, 1);
+  fire(panel.slots[0].button, 'mouseenter'); assert.equal(panel.highlight, 40);
+  const toggle = type => {
+    time += 400;
+    fire(panel.typeButtons.find(entry => entry.type === type).button, 'click');
+  };
+  toggle('Island');
+  assert.equal(panel.page, 0);
+  assert.equal(panel.hover, null); assert.equal(panel.highlight, 0);
+  assert.equal(panel.selected, 0);
+  assert.ok(panel.slots.filter(slot => slot.row).every(slot => slot.row.type !== 'Island'));
+  assert.match(panel.counter.textContent, /of 63$/);
+  assert.equal(panel.typeButtons[1].button.attrs['aria-pressed'], 'false');
+  panel.search.value = 'Port'; fire(panel.search, 'input');
+  assert.deepEqual(panel.slots.filter(slot => slot.row).map(slot => slot.row.id), [5]);
+  toggle('Water');
+  assert.equal(panel.slots.filter(slot => slot.row).length, 0);
+  assert.equal(panel.counter.textContent, '0-0 of 0');
+  assert.match(panel.status.textContent, /No regions match/);
+  toggle('Region');
+  for (const type of ['Mountains', 'River', 'Continent']) toggle(type);
+  assert.equal(panel.types.size, 0);
+  toggle('Island');
+  assert.equal(panel.slots[0].row.id, 4, 're-enabling a type still honors the search');
+  assert.equal(panel.slots.length, 40, 'filtering reuses the bounded row pool');
+  panel.reset();
+  assert.deepEqual([...panel.types], ['Region', 'Island', 'Water', 'Mountains', 'River', 'Continent']);
+  assert.ok(panel.typeButtons.every(({ button }) => button.attrs['aria-pressed'] === 'true'));
+  panel.update(rows);
+  assert.match(panel.counter.textContent, /of 95$/);
+});
+
+test('mountain, river and continent filters compose with search and mixed-type names', () => {
+  const panel = new RegionsPanel({
+    document: { body: element(), createElement: element }, scale: n => n, className: 'chrome', onHighlight() {},
+  });
+  panel.update([
+    { id: 'nile', name: 'Nile', type: 'Water', types: ['Water', 'River'], continent: 'Asia' },
+    { id: 'alps', name: 'Alps', type: 'Mountains', continent: 'Asia' }, { id: 'asia', name: 'Asia', type: 'Continent' },
+  ].map(row => ({ ...row, tiles: 2, population: 0, settlements: [], owners: [] })));
+  const toggle = type => fire(panel.typeButtons.find(entry => entry.type === type).button, 'click');
+  fire(panel.slots[0].button, 'click');
+  toggle('Water');
+  assert.equal(panel.slots.filter(slot => slot.row).length, 3, 'a river stays included when water is disabled');
+  toggle('River');
+  assert.deepEqual(panel.slots.filter(slot => slot.row).map(slot => slot.row.id), ['asia', 'alps']);
+  toggle('Mountains');
+  assert.deepEqual(panel.slots.filter(slot => slot.row).map(slot => slot.row.id), ['asia']);
+  panel.search.value = 'Alps'; fire(panel.search, 'input');
+  assert.equal(panel.slots.filter(slot => slot.row).length, 0);
+  toggle('Continent');
+  assert.equal(panel.slots.filter(slot => slot.row).length, 0);
+});
+
+test('continent sections expand, order children by population, compose with filters and keep a bounded slot pool', t => {
+  let time = 1000;
+  t.mock.method(Date, 'now', () => time);
+  const panel = new RegionsPanel({
+    document: { body: element(), createElement: element }, scale: n => n, className: 'chrome', onHighlight() {},
+  });
+  const row = (id, name, population, continent, type = 'Region') =>
+    ({ id, name, population, continent, type, tiles: 1, settlements: [], owners: [] });
+  panel.update([row('europe', 'Europe', 100, 'Europe', 'Continent'),
+    row('asia', 'Asia', 200, 'Asia', 'Continent'),
+    row('low', 'A low population', 10, 'Asia'), row('high', 'Z high population', 100, 'Asia'),
+    row('italy', 'Italia', 100, 'Europe'), row('sea', 'Pacific Ocean', 0, null, 'Water')]);
+  const ids = () => panel.slots.filter(slot => slot.row).map(slot => slot.row.id);
+  assert.deepEqual(ids(), ['asia', 'europe', 'geography:unassigned']);
+  assert.equal(panel.slots[0].button.attrs['aria-expanded'], 'false');
+  fire(panel.slots[0].button, 'keydown', { key: 'Enter' });
+  assert.deepEqual(ids(), ['asia', 'high', 'low', 'europe', 'geography:unassigned']);
+  assert.equal(panel.slots[0].button.attrs['aria-expanded'], 'true');
+  assert.equal(panel.selected, null, 'expanding a continent does not select it as an area');
+  fire(panel.typeButtons.find(entry => entry.type === 'Continent').button, 'click');
+  assert.deepEqual(ids(), ['asia', 'high', 'low', 'europe', 'geography:unassigned'],
+    'continent headings remain available as navigation when their standalone filter is off');
+  time += 400; fire(panel.slots[0].button, 'click');
+  assert.deepEqual(ids(), ['asia', 'europe', 'geography:unassigned']);
+  panel.search.value = 'Italia'; fire(panel.search, 'input');
+  assert.deepEqual(ids(), ['europe', 'italy'], 'search exposes matching children under their continent');
+  time += 400; fire(panel.slots[0].button, 'click');
+  assert.deepEqual(ids(), ['europe'], 'search-expanded sections can still be collapsed manually');
+  time += 400; fire(panel.slots[0].button, 'click');
+  assert.deepEqual(ids(), ['europe', 'italy']);
+  panel.reset(); assert.equal(panel.expanded.size, 0);
+  panel.update([row('asia', 'Asia', 200, 'Asia', 'Continent'),
+    ...Array.from({ length: 95 }, (_, id) => row(id, `Area ${id}`, id, 'Asia'))]);
+  time += 400; fire(panel.slots[0].button, 'click');
+  assert.equal(panel.slots.length, 40);
+  assert.equal(panel.slots[1].row.id, 94);
+  fire(panel.next, 'click'); assert.equal(panel.slots[0].row.id, 55);
+  assert.equal(panel.slots.length, 40);
+});
+
+test('continent membership uses only known tiles and groups cross-continent features once by largest known share', () => {
+  const geography = {
+    regions: [{ id: 'land', name: 'Italia', tiles: [0] }, { id: 'sea', name: 'Sea', water: true, tiles: [4] }],
+    regionForTile: new Map([[0, 'land'], [4, 'sea']]),
+    continents: [{ id: 'europe', name: 'Europe', tiles: [0, 1] }, { id: 'asia', name: 'Asia', tiles: [2, 3] }],
+    features: [{ id: 'river', name: 'River', type: 'river', tiles: [1, 2, 3] }],
+  };
+  const rows = regionRows(geography, new Map(), new Map(), [], [2, 2, 2, 0, 2], () => '');
+  assert.equal(rows.find(row => row.id === 'land').continent, 'Europe');
+  assert.equal(rows.find(row => row.id === 'sea').continent, null);
+  assert.equal(rows.filter(row => row.id === 'river').length, 1);
+  assert.equal(rows.find(row => row.id === 'river').continent, 'Asia', 'ties are stable by continent name');
+  const hidden = regionRows(geography, new Map(), new Map(), [], [2, 2, 0, 0, 2], () => '');
+  assert.equal(hidden.find(row => row.id === 'river').continent, 'Europe', 'unseen Asian tiles cannot affect grouping');
 });

@@ -8,6 +8,23 @@ const source = await readFile(new URL('../anthroprocenia/ui/map/anthroprocenia-p
 const town = await loadModule('anthroprocenia-townscape.js');
 const crowds = await loadModule('anthroprocenia-crowds.js');
 const ui = await loadModule('anthroprocenia-ui.js');
+
+test('actual autonomous and commanded walkers travel 4.4 feet per second, cavalry twice that, at every map scale', () => {
+  for (const hexW of [10, 100, 1000]) for (const sub of ['', 'infantry', 'cavalry']) {
+    const graph = { nodes: [{ x: 0, y: 0 }, { x: hexW, y: 0 }], doorBuildings: new Map(), doorForms: new Map(), adj: [[1], [0]] };
+    const ctx = context(['newWalker', 'walkerBaseSpeed', 'mapScaleMetrics'], {
+      hexW, townHousingFor: () => ({ sourceOf: () => 0 }), popIsPinned: () => false,
+    });
+    const person = ctx.newWalker({ destinations: [0, 1], entry: { pathKey: 'home' }, nodeId: 'home', unitSub: sub }, { offset: 0 }, graph, 0, false, null);
+    Object.assign(person, { node: 0, x: 0, y: 0, wait: 0, route: [0, 1], leg: 0, t: 0 });
+    town.stepWalker(person, graph, 1, () => 1, () => 0.9);
+    const expected = sub === 'cavalry' ? 8.8 : 4.4;
+    assert.ok(Math.abs(person.x / hexW * 100 * 5280 - expected) < 1e-8);
+    Object.assign(person, { node: 0, x: 0, y: 0, cmd: { route: [0, 1] } });
+    town.stepCommanded(person, graph, 1);
+    assert.ok(Math.abs(person.x / hexW * 100 * 5280 - expected) < 1e-8);
+  }
+});
 function slice(name) {
   const start = source.indexOf(`function ${name}(`);
   assert.ok(start >= 0, name);
@@ -140,7 +157,7 @@ test('walker speed lettering has explicit nonshrinking dimensions at every UI sc
   }
 });
 
-test('the actual people tick scales autonomous and commanded walking, preserving original 5x pace and pause semantics', () => {
+test('the actual people tick scales autonomous and commanded walking in real seconds and preserves pause semantics', () => {
   const run = (speed, paused = false, resume = false) => {
     let now = 100;
     const ambient = { key: 'a', x: 0, fade: 0 }, commanded = { key: 'b', x: 0, fade: 0, cmd: {} };
@@ -176,17 +193,17 @@ test('the actual people tick scales autonomous and commanded walking, preserving
   };
   for (const speed of [1, 2, 3, 4, 5]) {
     const result = run(speed);
-    assert.ok(Math.abs(result.ambient - speed / 5) < 1e-12);
-    assert.ok(Math.abs(result.commanded - speed / 5) < 1e-12);
-    assert.ok(Math.abs(result.clock - 0.1 * speed / 5) < 1e-12);
+    assert.ok(Math.abs(result.ambient - speed) < 1e-12);
+    assert.ok(Math.abs(result.commanded - speed) < 1e-12);
+    assert.ok(Math.abs(result.clock - 0.1 * speed) < 1e-12);
   }
   const paused = run(3, true);
   assert.equal(paused.ambient, 0);
   assert.equal(paused.commanded, 0);
   assert.equal(paused.clock, 0);
   const resumed = run(3, true, true);
-  assert.ok(Math.abs(resumed.commanded - 0.6) < 1e-12, 'resume advances only the current frame, not the paused interval');
-  assert.ok(Math.abs(resumed.ambient - 0.6) < 1e-12);
+  assert.ok(Math.abs(resumed.commanded - 3) < 1e-12, 'resume advances only the current frame, not the paused interval');
+  assert.ok(Math.abs(resumed.ambient - 3) < 1e-12);
 });
 
 test('townscapes require a tile strictly larger than both viewport dimensions, respecting aspect ratio', () => {
@@ -215,10 +232,10 @@ test('offscreen activity clocks use the same speed multiplier and stop while pau
       popState: { walkerSpeed: speed, activityTime: 0, actionsAt: 100 }, els: {}, leadState: {}, familyState: {},
     });
     ctx.popRefreshActions(1100);
-    assert.equal(ctx.popState.activityTime, 1000 * speed / 5);
+    assert.equal(ctx.popState.activityTime, 1000 * speed);
     ctx.popState.peoplePaused = true;
     ctx.popRefreshActions(2100);
-    assert.equal(ctx.popState.activityTime, 1000 * speed / 5);
+    assert.equal(ctx.popState.activityTime, 1000 * speed);
   }
 });
 

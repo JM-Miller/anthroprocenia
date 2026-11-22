@@ -5,11 +5,13 @@ Anthroprocenia records your Civilization VII game and adds an interactive histor
 [h2]Features[/h2]
 [list]
 [*][b]History replay[/b]: scrub, step, or play back every recorded turn, with territory, settlements, roads, and units.
-[*][b]Geography[/b]: generated names for continents, seas, rivers, mountains, and other natural features, aligned with their outlines.
-[*][b]Townscapes[/b]: zoom in to see detailed settlements with streets, buildings, and a large central landmark for each district.
+[*][b]Chronicles and families[/b]: expandable dated histories and modeled family trees. Date displays include the calendar date and turn number.
+[*][b]Geography[/b]: real-world names and subdivisions on supported Earth maps, plus generated geography on other maps. Filter regions, islands, water bodies, rivers, mountains and continents.
+[*][b]Townscapes[/b]: zoom in to see detailed settlements with streets, buildings, and a large central landmark for each district. Roofs appear progressively while road preparation continues.
 [*][b]Population[/b]: walking residents with names, genders, occupations, personality traits, and homes. The Population panel groups people by civilization, settlement, and home location, sorts by occupation, shows occupation counts on hover, and can pause the walkers.
 [*][b]Layers[/b]: toggle borders, labels, rivers, natural features, continent boundaries, fog of war, and more.
 [*][b]Controls[/b]: mouse, touch, keyboard, and controller support. Native unit, settlement, and placement interactions still work from the map.
+[*][b]Calendars and pacing[/b]: Realistic and Realistic x2-x6 speeds, with annual, seasonal and monthly calendars. Skip Ahead uses native single-player autoplay with pause and Stop controls.
 [/list]
 
 [h2]Usage[/h2]
@@ -17,8 +19,10 @@ Open [b]Map View[/b] from the in-game HUD. Drag or use the arrow keys to pan, an
 
 [h2]Compatibility[/h2]
 [list]
-[*]Does not affect saved games; you can enable or disable it at any time.
+[*]Includes gameplay setup, speed and calendar changes. The game marks this mod as affecting saved games; back up saves before updating and choose your speed when starting a new game.
 [*]Remove other Anthroprocenia copies (e.g. manual installs) so only one is loaded.
+[*]Fully restart Civilization VII after updating. YnAMP is optional and supplies Giant Earth-specific map/setup options.
+[*]Native enemy-hover combat estimates and the red movement-style attack path remain unfinished.
 [/list]
 
 [h2]Manual install[/h2]

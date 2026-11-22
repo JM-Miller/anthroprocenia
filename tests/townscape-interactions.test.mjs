@@ -22,7 +22,7 @@ test('map input handlers are defined in the intact module scope', () => {
   { input: `${source}\nexport { ${exports.join(', ')} };`, encoding: 'utf8' });
   assert.equal(result.status, 0, result.stderr);
 });
-test('the intact playback module initializes state, exposes Map View and attaches its HUD control on DOM ready', () => {
+test('the intact playback module initializes Map View and automatic opening without adding a HUD map control', () => {
   const result = spawnSync(process.execPath, ['--max-old-space-size=96', '--experimental-vm-modules', '-e', `
     const vm = require('node:vm'), assert = require('node:assert/strict');
     const source = require('node:fs').readFileSync(0, 'utf8');
@@ -54,6 +54,11 @@ test('the intact playback module initializes state, exposes Map View and attache
           exports = names.startsWith('{')
             ? Object.fromEntries(names.slice(1, -1).split(',').map(name => [name.trim(), {}]))
             : { default: {} };
+          if (path.endsWith('/leader-model-manager.js')) exports.default = {
+            showLeaderModels() {}, showLeftLeaderModel() {}, showRightLeaderModel() {},
+            showRightIndLeaderModel() {}, showLeadersFirstMeet() {}, showLeadersDeclareWar() {},
+            showLeadersAcceptPeace() {}, showLeadersRejectPeace() {}, showLeadersDefeat() {}
+          };
         }
         const module = new vm.SyntheticModule(Object.keys(exports), function () {
           for (const [name, value] of Object.entries(exports)) this.setExport(name, value);
@@ -70,8 +75,8 @@ test('the intact playback module initializes state, exposes Map View and attache
       assert.ok(hooks.includes('loading-start-curtain-removed'));
       assert.ok(hooks.includes('DOMContentLoaded'));
       document.body = element(); for (const callback of ready) callback();
-      assert.ok(document.getElementById('anthroprocenia-map-hud-button'));
-      assert.equal(document.getElementById('anthroprocenia-map-hud-ring').style.visibility, 'visible');
+      assert.equal(document.getElementById('anthroprocenia-map-hud-button'), undefined);
+      assert.equal(document.getElementById('anthroprocenia-map-hud-ring'), undefined);
       assert.deepEqual(errors, []);
     })().catch(error => { console.error(error.stack); process.exitCode = 1; });
   `], { input: source, encoding: 'utf8' });
@@ -91,6 +96,7 @@ function slice(name) {
   return source.slice(start, i + 1);
 }
 function context(functions, state) {
+  if (functions.includes('newWalker')) functions = [...functions, 'walkerBaseSpeed', 'mapScaleMetrics'];
   const ctx = vm.createContext({ ...panel, lastMapInputTs: 0, townPaths: null, ...state });
   if (!functions.includes('townHousingFor')) functions = ['townHousingFor', ...functions];
   vm.runInContext(functions.map(slice).join('\n'), ctx);
@@ -277,7 +283,7 @@ test('walker tooltips include the live current action in close and single-member
 
 test('zoom immediately hides civ-coloured shapes without hiding the map input surface, then restores zoomed-out markers', () => {
   let visible = true, parked = 0;
-  const paths = { outer: { style: {} }, inner: { style: {} } }, input = { style: { display: 'none' } };
+  const paths = { outer: { style: {} }, inner: { style: {} }, lastOuter: 'M0,0L1,1Z', lastInner: 'M0,0L0.5,0.5Z' }, input = { style: { display: 'none' } };
   const ctx = context(['syncTownscapes'], {
     syncMapLabelVisibility() {}, syncTownVisibility() {}, syncRiverDeltas() {}, townRender: { timer: 0 },
     terrainMarkerPaths: new Map([['primary|secondary', paths]]), unitDom: { el: input }, unitSlots: [{}],
@@ -296,6 +302,10 @@ test('zoom immediately hides civ-coloured shapes without hiding the map input su
   assert.equal(paths.outer.style.display, '');
   assert.equal(paths.inner.style.display, '');
   assert.equal(input.style.display, '');
+  paths.lastOuter = paths.lastInner = '';
+  ctx.syncTownscapes();
+  assert.equal(paths.outer.style.display, 'none', 'empty retained company geometry cannot reappear after dot toggles');
+  assert.equal(paths.inner.style.display, 'none');
 });
 
 test('map hover reaches walker and roof tooltips through the preserved transparent input surface', () => {
@@ -323,7 +333,6 @@ test('map hover reaches walker and roof tooltips through the preserved transpare
   ctx.onMapHoverInner(event);
   assert.equal(tip.innerHTML, 'Dockhouse');
   assert.match(slice('syncTownscapes'), /unitDom.el.style.display = ''/);
-  assert.match(slice('syncTownscapes'), /paths.outer.style.display = paths.inner.style.display = display/);
 });
 
 test('all resident IDs belong to exactly one roof, stay stable across reloads, and page without population-sized arrays', () => {

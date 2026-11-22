@@ -87,7 +87,7 @@ test('the playback builds a walk graph that joins roads, avoids rivers and trees
     popFollowMatches: () => false, popKeptWalking: () => context.pins };
   context.segmentIntersection = (await (await import('./load.mjs')).loadModule('anthroprocenia-townlinks.js')).segmentIntersection;
   context.buildingHousing = (await (await import('./load.mjs')).loadModule('anthroprocenia-population-panel.js')).buildingHousing;
-  runInNewContext(playback.match(/function townHousingFor[\s\S]*?\n}/)[0] + '\n' + playback.slice(start, end) + '\nthis.buildWalkGraph = buildWalkGraph; this.createWalkers = createWalkers; this.buildTownWorld = buildTownWorld;', context);
+  runInNewContext(playback.match(/function walkerBaseSpeed[\s\S]*?\n}/)[0] + '\n' + playback.match(/function mapScaleMetrics[\s\S]*?\n}/)[0] + '\n' + playback.match(/function townHousingFor[\s\S]*?\n}/)[0] + '\n' + playback.slice(start, end) + '\nthis.buildWalkGraph = buildWalkGraph; this.createWalkers = createWalkers; this.buildTownWorld = buildTownWorld;', context);
   const shapes = generateTownscape({ seed: 2, civKey: 'ROME', population: 2e5, kind: 'town', age: 0, lvl: 1 });
   const center = { x: 1000, y: 1000 }, radius = 20;
   const abs = poly => poly.map(([x, y]) => [center.x + x * radius, center.y + y * radius]);
@@ -161,7 +161,7 @@ test('the townscape highlight is cleared whenever the hover handler does not kee
   assert.match(playback, /function onMapHover\(e\) \{\s*townHoverKeep = false;[\s\S]*?finally \{ if \(!townHoverKeep\) \{ try \{ setTownHighlight\(null\); \}/);
   assert.match(playback, /townHoverKeep = true;/);
   assert.match(playback, /document\.addEventListener\('mouseleave', \(\) => \{ hideRegionHover\(true\); lastHoverPoint = null; try \{ setTownHighlight\(null\)/);
-  assert.match(playback, /townLayer\.style\.display = 'block';\s*syncTownElementVisibility\(\);\s*syncTownCompass\(\);\s*revalidateTownHover\(\);/);
+  assert.match(playback, /townLayer\.style\.display = 'block';\s*placeIcons\(\);\s*syncTownElementVisibility\(\);\s*syncTownCompass\(\);\s*revalidateTownHover\(\);/);
   // The extracted highlight logic behaves: set, keep, then clear.
   const start = playback.indexOf('function setTownHighlight(key) {'), end = playback.indexOf('function townBuildingAt', start);
   const { runInNewContext } = await import('node:vm');

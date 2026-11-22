@@ -113,6 +113,19 @@ test('a map dot and the panel row are the same person', () => {
   const infant = vm.runInContext('popPerson', context)({ ...node, tile: 77 }, 3);
   assert.equal(infant.ageCategory, 'Child');
   assert.equal(infant.occupation, 'Infant');
+  for (const [years, expected] of [[12.999, 'Child'], [13, 'Youth'], [15.999, 'Youth'], [16, 'Adult']]) {
+    context.popState.profiles.clear();
+    context.popLife = () => ({ state: { gen: 0, family: 0 }, years, turn: 5 });
+    const profile = vm.runInContext('popPerson', context)({ ...node, tile: 77 }, 3);
+    assert.equal(profile.ageCategory, expected);
+    assert.equal(profile.years, Math.floor(years));
+    assert.equal(profile.name, row.name);
+  }
+  context.popState.profiles.clear();
+  context.popLife = () => ({ state: { gen: 0, family: 0 }, years: 0, turn: 5 });
+  const recruit = vm.runInContext('popPerson', context)({ ...node, tile: 77, icon: { ...node.icon, unit: { sub: 'melee' } } }, 3);
+  assert.equal(recruit.years, 16);
+  assert.equal(recruit.ageCategory, 'Adult');
   context.popState.profiles.clear();
   context.popLife = () => ({ state: { gen: 2, family: 1 }, years: 20, turn: 5 });
   const later = vm.runInContext('popPerson', context)({ ...node, tile: 77 }, 3);

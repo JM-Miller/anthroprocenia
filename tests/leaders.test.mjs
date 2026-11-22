@@ -21,12 +21,26 @@ test('leaders: the royal family at the palace, governors at urban centres, offic
   assert.equal(role('', 0), '');
 });
 
-test('children lead nowhere, except the heir at the palace', () => {
-  const child = { ageCategory: 'Child' };
-  assert.equal(role('palace', 2, child), 'Crown Prince');
-  assert.equal(role('palace', 0, child), '');
-  assert.equal(role('center', 0, child), '');
-  assert.equal(role('unit', 0, { ...child, unit: { sub: 'commander' } }), '');
+test('children and youths lead nowhere, except the heir at the palace', () => {
+  for (const ageCategory of ['Child', 'Youth']) {
+    const child = { ageCategory };
+    assert.equal(role('palace', 2, child), 'Crown Prince');
+    assert.equal(role('palace', 0, child), '');
+    assert.equal(role('center', 0, child), '');
+    assert.equal(role('unit', 0, { ...child, unit: { sub: 'commander' } }), '');
+    assert.equal(role('palace', 2, { ...child, government: 'Republic' }), '');
+  }
+});
+test('palace leadership follows the recorded government without giving children elected or appointed offices', () => {
+  for (const [government, expected] of [['Republic', 'Consul'], ['Democracy', 'President'], ['Chiefdom', 'Chief'],
+    ['Oligarchy', 'First Councillor'], ['Theocracy', 'High Priest'], ['Communism', 'Chairperson'], ['Despotism', 'Autocrat']]) {
+    assert.equal(role('palace', 0, { government, gender: 'female' }), expected);
+    for (let index = 0; index < 5; index++) {
+      assert.doesNotMatch(role('palace', index, { government }), /King|Queen|Prince/);
+      assert.equal(role('palace', index, { government, ageCategory: 'Child' }), '');
+    }
+  }
+  assert.equal(role('palace', 0, { government: 'Monarchy', gender: 'female' }), 'Queen');
 });
 
 test('leaders act as courtiers, scholars or soldiers', () => {

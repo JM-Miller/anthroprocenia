@@ -1,25 +1,43 @@
 import { parseGameYear } from './anthroprocenia-units.js';
+import { calendarDateLabel } from './anthroprocenia-calendar.js';
 
 export function familyEventDate(year, years, frames) {
   const at = years.findIndex(value => value >= year);
-  if (at >= 0 && Math.abs(years[at] - year) < 0.0001 && frames[at]) return frames[at][3] || `recorded turn ${at + 1}`;
+  if (at >= 0 && Math.abs(years[at] - year) < 0.0001 && frames[at]) return frames[at][3] || 'Date unknown';
   const origin = parseGameYear(frames[0] && frames[0][3]);
   if (origin === null) return year < 0 ? `${Math.ceil(-year)} years before the first record` : `${Math.floor(year)} years after the first record`;
   const astronomical = origin < 0 ? origin + 1 : origin;
   const date = Math.floor(astronomical + year);
   return date <= 0 ? `${1 - date} BCE` : `${date} CE`;
 }
+export function familyEventDateLabel(year, years, frames) {
+  const date = familyEventDate(year, years, frames), at = years.findIndex(value => value >= year);
+  if (year < years[0]) return `${date} (before Turn ${frames[0][1]})`;
+  if (at < 0 || !frames[at]) return `${date} (after Turn ${frames[frames.length - 1][1]})`;
+  return calendarDateLabel(date, frames[at][1]);
+}
+
+export function timelineDateLabel(group) {
+  const labels = [...new Set(group.events.map(event => event.dateLabel).filter(Boolean))];
+  if (labels.length === 1) return labels[0];
+  const turns = group.events.map(event => event.calendarTurn ?? (Number.isInteger(event.turn) ? event.turn + 1 : null)).filter(Number.isInteger);
+  return turns.length ? calendarDateLabel(group.date,
+    turns.reduce((first, turn) => Math.min(first, turn), Infinity),
+    turns.reduce((last, turn) => Math.max(last, turn), -Infinity)) : group.date || 'Recorded events';
+}
 
 export function familyEvents(members, nameOf, years, frames, observations = []) {
   const events = [], byId = new Map(members.map(member => [member.id, member]));
   const add = (year, text, details = 'Family history reconstructed from household records.') => {
     const date = familyEventDate(year, years, frames);
-    events.push({ year, date, details, text: `In ${date} ${text}` });
+    const dateLabel = familyEventDateLabel(year, years, frames), at = years.findIndex(value => value >= year);
+    const turn = year >= years[0] && at >= 0 && frames[at] ? at : undefined;
+    events.push({ year, date, dateLabel, calendarTurn: turn === undefined ? undefined : frames[turn][1], details, text: `In ${dateLabel} ${text}` });
   };
   for (const member of members) {
     const name = nameOf(member);
-    const details = `Born: ${familyEventDate(member.born, years, frames)}. Children: ${(member.children || []).length}.`
-      + (member.deathYear !== undefined ? ` Died: ${familyEventDate(member.deathYear, years, frames)}${member.cause ? ` (${member.cause})` : ''}.` : '');
+    const details = `Born: ${familyEventDateLabel(member.born, years, frames)}. Children: ${(member.children || []).length}.`
+      + (member.deathYear !== undefined ? ` Died: ${familyEventDateLabel(member.deathYear, years, frames)}${member.cause ? ` (${member.cause})` : ''}.` : '');
     add(member.born, `${name} was born.`, details);
     if (member.kind === 'moved' && years[member.since] !== undefined) add(years[member.since], `${name} moved to this home.`);
     if (member.spouse && member.id < member.spouse && byId.has(member.spouse)) {
@@ -72,8 +90,8 @@ export class CivilizationTimeline {
     if (!record) return;
     const initial = this.turns++ === 0;
     const add = (text, details, plots = []) => {
-      const date = frame[3] || `recorded turn ${turn + 1}`;
-      this.events.push({ turn, date, details, plots: [...new Set(plots)], text: `In ${date} ${text}` });
+      const date = frame[3] || '', dateLabel = calendarDateLabel(frame[3], frame[1]);
+      this.events.push({ turn, calendarTurn: frame[1], date, dateLabel, details, plots: [...new Set(plots)], text: `In ${dateLabel} ${text}` });
     };
     const all = this.owner === null, beforeIdentities = this.identities;
     if (players && Array.isArray(players.idd)) {
@@ -85,7 +103,7 @@ export class CivilizationTimeline {
     }
     const civ = id => {
       const identity = this.identities.get(id) || beforeIdentities.get(id);
-      return identity && (extra.civilizationName ? extra.civilizationName(identity) : identity[1] || identity[2]) || `Civilization ${id}`;
+      return identity && (extra.civilizationName ? extra.civilizationName(identity, id) : identity[1] || identity[2]) || `Civilization ${id}`;
     };
     const affects = owner => all ? this.identities.has(owner) || beforeIdentities.has(owner) : owner === this.owner;
     if (!initial && this.age !== frame[0]) add(`${all ? 'The world' : civ(this.owner)} entered a new Age.`,
@@ -167,20 +185,28 @@ export class CivilizationTimeline {
             `${name} changed from ${previous.type} to ${row[3]}, taking on a new standing within ${civ(owner)}.`, [plot]);
           if (Number.isFinite(previous.population) && row[2] !== previous.population) add(`${place}'s population ${row[2] > previous.population ? 'grew' : 'dwindled'}.`,
             `${name} ${row[2] > previous.population ? 'became home to a growing community' : 'was home to a smaller community than before'}. Its recorded population changed from ${previous.population} to ${row[2]}.`, [plot]);
+          const yieldsChanged = (row[4] || []).some((after, index) =>
+            Number.isFinite(previous.yields?.[index]) && Number.isFinite(after) && previous.yields[index] !== after);
+          const oldJobs = yieldsChanged ? extra.occupationCounts?.(plot, turn - 1) : null;
+          const newJobs = yieldsChanged ? extra.occupationCounts?.(plot, turn) : null;
           for (let yieldIndex = 0; yieldIndex < (row[4] || []).length; yieldIndex++) {
             const before = previous.yields && previous.yields[yieldIndex], after = row[4][yieldIndex];
             if (Number.isFinite(before) && Number.isFinite(after) && before !== after) {
               const resource = ['food', 'production', 'gold', 'science', 'culture', 'happiness', 'influence'][yieldIndex] || 'local output';
-              const milestone = ['harvests flourished', 'workshops thrived', 'wealth grew', 'scholarship flourished', 'cultural life flourished', 'spirits rose', 'influence grew'][yieldIndex] || 'prosperity grew';
-              const oldJobs = extra.occupationCounts?.(plot, turn - 1)?.[yieldIndex];
-              const newJobs = extra.occupationCounts?.(plot, turn)?.[yieldIndex];
-              const counted = Number.isFinite(oldJobs) && Number.isFinite(newJobs);
-              const delta = counted ? newJobs - oldJobs : null;
+              const occupation = ['farmers', 'artisans', 'traders', 'scholars', 'artists', 'entertainers', 'diplomats'][yieldIndex] || 'workers';
+              const beforeJobs = oldJobs?.[yieldIndex], afterJobs = newJobs?.[yieldIndex];
+              const counted = Number.isFinite(beforeJobs) && Number.isFinite(afterJobs);
+              const delta = counted ? afterJobs - beforeJobs : null;
+              if (delta === 0) continue;
               const count = delta === null ? '' : Math.abs(delta).toLocaleString('en-US');
-              const details = counted
-                ? `${name} ${delta >= 0 ? 'gained' : 'lost'} ${count} people in ${resource}-related occupations; this workforce changed from ${oldJobs.toLocaleString('en-US')} to ${newJobs.toLocaleString('en-US')}.`
-                : `${name}'s ${resource}-related workforce ${after > before ? 'expanded' : 'contracted'}; simulated occupation counts are unavailable in this record.`;
-              add(`${place}'s ${after > before ? milestone : `${resource}-related workforce declined`}.`, details, [plot]);
+              const hiring = `${name} (${civ(owner)})`;
+              const summary = counted ? `${hiring} ${delta > 0 ? `hired ${count} new ${occupation}` : `lost ${count} ${occupation}`}.`
+                : `${hiring}'s ${resource}-related workforce changed.`;
+              const change = after - before, yieldName = resource[0].toUpperCase() + resource.slice(1);
+              const yieldText = `(${change > 0 ? '+' : ''}${Number(change.toFixed(2))} ${yieldName})`;
+              const details = counted ? `${summary} ${yieldText}`
+                : `${hiring}'s ${resource}-related workforce ${after > before ? 'expanded' : 'contracted'}; simulated occupation counts are unavailable in this record. ${yieldText}`;
+              add(summary, details, [plot]);
             }
           }
         }
@@ -336,7 +362,15 @@ export class LiveTimelineFeed {
     const baseline = this.turn < 0;
     if (turn < this.turn) return;
     const recent = new Set();
-    for (const event of events) {
+    // Timeline events are turn-ordered; old history cannot produce a new notice.
+    const firstTurn = baseline ? turn - 1 : Math.min(this.turn, turn - 1);
+    let low = 0, high = events.length;
+    while (low < high) {
+      const middle = Math.floor((low + high) / 2);
+      if (events[middle].turn < firstTurn) low = middle + 1; else high = middle;
+    }
+    for (let index = low; index < events.length; index++) {
+      const event = events[index];
       const key = `${event.turn}|${event.text}`;
       if (!baseline && event.turn >= this.turn && !this.seen.has(key)) this.pending.push(event);
       if (event.turn >= turn - 1) recent.add(key);

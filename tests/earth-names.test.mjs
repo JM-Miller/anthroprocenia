@@ -58,8 +58,9 @@ test('Giant Earth required islands and peninsulas retain exact real names at the
     ['Greenland', 176, 88], ['Iceland', 2, 84], ['Madagascar', 37, 17],
     ['Borneo', 83, 31], ['Sumatra', 75, 30], ['Java', 83, 25],
     ['Philippines', 89, 40], ['Hawaiian Islands', 115, 52], ['New Zealand', 111, 7],
-    ['Australia', 95, 15], ['Taiwan', 87, 49], ['Sri Lanka', 63, 33],
-    ['Cyprus', 32, 53], ['Sardinia', 18, 56], ['Sicily', 21, 53],
+    ['Eastern Australia', 95, 15], ['Western Australia', 91, 15], ['Taiwan', 87, 49], ['Sri Lanka', 63, 33],
+    ['Cyprus', 32, 53], ['Sardinia', 18, 56], ['Sicily', 21, 53], ['Malta', 22, 51],
+    ['Jamaica', 153, 46],
   ];
   const land = new Set(places.map(([, x, y]) => y * 180 + x));
   for (let x = 89; x <= 100; x++) for (let y = 10; y <= 20; y++) land.add(y * 180 + x);
@@ -82,7 +83,90 @@ test('Giant Earth required islands and peninsulas retain exact real names at the
   assert.ok(data.regions.concat(data.features).every(entry => !/Misty|Fabled|Isle of|near Vala/.test(entry.name)));
   assert.deepEqual(errors, []);
 });
-test('Earth mountains join across a one-tile gap, use actual range names, and never invent unmatched ranges or lakes', () => {
+test('Italia absorbs every land-connected South Europe tile but not disconnected land or other continents', () => {
+  const land = new Set(Array.from({ length: 10 }, (_, i) => 60 * 180 + 12 + i));
+  land.add(60 * 180 + 10);
+  land.add(61 * 180 + 12);
+  land.add(56 * 180 + 17);
+  for (const atlas of [false, true]) {
+    const { ctx, errors } = world('LOC_MAP_GIANT_EARTH_NAME', { width: 180, height: 94,
+      tile: (x, y) => ({ water: !land.has(y * 180 + x), deep: true }),
+    });
+    ctx.GameplayMap.getContinentType = (x, y) => x < 19 && y !== 61 ? 1 : 0;
+    ctx.GameInfo.Continents.lookup = id => ({ Description: id === 1 ? 'South Europe' : 'Europe' });
+    if (atlas) giantContext(ctx);
+    const data = ctx.window.AnthroproceniaGeography.getMapData();
+    const at = (x, y) => data.regions.find(region => region.id === data.regionForTile.get(y * 180 + x));
+    const italia = at(20, 60);
+    for (let x = 12; x <= 21; x++) assert.equal(at(x, 60).id, italia.id, `${x},60; atlas=${atlas}`);
+    assert.equal(italia.name, 'Italia');
+    assert.equal(italia.requiredEarthName, true);
+    assert.notEqual(at(10, 60).name, 'Italia', 'water breaks the South Europe connection');
+    assert.notEqual(at(12, 61).name, 'Italia', 'adjacent other continents are not absorbed');
+    assert.equal(at(17, 56).name, 'Sardinia', 'disconnected South Europe island keeps its name');
+    assert.deepEqual(errors, []);
+  }
+});
+test('India, Southeast Asia, the full Malayan Peninsula, Iberia and Jamaica retain required names with or without atlas metadata', () => {
+  const places = [['Iberia', 7, 57], ['Iberia', 11, 59], ['India', 60, 52], ['India', 58, 41],
+    ['India', 62, 38], ['India', 71, 53], ['Southeast Asia', 75, 40], ['Southeast Asia', 76, 47],
+    ['Southeast Asia', 75, 38], ['Southeast Asia', 75, 39], ['Southeast Asia', 75, 40],
+    ['The Malayan Peninsula', 73, 39], ['The Malayan Peninsula', 74, 38],
+    ['The Malayan Peninsula', 73, 37], ['The Malayan Peninsula', 74, 36],
+    ['The Malayan Peninsula', 74, 35], ['The Malayan Peninsula', 78, 32],
+    ['Jamaica', 152, 46], ['Jamaica', 153, 46]];
+  for (const atlas of [false, true]) {
+    const { ctx, errors } = world('LOC_MAP_GIANT_EARTH_NAME', { width: 180, height: 94,
+      tile: (x, y) => ({ water: !((x >= 2 && x <= 82 && y >= 31 && y <= 70) || y === 46 && (x === 152 || x === 153)), deep: true }),
+    });
+    if (atlas) giantContext(ctx);
+    const data = ctx.window.AnthroproceniaGeography.getMapData();
+    for (const [name, x, y] of places) {
+      const region = data.regions.find(region => region.id === data.regionForTile.get(y * 180 + x));
+      assert.equal(region.name, name, `${name} at ${x},${y}; atlas=${atlas}`);
+      assert.equal(region.requiredEarthName, true);
+      assert.equal(region.island, name === 'Jamaica');
+    }
+    assert.equal(data.regionForTile.size, 180 * 94);
+    assert.deepEqual(errors, []);
+    if (atlas) {
+      ctx.GameTutorial.getProperty = () => ({ schemaVersion: 1, status: 'ready',
+        mapName: 'MassiveOldWorld', sourceMapName: 'GiantEarth', sourceWidth: 180, sourceHeight: 94,
+        sourceStartX: 50, sourceEndX: 79, sourceStartY: 30, sourceEndY: 64,
+        liveWidth: 30, liveHeight: 35, livePlayableStartX: 0, livePlayableEndX: 29,
+      });
+      const cropped = ctx.earthRegionLookup('LOC_MAP_REGIONAL_EARTH_NAME', 30, 35);
+      assert.equal(cropped({ x: 10, y: 22 }), 'India');
+      assert.equal(cropped({ x: 25, y: 10 }), 'Southeast Asia');
+    }
+  }
+});
+test('required European, North African and Malayan regions survive absent atlas data and retain distinct island names', () => {
+  const places = [
+    ['Central North Africa', 22, 47], ['Western Europe', 13, 67], ['Central Europe', 21, 71],
+    ['Eastern Europe', 36, 74], ['The Balkans', 27, 63], ['The Malayan Peninsula', 76, 32],
+    ['Corsica', 17, 59], ['The Balearic Isles', 13, 56], ['Britain', 10, 76],
+    ['Ireland', 4, 75], ['Iberia', 11, 58], ['Sardinia', 18, 56], ['Southeast Asia', 75, 40],
+  ];
+  const islands = new Set(places.slice(6, 12).map(([, x, y]) => y * 180 + x));
+  for (const atlas of [false, true]) {
+    const { ctx, errors } = world('LOC_MAP_GIANT_EARTH_NAME', { width: 180, height: 94,
+      tile: (x, y) => ({ water: !(islands.has(y * 180 + x) ||
+        x >= 2 && x <= 82 && y >= 31 && y <= 82 &&
+        !(x >= 2 && x <= 12 && y >= 70) &&
+        !(x >= 12 && x <= 18 && y >= 54 && y <= 60)), deep: true }),
+    });
+    if (atlas) giantContext(ctx);
+    const data = ctx.window.AnthroproceniaGeography.getMapData();
+    for (const [name, x, y] of places) {
+      const region = data.regions.find(entry => entry.id === data.regionForTile.get(y * 180 + x));
+      assert.equal(region.name, name, `${name}; atlas=${atlas}`);
+      assert.equal(region.requiredEarthName, true);
+    }
+    assert.deepEqual(errors, []);
+  }
+});
+test('Earth mountains retain natural grouping and unmatched lakes use geographic descriptions, not invented proper names', () => {
   const mountainTiles = new Set([64 * 180 + 18, 64 * 180 + 20, 64 * 180 + 24, 20 * 180 + 10, 20 * 180 + 11]);
   const { ctx, errors } = world('LOC_MAP_GIANT_EARTH_NAME', { width: 180, height: 94,
     tile: (x, y) => ({ water: x !== 10 && !mountainTiles.has(y * 180 + x),
@@ -94,9 +178,208 @@ test('Earth mountains join across a one-tile gap, use actual range names, and ne
   assert.ok(alps.tiles.includes(64 * 180 + 18) && alps.tiles.includes(64 * 180 + 20));
   assert.ok(!alps.tiles.includes(64 * 180 + 24), 'a wider gap does not join the range');
   assert.equal(data.features.some(feature => feature.tiles.includes(20 * 180 + 10) && feature.type === 'mountains'), false);
-  assert.equal(data.features.some(feature => feature.type === 'lake'), false, 'unmapped real-world lake is not assigned a fantasy name');
+  assert.equal(data.features.find(feature => feature.type === 'lake').name, 'Inland Waters of Central Asia');
   assert.deepEqual(errors, []);
 });
+test('Arabia and both Central African regions are mandatory at verified Giant Earth city locations', () => {
+    const places = [
+      ['Arabia', 36, 41], ['Arabia', 40, 43], ['Arabia', 38, 38], ['Arabia', 45, 43],
+      ['Western Central Africa', 21, 26], ['Western Central Africa', 19, 28], ['Western Central Africa', 20, 32],
+      ['Eastern Central Africa', 31, 30], ['Eastern Central Africa', 33, 28], ['Eastern Central Africa', 29, 28],
+      ['Greece', 28, 56], ['Greece', 27, 54], ['Greece', 27, 55],
+      ['Western North Africa', 14, 47], ['Eastern North Africa', 31, 45], ['Central North Africa', 22, 47],
+    ];
+    for (const atlas of [false, true]) {
+      const { ctx, errors } = world('LOC_MAP_GIANT_EARTH_NAME', { width: 180, height: 94,
+        tile: (x, y) => ({ water: !(x >= 2 && x <= 82 && y >= 10 && y <= 82), deep: true }),
+      });
+      if (atlas) giantContext(ctx);
+      const data = ctx.window.AnthroproceniaGeography.getMapData();
+      for (const [name, x, y] of places) {
+        const region = data.regions.find(entry => entry.id === data.regionForTile.get(y * 180 + x));
+        assert.equal(region.name, name, `${name} at ${x},${y}; atlas=${atlas}`);
+        assert.equal(region.requiredEarthName, true);
+        assert.equal(region.island, false);
+      }
+      for (const [x, y] of [[40, 51], [36, 53]]) {
+        assert.notEqual(ctx.giantEarthLandName({ x, y }), 'Arabia', 'Mesopotamia and Damascus are not Arabia');
+      }
+      for (const region of data.regions) {
+        assert.ok(region.name.trim(), `${region.id} has a name`);
+        if (region.island) continue;
+        assert.equal(ctx.splitConnectedBy(region.tiles, data.locations, () => null).length, 1, `${region.name} is connected`);
+      }
+      assert.equal(data.regions.reduce((sum, region) => sum + region.tiles.length, 0), 180 * 94);
+      assert.equal(data.regionForTile.size, 180 * 94);
+      assert.deepEqual(errors, []);
+    }
+});
+test('unmatched Earth islands and inland waters use containing real-world geography rather than blank or invented names', () => {
+    const { ctx, errors } = world('LOC_MAP_GIANT_EARTH_NAME', { width: 180, height: 94,
+      tile: (x, y) => ({ water: !(x === 126 && y === 30), lake: x === 130 && y === 20, deep: true }),
+    });
+    const data = ctx.window.AnthroproceniaGeography.getMapData();
+    const at = (x, y) => data.regions.find(region => region.id === data.regionForTile.get(y * 180 + x));
+    assert.equal(at(126, 30).name, 'Pacific Ocean Islands');
+    assert.equal(at(130, 20).name, 'Inland Waters of Oceania');
+    assert.ok(data.regions.every(region => region.name.trim() && !/Misty|Fabled|near Vala/.test(region.name)));
+    assert.equal(ctx.earthLandRegionName({ x: 52, y: 76 }, ctx.fixedGiantEarthRegionLookup('LOC_MAP_GIANT_EARTH_NAME', 180, 94)), 'Western North Asia');
+    assert.deepEqual(errors, []);
+});
+test('North American, Arctic and Siberian subdivisions are mandatory on mainland and offshore islands', () => {
+  const places = [
+    ['Western North America', 130, 65], ['Eastern North America', 153, 65],
+    ['Western Arctic America', 128, 84], ['Eastern Arctic America', 154, 84],
+    ['Western Siberia', 62, 80], ['Eastern Siberia', 92, 88],
+    ['Western North Asia', 62, 75], ['Eastern North Asia', 92, 75],
+  ];
+  const islandTiles = new Set(places.map(([, x, y]) => y * 180 + x));
+  for (const islands of [false, true]) for (const atlas of [false, true]) {
+    const { ctx, errors } = world('LOC_MAP_GIANT_EARTH_NAME', { width: 180, height: 94,
+      tile: (x, y) => ({ water: islands ? !islandTiles.has(y * 180 + x)
+        : !((x >= 116 && x <= 166 && y >= 53 && y <= 91) || (x >= 49 && x <= 114 && y >= 65 && y <= 91)), deep: true }),
+    });
+    if (atlas) giantContext(ctx);
+    const data = ctx.window.AnthroproceniaGeography.getMapData();
+    for (const [name, x, y] of places) {
+      const region = data.regions.find(entry => entry.id === data.regionForTile.get(y * 180 + x));
+      assert.equal(region.name, name, `${name}; islands=${islands}, atlas=${atlas}`);
+      assert.equal(region.requiredEarthName, true);
+      assert.equal(region.island, islands);
+    }
+    assert.deepEqual(errors, []);
+  }
+});
+test('Giant Earth retires broad northern and central regions and places Siberia above the live tundra frontier', () => {
+  for (const atlas of [false, true]) {
+    const { ctx, errors } = world('LOC_MAP_GIANT_EARTH_NAME', { width: 180, height: 94,
+      tile: (x, y) => ({ water: !((x >= 2 && x <= 114 && y >= 10 && y <= 93) ||
+        (x >= 116 && x <= 167 && y >= 48 && y <= 93)), deep: true }),
+    });
+    ctx.GameInfo.Biomes = { lookup: id => ({ BiomeType: id === 1 ? 'BIOME_TUNDRA' : 'BIOME_GRASSLAND' }) };
+    ctx.GameplayMap.getBiomeType = (x, y) => y >= (x < 75 ? 77 : 84) ? 1 : 0;
+    if (atlas) {
+      giantContext(ctx);
+      ctx.GameInfo.RegionPosition = [
+        { MapName: 'GiantEarth', Region: 'NORTH_EUROPA', X: 0, Y: 70, Width: 50, Height: 24 },
+        { MapName: 'GiantEarth', Region: 'CENTRAL_AFRICA', X: 0, Y: 10, Width: 50, Height: 60 },
+        { MapName: 'GiantEarth', Region: 'NORTH_AMERICA', X: 116, Y: 40, Width: 64, Height: 54 },
+        { MapName: 'GiantEarth', Region: 'NORTH_ASIA', X: 50, Y: 60, Width: 65, Height: 34 },
+      ];
+    }
+    const data = ctx.window.AnthroproceniaGeography.getMapData();
+    assert.ok(data.regions.every(region => !['North Europe', 'Northern Europe', 'Central Africa', 'North America',
+      'North Africa', 'West Asia', 'South Europe', 'Mediterranean', 'Siberia', 'North Asia'].includes(region.name)));
+    const at = (x, y) => data.regions.find(region => region.id === data.regionForTile.get(y * 180 + x)).name;
+    for (const x of [52, 62, 72, 82, 92, 105]) {
+      const edge = x < 75 ? 77 : 84;
+      const side = x < 68 ? 'Western' : 'Eastern';
+      assert.equal(at(x, edge - 1), `${side} North Asia`, `directly below tundra at ${x}; atlas=${atlas}`);
+      for (let y = edge; y < 94; y++) assert.equal(at(x, y), `${side} Siberia`, `northern land at ${x},${y}; atlas=${atlas}`);
+    }
+    assert.equal(at(25, 84), 'Scandinavia'); assert.equal(at(40, 88), 'Western Siberia');
+    assert.equal(at(19, 28), 'Western Central Africa'); assert.equal(at(31, 27), 'Eastern Central Africa');
+    assert.equal(at(124, 56), 'Central America'); assert.equal(at(160, 76), 'Eastern North America');
+    assert.equal(data.regionForTile.size, 180 * 94);
+    for (const region of data.regions.filter(region => !region.island)) {
+      assert.equal(ctx.splitConnectedBy(region.tiles, data.locations, () => null).length, 1);
+    }
+    assert.equal(data.continents.reduce((sum, continent) => sum + continent.tiles.length, 0),
+      data.regions.filter(region => !region.water).reduce((sum, region) => sum + region.tiles.length, 0));
+    assert.deepEqual(errors, []);
+  }
+});
+test('Giant Earth expands Greece modestly, bounds America by tundra and Baja while retaining Florida, and splits mainland Australia', () => {
+  for (const atlas of [false, true]) {
+    const { ctx, errors } = world('LOC_MAP_GIANT_EARTH_NAME', { width: 180, height: 94,
+      tile: (x, y) => ({ water: !((x >= 116 && x < 168 && y >= 48) ||
+        (x >= 84 && x <= 104 && y >= 7 && y <= 25) ||
+        (x >= 99 && x <= 100 && y >= 4 && y <= 5) ||
+        (x >= 2 && x <= 49 && y >= 50 && y <= 70)), deep: true }),
+    });
+    const edge = x => x < 145 ? 76 : 78;
+    ctx.GameInfo.Biomes = { lookup: id => ({ BiomeType: ['BIOME_GRASSLAND', 'BIOME_TUNDRA', 'BIOME_SNOW'][id] }) };
+    ctx.GameplayMap.getBiomeType = (x, y) => y >= 90 ? 2 : y >= edge(x) ? 1 : 0;
+    if (atlas) {
+      giantContext(ctx);
+      ctx.GameInfo.RegionPosition.push({ MapName: 'GiantEarth', Region: 'NORTH_AMERICA', X: 116, Y: 35, Width: 52, Height: 59 });
+    }
+    const data = ctx.window.AnthroproceniaGeography.getMapData();
+    const regionAt = (x, y) => data.regions.find(region => region.id === data.regionForTile.get(y * 180 + x));
+    const at = (x, y) => regionAt(x, y).name;
+    assert.equal(at(27, 60), 'Greece'); assert.equal(at(27, 63), 'The Balkans');
+    assert.equal(at(35, 56), 'Anatolia');
+    for (const x of [124, 140, 141, 142, 144, 145, 160]) {
+      assert.equal(at(x, edge(x) - 1), `${x < 144 ? 'Western' : 'Eastern'} North America`);
+      for (let y = edge(x); y < 94; y++) {
+        assert.equal(at(x, y), `${x < 142 ? 'Western' : 'Eastern'} Arctic America`, `${x},${y}; atlas=${atlas}`);
+      }
+    }
+    assert.equal(at(131, 58), 'Western North America');
+    for (const [x, y] of [[131, 57], [132, 54], [140, 55]]) assert.equal(at(x, y), 'Central America');
+    for (const [x, y] of [[150, 53], [151, 56], [152, 57]]) assert.equal(at(x, y), 'Eastern North America');
+    assert.equal(at(94, 15), 'Western Australia'); assert.equal(at(95, 15), 'Eastern Australia');
+    assert.equal(at(99, 4), 'Eastern Australia', 'Tasmania remains in the eastern division');
+    assert.equal(regionAt(94, 15).island, false); assert.equal(regionAt(95, 15).island, false);
+    assert.ok(data.regions.filter(region => !region.water).every(region => region.name !== 'Australia'));
+    assert.equal(data.regionForTile.size, 180 * 94);
+    assert.deepEqual(errors, []);
+  }
+});
+
+test('Giant Earth keeps Alaska, the lowered Central American boundary and Panama in their requested regions', () => {
+  const places = [
+    ['Western Arctic America', 106, 74], ['Western Arctic America', 109, 73],
+    ['Western Arctic America', 112, 74], ['Western Arctic America', 113, 79],
+    ['Western Arctic America', 114, 84], ['Western Arctic America', 118, 82],
+    ['Western Arctic America', 120, 84], ['Western Arctic America', 127, 74],
+    ['Western Arctic America', 129, 75], ['Western Arctic America', 130, 76],
+    ['Eastern Siberia', 107, 83], ['Eastern Siberia', 110, 84],
+    ['Western North America', 129, 78],
+    ['Western North America', 140, 56], ['Western North America', 140, 57],
+    ['Central America', 140, 55], ['Central America', 132, 57],
+    ['Western North America', 132, 58], ['Eastern North America', 150, 53],
+    ['Central America', 149, 41], ['Central America', 150, 40],
+    ['South America', 153, 39], ['South America', 156, 37],
+  ];
+  const land = new Set(places.map(([, x, y]) => y * 180 + x));
+  for (const atlas of [false, true]) {
+    const { ctx, errors } = world('LOC_MAP_GIANT_EARTH_NAME', { width: 180, height: 94,
+      tile: (x, y) => ({ water: !(land.has(y * 180 + x) || x >= 116 && x < 168 && y >= 37), deep: true }),
+    });
+    if (atlas) {
+      giantContext(ctx);
+      ctx.GameInfo.RegionPosition.push(
+        { MapName: 'GiantEarth', Region: 'CENTRAL_AMERICA', X: 129, Y: 38, Width: 37, Height: 16 },
+        { MapName: 'GiantEarth', Region: 'NORTH_AMERICA', X: 127, Y: 54, Width: 43, Height: 18 },
+        { MapName: 'GiantEarth', Region: 'SOUTH_AMERICA_WEST', X: 143, Y: 12, Width: 18, Height: 26 });
+    }
+    const data = ctx.window.AnthroproceniaGeography.getMapData();
+    for (const [name, x, y] of places) {
+      assert.equal(data.regions.find(region => region.id === data.regionForTile.get(y * 180 + x)).name,
+        atlas && x === 156 && y === 37 ? 'Western South America' : name, `${x},${y}; atlas=${atlas}`);
+    }
+    assert.deepEqual(errors, []);
+  }
+});
+
+test('retired Giant Earth land regions merge without renaming the Mediterranean Sea or named peninsulas', () => {
+  const { ctx } = world();
+  for (const [old, plot, expected] of [
+    ['West Asia', { x: 47, y: 50 }, 'Middle East'],
+    ['South Europe', { x: 15, y: 60 }, 'Central North Africa'],
+    ['North Africa', { x: 22, y: 47 }, 'Central North Africa'],
+    ['Mediterranean', { x: 14, y: 50 }, 'Western North Africa'],
+    ['Mediterranean', { x: 22, y: 50 }, 'Central North Africa'],
+    ['Mediterranean', { x: 30, y: 50 }, 'Eastern North Africa'],
+    ['Mediterranean', { x: 15, y: 60 }, 'Western Europe'],
+    ['Mediterranean', { x: 24, y: 60 }, 'Central Europe'],
+    ['Mediterranean', { x: 32, y: 60 }, 'Eastern Europe'],
+    ['Mediterranean Sea', { x: 22, y: 54 }, 'Mediterranean Sea'],
+    ['Italia', { x: 22, y: 58 }, 'Italia'],
+  ]) assert.equal(ctx.mergedGiantEarthRegionName(old, plot, new Map()), expected);
+});
+
 test('all bottom-row Earth land components form one Antarctica without absorbing intervening ocean', () => {
   const land = new Set([0, 1, 180, 90, 91, 179, 300]);
   const { ctx } = world('LOC_MAP_GIANT_EARTH_NAME', { width: 180, height: 94,
@@ -221,14 +504,14 @@ test('Giant Earth mainland atlas regions survive more islands than the procedura
   const data = ctx.window.AnthroproceniaGeography.getMapData();
   assert.ok(data.regions.filter(region => region.island).length > 100, 'islands alone exhaust the old region budget');
   const land = data.regions.filter(region => !region.water && !region.island);
-  assert.ok(land.some(region => region.name === 'North Africa'));
+  assert.ok(land.some(region => region.name === 'Central North Africa'));
   assert.ok(land.some(region => region.name === 'Central Asia'));
   assert.ok(land.every(region => region.nativeEarthName));
   assert.equal(land.reduce((sum, region) => sum + region.tiles.length, 0), 87 * 44);
   assert.equal(data.regionForTile.size, width * height, 'land, island and water tiles all retain a region');
   for (const region of land) for (const index of region.tiles) {
     assert.equal(region.name, ctx.giantEarthLandName(data.locations.get(index)) ||
-      (index % width < 43 ? 'North Africa' : 'Central Asia'), 'each label covers only its actual atlas location');
+      (index % width < 43 ? 'Central North Africa' : 'Central Asia'), 'each label covers only its actual atlas location');
   }
   assert.deepEqual(errors, []);
 });
@@ -277,6 +560,27 @@ test('procedural subregions form a complete connected nonoverlapping partition a
   const again = world('LOC_MAP_CONTINENTS_NAME', options).ctx.window.AnthroproceniaGeography.getMapData();
   assert.equal(JSON.stringify(data.regions), JSON.stringify(again.regions), 'partition and names are stable across reloads');
   assert.deepEqual(errors, []);
+});
+
+test('Earth river city landmarks use the source projection, reject ambiguous city keys, and preserve native fallback names', () => {
+  const { ctx } = world('LOC_MAP_GIANT_EARTH_NAME', { width: 180, height: 94,
+    tile: (x, y) => ({ river: (x === 115 && y === 5) || (x === 31 && y === 42),
+      riverName: x === 115 ? 'Named Tributary River' : 'Unrelated Native Name' }),
+  });
+  giantContext(ctx);
+  ctx.GameInfo.CityMap = [
+    { MapName: 'GiantEarth', CityLocaleName: 'LOC_CITY_NAME_LONDON', X: 12, Y: 72 },
+    { MapName: 'StockEarth', CityLocaleName: 'LOC_CITY_NAME_LONDON', X: 115, Y: 5 },
+    { MapName: 'GiantEarth', CityLocaleName: 'LOC_CITY_NAME_SANTIAGO', X: 140, Y: 15 },
+    { MapName: 'GiantEarth', CityLocaleName: 'LOC_CITY_NAME_SANTIAGO', X: 5, Y: 63 },
+  ];
+  const lookup = ctx.earthWaterLookup(ctx.earthRegionLookup('LOC_MAP_GIANT_EARTH_NAME', 180, 94));
+  assert.equal(lookup({ x: 12, y: 72 }, 'river'), 'Thames');
+  assert.equal(lookup({ x: 140, y: 15 }, 'river'), '', 'distant cities sharing one key cannot both identify one river');
+  assert.equal(lookup({ x: 115, y: 5 }, 'river'), '', 'other map projections do not supply anchors');
+  const rivers = ctx.window.AnthroproceniaGeography.getMapData().features.filter(feature => feature.type === 'river');
+  assert.ok(rivers.some(feature => feature.name === 'Named Tributary River'), 'unmapped native river names are not discarded or regenerated');
+  assert.ok(rivers.some(feature => feature.name === 'Nile'), 'verified Earth locations override unrelated native assignments');
 });
 
 test('native direction order produces the correct hex boundary edges, including map seams', () => {
@@ -336,5 +640,10 @@ test('partition covers every tile exactly once with connected regions on wrapped
     assert.equal(normalized.length, 2, 'never force detached pieces into one region just to meet a region count');
     assert.throws(() => ctx.splitRegionTiles([0, 100], data.locations), /disconnected/,
       'an unreachable tile is never assigned by straight-line distance');
+    for (const kind of [{ island: true }, { archipelago: true }]) {
+      const naturalGroup = ctx.fitRegionCount([{ ...disconnected[0], ...kind }], data.locations, 1);
+      assert.equal(naturalGroup.length, 1, 'natural island groups may remain disconnected');
+      assert.deepEqual(Array.from(naturalGroup[0].tiles), disconnected[0].tiles);
+    }
   }
 });

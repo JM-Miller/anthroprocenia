@@ -29,7 +29,7 @@ test('Giant tile capture reads districts once and avoids duplicate location engi
     GameContext: { localObserverID: 3 }, RevealedStates: { VISIBLE: 12, HIDDEN: 10 },
     markCenters: cls => { centers++; cls[n - 1] = 4; }, err: e => assert.fail(e),
   });
-  vm.runInContext(['tileClass', 'districtOccupier', 'readTiles', 'localObserverId', 'readVisibility'].map(slice).join('\n'), ctx);
+  vm.runInContext(['createCaptureReads', 'tileClass', 'districtOccupier', 'readTiles', 'localObserverId', 'readVisibility'].map(slice).join('\n'), ctx);
   const { owner, cls } = ctx.readTiles(), vis = ctx.readVisibility();
   for (let i = 0; i < n; i++) {
     const d = district(i), occupied = d && d.owner !== d.controllingPlayer;
@@ -59,4 +59,75 @@ test('63-player society capture reads each progression handle once, with identic
   assert.equal(rows.length, 63);
   for (let id = 0; id < 63; id++) assert.deepEqual(rows[id], [id, Array.from({ length: id }, (_, i) => i), id % 2 === 0, null]);
   assert.equal(techReads, 63); assert.equal(cultureReads, 63);
+});
+
+test('63-major captures share city and constructible reads, then refresh after razing on the next capture', () => {
+  let collections = 0, cities = 0, definitions = 0;
+  const states = Array.from({ length: 64 }, (_, pid) => ({
+    constructibles: pid < 63 ? [
+      ...Array.from({ length: 100 }, (_, i) => ({
+        type: i % 2 ? 'BUILDING' : 'IMPROVEMENT', location: { x: pid * 1000 + i + 10 }, damaged: i === 1,
+      })),
+      { type: 'WONDER', location: { x: pid * 1000 + 120 } },
+    ] : [
+      { type: 'VILLAGE', location: { x: 63010 } },
+      { type: 'UNKNOWN', location: { x: 63011 } },
+    ],
+    cities: pid < 63 ? [{ location: { x: pid * 1000 }, name: `City ${pid}`, population: pid + 1,
+      isTown: pid % 2 === 0, isCapital: pid === 0 }] : [],
+  }));
+  const types = {
+    BUILDING: { ConstructibleClass: 'BUILDING' },
+    IMPROVEMENT: { ConstructibleClass: 'IMPROVEMENT' },
+    WONDER: { ConstructibleClass: 'WONDER' },
+    VILLAGE: { ConstructibleClass: 'IMPROVEMENT', ConstructibleType: 'IMPROVEMENT_VILLAGE' },
+  };
+  const ctx = vm.createContext({
+    MAX_PLAYER_ID: 63,
+    Players: { get: pid => ({
+      isMajor: pid < 63, isIndependent: pid === 63, civilizationFullName: 'Village',
+      Constructibles: { getConstructibles() { collections++; return states[pid].constructibles; } },
+      Cities: { getCities() { cities++; return states[pid].cities; } },
+    }) },
+    GameInfo: { Constructibles: { lookup(type) { definitions++; return types[type]; } } },
+    GameplayMap: { getIndexFromLocation: loc => loc.x },
+    Locale: { compose: text => text }, err: error => assert.fail(error),
+    buildingTypeIndex: type => ({ BUILDING: 0, IMPROVEMENT: 1, VILLAGE: 2 })[type],
+    wonderTypeIndex: () => 0, settlementType: city => city.isTown ? 'Town' : 'City',
+    cityYields: city => [city.population], cityDefenseHealth: () => [50, 100],
+  });
+  vm.runInContext(['createCaptureReads', 'markCenters', 'readBuildings', 'readWonders', 'readSettlements']
+    .map(slice).join('\n') + '\nlet lastReadDamaged;', ctx);
+  const capture = () => vm.runInContext(`(() => {
+    const reads = createCaptureReads(), cls = new Int8Array(64000);
+    markCenters(cls, reads);
+    const buildings = readBuildings(reads), settlements = readSettlements(reads), wonders = readWonders(reads);
+    return { cls, buildings, settlements, wonders, damaged: lastReadDamaged };
+  })()`, ctx);
+  const first = capture();
+  assert.equal(collections, 64, 'one native constructible collection per player, not 129');
+  assert.equal(cities, 64, 'one native city collection per player, not 127');
+  assert.equal(definitions, 5, 'resolve repeated constructible types once, including missing definitions');
+  assert.equal(first.buildings.size, 6301);
+  assert.equal(first.wonders.size, 63);
+  assert.equal(first.settlements.size, 64);
+  assert.equal(first.damaged.size, 63);
+  assert.deepEqual([...first.buildings.get(11)], [0]);
+  assert.deepEqual([...first.damaged.get(11)], [0]);
+  assert.deepEqual([...first.wonders.get(120)], [0, 0]);
+  assert.deepEqual([...first.settlements.get(0)].slice(0, 3), ['City 0', 1, 'Town']);
+  assert.deepEqual([...first.settlements.get(63010)].slice(0, 3), ['Village', 0, 'Village']);
+  assert.equal(first.cls[0], 3);
+  assert.equal(first.cls[1000], 2);
+  assert.equal(first.cls[63010], 2);
+  states[0].constructibles = []; states[0].cities = []; states[63].constructibles = [];
+  collections = 0; cities = 0; definitions = 0;
+  const second = capture();
+  assert.equal(collections, 64); assert.equal(cities, 64); assert.equal(definitions, 3);
+  assert.equal(second.buildings.size, 6200);
+  assert.equal(second.wonders.size, 62);
+  assert.equal(second.settlements.size, 62);
+  assert.equal(second.damaged.size, 62);
+  assert.equal(second.cls[0], 0); assert.equal(second.cls[63010], 0);
+  assert.ok(!second.buildings.has(11) && !second.wonders.has(120) && !second.settlements.has(0));
 });

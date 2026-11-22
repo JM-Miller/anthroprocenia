@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Database>
+  <EnglishText>
+    <Row Tag="LOC_BUILDING_ANTHRO_PASTURAL_ENCLOSURE_NAME"><Text>Pastural Enclosure</Text></Row>
+    <Row Tag="LOC_BUILDING_ANTHRO_PASTURAL_ENCLOSURE_DESCRIPTION"><Text>Behind woven fences, the first herds turn patient tending into sustenance and useful labor. +1 [icon:YIELD_FOOD] Food and +1 [icon:YIELD_PRODUCTION] Production. Available from the beginning of Antiquity; no unlock requirements.</Text></Row>
+    <Row Tag="LOC_BUILDING_ANTHRO_FIRE_PIT_NAME"><Text>Fire Pit</Text></Row>
+    <Row Tag="LOC_BUILDING_ANTHRO_FIRE_PIT_DESCRIPTION"><Text>At the settlement's glowing heart, shared meals hold the darkness at bay. +1 [icon:YIELD_FOOD] Food and +1 [icon:YIELD_HAPPINESS] Happiness. Available from the beginning of Antiquity; no unlock requirements.</Text></Row>
+    <Row Tag="LOC_BUILDING_ANTHRO_TOOLMAKERS_HUT_NAME"><Text>Toolmaker's Hut</Text></Row>
+    <Row Tag="LOC_BUILDING_ANTHRO_TOOLMAKERS_HUT_DESCRIPTION"><Text>Stone, bone and timber take useful shape beneath practiced hands, easing the labors of a growing people. +2 [icon:YIELD_PRODUCTION] Production. Available from the beginning of Antiquity; no unlock requirements.</Text></Row>
+    <Row Tag="LOC_BUILDING_ANTHRO_BARTER_POST_NAME"><Text>Barter Post</Text></Row>
+    <Row Tag="LOC_BUILDING_ANTHRO_BARTER_POST_DESCRIPTION"><Text>Where footpaths meet, strangers exchange the small surpluses upon which greater fortunes will be built. +2 [icon:YIELD_GOLD] Gold. Available from the beginning of Antiquity; no unlock requirements.</Text></Row>
+    <Row Tag="LOC_BUILDING_ANTHRO_STORY_CIRCLE_NAME"><Text>Story Circle</Text></Row>
+    <Row Tag="LOC_BUILDING_ANTHRO_STORY_CIRCLE_DESCRIPTION"><Text>Voices carry the deeds of ancestors from one listening generation to the next, weaving a people from their memories. +1 [icon:YIELD_CULTURE] Culture and +1 [icon:YIELD_HAPPINESS] Happiness. Available from the beginning of Antiquity; no unlock requirements.</Text></Row>
+    <Row Tag="LOC_UNIT_ANTHRO_LATCHED_REED_OARBOAT_NAME"><Text>Latched Reed Oarboat</Text></Row>
+    <Row Tag="LOC_UNIT_ANTHRO_LATCHED_REED_OARBOAT_DESCRIPTION"><Text>Bound reeds and steady oars bear a settlement's first ventures along the shore. Inexpensive Antiquity naval unit with 15 [icon:NAR_REW_COMBAT] Combat Strength, weaker than a Galley. No unlock requirements; requires a legal naval deployment location.</Text></Row>
+    <Row Tag="LOC_UNIT_ANTHRO_CLUBMAN_NAME"><Text>Clubman</Text></Row>
+    <Row Tag="LOC_UNIT_ANTHRO_CLUBMAN_DESCRIPTION"><Text>With stout wood and the courage of necessity, these early defenders stand between home and danger. Inexpensive Antiquity melee unit with 12 [icon:NAR_REW_COMBAT] Combat Strength, weaker than a Warrior. No unlock requirements.</Text></Row>
+    <Row Tag="LOC_UNIT_ANTHRO_STONE_THROWER_NAME"><Text>Stone Thrower</Text></Row>
+    <Row Tag="LOC_UNIT_ANTHRO_STONE_THROWER_DESCRIPTION"><Text>A well-chosen stone and a practiced arm offer a humble answer to an approaching foe. Inexpensive Antiquity ranged unit with 10 [icon:NAR_REW_COMBAT] Ranged Strength and a range of 1, weaker than a Slinger. No unlock requirements.</Text></Row>
+    <Row Tag="LOC_ABILITY_ANTHRO_PIRATE_NAME"><Text>Pirate</Text></Row>
+    <Row Tag="LOC_ABILITY_ANTHRO_PIRATE_DESCRIPTION"><Text>Uses the Privateer's Pirate rules on land: may enter neutral foreign territory without Open Borders and pillage foreign tiles without declaring war.</Text></Row>
+    <Row Tag="LOC_UNIT_ANTHRO_RAIDER_NAME"><Text>Raider</Text></Row>
+    <Row Tag="LOC_UNIT_ANTHRO_RAIDER_DESCRIPTION"><Text>Beyond the border stones, swift bands seek the wealth that settled hands have gathered. Antiquity land unit with 22 [icon:NAR_REW_COMBAT] Combat Strength and 3 [icon:Action_Move] Movement. Pirate: enters neutral territory and pillages without declaring war. Gold purchase only; unlocked by Bronze Working.</Text></Row>
+    <Row Tag="LOC_UNIT_ANTHRO_HIGHWAYMEN_NAME"><Text>Highwaymen</Text></Row>
+    <Row Tag="LOC_UNIT_ANTHRO_HIGHWAYMEN_DESCRIPTION"><Text>Along the roads between prosperous towns, watchful companies make uncertain work of another realm's peace. Exploration land unit with 35 [icon:NAR_REW_COMBAT] Combat Strength and 3 [icon:Action_Move] Movement. Pirate: enters neutral territory and pillages without declaring war. Gold purchase only; unlocked by Heraldry.</Text></Row>
+    <Row Tag="LOC_UNIT_ANTHRO_PARTISAN_NAME"><Text>Partisan</Text></Row>
+    <Row Tag="LOC_UNIT_ANTHRO_PARTISAN_DESCRIPTION"><Text>Moving beyond the reach of formal armies, small bands turn familiar ground into an uncertain frontier. Modern land unit with 50 [icon:NAR_REW_COMBAT] Combat Strength and 3 [icon:Action_Move] Movement. Pirate: enters neutral territory and pillages without declaring war. Gold purchase only; unlocked by Industrialization.</Text></Row>
+  </EnglishText>
+</Database>

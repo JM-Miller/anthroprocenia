@@ -1,11 +1,12 @@
-import { currentRealisticDate, realisticCalendarEnabled } from '../map/anthroprocenia-calendar.js';
+import { calendarDateLabel, currentRealisticDate, realisticCalendarEnabled } from '../map/anthroprocenia-calendar.js';
 
 function updateDate() {
   try {
     const date = currentRealisticDate(Game.turn);
     if (!date) return;
+    const label = calendarDateLabel(date, Game.turn);
     for (const element of document.querySelectorAll('.ps-turn-age')) {
-      if (element.textContent !== date) element.textContent = date;
+      if (element.textContent !== label) element.textContent = label;
     }
   } catch (error) { console.error(`[ANTHROPROCENIA] calendar HUD: ${error}`); }
 }

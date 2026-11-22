@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Database>
+  <Types>
+    <Row Type="ABILITY_ANTHRO_PIRATE" Kind="KIND_ABILITY" />
+    <Row Type="MODIFIER_ANTHRO_PIRATE_TYPE" Kind="KIND_MODIFIER" />
+  </Types>
+  <Tags>
+    <Row Tag="UNIT_CLASS_ANTHRO_LAND_PRIVATEER" Category="UNIT_CLASS" />
+  </Tags>
+  <UnitAbilities>
+    <Row UnitAbilityType="ABILITY_ANTHRO_PIRATE" Name="LOC_ABILITY_ANTHRO_PIRATE_NAME" Description="LOC_ABILITY_ANTHRO_PIRATE_DESCRIPTION" />
+  </UnitAbilities>
+  <UnitClass_Abilities>
+    <Row UnitClassType="UNIT_CLASS_ANTHRO_LAND_PRIVATEER" UnitAbilityType="ABILITY_ANTHRO_PIRATE" />
+  </UnitClass_Abilities>
+  <DynamicModifiers>
+    <Row ModifierType="MODIFIER_ANTHRO_PIRATE_TYPE" CollectionType="COLLECTION_OWNER" EffectType="EFFECT_UNIT_SET_PRIVATEER" />
+  </DynamicModifiers>
+  <Modifiers>
+    <Row ModifierId="MODIFIER_ANTHRO_PIRATE" ModifierType="MODIFIER_ANTHRO_PIRATE_TYPE" />
+  </Modifiers>
+  <ModifierArguments>
+    <Row ModifierId="MODIFIER_ANTHRO_PIRATE" Name="Privateer" Value="true" />
+  </ModifierArguments>
+  <UnitAbilityModifiers>
+    <Row UnitAbilityType="ABILITY_ANTHRO_PIRATE" ModifierId="MODIFIER_ANTHRO_PIRATE" />
+    <Row UnitAbilityType="ABILITY_ANTHRO_PIRATE" ModifierId="ENTER_FOREIGN_MOD_ADJUST_UNIT_ENTER_FOREIGN_LANDS" />
+  </UnitAbilityModifiers>
+</Database>

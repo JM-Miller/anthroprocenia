@@ -217,7 +217,7 @@ test('scene budgets limit accepted geometry, retain exact populations, and still
   const ctx = context(['townZoomKey', 'syncTownscapes', 'townHousingFor', 'polygonPath', 'linePath', 'syncTownRoofs', 'townMinorRoads', 'submitTownGeometry'], {
     townInterturn: { active: false }, scatterJob: null, lastMapInputTs: 0,
     syncTownVisibility() {}, syncTownElementVisibility() {}, syncTownCompass() {}, townLinkTile: () => 0, iconPoints: [], townRender: { pending: false, logged: true }, townViewKey: () => 'current',
-    syncMapLabelVisibility() {}, syncRiverDeltas() {}, syncMapSvgViewport() {}, syncTownDecorationVisibility() {},
+    townDecoScene: {}, hideTownLabels() {}, syncMapLabelVisibility() {}, syncRiverDeltas() {}, syncMapSvgViewport() {}, syncTownDecorationVisibility() {}, showTownDecorationPreview() {}, placeIcons() {}, clearPeopleVisuals() {},
     terrainMarkerPaths: new Map(), unitDom: {}, dotDom: {}, wonDom: {}, mapVisible: true, showWonders: false,
     townscapeActive: () => true, bgLayer: { el: { style: {} } }, columnShiftMarkersStale: false, fogMarkersStale: false,
     townLayer: { style: {} }, ensureTownscapeLayer() {}, townKey: '', townSizeKey: '1000x1000', townHighlightKey: null,

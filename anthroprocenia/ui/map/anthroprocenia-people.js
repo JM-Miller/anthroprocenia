@@ -422,18 +422,30 @@ export function personProfile(opts) {
 }
 
 // ---- leadership roles ----------------------------------------------------------------------------------------------------------
-// The first few people of some homes lead: the royal family at a palace, the governor and deputy of a settlement's urban
+// The first few people of some homes lead: government officials or the royal family at a palace, the governor and deputy of a settlement's urban
 // centre (its specialists' home), a commander with their scribe and aide, and the officer of a military unit (a centurion and
 // optio in Rome's). opts: { home: 'palace' | 'center' | 'unit', unit: { sub } | null, civKey, index, gender, age: 0 | 1 | 2,
-// ageCategory }. Returns the role's title ('' for everyone else).
+// ageCategory, government }. Returns the role's title ('' for everyone else).
 const ROYAL = [['King', 'Queen'], ['Prince Consort', 'Queen Consort'], ['Crown Prince', 'Crown Princess'], ['Prince', 'Princess'], ['Prince', 'Princess']];
 const CIVILIAN_UNITS = new Set(['settler', 'builder', 'merchant', 'scout', 'religious', 'civilian', 'great']);
 export const LEADERS_PER_HOME = { palace: 5, center: 2, commander: 3, military: 2 };
 export function leaderRole(opts) {
   const index = opts.index | 0, female = opts.gender === 'female' ? 1 : 0;
-  if (index < 0 || opts.ageCategory === 'Child' && index !== 2) return '';
-  if (opts.home === 'palace') return index < LEADERS_PER_HOME.palace ? ROYAL[index][female] : '';
-  if (opts.ageCategory === 'Child') return '';
+  const underage = opts.ageCategory === 'Child' || opts.ageCategory === 'Youth';
+  if (index < 0 || underage && index !== 2) return '';
+  if (opts.home === 'palace') {
+    const government = String(opts.government || '');
+    const titles = /republic/i.test(government) ? ['Consul', 'Co-Consul', 'Senator', 'Senator', 'Magistrate']
+      : /democra/i.test(government) ? ['President', 'Vice President', 'Minister', 'Minister', 'Councillor']
+      : /theocra/i.test(government) ? ['High Priest', 'Priest', 'Priest', 'Priest', 'Priest']
+      : /communis|socialis/i.test(government) ? ['Chairperson', 'Deputy Chairperson', 'Commissar', 'Commissar', 'Councillor']
+      : /fascis|autocra|dictator|despot|authoritarian|totalitarian/i.test(government) ? ['Autocrat', 'Deputy', 'Minister', 'Minister', 'Councillor']
+      : /oligarch/i.test(government) ? ['First Councillor', 'Councillor', 'Councillor', 'Councillor', 'Magistrate']
+      : /chiefdom|tribal/i.test(government) ? ['Chief', 'Elder', 'Elder', 'Councillor', 'Councillor'] : null;
+    if (titles) return underage ? '' : titles[index] || '';
+    return index < LEADERS_PER_HOME.palace ? ROYAL[index][female] : '';
+  }
+  if (underage) return '';
   if (opts.home === 'center') return ['Governor', 'Deputy Governor'][index] || '';
   if (opts.home !== 'unit' || !opts.unit) return '';
   const sub = opts.unit.sub || '';

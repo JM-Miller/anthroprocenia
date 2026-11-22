@@ -9,6 +9,7 @@ const calendar = await loadModule('anthroprocenia-calendar.js');
 const demo = await loadModule('anthroprocenia-demography.js');
 const root = new URL('../anthroprocenia/', import.meta.url);
 const sql = await readFile(new URL('data/realistic-calendar.sql', root), 'utf8');
+const speedSql = await readFile(new URL('data/realistic-speeds.sql', root), 'utf8');
 const recorder = await readFile(new URL('ui/history/anthroprocenia-recorder.js', root), 'utf8');
 test('realistic calendar action groups load for every age', async () => {
   const manifest = await readFile(new URL('anthroprocenia.modinfo', root), 'utf8');
@@ -58,11 +59,32 @@ test('realistic dates include annual BCE/CE, four seasons, and twelve full month
   assert.throws(() => calendar.realisticDate('AGE_MODERN', NaN), /Invalid/);
 });
 
+test('map date title and scrub preview show calendar dates with the actual age turn, not the recording index', async () => {
+  const playback = await readFile(new URL('ui/map/anthroprocenia-playback.js', root), 'utf8');
+  const ctx = vm.createContext({
+    ...calendar, frames: [[0, 40, 1, '3961 BCE'], [1, 3, 0, 'Autumn 400 CE']],
+    pos: 1, playing: false, lastHoverGi: -2, ps: n => n, trackFrac: () => 1,
+    ensureTrackFill: () => null, syncWorldTimeline() {},
+    els: { dateTitle: {}, label: { style: {} }, track: { getBoundingClientRect: () => ({ left: 10, top: 50, width: 100 }) } },
+  });
+  vm.runInContext(['updateControls', 'onTrackHover'].map(name => slice(playback, name)).join('\n'), ctx);
+  ctx.updateControls();
+  ctx.onTrackHover({ clientX: 100 });
+  assert.equal(ctx.els.dateTitle.textContent, 'Autumn 400 CE (Turn 3)');
+  assert.equal(ctx.els.label.textContent, 'Autumn 400 CE (Turn 3) (2/2)');
+  ctx.pos = 0; ctx.updateControls();
+  assert.equal(ctx.els.dateTitle.textContent, '3961 BCE (Turn 40)');
+  assert.deepEqual(ctx.frames[1], [1, 3, 0, 'Autumn 400 CE'], 'display formatting does not rewrite recorded dates');
+});
+
 function database() {
   const db = new DatabaseSync(':memory:');
   db.exec(`
     CREATE TABLE GlobalParameters(Name TEXT PRIMARY KEY,Value TEXT);
+    CREATE TABLE Types(Type TEXT PRIMARY KEY,Kind TEXT);
     CREATE TABLE GameSpeeds(GameSpeedType TEXT PRIMARY KEY,Name TEXT,Description TEXT,CostMultiplier INTEGER DEFAULT 100);
+    CREATE TABLE GameSpeed_Scalings(GameSpeedScalingType TEXT PRIMARY KEY,GameSpeedType TEXT,ScalingType TEXT,DefaultCostMultiplier INTEGER);
+    CREATE TABLE GameSpeed_Durations(GameSpeedScalingType TEXT,NumberOfTurnsOnStandard INTEGER,NumberOfTurnsScaled INTEGER,PRIMARY KEY(GameSpeedScalingType,NumberOfTurnsOnStandard));
     CREATE TABLE GameSpeed_Turns(Age TEXT,GameSpeedType TEXT,MonthIncrement INTEGER,TurnsPerIncrement INTEGER);
     CREATE TABLE AgeProgressions(AgeProgressionType TEXT PRIMARY KEY,AgeType TEXT,EndsAge INTEGER,MaxPoints_Abbreviated INTEGER,MaxPoints_Standard INTEGER,MaxPoints_Long INTEGER);
     CREATE TABLE AgeProgressionTurns(AgeProgressionTurnType TEXT,AgeProgressionType TEXT,Points INTEGER,GameSpeedScaling INTEGER);
@@ -72,10 +94,15 @@ function database() {
     CREATE TABLE ProgressionTreeNodes(ProgressionTreeNodeType TEXT PRIMARY KEY,ProgressionTree TEXT,Cost INTEGER,RepeatableCostProgressionModel TEXT,RepeatableCostProgressionParam1 INTEGER);
     CREATE TABLE ProgressionTreePrereqs(Node TEXT,PrereqNode TEXT);
     INSERT INTO GameSpeeds(GameSpeedType,Name) VALUES ('GAMESPEED_STANDARD','Standard'),('GAMESPEED_ONLINE','Online');
+    INSERT INTO GameSpeeds VALUES ('GAMESPEED_MARATHON','Marathon','',300);
+    INSERT INTO GameSpeed_Scalings VALUES ('MARATHON_HALF','GAMESPEED_MARATHON','SCALING_HALF',200),
+      ('MARATHON_SLIGHT','GAMESPEED_MARATHON','SCALING_SLIGHT',120);
+    INSERT INTO GameSpeed_Durations VALUES ('MARATHON_HALF',30,60);
     INSERT INTO ProgressionTrees VALUES ('science','SYSTEM_TECH','NO_COST_PROGRESSION',500),('culture','SYSTEM_CULTURE','COST_PROGRESSION_PREVIOUS_COPIES',100),('other','SYSTEM_OTHER','NO_COST_PROGRESSION',0);
     INSERT INTO ProgressionTreeNodes VALUES ('tech','science',140,'COST_PROGRESSION_PREVIOUS_COPIES',280),
       ('civic','culture',70,'NO_COST_PROGRESSION',500),('other','other',10,'NO_COST_PROGRESSION',0);
   `);
+  db.exec(speedSql);
   return db;
 }
 for (const [age, file, turns, months] of [
@@ -98,11 +125,11 @@ for (const [age, file, turns, months] of [
     assert.equal(db.prepare("SELECT Points FROM AgeProgressionEvents WHERE AgeProgressionEventType='milestone'").get().Points, 0);
     assert.equal(db.prepare("SELECT Points FROM AgeProgressionEventMapSizeOverrides WHERE AgeProgressionEventType='milestone'").get().Points, 0);
     assert.equal(db.prepare("SELECT Points FROM AgeProgressionEvents WHERE AgeProgressionEventType='other'").get().Points, 2);
-    assert.equal(db.prepare("SELECT Cost FROM ProgressionTreeNodes WHERE ProgressionTreeNodeType='tech'").get().Cost, turns);
-    assert.equal(db.prepare("SELECT RepeatableCostProgressionParam1 n FROM ProgressionTreeNodes WHERE ProgressionTreeNodeType='tech'").get().n, turns * 2);
+    assert.equal(db.prepare("SELECT Cost FROM ProgressionTreeNodes WHERE ProgressionTreeNodeType='tech'").get().Cost, Math.round(turns / 3));
+    assert.equal(db.prepare("SELECT RepeatableCostProgressionParam1 n FROM ProgressionTreeNodes WHERE ProgressionTreeNodeType='tech'").get().n, Math.round(turns * 2 / 3));
     assert.equal(db.prepare("SELECT RepeatableCostProgressionParam1 n FROM ProgressionTreeNodes WHERE ProgressionTreeNodeType='civic'").get().n, 500);
     assert.equal(db.prepare("SELECT Cost FROM ProgressionTreeNodes WHERE ProgressionTreeNodeType='other'").get().Cost, 10);
-    assert.equal(db.prepare("SELECT CostMultiplier FROM GameSpeeds WHERE GameSpeedType='GAMESPEED_STANDARD'").get().CostMultiplier, 100);
+    assert.equal(db.prepare("SELECT CostMultiplier FROM GameSpeeds WHERE GameSpeedType='GAMESPEED_STANDARD'").get().CostMultiplier, 300);
     const param = name => Number(db.prepare('SELECT Value FROM GlobalParameters WHERE Name=?').get(name).Value);
     assert.equal(param('GOLDEN_AGE_DURATION_IN_TURNS'), Math.round(6 * turns / 140));
     assert.ok(Math.abs(param('GOLDEN_AGE_HAPPINESS_CURVE_C') - 80 * turns / 140) < 1e-8);
@@ -120,26 +147,70 @@ test('Agriculture and Chiefdom cost one tenth of the previous scaled cost withou
     db.exec(await readFile(new URL('data/calendar-antiquity.sql', root), 'utf8'));
     db.exec(sql);
     const cost = id => db.prepare('SELECT Cost FROM ProgressionTreeNodes WHERE ProgressionTreeNodeType=?').get(id).Cost;
-    assert.equal(cost('NODE_TECH_AQ_AGRICULTURE'), 220);
-    assert.equal(cost('NODE_CIVIC_AQ_MAIN_CHIEFDOM'), 393);
-    assert.equal(cost('pottery'), 2200);
-    assert.equal(cost('mysticism'), 3929);
+    assert.equal(cost('NODE_TECH_AQ_AGRICULTURE'), 73);
+    assert.equal(cost('NODE_CIVIC_AQ_MAIN_CHIEFDOM'), 131);
+    assert.equal(cost('pottery'), 733);
+    assert.equal(cost('mysticism'), 1310);
   } finally { db.close(); }
 });
-test('shell setup offers only Realistic and resets both single-player and multiplayer defaults', async () => {
+test('shell setup offers Realistic and x2 through x6 and resets both single-player and multiplayer defaults', async () => {
   const db = new DatabaseSync(':memory:');
   try {
-    db.exec(`CREATE TABLE GameSpeeds(Domain TEXT,GameSpeedType TEXT,Name TEXT,Description TEXT);
+    db.exec(`CREATE TABLE GameSpeeds(Domain TEXT,GameSpeedType TEXT,Name TEXT,Description TEXT,SortIndex INTEGER DEFAULT 30);
       CREATE TABLE Parameters(Key1 TEXT,ParameterID TEXT,DefaultValue TEXT);
-      INSERT INTO GameSpeeds VALUES ('StandardGameSpeeds','GAMESPEED_STANDARD','Standard',''),('StandardGameSpeeds','GAMESPEED_ONLINE','Online','');
+      INSERT INTO GameSpeeds(Domain,GameSpeedType,Name,Description) VALUES ('StandardGameSpeeds','GAMESPEED_STANDARD','Standard',''),('StandardGameSpeeds','GAMESPEED_ONLINE','Online','');
       INSERT INTO Parameters VALUES ('SP','GameSpeeds','GAMESPEED_STANDARD'),('MP','GameSpeeds','GAMESPEED_ONLINE');`);
     db.exec(await readFile(new URL('config/RealisticSpeed.sql', root), 'utf8'));
     const speeds = db.prepare('SELECT GameSpeedType,Name FROM GameSpeeds').all();
-    assert.equal(speeds.length, 1);
+    assert.equal(speeds.length, 6);
     assert.equal(speeds[0].Name, 'LOC_ANTHRO_REALISTIC_SPEED');
+    assert.deepEqual(speeds.slice(1).map(row => row.GameSpeedType), [2,3,4,5,6].map(n => `GAMESPEED_ANTHRO_REALISTIC_X${n}`));
     assert.ok(db.prepare('SELECT DefaultValue FROM Parameters').all().every(row => row.DefaultValue === 'GAMESPEED_STANDARD'));
   } finally { db.close(); }
 });
+test('all accelerated speeds use matching native calendars, research fractions and Marathon non-research scaling in every Age', async () => {
+  for (const [file, age, turns, months] of [
+    ['antiquity', 'AGE_ANTIQUITY', 4400, 12], ['exploration', 'AGE_EXPLORATION', 5400, 3], ['modern', 'AGE_MODERN', 2400, 1],
+  ]) for (const factor of [2,3,4,5,6]) {
+    const db = database();
+    try {
+      db.prepare('INSERT INTO AgeProgressions VALUES (?,?,1,120,140,160)').run('end', age);
+      db.exec(await readFile(new URL(`data/realistic-x${factor}.sql`, root), 'utf8'));
+      db.exec(await readFile(new URL(`data/calendar-${file}.sql`, root), 'utf8'));
+      db.exec(sql);
+      const speed = `GAMESPEED_ANTHRO_REALISTIC_X${factor}`;
+      const native = db.prepare('SELECT * FROM GameSpeed_Turns WHERE Age=? AND GameSpeedType=?').get(age, speed);
+      assert.equal(native.MonthIncrement, months * factor);
+      assert.equal(native.TurnsPerIncrement, Math.ceil(turns / factor));
+      assert.equal(db.prepare("SELECT MaxPoints_Long n FROM AgeProgressions WHERE AgeProgressionType='end'").get().n, Math.ceil(turns / factor));
+      const multiplier = db.prepare('SELECT CostMultiplier n FROM GameSpeeds WHERE GameSpeedType=?').get(speed).n;
+      assert.equal(multiplier, 300);
+      const cost = db.prepare("SELECT Cost n FROM ProgressionTreeNodes WHERE ProgressionTreeNodeType='tech'").get().n;
+      assert.ok(Math.abs(cost * multiplier / 100 - turns / factor) <= 1.5, 'native final research cost is 1/N within integer rounding');
+      assert.equal(db.prepare("SELECT Cost n FROM ProgressionTreeNodes WHERE ProgressionTreeNodeType='other'").get().n, 10);
+      assert.equal(Number(db.prepare("SELECT Value FROM GlobalParameters WHERE Name='GOLDEN_AGE_DURATION_IN_TURNS'").get().Value), Math.round(6 * turns / (140 * factor)));
+      const scalings = db.prepare('SELECT ScalingType,DefaultCostMultiplier FROM GameSpeed_Scalings WHERE GameSpeedType=? ORDER BY ScalingType').all(speed);
+      assert.deepEqual(scalings.map(row => [row.ScalingType, row.DefaultCostMultiplier]), [['SCALING_HALF', 200], ['SCALING_SLIGHT', 120]]);
+      assert.equal(db.prepare(`SELECT NumberOfTurnsScaled n FROM GameSpeed_Durations WHERE GameSpeedScalingType=? AND NumberOfTurnsOnStandard=30`).get(`${speed}_SCALING_HALF`).n, 60);
+    } finally { db.close(); }
+  }
+});
+
+test('accelerated date labels and selected speed metadata agree without year zero', async () => {
+  for (const factor of [2,3,4,5,6]) {
+    for (const age of Object.keys(calendar.REALISTIC_AGES)) {
+      assert.equal(calendar.realisticDate(age, 20, factor), calendar.realisticDate(age, 1 + 19 * factor, 1));
+    }
+  }
+  const source = await readFile(new URL('ui/map/anthroprocenia-calendar.js', root), 'utf8');
+  const ctx = vm.createContext({ GameInfo: { GlobalParameters: { lookup: () => ({ Value: '6' }) } } });
+  vm.runInContext(source.replace(/^export /gm, ''), ctx);
+  assert.equal(ctx.realisticSpeedMultiplier(), 6);
+  assert.equal(ctx.realisticAgeTurns('AGE_ANTIQUITY'), 734);
+  assert.equal(ctx.realisticDate('AGE_MODERN', 2), 'July 1750 CE');
+  assert.equal(calendar.realisticDate('AGE_ANTIQUITY', 2001, 2), '1 CE');
+});
+
 test('recorder lookup indexes long histories incrementally and invalidates when histories are replaced or cleared', () => {
   const frames = Array.from({ length: 12600 }, (_, i) => [0, i, 0, '']);
   const ctx = vm.createContext({ manifest: { frames } });
@@ -183,6 +254,7 @@ test('calendar HUD handles delayed body creation and age/turn events without rep
   let observed = false, listener;
   const nativeDate = () => 'native date';
   const ctx = vm.createContext({
+    calendarDateLabel: calendar.calendarDateLabel,
     Game: { turn: 1, getTurnDate: nativeDate }, engine: { on: (name, fn) => { events[name] = fn; } },
     document: { body: null, querySelectorAll: () => [element], addEventListener: (name, fn) => { ready[name] = fn; } },
     MutationObserver: class {
@@ -197,13 +269,13 @@ test('calendar HUD handles delayed body creation and age/turn events without rep
   assert.equal(observed, false);
   ctx.document.body = {}; ready.DOMContentLoaded(); assert.equal(observed, true);
   while (tasks.length) tasks.shift()();
-  assert.equal(element.textContent, 'January 1750 CE');
+  assert.equal(element.textContent, 'January 1750 CE (Turn 1)');
   ctx.Game.turn = 12; events.LocalPlayerTurnBegin(); events.GameAgeChanged();
   assert.equal(tasks.length, 1, 'HUD refreshes coalesce');
-  tasks.shift()(); assert.equal(element.textContent, 'December 1750 CE');
+  tasks.shift()(); assert.equal(element.textContent, 'December 1750 CE (Turn 12)');
   element.textContent = 'native again';
   listener([{ type: 'childList', addedNodes: [], target: { nodeType: 1, matches: () => true } }]);
-  tasks.shift()(); assert.equal(element.textContent, 'December 1750 CE');
+  tasks.shift()(); assert.equal(element.textContent, 'December 1750 CE (Turn 12)');
   assert.equal(ctx.Game.getTurnDate, nativeDate);
   listener([{ type: 'childList', addedNodes: [{ nodeType: 1 }, { nodeType: 3 }], target: { nodeType: 1 } }]);
   assert.equal(tasks.length, 0, 'native UI wrappers without Element methods are safe');

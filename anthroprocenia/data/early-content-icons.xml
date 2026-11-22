@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Database>
+  <IconDefinitions>
+    <Row ID="BUILDING_ANTHRO_PASTURAL_ENCLOSURE" Path="fs://game/anthroprocenia_map_history/art/official-icons/official_building_granary.png" />
+    <Row ID="BUILDING_ANTHRO_FIRE_PIT" Path="fs://game/anthroprocenia_map_history/art/official-icons/official_building_altar.png" />
+    <Row ID="BUILDING_ANTHRO_TOOLMAKERS_HUT" Path="fs://game/anthroprocenia_map_history/art/official-icons/official_building_saw_pit.png" />
+    <Row ID="BUILDING_ANTHRO_BARTER_POST" Path="fs://game/anthroprocenia_map_history/art/official-icons/official_building_market.png" />
+    <Row ID="BUILDING_ANTHRO_STORY_CIRCLE" Path="fs://game/anthroprocenia_map_history/art/official-icons/official_building_monument.png" />
+    <Row ID="UNIT_ANTHRO_LATCHED_REED_OARBOAT" Path="fs://game/anthroprocenia_map_history/art/official-icons/official_unit_galley.png" />
+    <Row ID="UNIT_ANTHRO_CLUBMAN" Path="fs://game/anthroprocenia_map_history/art/official-icons/official_unit_warrior.png" />
+    <Row ID="UNIT_ANTHRO_STONE_THROWER" Path="fs://game/anthroprocenia_map_history/art/official-icons/official_unit_slinger.png" />
+    <Row ID="UNIT_ANTHRO_RAIDER" Path="fs://game/anthroprocenia_map_history/art/official-icons/official_unit_spearman.png" />
+    <Row ID="UNIT_ANTHRO_HIGHWAYMEN" Path="fs://game/anthroprocenia_map_history/art/official-icons/official_unit_swordsman.png" />
+    <Row ID="UNIT_ANTHRO_PARTISAN" Path="fs://game/anthroprocenia_map_history/art/official-icons/official_unit_rifleman.png" />
+  </IconDefinitions>
+</Database>

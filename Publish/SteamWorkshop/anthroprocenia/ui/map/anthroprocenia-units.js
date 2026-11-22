@@ -149,7 +149,7 @@ export function unitNamesForTile(civKey, tileIndex, units, origin) {
   return names;
 }
 
-// Estimated world population by year (negative = BCE), after common historical estimates (HYDE / McEvedy-Jones).
+// Historical estimates provide the curve; the simulation uses seven times this baseline.
 const WORLD_POPULATION = [
   [-10000, 4e6], [-5000, 5e6], [-3000, 14e6], [-2000, 27e6], [-1000, 50e6], [-500, 100e6], [1, 200e6], [500, 210e6],
   [1000, 310e6], [1500, 500e6], [1700, 600e6], [1800, 990e6], [1900, 1.65e9], [1950, 2.5e9], [1975, 4.1e9], [2000, 6.1e9],
@@ -158,14 +158,20 @@ const WORLD_POPULATION = [
 
 export function estimatedWorldPopulation(year) {
   const table = WORLD_POPULATION, y = Number.isFinite(year) ? year : 1;
-  if (y <= table[0][0]) return table[0][1];
-  if (y >= table[table.length - 1][0]) return table[table.length - 1][1];
+  if (y <= table[0][0]) return table[0][1] * 7;
+  if (y >= table[table.length - 1][0]) return table[table.length - 1][1] * 7;
   for (let i = 1; i < table.length; i++) {
     if (y > table[i][0]) continue;
     const [y0, p0] = table[i - 1], [y1, p1] = table[i], t = (y - y0) / (y1 - y0);
-    return Math.exp(Math.log(p0) + (Math.log(p1) - Math.log(p0)) * t);
+    return Math.exp(Math.log(p0) + (Math.log(p1) - Math.log(p0)) * t) * 7;
   }
-  return table[table.length - 1][1];
+  return table[table.length - 1][1] * 7;
+}
+
+export function homePopulation(worldPopulation, entityCount, seed, originPopulation, weight, damageFactor = 1) {
+  const scale = (originPopulation == null ? 1 : originPopulation / 50) / 5
+    * weight * populationVariation(seed) * damageFactor;
+  return iconPopulation(worldPopulation, entityCount, seed, scale);
 }
 
 // "4000 BCE", "1200 AD", "AD 1200", "Spring 500 BC", "1,200" -> signed year, or null when no year can be read.

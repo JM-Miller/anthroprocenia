@@ -69,6 +69,72 @@ test('recorded settlement population and occupations share home plans without mu
   const changed = vm.runInContext('settlementPopulationSnapshot(0).get(0)', context);
   assert.equal(changed.population, first.population); assert.ok(changed.occupations[0] > first.occupations[0]);
   assert.ok(changed.occupations.reduce((sum, value) => sum + value, 0) <= changed.population);
+  context.readUnitsTurn = () => [[5, 0, 0, 50, -1, 25], [6, 1, 0, 100, -1, 0]];
+  context.unitLineageId = row => 77 + row; context.manifest.rev = 3;
+  const snapshot = vm.runInContext('recordedPopulationSnapshot(0)', context);
+  const manpower = units.homePopulation(units.estimatedWorldPopulation(1), denominator + 2 * units.populationWeight('unit'),
+    'u|0|u77', 5, units.populationWeight('unit'), units.unitPopulationFactor(50, 25));
+  assert.equal(snapshot.units.get(0), manpower, 'the exact Population Panel unit seed and health/bonus formula are reused');
+  assert.equal(snapshot.tiles.get(5), manpower, 'unit population belongs to its actual tile, not its nearest settlement');
+  assert.equal(snapshot.tiles.get(0), snapshot.settlements.get(0).population, 'existing civilian/occupation snapshot semantics remain unchanged');
+  assert.ok(snapshot.tiles.get(6) > 0, 'units without an owned settlement still have tile and manpower totals');
+  assert.equal(context.pos, 99);
+});
+
+test('native production totals use purchased tiles and manpower uses the selected recorded unit, independent of replay position', async () => {
+  const playback = await read('anthroprocenia-playback.js');
+  const start = playback.indexOf('function nativePopulationRecord('), end = playback.indexOf('let cityDetailsTimer');
+  const element = () => {
+    const node = { children: [], classes: new Set(), style: {}, textContent: '' };
+    node.classList = { add: name => node.classes.add(name) };
+    node.insertBefore = (child, reference) => {
+      const index = node.children.indexOf(reference);
+      node.children.splice(index < 0 ? node.children.length : index, 0, child); child.parentNode = node;
+    };
+    node.querySelector = selector => {
+      for (const child of node.children) {
+        if (child.classes.has(selector.slice(1))) return child;
+        const found = child.querySelector(selector); if (found) return found;
+      }
+      return null;
+    };
+    return node;
+  };
+  const production = element(), header = element(), actions = element(), identifier = element();
+  production.insertBefore(header, null); actions.insertBefore(identifier, null);
+  identifier.classList.add('unit-actions__unit-identifier-container');
+  const selectedId = { id: 2 }, cityId = { id: 3 };
+  const firstUnit = { owner: 0, type: 42, location: { x: 5, y: 0 } }, selectedUnit = { ...firstUnit, location: { x: 5, y: 0 } };
+  production.component = { cityID: cityId, cityNameElement: header }; actions.component = { unitId: selectedId };
+  let captures = 0;
+  const rows = [[5, 0, 0, 100, -1, 0, 0, '0:1'], [5, 0, 0, 100, -1, 0, 0, '0:2']], snapshots = { tiles: new Map([[0, 100], [5, 70], [9, 900]]), units: new Map([[0, 30], [1, 70]]) };
+  const context = vm.createContext({
+    syncCivilizationUnitPortrait() {}, GameInfo: { Units: {} }, WorldUI: {},
+    manifest: { rev: 1, frames: [[], []], unitTypes: [[42]] }, frames: [[], []], pos: 99,
+    document: { createElement: element, querySelector: name => name === 'unit-actions' ? actions : production },
+    readManifest() { return this.manifest; }, refresh() { throw new Error('an unchanged recording should not refresh'); },
+    recordedPopulationSnapshot(turn) { assert.equal(turn, 1); return snapshots; },
+    readUnitsTurn: () => rows, Units: { get: id => id.id === 1 ? firstUnit : selectedUnit },
+    GameplayMap: { getIndexFromLocation: location => location.x },
+    Cities: { get: () => ({ location: { x: 0, y: 0 }, getPurchasedPlots: () => [0, 5, 5] }) },
+    window: { AnthroproceniaRequestCapture: () => captures++ }, formatThousands,
+    err: message => assert.fail(message),
+  });
+  context.readManifest = () => context.manifest;
+  vm.runInContext(playback.slice(start, end), context);
+  context.syncNativePopulationDisplays();
+  const population = production.querySelector('.anthroprocenia-settlement-population'), manpower = actions.querySelector('.anthroprocenia-unit-manpower');
+  assert.equal(production.children[1], population, 'population is directly under the real city header');
+  assert.equal(population.textContent, 'Population: 170', 'purchased plots are deduplicated and outside tiles excluded');
+  assert.equal(manpower.textContent, 'Manpower: 70', 'same-type, same-tile units cannot exchange their population seeds');
+  context.syncNativePopulationDisplays(); assert.equal(production.children.length, 2); assert.equal(actions.children.length, 2);
+  selectedUnit.location.x = 6;
+  context.syncNativePopulationDisplays(); context.syncNativePopulationDisplays();
+  assert.equal(manpower.textContent, 'Manpower: updating...'); assert.equal(captures, 1, 'stale data requests one capture rather than inventing a count or looping');
+  rows[1][0] = 6; context.syncNativePopulationDisplays(); assert.equal(manpower.textContent, 'Manpower: 70');
+  delete rows[1][7]; context.syncNativePopulationDisplays();
+  assert.equal(manpower.textContent, 'Manpower: updating...', 'older records request fresh native identity data instead of guessing another unit');
+  assert.equal(context.pos, 99);
 });
 
 test('everything starts collapsed and expanding shows exactly one level more', () => {
@@ -320,6 +386,7 @@ test('the model builder and renderer run end to end against stubbed game data', 
   const context = vm.createContext({
     ...panel, ...persist, Date, console, Math, Number, String, Map, Set, Array, Object, JSON, playing: false,
     readPlayersRec: () => null, relationshipForPos: () => new Map(),
+    countryTerritories: () => new Map(), majorCountryNames: () => new Map([[1, 'The Latin League']]),
     popFollow: { person: null }, panelActionIcon: () => '', setPanelButtonLabel: (button, kind, text) => { button.textContent = text; },
     viewRead: key => (store.has(key) ? JSON.parse(store.get(key)) : null),
     viewSave: (key, produce) => { saves.push(key); store.set(key, JSON.stringify(produce())); },

@@ -36,6 +36,7 @@ import { ScoreVictoryTab } from '/base-standard/ui-next/screens/victories/score-
 import { VictoriesSummary } from '/base-standard/ui-next/screens/victories/summary-victory-tab.js';
 import { createVictoriesScreenModel, VictoriesScreenContext } from '/base-standard/ui-next/screens/victories/victories-screen-model.js';
 import style from '/base-standard/ui-next/screens/victories/victories-screen.scss.js';
+import { createCountryNamesView } from './map/anthroprocenia-country-names.js';
 
 const TAG = '[ANTHROPROCENIA]';
 const DEBUG = false;   // set true to re-enable the mod's [ANTHROPROCENIA] informational logging
@@ -195,6 +196,10 @@ const VictoriesScreenWithAnthroprocenia = (props) => {
                 name: "score",
                 title: () => "LOC_VICTORY_SCORE_NAME",
                 body: () => createComponent(ScoreVictoryTab, {})
+              }), createComponent(Tab.Item, {
+                name: "country-names",
+                title: () => "Country Names",
+                body: () => createCountryNamesView()
               }), createComponent(Tab.Item, {
                 name: "map",
                 title: () => "Map",

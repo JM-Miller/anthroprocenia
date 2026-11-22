@@ -5,7 +5,7 @@
 export const AGE_CATEGORIES = ['Child', 'Youth', 'Adult', 'Elder'];
 export function ageCategory(years) {
   const y = Number(years) || 0;
-  return y < 15 ? 'Child' : y < 25 ? 'Youth' : y < 60 ? 'Adult' : 'Elder';
+  return y < 13 ? 'Child' : y < 16 ? 'Youth' : y < 60 ? 'Adult' : 'Elder';
 }
 export const DEATH_CAUSES = { age: 'old age', disease: 'disease', battle: 'battle', pillage: 'pillaging', infancy: 'illness in infancy' };
 
@@ -130,39 +130,51 @@ export function familyMembers(state, focus = state.gen) {
 
 // Small, stable home cohorts keep relationships reconstructible without materializing the whole population.
 export const FAMILY_COHORT_SIZE = 8;
-export function simulateFamilies(lives, year, years, unit = false) {
+export function simulateFamilies(lives, year, years, unit, genderOf) {
+  if (typeof genderOf !== 'function') throw new TypeError('Family simulation requires a canonical gender resolver');
   const members = new Map(), marriages = [];
   for (const { index, state } of lives) {
     for (const life of [...state.history, state]) {
       if (life.born > year) continue;
       const id = `${index}:${life.gen}`;
-      members.set(id, { ...life, id, index, parents: [], children: [], spouse: null });
+      const gender = genderOf(index, life.gen);
+      if (gender !== 'male' && gender !== 'female') throw new TypeError(`Invalid family member gender: ${id}`);
+      members.set(id, { ...life, id, index, gender, parents: [], children: [], spouse: null });
     }
   }
   const ageAt = (p, at) => unit ? 16 + (at - p.born) * 0.7 : at - p.born;
   const end = p => p.deathYear === undefined ? Infinity : p.deathYear;
+  const ancestorCache = new Map();
   const link = (parent, child) => {
-    if (!child.parents.includes(parent.id)) child.parents.push(parent.id);
+    if (!child.parents.includes(parent.id)) {
+      child.parents.push(parent.id);
+      // Birth events can add ancestors to people whose ancestry was already queried.
+      ancestorCache.clear();
+    }
     if (!parent.children.includes(child.id)) parent.children.push(child.id);
   };
   for (const child of members.values()) {
     const parent = members.get(`${child.index}:${child.parent}`);
     if (parent && ageAt(parent, child.born) >= 16 && end(parent) >= child.born) link(parent, child);
   }
+  const ancestors = p => {
+    if (ancestorCache.has(p.id)) return ancestorCache.get(p.id);
+    const found = new Set(), todo = [...p.parents];
+    while (todo.length) {
+      const id = todo.pop();
+      if (found.has(id)) continue;
+      found.add(id);
+      const parent = members.get(id);
+      if (parent) todo.push(...parent.parents);
+    }
+    ancestorCache.set(p.id, found);
+    return found;
+  };
   const related = (a, b) => {
-    const ancestors = p => {
-      const found = new Set(), todo = [...p.parents];
-      while (todo.length) {
-        const id = todo.pop();
-        if (found.has(id)) continue;
-        found.add(id);
-        const parent = members.get(id);
-        if (parent) todo.push(...parent.parents);
-      }
-      return found;
-    };
     const aa = ancestors(a), bb = ancestors(b);
-    return aa.has(b.id) || bb.has(a.id) || [...aa].some(id => bb.has(id));
+    if (aa.has(b.id) || bb.has(a.id)) return true;
+    for (const id of aa) if (bb.has(id)) return true;
+    return false;
   };
   const events = [];
   for (const p of members.values()) {
@@ -171,20 +183,36 @@ export function simulateFamilies(lives, year, years, unit = false) {
     events.push({ year: Math.max(adult, arrival), adult: true, p }, { year: p.born, adult: false, p });
   }
   events.sort((a, b) => a.year - b.year || Number(b.adult) - Number(a.adult) || a.p.index - b.p.index || a.p.gen - b.p.gen);
-  const available = [];
+  const available = { male: [], female: [] }, activeMarriages = [];
   for (const event of events) {
     const { p, year: at } = event;
     if (at > year) continue;
     if (event.adult) {
       if (at >= end(p) || p.spouse) continue;
-      const mate = available.find(other => !other.spouse && other.index !== p.index && end(other) > at
-        && Math.abs(ageAt(other, at) - ageAt(p, at)) <= 20 && !related(other, p));
-      if (!mate) { available.push(p); continue; }
+      const candidates = available[p.gender === 'male' ? 'female' : 'male'];
+      let mate = null;
+      for (let i = 0; i < candidates.length;) {
+        const other = candidates[i];
+        if (end(other) <= at) { candidates.splice(i, 1); continue; }
+        if (other.index !== p.index && Math.abs(ageAt(other, at) - ageAt(p, at)) <= 20 && !related(other, p)) {
+          mate = other;
+          candidates.splice(i, 1);
+          break;
+        }
+        i++;
+      }
+      if (!mate) { available[p.gender].push(p); continue; }
       p.spouse = mate.id; mate.spouse = p.id;
       p.married = mate.married = at;
-      marriages.push({ partners: [mate.id, p.id], year: at, end: Math.min(end(mate), end(p)) });
+      const marriage = { partners: [mate.id, p.id], year: at, end: Math.min(end(mate), end(p)) };
+      marriages.push(marriage);
+      activeMarriages.push(marriage);
     } else if (!unit && p.kind !== 'moved' && p.parents.length < 2) {
-      const marriage = marriages.find(m => m.year < at && m.end >= at && p.parents.every(id => m.partners.includes(id)) && m.partners.every(id => {
+      for (let i = activeMarriages.length - 1; i >= 0; i--) {
+        const m = activeMarriages[i];
+        if (m.end < at || m.partners.some(id => ageAt(members.get(id), at) > 50)) activeMarriages.splice(i, 1);
+      }
+      const marriage = activeMarriages.find(m => m.year < at && p.parents.every(id => m.partners.includes(id)) && m.partners.every(id => {
         const parent = members.get(id);
         return (parent.index !== p.index || p.parents.includes(id)) && ageAt(parent, at) >= 18 && ageAt(parent, at) <= 50;
       }));

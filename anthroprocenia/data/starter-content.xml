@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Database>
+  <Types>
+    <Row Type="BUILDING_ANTHRO_PASTURAL_ENCLOSURE" Kind="KIND_CONSTRUCTIBLE" />
+    <Row Type="BUILDING_ANTHRO_FIRE_PIT" Kind="KIND_CONSTRUCTIBLE" />
+    <Row Type="BUILDING_ANTHRO_TOOLMAKERS_HUT" Kind="KIND_CONSTRUCTIBLE" />
+    <Row Type="BUILDING_ANTHRO_BARTER_POST" Kind="KIND_CONSTRUCTIBLE" />
+    <Row Type="BUILDING_ANTHRO_STORY_CIRCLE" Kind="KIND_CONSTRUCTIBLE" />
+    <Row Type="UNIT_ANTHRO_LATCHED_REED_OARBOAT" Kind="KIND_UNIT" />
+    <Row Type="UNIT_ANTHRO_CLUBMAN" Kind="KIND_UNIT" />
+    <Row Type="UNIT_ANTHRO_STONE_THROWER" Kind="KIND_UNIT" />
+  </Types>
+  <Constructibles>
+    <Row ConstructibleType="BUILDING_ANTHRO_PASTURAL_ENCLOSURE" Name="LOC_BUILDING_ANTHRO_PASTURAL_ENCLOSURE_NAME" Description="LOC_BUILDING_ANTHRO_PASTURAL_ENCLOSURE_DESCRIPTION" Tooltip="LOC_BUILDING_ANTHRO_PASTURAL_ENCLOSURE_DESCRIPTION" ConstructibleClass="BUILDING" Cost="35" Population="1" RequiresUnlock="false" Age="AGE_ANTIQUITY" />
+    <Row ConstructibleType="BUILDING_ANTHRO_FIRE_PIT" Name="LOC_BUILDING_ANTHRO_FIRE_PIT_NAME" Description="LOC_BUILDING_ANTHRO_FIRE_PIT_DESCRIPTION" Tooltip="LOC_BUILDING_ANTHRO_FIRE_PIT_DESCRIPTION" ConstructibleClass="BUILDING" Cost="35" Population="1" RequiresUnlock="false" Age="AGE_ANTIQUITY" />
+    <Row ConstructibleType="BUILDING_ANTHRO_TOOLMAKERS_HUT" Name="LOC_BUILDING_ANTHRO_TOOLMAKERS_HUT_NAME" Description="LOC_BUILDING_ANTHRO_TOOLMAKERS_HUT_DESCRIPTION" Tooltip="LOC_BUILDING_ANTHRO_TOOLMAKERS_HUT_DESCRIPTION" ConstructibleClass="BUILDING" Cost="35" Population="1" RequiresUnlock="false" Age="AGE_ANTIQUITY" />
+    <Row ConstructibleType="BUILDING_ANTHRO_BARTER_POST" Name="LOC_BUILDING_ANTHRO_BARTER_POST_NAME" Description="LOC_BUILDING_ANTHRO_BARTER_POST_DESCRIPTION" Tooltip="LOC_BUILDING_ANTHRO_BARTER_POST_DESCRIPTION" ConstructibleClass="BUILDING" Cost="35" Population="1" RequiresUnlock="false" Age="AGE_ANTIQUITY" />
+    <Row ConstructibleType="BUILDING_ANTHRO_STORY_CIRCLE" Name="LOC_BUILDING_ANTHRO_STORY_CIRCLE_NAME" Description="LOC_BUILDING_ANTHRO_STORY_CIRCLE_DESCRIPTION" Tooltip="LOC_BUILDING_ANTHRO_STORY_CIRCLE_DESCRIPTION" ConstructibleClass="BUILDING" Cost="35" Population="1" RequiresUnlock="false" Age="AGE_ANTIQUITY" />
+  </Constructibles>
+  <Buildings>
+    <Row ConstructibleType="BUILDING_ANTHRO_PASTURAL_ENCLOSURE" Movable="false" Town="true" PurchaseYield="YIELD_GOLD" />
+    <Row ConstructibleType="BUILDING_ANTHRO_FIRE_PIT" Movable="false" Town="true" PurchaseYield="YIELD_GOLD" />
+    <Row ConstructibleType="BUILDING_ANTHRO_TOOLMAKERS_HUT" Movable="false" Town="true" PurchaseYield="YIELD_GOLD" />
+    <Row ConstructibleType="BUILDING_ANTHRO_BARTER_POST" Movable="false" Town="true" PurchaseYield="YIELD_GOLD" />
+    <Row ConstructibleType="BUILDING_ANTHRO_STORY_CIRCLE" Movable="false" Town="true" PurchaseYield="YIELD_GOLD" />
+  </Buildings>
+  <Constructible_ValidDistricts>
+    <Row ConstructibleType="BUILDING_ANTHRO_PASTURAL_ENCLOSURE" DistrictType="DISTRICT_CITY_CENTER" />
+    <Row ConstructibleType="BUILDING_ANTHRO_PASTURAL_ENCLOSURE" DistrictType="DISTRICT_URBAN" />
+    <Row ConstructibleType="BUILDING_ANTHRO_FIRE_PIT" DistrictType="DISTRICT_CITY_CENTER" />
+    <Row ConstructibleType="BUILDING_ANTHRO_FIRE_PIT" DistrictType="DISTRICT_URBAN" />
+    <Row ConstructibleType="BUILDING_ANTHRO_TOOLMAKERS_HUT" DistrictType="DISTRICT_CITY_CENTER" />
+    <Row ConstructibleType="BUILDING_ANTHRO_TOOLMAKERS_HUT" DistrictType="DISTRICT_URBAN" />
+    <Row ConstructibleType="BUILDING_ANTHRO_BARTER_POST" DistrictType="DISTRICT_CITY_CENTER" />
+    <Row ConstructibleType="BUILDING_ANTHRO_BARTER_POST" DistrictType="DISTRICT_URBAN" />
+    <Row ConstructibleType="BUILDING_ANTHRO_STORY_CIRCLE" DistrictType="DISTRICT_CITY_CENTER" />
+    <Row ConstructibleType="BUILDING_ANTHRO_STORY_CIRCLE" DistrictType="DISTRICT_URBAN" />
+  </Constructible_ValidDistricts>
+  <Constructible_YieldChanges>
+    <Row ConstructibleType="BUILDING_ANTHRO_PASTURAL_ENCLOSURE" YieldType="YIELD_FOOD" YieldChange="1" />
+    <Row ConstructibleType="BUILDING_ANTHRO_PASTURAL_ENCLOSURE" YieldType="YIELD_PRODUCTION" YieldChange="1" />
+    <Row ConstructibleType="BUILDING_ANTHRO_FIRE_PIT" YieldType="YIELD_FOOD" YieldChange="1" />
+    <Row ConstructibleType="BUILDING_ANTHRO_FIRE_PIT" YieldType="YIELD_HAPPINESS" YieldChange="1" />
+    <Row ConstructibleType="BUILDING_ANTHRO_TOOLMAKERS_HUT" YieldType="YIELD_PRODUCTION" YieldChange="2" />
+    <Row ConstructibleType="BUILDING_ANTHRO_BARTER_POST" YieldType="YIELD_GOLD" YieldChange="2" />
+    <Row ConstructibleType="BUILDING_ANTHRO_STORY_CIRCLE" YieldType="YIELD_CULTURE" YieldChange="1" />
+    <Row ConstructibleType="BUILDING_ANTHRO_STORY_CIRCLE" YieldType="YIELD_HAPPINESS" YieldChange="1" />
+  </Constructible_YieldChanges>
+  <Units>
+    <Row UnitType="UNIT_ANTHRO_LATCHED_REED_OARBOAT" Name="LOC_UNIT_ANTHRO_LATCHED_REED_OARBOAT_NAME" Description="LOC_UNIT_ANTHRO_LATCHED_REED_OARBOAT_DESCRIPTION" Tier="1" Maintenance="1" BaseSightRange="2" BaseMoves="2" UnitMovementClass="UNIT_MOVEMENT_CLASS_NAVAL" Domain="DOMAIN_SEA" CoreClass="CORE_CLASS_MILITARY" FormationClass="FORMATION_CLASS_NAVAL" ZoneOfControl="true" />
+    <Row UnitType="UNIT_ANTHRO_CLUBMAN" Name="LOC_UNIT_ANTHRO_CLUBMAN_NAME" Description="LOC_UNIT_ANTHRO_CLUBMAN_DESCRIPTION" Tier="1" BaseSightRange="2" BaseMoves="2" UnitMovementClass="UNIT_MOVEMENT_CLASS_FOOT" Domain="DOMAIN_LAND" CoreClass="CORE_CLASS_MILITARY" FormationClass="FORMATION_CLASS_LAND_COMBAT" ZoneOfControl="true" />
+    <Row UnitType="UNIT_ANTHRO_STONE_THROWER" Name="LOC_UNIT_ANTHRO_STONE_THROWER_NAME" Description="LOC_UNIT_ANTHRO_STONE_THROWER_DESCRIPTION" Tier="1" BaseSightRange="2" BaseMoves="2" UnitMovementClass="UNIT_MOVEMENT_CLASS_FOOT" Domain="DOMAIN_LAND" CoreClass="CORE_CLASS_MILITARY" FormationClass="FORMATION_CLASS_LAND_COMBAT" ZoneOfControl="false" />
+  </Units>
+  <Unit_Stats>
+    <Row UnitType="UNIT_ANTHRO_LATCHED_REED_OARBOAT" Combat="15" RangedCombat="10" Bombard="5" Range="1" />
+    <Row UnitType="UNIT_ANTHRO_CLUBMAN" Combat="12" />
+    <Row UnitType="UNIT_ANTHRO_STONE_THROWER" Combat="3" RangedCombat="10" Bombard="3" Range="1" />
+  </Unit_Stats>
+  <Unit_Costs>
+    <Row UnitType="UNIT_ANTHRO_LATCHED_REED_OARBOAT" YieldType="YIELD_PRODUCTION" Cost="25" />
+    <Row UnitType="UNIT_ANTHRO_CLUBMAN" YieldType="YIELD_PRODUCTION" Cost="20" />
+    <Row UnitType="UNIT_ANTHRO_STONE_THROWER" YieldType="YIELD_PRODUCTION" Cost="20" />
+  </Unit_Costs>
+  <TypeTags>
+    <Row Type="BUILDING_ANTHRO_PASTURAL_ENCLOSURE" Tag="FOOD" />
+    <Row Type="BUILDING_ANTHRO_PASTURAL_ENCLOSURE" Tag="PRODUCTION" />
+    <Row Type="BUILDING_ANTHRO_FIRE_PIT" Tag="FOOD" />
+    <Row Type="BUILDING_ANTHRO_FIRE_PIT" Tag="HAPPINESS" />
+    <Row Type="BUILDING_ANTHRO_TOOLMAKERS_HUT" Tag="PRODUCTION" />
+    <Row Type="BUILDING_ANTHRO_BARTER_POST" Tag="GOLD" />
+    <Row Type="BUILDING_ANTHRO_STORY_CIRCLE" Tag="CULTURE" />
+    <Row Type="BUILDING_ANTHRO_STORY_CIRCLE" Tag="HAPPINESS" />
+    <Row Type="UNIT_ANTHRO_LATCHED_REED_OARBOAT" Tag="UNIT_CLASS_COMBAT" />
+    <Row Type="UNIT_ANTHRO_LATCHED_REED_OARBOAT" Tag="UNIT_CLASS_MELEE" />
+    <Row Type="UNIT_ANTHRO_LATCHED_REED_OARBOAT" Tag="UNIT_CLASS_NAVAL" />
+    <Row Type="UNIT_ANTHRO_LATCHED_REED_OARBOAT" Tag="UNIT_CLASS_RECON" />
+    <Row Type="UNIT_ANTHRO_LATCHED_REED_OARBOAT" Tag="UNIT_CLASS_LIGHT" />
+    <Row Type="UNIT_ANTHRO_CLUBMAN" Tag="UNIT_CLASS_COMBAT" />
+    <Row Type="UNIT_ANTHRO_CLUBMAN" Tag="UNIT_CLASS_MELEE" />
+    <Row Type="UNIT_ANTHRO_CLUBMAN" Tag="UNIT_CLASS_INFANTRY" />
+    <Row Type="UNIT_ANTHRO_STONE_THROWER" Tag="UNIT_CLASS_COMBAT" />
+    <Row Type="UNIT_ANTHRO_STONE_THROWER" Tag="UNIT_CLASS_RANGED" />
+  </TypeTags>
+  <Unit_Advisories>
+    <Row UnitType="UNIT_ANTHRO_LATCHED_REED_OARBOAT" AdvisoryClassType="ADVISORY_CLASS_MILITARY" />
+    <Row UnitType="UNIT_ANTHRO_CLUBMAN" AdvisoryClassType="ADVISORY_CLASS_MILITARY" />
+    <Row UnitType="UNIT_ANTHRO_STONE_THROWER" AdvisoryClassType="ADVISORY_CLASS_MILITARY" />
+  </Unit_Advisories>
+</Database>

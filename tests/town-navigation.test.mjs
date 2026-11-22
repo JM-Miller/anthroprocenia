@@ -51,7 +51,7 @@ function compass() {
   ctx.buildWalkerControls();
   return { ctx, advance: ms => { time += ms; }, overlay: value => { overlay = value; } };
 }
-test('compass is anchored to the map middle-right, points to all seven-tile neighbors and respects fog and overlays', () => {
+test('compass is anchored to the map middle-right, restricts distant neighbors and respects fog and overlays', () => {
   const { ctx, overlay } = compass();
   ctx.syncTownCompass();
   const button = ctx.els.townCompass, state = ctx.townCompassState;
@@ -61,10 +61,10 @@ test('compass is anchored to the map middle-right, points to all seven-tile neig
   assert.ok(button.children[0].children[0].attrs.d, 'explicit SVG compass glyph');
   assert.equal(state.el, null, 'disabled arrows allocate no rendering layer');
   state.enabled = true; ctx.syncTownCompass();
-  assert.equal((state.shape.match(/Z/g) || []).length, 3, 'current tile plus its adjacent tiles, not resources or other tiles');
+  assert.equal((state.shape.match(/Z/g) || []).length, 2, 'distant adjacent-tile towns are excluded as well as resources and other tiles');
   assert.match(state.el.style.cssText, /pointer-events:none/);
   ctx.fogMode = true; ctx.syncTownCompass();
-  assert.equal((state.shape.match(/Z/g) || []).length, 2, 'unrevealed town is not exposed');
+  assert.equal((state.shape.match(/Z/g) || []).length, 1, 'unrevealed town is not exposed');
   overlay(true); ctx.syncTownCompass();
   assert.equal(button.style.display, 'none'); assert.equal(state.el.style.display, 'none');
   overlay(false); ctx.syncTownCompass();
@@ -88,6 +88,23 @@ test('one slow compass click toggles once across mouseup and delayed click, and 
   assert.equal(ctx.townCompassState.path.attrs.d, '');
   assert.ok(ctx.els.civTimelineButton.children[0].children[0].attrs.d, 'timeline control also uses an explicit SVG icon');
 });
+test('compass reach uses the measured viewport, applies after wrapping, and tightens with zoom', () => {
+  const { ctx } = compass();
+  ctx.townCompassState.enabled = true;
+  ctx.iconPoints = [{ x: 420, y: 780, item: { index: 0, kind: 'building' } }];
+  ctx.syncTownCompass();
+  assert.equal((ctx.townCompassState.shape.match(/Z/g) || []).length, 1, 'exactly 450 pixels from the measured center is included');
+  ctx.iconPoints[0].y += 0.01; ctx.syncTownCompass();
+  assert.equal(ctx.townCompassState.shape, '', 'just beyond three quarters of the 600-pixel viewport height is excluded');
+  ctx.iconPoints[0].y = 600;
+  ctx.mapToScreen = (x, y) => ({ x: 420 + (x - 420) * ctx.viewZoom, y: 330 + (y - 330) * ctx.viewZoom });
+  ctx.syncTownCompass(); assert.ok(ctx.townCompassState.shape);
+  ctx.viewZoom = 2; ctx.syncTownCompass();
+  assert.equal(ctx.townCompassState.shape, '', 'an adjacent tile is not enough once zoom makes the town distant');
+  ctx.viewZoom = 1; ctx.iconPoints[0].x = 1470; ctx.iconPoints[0].y = 100;
+  ctx.syncTownCompass();
+  assert.ok(ctx.townCompassState.shape, 'the nearby wrapped copy is used instead of the unwrapped distance');
+});
 test('major roads taper just past townscape visibility to exactly twenty feet at the existing hundred-mile tile scale', () => {
   for (const width of [10, 100, 1000]) {
     assert.equal(town.majorRoadWidth(width, 0), Math.max(0.5, width * 0.022));
@@ -98,7 +115,7 @@ test('major roads taper just past townscape visibility to exactly twenty feet at
     assert.ok(town.majorRoadWidth(width, 1.25) < town.majorRoadWidth(width, 1));
   }
   const paths = { road: element(), roadDim: element() };
-  const ctx = vm.createContext({ ...town, townElementVisibility: { townRoads: true }, routePaths: paths, mapVisible: true, hexW: 100, hexH: 100,
+  const ctx = vm.createContext({ ...town, showRoads: true, townElementVisibility: { townRoads: true }, routePaths: paths, mapVisible: true, hexW: 100, hexH: 100,
     viewZoom: 15, viewAspectY: 1, window: { innerWidth: 1000, innerHeight: 800 } });
   vm.runInContext(slice('syncRouteWidths'), ctx); ctx.syncRouteWidths();
   assert.equal(paths.road.attrs['stroke-width'], String(town.majorRoadWidth(100, 1.5)));
@@ -108,7 +125,7 @@ test('major roads taper just past townscape visibility to exactly twenty feet at
 });
 test('townscape road visibility includes major map roads at town zoom but restores their overview visibility', () => {
   const paths = { road: element(), roadDim: element(), rail: element() };
-  const ctx = vm.createContext({ ...town, routePaths: paths, townElementVisibility: { townRoads: false },
+  const ctx = vm.createContext({ ...town, showRoads: true, routePaths: paths, townElementVisibility: { townRoads: false },
     mapVisible: true, hexW: 100, hexH: 100, viewZoom: 2, viewAspectY: 1,
     window: { innerWidth: 100, innerHeight: 100 } });
   vm.runInContext(slice('syncRouteWidths'), ctx);
@@ -118,7 +135,11 @@ test('townscape road visibility includes major map roads at town zoom but restor
   assert.equal(paths.road.style.display, '');
   ctx.townElementVisibility.townRoads = false; ctx.viewZoom = 0.5; ctx.syncRouteWidths();
   assert.equal(paths.road.style.display, ''); assert.equal(paths.roadDim.style.display, '');
-  assert.equal(paths.rail.style.display, undefined);
+  assert.equal(paths.rail.style.display, '');
+  ctx.showRoads = false; ctx.syncRouteWidths();
+  assert.ok(Object.values(paths).every(path => path.style.display === 'none'));
+  ctx.viewZoom = 20; ctx.syncRouteWidths();
+  assert.ok(Object.values(paths).every(path => path.style.display === 'none'), 'zoom cannot restore globally hidden roads');
 });
 
 test('headwear builds at most 128 new profiles per draw and eventually includes rare jobs without stale-turn icons', () => {

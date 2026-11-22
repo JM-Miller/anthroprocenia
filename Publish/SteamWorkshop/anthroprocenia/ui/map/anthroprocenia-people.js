@@ -273,6 +273,18 @@ function unitOptions(o) {
 export function landMilitaryUnit(unit) {
   return !!unit && ['infantry', 'ranged', 'cavalry', 'siege', 'armor', 'commander', 'scout'].includes(unit.sub);
 }
+export function occupationYieldIndex(title) {
+  const patterns = [
+    /farmer|farmhand|field hand|reaper|shepherd|herdsman|rancher|planter|picker|fisherman|hunter|miller|baker|agronomist|plowman|granary/i,
+    /artisan|craftsman|smith|weaver|potter|tanner|cooper|glassblower|machinist|welder|mechanic|miner|mason|stonecutter|quarry|woodcutter|sawyer|carpenter|lumberjack|factory|engineer|builder|laborer/i,
+    /merchant|trader|peddler|banker|stallkeeper|moneychanger|shopkeeper|salesman|accountant/i,
+    /scholar|researcher|professor|teacher|scientist|alchemist|librarian|philosopher|technician/i,
+    /artist|musician|actor|sculptor|poet|archivist|antiquarian|archaeologist/i,
+    /entertainer|bath attendant|gardener|groundskeeper|usher|innkeeper|clergyman|priest|priestess|acolyte|chaplain|temple keeper/i,
+    /diplomat|courtier|herald|civil servant|steward|chamberlain|notary|scribe|clerk|aide/i,
+  ];
+  return patterns.findIndex(pattern => pattern.test(title));
+}
 export function occupationOptions(opts) {
   const age = Math.max(0, Math.min(2, opts.age | 0)), flavor = faithFlavor(opts.religion);
   const shares = new Map(), add = (title, share) => shares.set(title, (shares.get(title) || 0) + share);
@@ -301,6 +313,16 @@ export function occupationOptions(opts) {
   if (unlocked.length) {
     for (const [title, share] of shares) shares.set(title, share * 0.7);
     for (const row of unlocked) add(row[1], 0.3 / unlocked.length);
+  }
+  if (!opts.unit && Array.isArray(opts.yields)) {
+    const representatives = ['Farmer', 'Artisan', 'Trader', 'Scholar', 'Artist', 'Entertainer', 'Diplomat'];
+    representatives.forEach(title => { if (!shares.has(title)) add(title, 0.01); });
+    for (const [title, share] of shares) {
+      const index = occupationYieldIndex(title), value = opts.yields[index];
+      if (index >= 0 && Number.isFinite(value)) shares.set(title, share * (value >= 0 ? 1 + value / 10 : 1 / (1 - value / 10)));
+    }
+    const total = [...shares.values()].reduce((sum, share) => sum + share, 0);
+    for (const [title, share] of shares) shares.set(title, share / total);
   }
   return [...shares];
 }
@@ -400,18 +422,30 @@ export function personProfile(opts) {
 }
 
 // ---- leadership roles ----------------------------------------------------------------------------------------------------------
-// The first few people of some homes lead: the royal family at a palace, the governor and deputy of a settlement's urban
+// The first few people of some homes lead: government officials or the royal family at a palace, the governor and deputy of a settlement's urban
 // centre (its specialists' home), a commander with their scribe and aide, and the officer of a military unit (a centurion and
 // optio in Rome's). opts: { home: 'palace' | 'center' | 'unit', unit: { sub } | null, civKey, index, gender, age: 0 | 1 | 2,
-// ageCategory }. Returns the role's title ('' for everyone else).
+// ageCategory, government }. Returns the role's title ('' for everyone else).
 const ROYAL = [['King', 'Queen'], ['Prince Consort', 'Queen Consort'], ['Crown Prince', 'Crown Princess'], ['Prince', 'Princess'], ['Prince', 'Princess']];
 const CIVILIAN_UNITS = new Set(['settler', 'builder', 'merchant', 'scout', 'religious', 'civilian', 'great']);
 export const LEADERS_PER_HOME = { palace: 5, center: 2, commander: 3, military: 2 };
 export function leaderRole(opts) {
   const index = opts.index | 0, female = opts.gender === 'female' ? 1 : 0;
-  if (index < 0 || opts.ageCategory === 'Child' && index !== 2) return '';
-  if (opts.home === 'palace') return index < LEADERS_PER_HOME.palace ? ROYAL[index][female] : '';
-  if (opts.ageCategory === 'Child') return '';
+  const underage = opts.ageCategory === 'Child' || opts.ageCategory === 'Youth';
+  if (index < 0 || underage && index !== 2) return '';
+  if (opts.home === 'palace') {
+    const government = String(opts.government || '');
+    const titles = /republic/i.test(government) ? ['Consul', 'Co-Consul', 'Senator', 'Senator', 'Magistrate']
+      : /democra/i.test(government) ? ['President', 'Vice President', 'Minister', 'Minister', 'Councillor']
+      : /theocra/i.test(government) ? ['High Priest', 'Priest', 'Priest', 'Priest', 'Priest']
+      : /communis|socialis/i.test(government) ? ['Chairperson', 'Deputy Chairperson', 'Commissar', 'Commissar', 'Councillor']
+      : /fascis|autocra|dictator|despot|authoritarian|totalitarian/i.test(government) ? ['Autocrat', 'Deputy', 'Minister', 'Minister', 'Councillor']
+      : /oligarch/i.test(government) ? ['First Councillor', 'Councillor', 'Councillor', 'Councillor', 'Magistrate']
+      : /chiefdom|tribal/i.test(government) ? ['Chief', 'Elder', 'Elder', 'Councillor', 'Councillor'] : null;
+    if (titles) return underage ? '' : titles[index] || '';
+    return index < LEADERS_PER_HOME.palace ? ROYAL[index][female] : '';
+  }
+  if (underage) return '';
   if (opts.home === 'center') return ['Governor', 'Deputy Governor'][index] || '';
   if (opts.home !== 'unit' || !opts.unit) return '';
   const sub = opts.unit.sub || '';

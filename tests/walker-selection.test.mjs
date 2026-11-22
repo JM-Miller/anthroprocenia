@@ -215,6 +215,10 @@ test('Population and Leaders UI build real circular icon controls and retain lab
     assert.equal(button.children[0].tag, 'svg');
     assert.ok(button.attrs.title && button.attrs['aria-label']);
   }
+  const foreground = ctx.els.popBtn.children[0].children[0].attrs.fill;
+  for (const part of ctx.els.leadBtn.children[0].children) assert.equal(part.attrs.fill, foreground);
+  const border = button => button.style.cssText.match(/border:[^;]+/)[0];
+  assert.equal(border(ctx.els.leadBtn), border(ctx.els.popBtn));
   const populationClose = all.find(el => el.attrs.title === 'Close the Population Panel');
   const leadersClose = all.find(el => el.attrs.title === 'Close the Leaders Panel');
   for (const button of [populationClose, leadersClose]) {

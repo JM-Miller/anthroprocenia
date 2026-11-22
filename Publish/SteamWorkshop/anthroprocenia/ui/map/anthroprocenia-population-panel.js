@@ -1,4 +1,4 @@
-// Pure logic for the Map View "Population Panel": a Civilization > Continent > Tile > Icon type > Home Location tree with
+// Pure logic for the Map View "Population Panel": a Civilization > Continent > Region > Tile > Icon type > Home Location tree with
 // people under each Home Location (one icon circle). Nothing here touches the game or the DOM, so it can be tested on its own.
 
 export const PAGE_SIZE = 60;
@@ -78,8 +78,12 @@ export function buildPopulationTree(entries) {
     const civ = child(civs, civId, () => ({ id: civId, kind: 'civ', label: entry.civ.name, total: 0, children: [] }));
     const contId = `${civId}|k:${entry.continent.id}`;
     const continent = child(civ.map, contId, () => ({ id: contId, kind: 'continent', label: entry.continent.name, total: 0, children: [] }));
+    const regionId = entry.region && `${contId}|r:${entry.region.id}`;
+    const region = regionId ? child(continent.map, regionId, () => ({
+      id: regionId, kind: 'region', geographicKind: entry.region.type, label: entry.region.name, total: 0, children: [],
+    })) : null;
     const tileId = tileNodeId(entry.civ.id, entry.continent.id, entry.tile.index);
-    const tile = child(continent.map, tileId, () => ({ id: tileId, kind: 'tile', label: entry.tile.name, tile: entry.tile.index, total: 0, children: [] }));
+    const tile = child((region || continent).map, tileId, () => ({ id: tileId, kind: 'tile', label: entry.tile.name, tile: entry.tile.index, total: 0, children: [] }));
     const home = homeGroupFor(entry.icon), groupId = `${tileId}|g:${home.id}`;
     const iconId = `${groupId}|i:${entry.icon.id}`;
     if (tile.map.has(groupId) && tile.map.get(groupId).map.has(iconId)) continue;
@@ -87,6 +91,7 @@ export function buildPopulationTree(entries) {
     const icon = { id: iconId, kind: 'icon', iconKind: entry.icon.kind, label: entry.icon.name, tile: entry.tile.index, total: population, icon: entry.icon, children: [] };
     group.map.set(iconId, icon);
     group.total += population; tile.total += population; continent.total += population; civ.total += population;
+    if (region) region.total += population;
   }
   const finish = node => {
     if (!node.map) return node;
@@ -168,7 +173,19 @@ export function scrollToRow(rowIndex, scroll, viewHeight, rowHeight = ROW_HEIGHT
   return scroll;
 }
 
-export function ancestorIds(id) {
+export function ancestorIds(id, tree = null) {
+  if (tree) {
+    const find = (nodes, path) => {
+      for (const node of nodes) {
+        if (node.id === id) return path;
+        const found = find(node.children || [], [...path, node.id]);
+        if (found) return found;
+      }
+      return null;
+    };
+    const found = find(tree, []);
+    if (found) return found;
+  }
   const parts = String(id).split('|'), ids = [];
   for (let i = 1; i < parts.length; i++) ids.push(parts.slice(0, i).join('|'));
   return ids;
@@ -206,7 +223,7 @@ export function rowHovered(row, hover) {
 // occupation group when people are grouped by occupation) and widens every "show more" page so that row is listed.
 // `options` is the same as visibleRows'. Returns the icon node, or null when the tree has no such Home Location.
 export function revealPerson(tree, nodeId, personIndex, expanded, shown, options = {}) {
-  const path = [...ancestorIds(nodeId), nodeId];
+  const path = [...ancestorIds(nodeId, tree), nodeId];
   let list = tree, parentId = 'root', node = null;
   const cover = (id, count) => {
     const needed = Math.ceil(count / PAGE_SIZE) * PAGE_SIZE;

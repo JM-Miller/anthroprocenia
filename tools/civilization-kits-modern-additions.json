@@ -1,0 +1,733 @@
+{
+  "ASHANTI": {
+    "ability": [["connected", "GOLD", 2], ["plot", "CULTURE", 1, "vegetated"], ["resource", 1]],
+    "buildings": [
+      [["resource", 2], ["connected", "GOLD", 2]],
+      [["worker", "CULTURE", 2], ["yield", "HAPPINESS", 3]]
+    ],
+    "quarter": [["connected", "CULTURE", 2], ["wonder", 20]],
+    "military": [["combat", 5, "defend"], ["ignore", "FOREST"]],
+    "scout": [["sight", 1], ["ignore", "FOREST"], ["move", 1]],
+    "improvement": ["Nnoboa", "FARM", "FOOD", 3, ["plot", "CULTURE", 1, "vegetated"]],
+    "civics": [
+      ["Forest Provisioning", [], [["plot", "FOOD", 1, "farm"]]],
+      ["Goldweight Exchange", [1], [["resource", 1], ["connected", "GOLD", 1]]],
+      ["Stool Councils", [1], [["worker", "CULTURE", 1]]],
+      ["Artisan Patronage", [2], [["wonder", 20]]],
+      ["Federated Allegiance", [3], [["connected", "HAPPINESS", 2]]],
+      ["Confederate Renewal", [4, 5], [["trade", 1], ["connected", "CULTURE", 2]]]
+    ],
+    "traditions": [
+      ["Proverb Weights", 2, [["resource", 1], ["yield", "GOLD", 3]]],
+      ["Court Artisans", 3, [["worker", "CULTURE", 2]]],
+      ["Market Stewardship", 4, [["plot", "FOOD", 1, "farm"], ["growth", 10]]],
+      ["Councils of Stools", 5, [["connected", "HAPPINESS", 2]]]
+    ],
+    "history": "The Asante state emerged around Kumasi through alliances associated with Osei Tutu and the Golden Stool around the turn of the eighteenth century. Constituent stools retained important institutions within a wider political order led by the Asantehene. Gold production, forest farming, markets, and skilled metalworking sustained courtly power. Brass weights and royal regalia linked exchange to proverbial knowledge and public authority. This prosperity also involved conquest, tribute, and enslavement; it should not be imagined as an egalitarian federation. Nineteenth-century wars with Britain culminated in occupation, the exile of Prempeh I, and the 1900 resistance associated with Yaa Asantewaa. Colonial rule constrained sovereignty without erasing Asante institutions or artistic life. The kit therefore pairs commerce and cultural patronage with food production and defensive capacity. Generic native infantry and buildings provide visual approximations rather than reconstructed Asante uniforms, shrines, or palaces.",
+    "elementHistory": {
+      "building1": "Abramo are Akan brass goldweights used to measure gold dust in exchange. Their geometric and figurative forms could carry proverbial associations. Naming a market building after these objects is an explicit metonym, not a claim that abramo was the historical word for a market.",
+      "building2": "Abosomfie denotes a shrine house associated with an obosom, a deity within Asante religious life. Surviving compounds near Kumasi preserve earthen construction and meaningful relief decoration. Generic museum assets approximate a cultural function, not an authentic shrine plan or a claim that shrines were museums.",
+      "quarter": "Dwabrem names a gathering space associated with Asante royal ceremony, attested in current Manhyia Palace usage. The quarter extends that ceremonial association to Kumasi's earlier courtly networks. It is not a claim that the present palace, built in 1925, existed throughout the eighteenth century.",
+      "improvement": "Nnoboa describes reciprocal collective labor in Ghanaian farming rather than a specific garden structure. Applied to a farm improvement, the term explicitly abstracts cooperation among cultivators. Forest-zone food production and women's labor sustained households and markets alongside gold exchange; no timeless, universally egalitarian institution is implied.",
+      "military": "Ɔsraani is the attested Twi word for a soldier, used as a functional translation rather than an invented musketeer regiment title. Asante forces obtained firearms through trade and organized service through political divisions. Generic infantry models do not reconstruct Asante uniforms, formations, or the conditions of forest campaigning.",
+      "scout": "Messengers linked the Asantehene's court with constituent stools, provincial authorities, and trading routes. Forest travel required local knowledge and political credentials. Emissary is a clear English functional label retained rather than inventing an unverified Twi corps title; native explorer art is only a gameplay approximation."
+    },
+    "civicHistory": [
+      "Forest agriculture sustained growing towns and specialist crafts. Household provisioning remained essential even where historical accounts foreground gold, diplomacy, and the activities of kings.",
+      "Goldweight exchange belonged to a broader Akan commercial world. Its objects combined practical measurement with visual forms that could evoke proverbs and social knowledge.",
+      "Stool office linked authority to particular communities and ancestors. Councils constrained and negotiated royal power without creating modern democratic equality.",
+      "Court patronage supported metalworkers, woodcarvers, and textile production. Some expertise entered Kumasi through conquest, reminding us that artistic flourishing and coercion could coexist.",
+      "The Asante political order joined constituent states with differing obligations and interests. Allegiance required recurring negotiation rather than simple administrative uniformity.",
+      "Resistance in 1900 and subsequent institutional survival show that conquest did not end Asante political identity. Renewal here signifies cultural and institutional persistence, not uninterrupted sovereignty."
+    ],
+    "sources": ["https://whc.unesco.org/en/list/35/", "https://www.metmuseum.org/it/essays/gold-in-asante-courtly-arts", "https://www.metmuseum.org/art/collection/search/317673?searchField=All", "https://ghana-net.com/asante-traditional-buildings/", "https://manhyiapalace.org/news/asanteheneat27-akwasidae-today-marks-otumfuos-27-year-reign", "https://nsuworks.nova.edu/tqr/vol26/iss1/8/", "https://learnakandictionary.com/english-twi/soldier/"]
+  },
+  "WAFDIST_EGYPT": {
+    "ability": [["connected", "CULTURE", 2], ["worker", "GOLD", 1]],
+    "buildings": [
+      [["worker", "CULTURE", 2], ["yield", "SCIENCE", 2]],
+      [["connected", "HAPPINESS", 2], ["worker", "SCIENCE", 1]]
+    ],
+    "quarter": [["connected", "CULTURE", 2], ["resource", 2]],
+    "military": [["combat", 5, "defend"], ["heal", 5]],
+    "scout": [["sight", 2], ["move", 1]],
+    "improvement": ["Sāqiya", "FARM", "FOOD", 3, ["growth", 15]],
+    "civics": [
+      ["Delegation Networks", [], [["connected", "CULTURE", 1]]],
+      ["The 1923 Constitution", [1], [["yield", "HAPPINESS", 3]]],
+      ["Nile Smallholders", [1], [["plot", "FOOD", 1, "river"]]],
+      ["Independent Newspapers", [2], [["worker", "SCIENCE", 2]]],
+      ["Provincial Associations", [3], [["connected", "GOLD", 2]]],
+      ["Parliamentary Coalition", [4, 5], [["trade", 1], ["connected", "HAPPINESS", 2]]]
+    ],
+    "traditions": [
+      ["Provincial Committees", 2, [["connected", "CULTURE", 2]]],
+      ["Public Debate", 3, [["worker", "SCIENCE", 1], ["yield", "HAPPINESS", 2]]],
+      ["Nile Husbandry", 4, [["plot", "FOOD", 1, "river"]]],
+      ["Associational Life", 5, [["resource", 1], ["connected", "GOLD", 1]]]
+    ],
+    "history": "The Wafd grew from the delegation seeking Egyptian representation after the First World War and became a mass nationalist party during the upheavals of 1919. Saad Zaghloul's leadership linked provincial support with demands for independence and constitutional government. Britain's declaration of Egyptian independence in 1922 retained important reservations, while the 1923 constitution established a parliamentary monarchy. The Wafd won the first general election in 1924, but royal intervention, British pressure, party divisions, and interruptions to constitutional rule repeatedly limited elected government. Its national language did not remove inequalities of class, landholding, or gender. Newspapers, lawyers, professional networks, and provincial committees helped make politics a public activity beyond the palace. This kit represents that interwar contest, not a timeless Egyptian state or the later military republic. Nile farming supports the urban public sphere, while generic infantry represents the national army rather than an invented Wafdist militia.",
+    "elementHistory": {
+      "building1": "Al-Balagh began publication in Cairo in 1923 and supported the Wafd during much of the interwar period, though its alignment changed. The newspaper's attested name anchors the communications building. Radio-station assets remain a functional approximation, not a reconstruction of its press or editorial offices.",
+      "building2": "Majlis al-Nuwwab is the Arabic name of the Chamber of Deputies within Egypt's parliamentary institutions. The 1923 constitution placed it alongside a Senate under a powerful monarchy. Its legislative role did not ensure uninterrupted Wafdist government, universal participation, or freedom from royal and British interference.",
+      "quarter": "Bayt al-Umma, the House of the Nation, was Saad Zaghloul's Cairo residence and a meeting place associated with nationalist politics. Its attested name replaces a generic forum. Treating the house as a repeatable quarter is a gameplay abstraction, not evidence of multiple historical residences.",
+      "improvement": "Sāqiya is the attested Arabic name for a mechanical water-lifting device used in Egyptian irrigation, often powered by animals rather than flowing water. It replaces an invented cooperative title. The farm donor abstracts irrigated cultivation, not a claim that the Wafd invented the device or universally reorganized water rights.",
+      "military": "Al-Mushāh is the Arabic infantry term, used here as a functional translation, not a newly invented regiment or Wafdist militia. Egypt's national army served a monarchy constrained by British power. Generic native models approximate changing equipment without reconstructing Egyptian uniforms or implying permanent party control over soldiers.",
+      "scout": "Provincial reports and political correspondence connected local concerns with the capital's public sphere. Journalists and party organizers traveled through networks rather different from military reconnaissance. The Correspondent turns those connections into exploration gameplay and should not be read as an official Wafdist scout unit."
+    },
+    "civicHistory": [
+      "The delegation that gave the Wafd its name sought to carry Egypt's case abroad. Arrests and exile helped transform that demand into mass mobilization.",
+      "The 1923 constitution created representative institutions while preserving royal powers. Its suspension and restoration demonstrate how precarious constitutional government remained.",
+      "Agricultural communities supplied the wealth and population behind national politics. Land concentration and unequal rural conditions complicated claims that independence alone would secure social justice.",
+      "Newspapers made constitutional disputes and nationalist arguments public. Their editors and readers faced censorship, partisan conflict, and the power of both palace and occupation.",
+      "Provincial networks gave the Wafd reach beyond Cairo. Organization depended on local notables and associations as well as popular enthusiasm.",
+      "Coalitions and electoral victories operated within an uneven balance among party, king, and Britain. The settlement of 1936 did not eliminate that triangular contest."
+    ],
+    "sources": ["https://www.britannica.com/place/Egypt/The-interwar-period", "https://en.wikipedia.org/wiki/Egyptian_Constitution_of_1923", "https://en.wikipedia.org/wiki/Al_Balagh", "https://www.parliament.gov.eg/Documents/History/dostor_1923.aspx", "https://english.ahram.org.eg/News/277093.aspx", "https://sina.birzeit.edu/qabas/lemma/2022649500", "https://en.wikipedia.org/wiki/Saqiyah", "https://www.britishmuseum.org/collection/object/Y_EA88641"]
+  },
+  "SERBIA": {
+    "ability": [["plot", "GOLD", 1, "farm"], ["connected", "FOOD", 1], ["growth", 10]],
+    "buildings": [
+      [["plot", "FOOD", 1, "farm"], ["resource", 2]],
+      [["worker", "CULTURE", 2], ["yield", "SCIENCE", 2]]
+    ],
+    "quarter": [["connected", "HAPPINESS", 2], ["production", "LAND", 15]],
+    "military": [["combat", 6, "defend"], ["heal", 10]],
+    "scout": [["move", 1], ["ignore", "FOREST"]],
+    "improvement": ["Šljivik", "FARM", "GOLD", 3, ["growth", 10]],
+    "civics": [
+      ["Peasant Holdings", [], [["growth", 15]]],
+      ["Orchard Markets", [1], [["plot", "GOLD", 1, "farm"]]],
+      ["Print and Literacy", [1], [["worker", "CULTURE", 1]]],
+      ["District Roads", [2], [["connected", "PRODUCTION", 2]]],
+      ["Assembly Debates", [3], [["yield", "HAPPINESS", 3]]],
+      ["Constitutional Kingdom", [4, 5], [["settlements", 1], ["connected", "SCIENCE", 1]]]
+    ],
+    "traditions": [
+      ["Orchard Husbandry", 2, [["plot", "FOOD", 1, "farm"], ["yield", "GOLD", 2]]],
+      ["Reading Rooms", 3, [["worker", "CULTURE", 2]]],
+      ["District Solidarity", 4, [["connected", "PRODUCTION", 2]]],
+      ["Reserve Obligations", 5, [["production", "LAND", 20]]]
+    ],
+    "history": "Modern Serbia developed through uprisings against Ottoman rule in 1804 and 1815, followed by a gradual expansion of autonomous institutions. Ottoman recognition of hereditary princely government in 1830 did not immediately create full independence. That status received international recognition in 1878, and Serbia became a kingdom in 1882. Rural smallholders, livestock trading, orchards, and market towns supplied the foundations of political and economic life. Schools, print culture, and language reform helped construct a modern public sphere. Rival dynasties and disputes over constitutions repeatedly disturbed that process. State expansion also brought displacement and unequal treatment of populations who did not share the dominant national project. The kit emphasizes agriculture, literacy, and district connections rather than presenting Serbian history only as warfare. Reserve infantry represents mobilization across changing armies; native models are visual approximations, not authentic Serbian uniforms or evidence of one continuous regiment.",
+    "elementHistory": {
+      "building1": "Zadruga denotes a South Slavic extended household and its associated economic arrangements, whose legal treatment remained contested in nineteenth-century Serbia. The building abstracts shared provisioning rather than naming a commercial exchange. It does not imply universal communal ownership, equal household authority, or an unchanged institution surviving everywhere.",
+      "building2": "Čitalište beogradsko, the Belgrade reading society opened in 1846, supported reading, newspaper access, and public cultural activity. Its attested Serbian name anchors the building. Repeating it outside Belgrade is a gameplay abstraction of reading-room networks, not evidence of branches all bearing the same historical title.",
+      "quarter": "Skupština is the Serbian assembly term used here for civic gathering and representation. Nineteenth-century assemblies operated amid conflict over princely authority and constitutional powers. The quarter abstracts these functions; it does not claim a standardized historical district plan or equal participation by every resident.",
+      "improvement": "Šljivik means a plum orchard, a straightforward Serbian-language label rather than a reconstructed ancient institution. Plums supplied fresh fruit, preserves, and distilling within rural economies. Household labor and market connections sustained cultivation; generic farm assets do not supply a newly modeled or nationally standardized historical orchard.",
+      "military": "Rezervista is the Serbian word for a reservist, a functional label rather than a particular regiment title. Mobilization connected military obligations with rural households whose agricultural work could be interrupted by service. Generic native infantry does not reconstruct Serbian uniforms, reserve categories, or equipment at one specific battle.",
+      "scout": "Couriers connected district authorities, market towns, and a growing central administration over difficult terrain. Their work joined practical route knowledge with institutional communication. The District Courier turns that role into a recon unit without inventing a standardized Serbian explorer corps or dedicated historical uniform."
+    },
+    "civicHistory": [
+      "Peasant holdings shaped nineteenth-century Serbia's social structure. Their importance did not remove debt, regional inequalities, or the competing demands of state taxation and military service.",
+      "Rural produce moved through local markets into larger commercial networks. Orchard cultivation offered one connection between household subsistence and exchange.",
+      "Language reform and print culture contributed to national institution building. Literacy spread unevenly and remained a project rather than an immediate consequence of autonomy.",
+      "Roads linked districts to the capital and external markets. Better communication could strengthen administration as well as support local economic opportunity.",
+      "Constitutional arguments repeatedly tested the relationship between ruler, assembly, and political elites. Dynastic change did not automatically resolve those institutional conflicts.",
+      "The kingdom pursued sovereignty, modernization, and territorial claims. Its expansion must also be understood through the experiences of displaced and subordinated neighboring communities."
+    ],
+    "sources": ["https://www.britannica.com/place/Serbia/Consolidation-of-the-state", "https://www.britannica.com/topic/history-of-Serbia/Modern-Serbia", "https://journals.openedition.org/res/3617", "https://kompasinfo.rs/citaliste-beogradsko-prva-citaonica-u-srbiji-i-svetionik-kulture/?script=lat", "https://en.wiktionary.org/wiki/%C5%A1ljivik", "https://sr.wiktionary.org/sr-ec/rezerv%C8%89sta"]
+  },
+  "INDONESIA": {
+    "ability": [["trade", 1], ["plot", "GOLD", 1, "fishing"], ["connected", "CULTURE", 1]],
+    "buildings": [
+      [["resource", 2], ["connected", "GOLD", 2]],
+      [["worker", "SCIENCE", 2], ["worker", "CULTURE", 1]]
+    ],
+    "quarter": [["production", "SEA", 25], ["connected", "CULTURE", 2]],
+    "military": [["combat", 5, "defend"], ["ignore", "RAINFOREST"]],
+    "scout": [["sight", 1], ["move", 1], ["ignore", "RAINFOREST"]],
+    "improvement": ["Lumbung", "ENTREPOT", "GOLD", 3, ["resource", 1]],
+    "civics": [
+      ["Archipelago Markets", [], [["plot", "GOLD", 1, "fishing"]]],
+      ["Harbor Associations", [1], [["production", "SEA", 20]]],
+      ["National Awakening", [1], [["worker", "SCIENCE", 1]]],
+      ["Cooperative Exchange", [2], [["trade", 1], ["connected", "FOOD", 1]]],
+      ["Print across Islands", [3], [["connected", "CULTURE", 2]]],
+      ["The Youth Pledge", [4, 5], [["connected", "HAPPINESS", 2], ["worker", "CULTURE", 1]]]
+    ],
+    "traditions": [
+      ["Harbor Brokers", 2, [["resource", 1], ["connected", "GOLD", 1]]],
+      ["Mutual Assistance", 3, [["growth", 15], ["connected", "HAPPINESS", 1]]],
+      ["A Shared Language", 4, [["connected", "CULTURE", 2]]],
+      ["Maritime Workshops", 5, [["production", "SEA", 25]]]
+    ],
+    "history": "Modern Indonesia emerged from an archipelago of different languages, religions, and political traditions, not from a single uninterrupted island kingdom. Dutch colonial expansion integrated territories through coercion as well as commerce. The late nineteenth-century Ombilin mining system, with its railways and port facilities, depended on local expertise, contract workers, and convict labor. Early twentieth-century associations, schools, newspapers, and religious organizations developed competing visions of collective advancement. The Youth Pledge of 1928 expressed a commitment to one homeland, nation, and unifying Indonesian language without eliminating regional identities. Japanese occupation brought further violence and disruption before the 1945 proclamation and the struggle that secured recognition of independence in 1949. Harbors and learning institutions therefore anchor this kit alongside defensive infantry. Infanteri is a functional Indonesian-language label, not a named historical formation; earlier donor tiers and all reused models are gameplay approximations rather than a claim that Indonesia already possessed a national army under Dutch rule.",
+    "elementHistory": {
+      "building1": "Tanjung Priok developed as Batavia's new harbor in the late nineteenth century, serving increased shipping and changing transport requirements. Its attested place-name anchors the building. Replication abstracts port functions across the archipelago rather than claiming identical institutions everywhere or erasing the harbor's role in colonial extraction.",
+      "building2": "Taman Siswa, the Garden of Students, was founded by Ki Hadjar Dewantoro in 1922. Its schools combined modern subjects with Indigenous cultural education, initially emphasizing Javanese traditions. The institution's attested name replaces a generic national school without implying a single curriculum or universal archipelago-wide participation.",
+      "quarter": "Bandar is an Indonesian word for a harbor or trading port town. Used as a functional quarter label, it joins maritime exchange with the circulation of students, publications, and political ideas. It does not name a uniform historical institution or erase ports' roles in colonial extraction and coerced labor.",
+      "improvement": "Lumbung is an Indonesian term for a grain store, with regionally varied architectural forms such as those documented in Kerinci and Lombok. Storage supports household security and exchange. The entrepot donor is a functional approximation, not evidence that every lumbung served international shipping or followed one design.",
+      "military": "Infanteri is the attested Indonesian infantry term, used functionally rather than as an invented republican regiment title. Independence forces included volunteers, militias, and soldiers with varied wartime experiences. Generic native models approximate changing equipment; earlier tiers do not prove that a national republican army existed before 1945.",
+      "scout": "Correspondence and travel linked intellectuals, merchants, and organizers across colonial boundaries and island communities. Such connections helped a national public emerge without erasing local attachments. The Interisland Correspondent converts these networks into reconnaissance mechanics, not an attested uniformed service or a claim that journalists were soldiers."
+    },
+    "civicHistory": [
+      "Archipelago markets long preceded modern nationalism. Their routes connected distinct communities whose incorporation into a colonial economy often involved coercive monopolies and unequal bargaining power.",
+      "Harbor communities supplied maritime knowledge and brokerage. Their associations and livelihoods should not be mistaken for a single centrally organized national shipping system.",
+      "The National Awakening involved multiple organizations and ideologies. Education offered new opportunities, but access remained limited and colonial authorities restricted political activity.",
+      "Cooperative exchange represents mutual assistance and experiments with collective organization. It is not a claim that all Indonesian communities practiced one timeless economic institution.",
+      "Print and travel widened debate beyond local elites. Newspapers helped circulate a national vocabulary while maintaining differences in language, religion, and political commitments.",
+      "The 1928 Youth Pledge gave powerful expression to a shared political future. It affirmed Indonesian as a unifying language rather than abolishing the archipelago's other languages."
+    ],
+    "sources": ["https://whc.unesco.org/en/list/1610/", "https://www.indonesia.travel/us/en/travel-ideas/heritage/ombilin-coal-mine-world-heritage-site-in-sawahlunto", "https://www.britannica.com/topic/Youth-Pledge", "https://www.britannica.com/biography/Ki-Hadjar-Dewantoro", "https://handep.rifqisyams.id/index.php/handep/article/view/456", "https://scholarhub.ui.ac.id/multikultura/vol5/iss1/20/", "https://kbbi.web.id/infanteri", "https://kbbi.co.id/arti-kata/bandar"]
+  },
+  "PORTUGAL": {
+    "ability": [["trade", 1], ["connected", "GOLD", 2], ["production", "SEA", 15]],
+    "buildings": [
+      [["resource", 2], ["yield", "GOLD", 4]],
+      [["worker", "SCIENCE", 2], ["worker", "PRODUCTION", 1]]
+    ],
+    "quarter": [["connected", "PRODUCTION", 2], ["production", "SEA", 20]],
+    "military": [["combat", 5, "defend"], ["sight", 1]],
+    "scout": [["sight", 2], ["move", 1]],
+    "improvement": ["Companha", "FISHING_BOAT", "FOOD", 3, ["plot", "GOLD", 1, "fishing"]],
+    "civics": [
+      ["Atlantic Commerce", [], [["connected", "GOLD", 1]]],
+      ["Commercial Associations", [1], [["resource", 2]]],
+      ["Constitutional Charter", [1], [["connected", "HAPPINESS", 1]]],
+      ["Technical Instruction", [2], [["worker", "SCIENCE", 2]]],
+      ["Coastal Industries", [3], [["plot", "PRODUCTION", 1, "fishing"]]],
+      ["Civic Modernization", [4, 5], [["trade", 1], ["connected", "PRODUCTION", 2]]]
+    ],
+    "traditions": [
+      ["Commercial Associations", 2, [["connected", "GOLD", 2]]],
+      ["Technical Instruction", 3, [["worker", "SCIENCE", 2]]],
+      ["Coastal Livelihoods", 4, [["plot", "FOOD", 1, "fishing"]]],
+      ["Atlantic Shipwrights", 5, [["production", "SEA", 25]]]
+    ],
+    "history": "Nineteenth-century Portugal confronted invasion, civil conflict, the independence of Brazil, and repeated disputes over constitutional government. The liberal revolution of 1820 and the charter of 1826 did not produce a stable or broadly inclusive settlement. Constitutional monarchy eventually developed a system of alternating governing elites, while commercial associations, railways, and technical education pursued material improvement. Porto's exchange building and riverside landscape reflect the importance of merchants and Atlantic connections. Industrial growth remained uneven, and many people emigrated. Overseas expansion in Africa rested on coercive colonial authority, not a benign commercial mission; formal abolition did not immediately end exploitative labor. The monarchy fell in 1910 amid deep political dissatisfaction. This kit therefore treats commerce and engineering as contested modern institutions rather than repeating an exploration-era celebration of voyages. Generic infantry approximates caçadores, while native constructibles provide functional rather than architectural equivalence.",
+    "elementHistory": {
+      "building1": "Associação Comercial do Porto was founded in 1834 to represent the city's business community. Its exchange architecture expressed merchant ambitions within a changing constitutional order. The attested Portuguese name replaces a generic association; replication abstracts commercial organization, not uniformly shared prosperity or an absence of imperial entanglement.",
+      "building2": "Escola Politécnica names Lisbon's technical and scientific school established in 1837, within wider reforms of military and higher education. Its attested Portuguese title anchors practical learning. Repeating the institution is a gameplay abstraction, not a claim of universal higher education or immediate nationwide industrial transformation.",
+      "quarter": "Ribeira names Porto's historic riverside area, where dense urban life developed around exchange and the Douro. Its Portuguese place-name replaces a generic riverside quarter. Replication abstracts related functions elsewhere rather than claiming identical districts or presenting the wider Atlantic economy as free of colonial coercion.",
+      "improvement": "Companha is a Portuguese term for a fishing crew or association of fishers. Applied to an improvement, it represents coordinated coastal work rather than a particular boat design or a modern cooperative charter. Generic fishing assets approximate production without erasing differences in ownership, bargaining power, and working conditions.",
+      "military": "Portuguese caçadores were light infantry associated particularly with the Peninsular War and subsequent military traditions. Their equipment and organization evolved. Native line-infantry progression provides approximate visuals and statistics; it does not recreate a particular caçador battalion, its characteristic uniform, or a permanent specialist formation across all tiers.",
+      "scout": "Surveying supported navigation, public works, and the practical mapping of coasts and infrastructure. Such knowledge could also serve colonial projects. The Coastal Surveyor emphasizes technical reconnaissance without claiming that all survey work was civilian, politically innocent, or performed by a standardized national explorer corps."
+    },
+    "civicHistory": [
+      "Atlantic commerce remained important after Brazil's independence. Portuguese merchants and state planners sought new commercial arrangements within an increasingly competitive and unequal international economy.",
+      "Commercial associations gave organized business a civic voice. Their monumental buildings advertised confidence even when wider economic growth remained fragile and geographically uneven.",
+      "The 1826 charter established a monarchical constitutional framework. Conflict over legitimacy and the balance of royal and representative authority continued well beyond its promulgation.",
+      "Technical instruction offered tools for public works and industrial development. The spread of expertise did not itself resolve questions of finance, labor conditions, or social access.",
+      "Fishing and processing linked coastal households to larger markets. Industrial change brought new possibilities alongside demanding work and exposure to commercial volatility.",
+      "Civic modernization involved infrastructure, education, and political demands, not a single completed reform. The republican revolution of 1910 exposed deep dissatisfaction with the monarchy's settlement."
+    ],
+    "sources": ["https://whc.unesco.org/en/list/755/", "https://www.britannica.com/place/Portugal/Constitutionalism", "https://pt.wikipedia.org/wiki/Associa%C3%A7%C3%A3o_Comercial_do_Porto", "https://eric.ed.gov/?id=EJ975425", "https://www.infopedia.pt/dicionarios/lingua-portuguesa/companha"]
+  },
+  "HUNGARY": {
+    "ability": [["plot", "PRODUCTION", 1, "river"], ["worker", "SCIENCE", 1], ["growth", 10]],
+    "buildings": [
+      [["plot", "PRODUCTION", 1, "farm"], ["yield", "FOOD", 4]],
+      [["worker", "SCIENCE", 2], ["wonder", 15]]
+    ],
+    "quarter": [["connected", "PRODUCTION", 2], ["worker", "CULTURE", 2]],
+    "military": [["combat", 5, "defend"], ["heal", 10]],
+    "scout": [["sight", 2], ["move", 1]],
+    "improvement": ["Konyhakert", "FARM", "FOOD", 3, ["connected", "GOLD", 1]],
+    "civics": [
+      ["Reform Diets", [], [["worker", "CULTURE", 1]]],
+      ["The March Laws", [1], [["growth", 15]]],
+      ["Learned Societies", [1], [["worker", "SCIENCE", 1]]],
+      ["Steam Milling", [2], [["plot", "PRODUCTION", 1, "farm"]]],
+      ["Public Subscription", [3], [["wonder", 20], ["yield", "CULTURE", 2]]],
+      ["Danube Metropolis", [4, 5], [["connected", "PRODUCTION", 2], ["resource", 2]]]
+    ],
+    "traditions": [
+      ["Mill Engineering", 2, [["plot", "PRODUCTION", 1, "farm"]]],
+      ["Learned Societies", 3, [["worker", "SCIENCE", 2]]],
+      ["Public Subscription", 4, [["wonder", 20]]],
+      ["Danube Provisioning", 5, [["connected", "FOOD", 2], ["growth", 10]]]
+    ],
+    "history": "Hungary's nineteenth-century reform movement sought changes in law, language, economic development, and the relationship with Habsburg rule. The revolution of 1848 and its defeat exposed conflicts that the Compromise of 1867 later addressed through a dual monarchy. Hungary gained extensive internal autonomy, while foreign affairs and military questions remained shared imperial concerns. The unification of Buda, Pest, and Óbuda in 1873 created a capital whose bridges, mills, boulevards, and cultural institutions advertised rapid metropolitan growth. Agriculture and food processing remained crucial even as engineering and scholarship flourished. Political participation was restricted, rural inequality endured, and Magyarization policies disadvantaged many non-Magyar communities. This kit combines grain processing with learned societies rather than reducing Hungary to cavalry or a claim of continuous independence. Honvéd infantry and the generic building models are gameplay approximations, not exact representations of Hungarian formations or Budapest's architecture.",
+    "elementHistory": {
+      "building1": "Pesti Hengermalom refers to Pest's pioneering steam-powered roller-milling enterprise, operating from 1841. Its attested Hungarian name connects grain processing with joint-stock finance and engineering. Generic factory assets are functional approximations, not a reconstruction of the mill; replication represents the wider milling sector rather than duplicate historical companies.",
+      "building2": "Magyar Tudós Társaság was the original name of the Hungarian learned society that became the Academy of Sciences. Its foundation is associated with Széchenyi's 1825 donation. The attested title anchors scholarship and language cultivation without implying universal access or political neutrality toward the kingdom's other linguistic communities.",
+      "quarter": "Városnegyed is the Hungarian word for a town quarter or neighborhood, used as a functional label rather than an attested Danube district title. The combination links milling, scholarship, and civic culture in the growing capital without suggesting that metropolitan prosperity characterized every community in the kingdom.",
+      "improvement": "Konyhakert is the Hungarian term for a kitchen or vegetable garden, not a named historical institution. Such cultivation helped provision households and expanding towns. The farm donor abstracts this work without claiming that all gardens were commercial enterprises, that smallholders were uniformly prosperous, or that Hungary followed one standardized design.",
+      "military": "Honvéd institutions drew their name and symbolism from the defense of the homeland, with distinct organizations in 1848 and the Dual Monarchy period. This unit is an umbrella representation. Native infantry models do not reproduce the uniforms, language arrangements, or changing command structures of those forces.",
+      "scout": "County administration, infrastructure projects, and economic development relied on surveying and local geographical knowledge. Such work helped connect countryside and capital while also strengthening state oversight. The County Surveyor turns that expertise into exploration mechanics, not an attested independent military reconnaissance corps or bespoke historical model."
+    },
+    "civicHistory": [
+      "Reform-era diets debated legal and economic change within a society still marked by noble privilege. National advancement did not have one uncontested meaning.",
+      "The March Laws of 1848 challenged old institutions and promised major reforms. Revolution and imperial conflict prevented a straightforward, peaceful implementation.",
+      "Learned societies cultivated language, scholarship, and scientific exchange. Their projects helped build national institutions while reflecting the social resources of educated and propertied supporters.",
+      "Steam milling connected agricultural output with technical innovation and commercial transport. The wealth it generated was unevenly distributed between owners, workers, and rural producers.",
+      "Subscriptions and patronage funded cultural institutions and public projects. Civic participation in these initiatives remained shaped by class and access to influence.",
+      "Budapest's growth followed unification and the Dual Monarchy settlement. Its monumental achievements coexist historically with restricted suffrage and policies of linguistic assimilation."
+    ],
+    "sources": ["https://whc.unesco.org/en/list/400/", "https://www.britannica.com/place/Hungary/The-Dual-Monarchy-1867-1918", "https://www.britannica.com/place/Austria-Hungary", "https://tozsdemuzeum.hu/en/kibocsato/pesti-hengermalom-tarsasag/", "https://en.wikipedia.org/wiki/Hungarian_Academy_of_Sciences", "https://mta.hu/mta_hirei/a-magyar-szellemi-elet-egyik-meghatarozo-kozpontja-ma-200-eves-a-magyar-tudomanyos-akademia-114839", "https://en.wiktionary.org/wiki/v%C3%A1rosnegyed", "https://en.wiktionary.org/wiki/konyhakert"]
+  },
+  "TAHITI": {
+    "ability": [["plot", "FOOD", 1, "fishing"], ["plot", "CULTURE", 1, "farm"], ["growth", 10]],
+    "buildings": [
+      [["yield", "HAPPINESS", 4], ["growth", 15]],
+      [["worker", "CULTURE", 2], ["connected", "HAPPINESS", 1]]
+    ],
+    "quarter": [["plot", "GOLD", 1, "fishing"], ["connected", "CULTURE", 2]],
+    "military": [["combat", 5, "defend"], ["combat", 3, "coast"]],
+    "scout": [["sight", 2], ["move", 1]],
+    "improvement": ["Faʻaʻapu", "FARM", "FOOD", 3, ["growth", 15]],
+    "civics": [
+      ["Valley Communities", [], [["plot", "FOOD", 1, "farm"]]],
+      ["Reef Passage Knowledge", [1], [["plot", "GOLD", 1, "fishing"]]],
+      ["Pōmare Consolidation", [1], [["connected", "HAPPINESS", 1]]],
+      ["Island Exchange", [2], [["trade", 1], ["resource", 1]]],
+      ["Genealogical Authority", [3], [["worker", "CULTURE", 2]]],
+      ["Island Negotiations", [4, 5], [["connected", "CULTURE", 2], ["growth", 15]]]
+    ],
+    "traditions": [
+      ["Lagoon Stewardship", 2, [["plot", "FOOD", 1, "fishing"]]],
+      ["Oral Genealogies", 3, [["worker", "CULTURE", 2]]],
+      ["Interdistrict Hospitality", 4, [["connected", "HAPPINESS", 2]]],
+      ["Breadfruit and Gardens", 5, [["plot", "FOOD", 1, "farm"], ["growth", 10]]]
+    ],
+    "history": "Tahiti's late precolonial society combined chiefly authority, genealogical claims, religious institutions, cultivated valleys, and knowledge of lagoons and ocean routes. The Pōmare dynasty consolidated royal power amid changing alliances and increasing foreign contact. Protestant missionaries became influential during the early nineteenth century, transforming religion, literacy, and royal government without simply replacing all Mā'ohi practices. Queen Pōmare IV's reign confronted French demands and the protectorate imposed in 1842, followed by armed conflict and continuing restrictions on sovereignty. Pōmare V's abdication preceded annexation in 1880. These transitions belong to Tahiti and neighboring Society Island connections, not a generic Hawaiian monarchy. Raiatea's Taputapuātea provides regional context for Mā'ohi ceremonial networks, not a Tahitian location. This kit emphasizes food production, hospitality, and cultural continuity. ʻAito is a translated warrior label, not an attested royal regiment, while infantry tiers and generic native buildings are explicitly approximate gameplay representations.",
+    "elementHistory": {
+      "building1": "Fare potee names an open, rounded-ended house form associated with gathering and communal activity in Tahitian architectural vocabulary. Its shade and openness suit a social role. The building is an architectural abstraction, not a claim that one surviving modern reconstruction exactly reproduces every nineteenth-century meeting place.",
+      "building2": "Marae were ceremonial and political places within Mā'ohi societies, connecting chiefly authority with ancestors and deities. Their functions and forms varied across islands. This building represents late precolonial foundations and inherited cultural significance, not unchanged royal institutions after Christian conversion or a claim that Raiatea's Taputapuātea stands on Tahiti.",
+      "quarter": "ʻĀpoʻoraʻa is an attested Tahitian assembly term, used here as a functional gathering-place label rather than a particular royal institution's title. Chiefly households and political audiences shaped changing royal centers. The abstraction does not project the modern territorial legislature unchanged into the Pōmare monarchy or reconstruct a fixed district.",
+      "improvement": "Faʻaʻapu is the Tahitian garden term, used here for cultivated valley foods rather than a conjectural historical institution. Breadfruit, taro, and other crops depended on household labor and access to land. Generic farm assets emphasize inhabited, worked landscapes rather than an untouched paradise awaiting outside development.",
+      "military": "ʻAito is an attested Tahitian word for a warrior or champion, applied functionally to armed followers rather than presented as a named royal regiment. Chiefs and monarchs used changing weapons amid foreign intervention. Native infantry models are approximate; later tiers do not imply an independent twentieth-century Tahitian army.",
+      "scout": "Knowledge of reef passages, winds, landmarks, and interisland relationships underpinned Tahitian mobility. Navigation also connected fishing and visiting with wider voyaging traditions. The Reef Navigator adapts that expertise to a recon role, using native explorer art rather than a newly modeled canoe or an official royal scout service."
+    },
+    "civicHistory": [
+      "Valley communities cultivated food and maintained local relationships within chiefly political structures. Their economies were neither wholly isolated nor simply directed by a single centralized monarchy.",
+      "Reef passages connected lagoon livelihoods with coastal and interisland travel. Environmental expertise was practical knowledge accumulated through work, memory, and social transmission.",
+      "Pōmare consolidation involved alliance, conflict, and growing foreign influence. The dynasty's authority should not be projected backward as timeless government over an undifferentiated Polynesia.",
+      "Exchange brought new goods and opportunities as well as dependence and intervention. Foreign ships did not enter an empty or politically passive island world.",
+      "Genealogies connected people to authority, land, and remembered relationships. Christian conversion changed religious institutions without making Mā'ohi identity disappear.",
+      "Protectorate arrangements and annexation followed coercive French pressure. Negotiation here represents constrained political agency, not voluntary and universally welcomed incorporation into colonial rule."
+    ],
+    "sources": ["https://whc.unesco.org/en/list/1529/", "https://www.britannica.com/place/When-did-Tahiti-become-a-French-protectorate", "https://www.britannica.com/place/When-did-Tahiti-become-a-French-colony", "https://www.farepotee-maevahuahine.com/cultural-heritage.php", "https://www.tahiti-infos.com/Histoire-et-culture-polynesienne-il-etait-une-fois-nos-fare-traditionnels_a91374.html", "https://pasefika.com/dictionary/TahitianWord/373/F", "https://fr.wiktionary.org/wiki/%CA%BBaito", "https://www.farevanaa.pf/tah/faataaraa"]
+  },
+  "GRAN_COLOMBIA": {
+    "ability": [["connected", "CULTURE", 2], ["settlements", 1], ["production", "LAND", 10]],
+    "buildings": [
+      [["worker", "SCIENCE", 2], ["yield", "HAPPINESS", 2]],
+      [["connected", "GOLD", 2], ["resource", 2]]
+    ],
+    "quarter": [["connected", "HAPPINESS", 2], ["connected", "PRODUCTION", 1]],
+    "military": [["combat", 5, "attack"], ["move", 1]],
+    "scout": [["move", 1], ["sight", 1], ["heal", 10]],
+    "improvement": ["Posta", "ENTREPOT", "GOLD", 2, ["connected", "CULTURE", 1]],
+    "civics": [
+      ["Angostura Congress", [], [["connected", "CULTURE", 1]]],
+      ["Llanero Alliances", [1], [["production", "LAND", 20]]],
+      ["Cúcuta Constitution", [1], [["yield", "HAPPINESS", 3]]],
+      ["Provincial Correspondence", [2], [["connected", "PRODUCTION", 2]]],
+      ["Public Instruction", [3], [["worker", "SCIENCE", 2]]],
+      ["Republican Institutions", [4, 5], [["settlements", 1], ["connected", "GOLD", 2]]]
+    ],
+    "traditions": [
+      ["Provincial Correspondence", 2, [["connected", "CULTURE", 2]]],
+      ["Public Instruction", 3, [["worker", "SCIENCE", 2]]],
+      ["Llanero Mobility", 4, [["production", "LAND", 20]]],
+      ["Customs Administration", 5, [["resource", 2], ["yield", "GOLD", 3]]]
+    ],
+    "history": "The Republic of Colombia proclaimed in 1819, conventionally called Gran Colombia, joined the independence struggles of territories corresponding broadly to Colombia, Venezuela, Ecuador, and Panama. The Congress of Cúcuta in 1821 established a centralized representative republic with Bogotá as its capital. Simón Bolívar and Francisco de Paula Santander became central figures in an ambitious but fragile institutional experiment. Customs revenue, schooling, and communication across difficult terrain mattered alongside battlefield victories. Independence did not immediately abolish slavery or equalize the position of Indigenous communities and rural workers. Regional leaders disputed the distribution of power, while the conflict between constitutional government and Bolívar's later dictatorship deepened political divisions. Venezuela and Ecuador separated in 1830. This kit explores integration as a difficult civic project rather than inevitable continental unity. Llanero cavalry uses generic mounted art; later armored donor statistics are progression abstractions, not equipment that this short-lived republic possessed.",
+    "elementHistory": {
+      "building1": "Colegio de Boyacá was established in Tunja by Santander's government in 1822, making it a specific institutional expression of republican education. Its Spanish name replaces a generic school. Replication abstracts that program rather than proving uniform educational access, universal literacy, or duplicate colleges under the same title.",
+      "building2": "Aduana is the Spanish term for a customs office, here representing revenue collected from international trade. Port income mattered to the new republic and intensified disputes over regional resources. This is a translated functional label, not a unique nationwide institutional title or a claim that smuggling disappeared.",
+      "quarter": "Cabildo names the municipal council inherited from Spanish American government, whose functions included markets, taxation, and local regulation. Independence transformed rather than erased this institutional landscape. The quarter abstracts civic administration without claiming that all residents enjoyed equal representation or that republican cities adopted one standardized plan.",
+      "improvement": "Posta is the Spanish relay-station term associated with postal travel. Messengers connecting mountain capitals and coastal ports relied on routes, lodging, and successive local assistance. The improvement abstracts such services rather than claiming that Gran Colombia completed a uniform modern postal network throughout all its claimed territory.",
+      "military": "Llanero horsemen from the plains played important roles in the independence wars, with loyalties and alliances that changed over time. Their mobility was not a uniquely republican inheritance. Cuirassier models approximate mounted combat but do not reproduce llanero dress, riding practices, or equipment.",
+      "scout": "Postillón is the attested Spanish term for a postal rider serving successive relay stations. Here it functionally represents couriers carrying correspondence across difficult provincial routes, not a named Gran Colombian scout formation. Native explorer art is approximate and does not reconstruct a mounted postal service or its equipment."
+    },
+    "civicHistory": [
+      "The 1819 Angostura Congress gave institutional shape to a republic while independence campaigns continued. Claimed unity preceded the full establishment of civil government.",
+      "Llanero participation reflected shifting alliances, local leadership, and social demands. Plains fighters should not be portrayed as naturally or uniformly attached to one political cause.",
+      "The Cúcuta constitution organized a centralized representative republic in 1821. Representation and citizenship nevertheless operated within exclusions inherited from colonial society.",
+      "Correspondence made regional interests visible to central officials. Slow travel and difficult terrain magnified disagreements that could not be resolved by constitutional language alone.",
+      "Public instruction promised to form republican citizens. Limited funding and unequal access meant that educational ideals advanced unevenly across the new state.",
+      "Disputes over executive power and provincial autonomy fractured the republic. Its dissolution warns against treating a shared struggle for independence as a settled agreement about government."
+    ],
+    "sources": ["https://www.britannica.com/place/Gran-Colombia", "https://boyaca7dias.com.co/2022/03/30/algunas-fuentes-documentales-para-la-historia-del-colegio-de-boyaca/", "https://www.rae.es/desen/aduana", "https://www.britannica.com/topic/cabildo-local-government", "https://dle.rae.es/estafeta"]
+  },
+  "VATICAN": {
+    "ability": [["worker", "CULTURE", 2], ["worker", "SCIENCE", 1], ["wonder", 15]],
+    "buildings": [
+      [["worker", "SCIENCE", 3], ["yield", "CULTURE", 2]],
+      [["worker", "CULTURE", 3], ["wonder", 20]]
+    ],
+    "quarter": [["worker", "SCIENCE", 2], ["yield", "HAPPINESS", 5]],
+    "military": [["combat", 7, "defend"], ["heal", 10]],
+    "scout": [["sight", 2], ["move", 1]],
+    "improvement": ["Giardini Vaticani", "OPEN_AIR_MUSEUM", "CULTURE", 3, ["yield", "HAPPINESS", 2]],
+    "civics": [
+      ["The Lateran Settlement", [], [["yield", "HAPPINESS", 4]]],
+      ["Manuscript Stewardship", [1], [["worker", "SCIENCE", 2]]],
+      ["Museum Conservation", [1], [["wonder", 20]]],
+      ["Scholarly Catalogues", [2], [["worker", "CULTURE", 2]]],
+      ["Radio and Communications", [3], [["yield", "CULTURE", 4], ["resource", 1]]],
+      ["Cultural Custodianship", [4, 5], [["worker", "SCIENCE", 2], ["wonder", 15]]]
+    ],
+    "traditions": [
+      ["Cataloguing", 2, [["worker", "SCIENCE", 2]]],
+      ["Conservation Workshops", 3, [["wonder", 20]]],
+      ["Public Collections", 4, [["worker", "CULTURE", 2], ["yield", "HAPPINESS", 2]]],
+      ["Scholarly Exchange", 5, [["yield", "SCIENCE", 4], ["resource", 1]]]
+    ],
+    "history": "Vatican City State was created by the Lateran Treaty signed in February 1929 and ratified that June. It is distinct both from the Holy See, whose diplomatic and religious history is much older, and from the territorial Papal States ended in 1870. The settlement with Mussolini's Italy secured a small sovereign territory while entangling the new arrangement with a fascist political context. Libraries, museums, gardens, and palaces inherited from earlier centuries supported the state's unusual concentration of cultural institutions. Railway access and modern communications expressed practical independence without transforming the microstate into an expansionist power. Religious authority should not be confused with inclusive democratic government or universal agreement about the Church's political role. This kit prioritizes specialists, conservation, and research rather than territorial conquest. Its eight settlement labels are attested precincts within Vatican City, not eight separate cities; expansion and generic guard models are explicitly gameplay abstractions.",
+    "elementHistory": {
+      "building1": "Biblioteca Apostolica Vaticana is the institution's attested Italian name. The library long predates the state created in 1929 and preserves manuscripts and printed collections used by scholars. Generic laboratory assets approximate research mechanics, not its architecture or a claim that the Lateran settlement founded it.",
+      "building2": "Musei Vaticani is the Italian institutional name for collections assembled across earlier papacies. Conservation and interpretation continued within the new state. The building emphasizes stewardship without suggesting that all acquisition practices were unproblematic, that collections began in 1929, or that access historically served every public equally.",
+      "quarter": "Cortile del Belvedere names the historic courtyard ensemble linking papal spaces and later museum functions. It predates the modern state by centuries. The quarter uses its attested Italian name to connect scholarship and collections, not to designate a new administrative district or another independent city.",
+      "improvement": "Giardini Vaticani is the Italian name of the Vatican Gardens, a cultivated landscape inherited and altered over centuries within today's small state. Generic open-air-museum assets approximate a cultural function, not an exact garden plan, additional city, or evidence that Vatican City pursued agricultural expansion abroad.",
+      "military": "Guardia Svizzera is the Italian name of the Swiss Guard, founded in 1506 and continuing papal protection after 1929. It is not a conquest army. Generic infantry progression approximates protective service without reproducing ceremonial uniforms, halberds, recruitment rules, or changes in the institution's precise organization.",
+      "scout": "Scholarly and cultural exchange connects Vatican institutions with people far beyond the microstate. A delegate makes that outward relationship playable without implying a territorial scouting mission. Native explorer art is approximate; the unit is not an attested corps of Vatican military explorers or a substitute for diplomatic history."
+    },
+    "civicHistory": [
+      "The Lateran Treaty established Vatican City in 1929 and resolved the Roman Question. Its agreement with fascist Italy is an essential part of the political context.",
+      "Manuscript stewardship depends on preservation, description, and scholarly access. The library's long history must not be collapsed into the much younger history of the state.",
+      "Museum conservation brings technical work to inherited collections. It can preserve objects while also prompting difficult questions about acquisition, interpretation, and whose histories are represented.",
+      "Catalogues make collections discoverable and usable. Their labor is less monumental than palace building but fundamental to sustained historical and scientific research.",
+      "Modern communications and treaty-guaranteed transport access supported the new state's practical independence. They did not restore the territorial extent or governmental structure of the Papal States.",
+      "Custodianship here means sustained cultural work, not a claim of uncontested moral authority. The kit deliberately offers no settlement-cap bonus or historical rationale for conquest."
+    ],
+    "sources": ["https://whc.unesco.org/en/list/286/", "https://www.vaticanstate.va/en/state-and-government/general-informations.html", "https://www.vatican.va/roman_curia/secretariat_state/archivio/documents/rc_seg-st_19290211_patti-lateranensi_it.html", "https://www.vatican.va/roman_curia/secretariat_state/documents/ferrovia/ferrovia_it.html", "https://www.museivaticani.va/content/museivaticani/en/eventi-e-novita/iniziative/Eventi/2020/restauro-pigna.html", "https://www.vaticanlibrary.va/", "https://www.vatican.va/content/romancuria/it/guardia-svizzera-pontificia/corpo-della-guardia-svizzera-pontificia/profilo.html"]
+  },
+  "BERBER": {
+    "ability": [["plot", "FOOD", 1, "pasture"], ["connected", "HAPPINESS", 2], ["resource", 1]],
+    "buildings": [
+      [["connected", "HAPPINESS", 2], ["worker", "CULTURE", 1]],
+      [["resource", 2], ["connected", "GOLD", 2]]
+    ],
+    "quarter": [["connected", "FOOD", 2], ["connected", "CULTURE", 1]],
+    "military": [["combat", 6, "defend"], ["heal", 10]],
+    "scout": [["move", 1], ["sight", 2], ["ignore", "SAGEBRUSH_STEPPE"]],
+    "improvement": ["Agadir", "ENTREPOT", "FOOD", 3, ["resource", 1]],
+    "civics": [
+      ["Village Commons", [], [["plot", "FOOD", 1, "farm"]]],
+      ["Granary Custodianship", [1], [["resource", 2]]],
+      ["Confederate Arbitration", [1], [["connected", "HAPPINESS", 1]]],
+      ["Pastoral Agreements", [2], [["plot", "PRODUCTION", 1, "pasture"]]],
+      ["Caravan Hospitality", [3], [["trade", 1], ["connected", "GOLD", 1]]],
+      ["Networks of Autonomy", [4, 5], [["connected", "FOOD", 2], ["worker", "CULTURE", 1]]]
+    ],
+    "traditions": [
+      ["Granary Custodianship", 2, [["resource", 1], ["yield", "FOOD", 3]]],
+      ["Customary Arbitration", 3, [["connected", "HAPPINESS", 2]]],
+      ["Caravan Hospitality", 4, [["connected", "GOLD", 2]]],
+      ["Seasonal Commons", 5, [["plot", "FOOD", 1, "pasture"]]]
+    ],
+    "history": "Amazigh-speaking societies across North Africa did not form one nineteenth-century state. Atlas confederations, Kabyle villages, Saharan communities, and Ibadi oasis towns maintained different political and religious institutions. The Ayt Atta confederation combined pastoral interests with customary arbitration, including an appellate center at Igherm Amazdar. In Kabylia, resistance to French conquest and the 1871 uprising were followed by severe repression and land dispossession. Ayt Atta resistance at Bou Gafer in 1933 belongs to a later phase of colonial penetration in Morocco. M'Zab towns illustrate another durable tradition of community-oriented settlement and commerce, not a universal model for all Amazigh people. This composite kit therefore emphasizes negotiated commons, collective stores, and exchange without inventing a unified Berber empire. Its settlement labels intentionally span different jurisdictions and histories. Riflemen and generic buildings approximate varied local practices rather than reconstructing one standardized army, assembly, or granary.",
+    "elementHistory": {
+      "building1": "Tajmaât, a conventional rendering of the Kabyle assembly term, can name both the institution and its meeting building. Membership and authority were historically restricted, especially by gender. Its use here is regionally specific, not a claim that every Amazigh society shared one word, constitution, or egalitarian system.",
+      "building2": "Ssuq is an attested Kabyle word for a market, used here as a functional translation rather than a pan-Amazigh institutional title. Markets connected local producers, mountain communities, and wider routes. The commerce abstraction does not make all Amazigh livelihoods desert trading or claim political unity among separate societies.",
+      "quarter": "Istinaf names the appellate institution documented among the Ayt Atta, associated with Igherm Amazdar. Its attested name anchors the quarter's arbitration theme. Replication is a gameplay abstraction, not evidence that every Amazigh society shared this court or belonged to a unified national administrative system.",
+      "improvement": "Agadir, plural igudar, denotes a fortified collective granary in the Chleuh-speaking context. Families could retain separate storage rights within shared defenses, so collective did not mean undifferentiated ownership. Generic entrepot assets approximate storage without extending this particular term or institution indiscriminately across all Amazigh societies.",
+      "military": "Aɛsekri is an attested Kabyle word for a soldier, used as a functional label, not a pan-Amazigh regiment title. Resistance involved different regional leaders and alliances. Generic infantry approximates firearm-equipped fighters without reconstructing Ayt Atta uniforms, imposing one language on all communities, or inventing a united national army.",
+      "scout": "Mountain passes and caravan routes required specialized environmental knowledge, trusted relationships, and familiarity with water and seasonal movement. These skills differed between regions. The guide joins them for exploration gameplay without claiming a unified scout corps or making every Amazigh community simultaneously mountain pastoralist and Saharan caravan trader."
+    },
+    "civicHistory": [
+      "Commons required locally negotiated rules over use and obligation. Their existence does not imply the absence of hierarchy, unequal rights, or disputes within communities.",
+      "Collective storage reduced risks to produce and valuables in particular regions. Custodianship depended on enforceable agreements rather than an unchanging communal instinct.",
+      "Ayt Atta arbitration included appellate institutions at Igherm Amazdar. This specific confederate practice should not be generalized into a constitution for every Amazigh-speaking society.",
+      "Seasonal pastoral movement depended on agreements about access and timing. Colonial boundaries and expanding state power could disrupt these negotiated landscapes.",
+      "Caravan hospitality supported trade through relationships and obligations. Oasis towns and mobile communities participated differently, and commerce coexisted with conflict and unequal social status.",
+      "Autonomy faced distinct colonial pressures in Algeria and Morocco. Resistance and institutional persistence should not be flattened into one continuous national war or a story ending with conquest."
+    ],
+    "sources": ["https://whc.unesco.org/en/list/188/", "https://journals.openedition.org/encyclopedieberbere/1214?gathStatIcon=true", "https://www.erudit.org/fr/revues/etudfr/2021-v57-n1-etudfr05909/1076114ar/", "https://journals.openedition.org/encyclopedieberbere/901", "https://journals.openedition.org/encyclopedieberbere/2184?lang=fr", "https://www.dictionnaire-kabyle.com/aɛsekri.html", "https://www.dictionnaire-kabyle.com/ssuq.html"]
+  },
+  "SWEDEN": {
+    "ability": [["worker", "SCIENCE", 2], ["plot", "PRODUCTION", 1, "vegetated"]],
+    "buildings": [
+      [["worker", "PRODUCTION", 2], ["yield", "PRODUCTION", 3]],
+      [["worker", "SCIENCE", 2], ["yield", "HAPPINESS", 3]]
+    ],
+    "quarter": [["worker", "SCIENCE", 2], ["connected", "PRODUCTION", 2]],
+    "military": [["combat", 5, "defend"], ["heal", 10]],
+    "scout": [["sight", 2], ["ignore", "FOREST"], ["ignore", "TAIGA"]],
+    "improvement": ["Statens skogsförsöksanstalt", "INSTITUTE", "SCIENCE", 3, ["plot", "PRODUCTION", 1, "vegetated"]],
+    "civics": [
+      ["Forest and Foundry", [], [["plot", "PRODUCTION", 1, "vegetated"]]],
+      ["Engineering Workshops", [1], [["worker", "PRODUCTION", 2]]],
+      ["Popular Education", [1], [["worker", "SCIENCE", 1]]],
+      ["Cooperative Provision", [2], [["connected", "FOOD", 2]]],
+      ["Parliamentary Reform", [3], [["connected", "HAPPINESS", 2]]],
+      ["Research and Industry", [4, 5], [["worker", "SCIENCE", 2], ["resource", 2]]]
+    ],
+    "traditions": [
+      ["Precision Engineering", 2, [["worker", "PRODUCTION", 2]]],
+      ["Study Associations", 3, [["worker", "SCIENCE", 2]]],
+      ["Cooperative Provision", 4, [["connected", "FOOD", 2]]],
+      ["Forest Knowledge", 5, [["plot", "SCIENCE", 1, "vegetated"]]]
+    ],
+    "history": "Sweden's modern transformation drew on long-established mining and metalworking regions such as Falun, alongside forests, transport improvements, and expanding technical expertise. Nineteenth-century industrialization created internationally connected firms but also difficult working conditions, urban pressures, and mass emigration. Popular education, voluntary associations, and labor organization helped widen participation in public life. Constitutional change in 1809 limited royal power, while parliamentary reform in 1865–1866 replaced the four-estate Riksdag with two chambers without immediately establishing universal suffrage. The later expansion of political rights was a struggle rather than an automatic outcome of prosperity. State policies toward Sámi communities and northern resources complicate any exclusively benevolent account of national development. This kit connects engineering, specialist research, and cooperative provisioning, not a timeless welfare state. Generic native infantry and buildings provide approximations; forest research is a gameplay synthesis of environmental knowledge and modern scientific institutions.",
+    "elementHistory": {
+      "building1": "Motala Verkstad began in 1822 in connection with construction of the Göta Canal and developed broader engineering production. Its attested Swedish name anchors the workshop building. Generic ironworks assets do not reconstruct company premises; replication abstracts engineering capacity rather than claiming multiple identical historical firms.",
+      "building2": "Folkhögskola is the Swedish term for a folk high school, associated with adult and popular education beyond older elite institutions. The building emphasizes wider participation without equating learning with immediate political equality. Educational opportunity and the purposes of different schools remained historically varied rather than uniformly emancipatory.",
+      "quarter": "Bruk is a Swedish term associated with industrial works and the communities around them. Historical works sometimes supported schools, linking education to employers and production. This quarter abstracts that relationship without idealizing paternalism, child labor, or the unequal distribution of power within an industrial settlement.",
+      "improvement": "Statens skogsförsöksanstalt was the Swedish state forestry research institution's name from 1905 to 1937, following its establishment in 1902 under another title. Repeated improvements abstract its research functions, not duplicate agencies. Scientific management could strengthen commercial and state control and did not necessarily respect Sámi rights or local knowledge.",
+      "military": "Indelt soldat denotes a soldier within Sweden's allotment system, whose service was connected to a local support arrangement and soldier's croft. The system formally ended in 1901. Later tiers abstract subsequent infantry rather than extending it unchanged; native models do not reconstruct Swedish uniforms or household circumstances.",
+      "scout": "Surveyors and forest workers mapped resources and routes as industrial demand expanded. Their knowledge supported infrastructure while participating in contested uses of northern land. The Forest Surveyor becomes a recon unit for gameplay, not a neutral account of frontier development or a uniquely modeled historical scout corps."
+    },
+    "civicHistory": [
+      "Mining and forest resources supported long-term economic specialization. Falun's landscape records both technical achievement and the human and environmental demands of extractive production.",
+      "Engineering workshops brought practical skill into contact with scientific training. Their growth depended on workers, capital, transport, and markets rather than invention alone.",
+      "Popular education and voluntary learning expanded civic possibilities. Access and influence nevertheless varied by class, gender, region, and language.",
+      "Cooperative provision offered alternatives to individual dependence in changing markets. It belongs to modern organizational experimentation, not a timeless national habit shared by everyone.",
+      "The two-chamber reform of 1865–1866 ended the old estate structure. Property qualifications meant that it was not yet universal political equality.",
+      "Research-intensive industry developed alongside reform movements and labor struggles. This civic joins expertise to public institutions without projecting the later welfare state backward unchanged."
+    ],
+    "sources": ["https://whc.unesco.org/en/list/1027/", "https://www.britannica.com/place/Sweden/Parliamentary-reform", "https://uddautflykter.se/guide/ostergotland/motala/motala-industrimuseum/", "https://utbildningsguiden.skolverket.se/utbildning-for-vuxna/om-utbildningar-for-vuxna/om-folkhogskola", "https://www.diva-portal.org/smash/get/diva2:1532173/FULLTEXT01.pdf", "https://limhamnsmuseum.se/soldattorpet/", "https://www.skogen.se/glossary/statens-skogsforskningsinstitut-statens-skogsforsoksanstalt/"]
+  },
+  "AFGHANISTAN": {
+    "ability": [["connected", "GOLD", 2], ["plot", "FOOD", 1, "river"], ["resource", 1]],
+    "buildings": [
+      [["resource", 2], ["connected", "GOLD", 2]],
+      [["worker", "PRODUCTION", 2], ["production", "LAND", 15]]
+    ],
+    "quarter": [["connected", "HAPPINESS", 2], ["worker", "PRODUCTION", 1]],
+    "military": [["combat", 6, "defend"], ["heal", 10]],
+    "scout": [["move", 1], ["sight", 2], ["ignore", "SAGEBRUSH_STEPPE"]],
+    "improvement": ["Karez", "FARM", "FOOD", 3, ["growth", 15]],
+    "civics": [
+      ["Caravan Towns", [], [["resource", 1]]],
+      ["Irrigated Valleys", [1], [["plot", "FOOD", 1, "farm"]]],
+      ["Workshop Networks", [1], [["worker", "PRODUCTION", 1]]],
+      ["Orchard Markets", [2], [["connected", "GOLD", 2]]],
+      ["Schools and Reform", [3], [["worker", "SCIENCE", 2]]],
+      ["Independent Diplomacy", [4, 5], [["trade", 1], ["connected", "HAPPINESS", 2]]]
+    ],
+    "traditions": [
+      ["Garden Husbandry", 2, [["plot", "FOOD", 1, "farm"], ["growth", 10]]],
+      ["Caravan Brokerage", 3, [["resource", 1], ["connected", "GOLD", 1]]],
+      ["Craft Apprenticeship", 4, [["worker", "PRODUCTION", 2]]],
+      ["Reformist Learning", 5, [["worker", "SCIENCE", 2]]]
+    ],
+    "history": "Nineteenth-century Afghanistan combined important cities, irrigated farming, pastoral livelihoods, and trade routes across a politically diverse landscape. Rulers sought to consolidate authority while navigating British and Russian imperial pressure. Abdur Rahman Khan's government, established in 1880, centralized administration and military power through negotiation and severe coercion, including violence and displacement directed at Hazara communities. British influence restricted foreign relations even where direct colonial administration was absent. Amanullah Khan asserted full independence in 1919 and pursued reforms in education, law, and social life whose pace and political implications generated resistance. The kingdom was neither an isolated mountain fortress nor a homogeneous tribal society. This kit therefore pairs orchards, caravan commerce, and workshops with learning and diplomacy. The rifleman is a broad representation of changing armed forces, not a single timeless warrior type; its generic models and the reused buildings do not reconstruct Afghan material culture.",
+    "elementHistory": {
+      "building1": "Kārwānsarā is the Persian/Dari caravanserai term, a functional label for lodging, storage, and exchange along caravan routes. Such institutions connected Afghan towns with wider markets and practical hospitality. Generic port mechanics approximate trade infrastructure, not maritime geography or an assertion that all inns shared one official charter.",
+      "building2": "Mashīn-Khānah, machine house, was a local Dari name for Kabul's state workshop complex, developed under Abdur Rahman Khan. Arms manufacture formed only part of its broader production. The attested term replaces a generic royal workshop; factory assets remain approximate and do not imply evenly distributed industrial benefits.",
+      "quarter": "Chahar Suq is an attested name associated with Herat's central bazaar crossroads and cistern complex. The quarter extends that commercial setting to workshops and exchange for gameplay. It does not claim that every Afghan town had an identical district, that its institutions began in the nineteenth century, or that replication is literal.",
+      "improvement": "Karez systems carried groundwater through gently sloping underground channels to cultivated land. Their maintenance depended on labor and arrangements over access to water. The garden represents irrigated livelihoods without claiming that all Afghan agriculture used karez, that the technology was newly invented, or that water rights were uncontested.",
+      "military": "Piyāda-nizām is a functional Persian/Dari infantry label, not a newly invented Afghan regiment title. Rulers and local forces combined regular troops, retainers, and community mobilization in changing ways. Generic native models approximate firearm-equipped infantry without imposing one uniform, one command, or an exclusively martial identity on Afghan society.",
+      "scout": "Rāhnamā is an attested Persian word for a guide, used here functionally for route knowledge rather than an official scout corps. Travel required information about water, weather, and local relationships. Native explorer art approximates these skills without making civilian movement exclusively military or claiming a reconstructed Afghan uniform."
+    },
+    "civicHistory": [
+      "Caravan towns linked regional production with long-distance exchange. Their histories include urban scholarship and craft as well as strategic competition between rulers and neighboring empires.",
+      "Irrigation sustained orchards and fields in particular valleys. Water management required maintenance and negotiation, not simply the construction of channels by a centralized state.",
+      "Workshop networks connected skilled craftspeople with state demand. Centralization could provide resources while imposing coercive obligations and privileging some communities over others.",
+      "Orchard produce joined subsistence and commerce through town markets. Agriculture remained regionally varied and cannot be reduced to one crop or uniform rural social structure.",
+      "Amanullah's reforms included educational ambitions and challenges to established arrangements. Their contested reception should not be simplified into an opposition between progress and an unchanging society.",
+      "The 1919 settlement expanded Afghanistan's independent foreign relations. Sovereignty did not by itself resolve internal inequalities, disputes over reform, or the legacy of coercive state formation."
+    ],
+    "sources": ["https://www.britannica.com/biography/Abdur-Rahman-Khan", "https://www.britannica.com/biography/Amanullah-Khan", "https://www.britannica.com/event/Third-Anglo-Afghan-War", "https://www.kabularsenal.com/history-of-the-arsenal", "https://www.unesco.org/en/articles/unesco-will-launch-livelihood-resilience-and-heritage-project-southern-afghanistan", "https://abadis.ir/entofa/infantry/", "https://abadis.ir/entofa/guide/", "https://en.wiktionary.org/wiki/%D9%BE%DB%8C%D8%A7%D8%AF%D9%87", "https://en.wiktionary.org/wiki/%DA%A9%D8%A7%D8%B1%D9%88%D8%A7%D9%86%D8%B3%D8%B1%D8%A7", "https://www.archnet.org/publications/10406"]
+  },
+  "KAZAKH": {
+    "ability": [["plot", "FOOD", 1, "pasture"], ["plot", "GOLD", 1, "pasture"], ["resource", 1]],
+    "buildings": [
+      [["resource", 2], ["connected", "GOLD", 1]],
+      [["worker", "CULTURE", 2], ["yield", "HAPPINESS", 3]]
+    ],
+    "quarter": [["connected", "FOOD", 2], ["connected", "CULTURE", 1]],
+    "military": [["move", 1], ["combat", 5, "defend"], ["heal", 5]],
+    "scout": [["move", 1], ["sight", 1], ["ignore", "SAGEBRUSH_STEPPE"]],
+    "improvement": ["Qystau", "PASTURE", "FOOD", 3, ["plot", "PRODUCTION", 1, "pasture"]],
+    "civics": [
+      ["Seasonal Routes", [], [["plot", "FOOD", 1, "pasture"]]],
+      ["Winter Quarters", [1], [["growth", 15]]],
+      ["Steppe Fairs", [1], [["resource", 1], ["connected", "GOLD", 1]]],
+      ["Herd Stewardship", [2], [["plot", "PRODUCTION", 1, "pasture"]]],
+      ["Aitys and Print", [3], [["worker", "CULTURE", 2]]],
+      ["Literary Renewal", [4, 5], [["worker", "SCIENCE", 1], ["trade", 1]]]
+    ],
+    "traditions": [
+      ["Pasture Knowledge", 2, [["plot", "FOOD", 1, "pasture"]]],
+      ["Aitys Debate", 3, [["worker", "CULTURE", 2]]],
+      ["Caravan Connections", 4, [["connected", "GOLD", 2]]],
+      ["Winter Provisioning", 5, [["growth", 15], ["resource", 1]]]
+    ],
+    "history": "Kazakh societies entered the nineteenth century with pastoral economies organized around seasonal movement, kinship, political authority, and negotiated access to land and water. Herding was a sophisticated adaptation to variable environments, not an absence of economic organization. Russian imperial expansion progressively restricted khanly institutions, established administrative centers, and redirected commerce. Settler colonization and land law disrupted migration routes and wintering grounds, while trade fairs drew pastoral producers into changing markets. These developments created opportunities for some intermediaries alongside dispossession and widening inequalities. Poetic performance, Islamic learning, and new literary currents, associated prominently with Abai, contributed to cultural debate and renewal. The kit emphasizes pasture productivity, exchange, and cultural knowledge rather than an endless mounted-warrior stereotype. Its towns include colonial centers within Kazakh networks, not eight sovereign capitals. Mounted art remains approximate, and later armored donor statistics do not claim historical mechanization of nineteenth-century retinues.",
+    "elementHistory": {
+      "building1": "Qoyandy, also rendered Koyandy, names the major fair established near Karkaraly in 1848 and held into 1930. Its trade connected pastoral producers with wider markets and cultural gatherings. Repetition abstracts fair functions, not duplicate historical sites or a claim that colonial commercial integration benefited all participants equally.",
+      "building2": "Aitys is the Kazakh improvisational contest in which aqyns exchange sung or spoken verse, commonly with dombra accompaniment. The attested performance name is applied metonymically to a venue. Generic opera-house assets do not imply that these gatherings required purpose-built theaters or followed one centralized national program.",
+      "quarter": "Järmeñke is the Kazakh word for a fair or market, used as a functional label rather than a particular administrative district title. Exchange could bring performance, news, and negotiation together. The quarter does not turn mobile life into an exclusively urban culture or imply one centralized government for every gathering.",
+      "improvement": "Qystau denotes winter quarters within Kazakh seasonal pastoral movement, joining shelter and access to fodder with a wider mobile geography. The term is attested rather than reconstructed. Generic pasture assets approximate its economic role without implying that colonial sedentarization was voluntary or that all winter sites shared one design.",
+      "military": "Sarbaz is a Kazakh word for soldier or warrior, not the attested title of one national cavalry regiment. The mounted gameplay interpretation represents followers serving different leaders. Cuirassier models do not reconstruct Kazakh dress, and later armored donor statistics do not describe nineteenth-century retinue equipment.",
+      "scout": "Steppe travel required knowledge of seasonal water, pasture, weather, and social agreements governing movement. Guides made trade and communication possible alongside military travel. The Steppe Guide represents those skills through reconnaissance mechanics, not a documented uniformed corps or an assertion that pastoral knowledge belonged exclusively to warriors."
+    },
+    "civicHistory": [
+      "Seasonal routes joined pastures suited to different times of year. Their organization depended on social rights and environmental knowledge rather than aimless wandering.",
+      "Winter quarters anchored mobile economies through shelter and fodder. Colonial appropriation could disrupt the relationship between these sites and summer grazing grounds.",
+      "Fairs connected livestock production with imperial markets and imported goods. Greater trade could coexist with debt, unequal terms, and the concentration of commercial power.",
+      "Herd stewardship involved decisions about species, movement, and risk. Settler expansion and administrative land rules constrained the flexibility on which pastoral production depended.",
+      "Aitys and other poetic forms provided arenas for memory and argument. Print introduced additional channels without rendering oral performance obsolete or politically uniform.",
+      "Literary renewal associated with figures such as Abai engaged learning, ethics, and social criticism. It was not simply the passive reception of imperial educational influence."
+    ],
+    "sources": ["https://journals.openedition.org/asiecentrale/3073", "https://dergipark.org.tr/en/pub/bilig/issue/87991/1577405", "https://en.wikipedia.org/wiki/Koyandy_fair", "https://ich.unesco.org/en/RL/aitysh-aitys-art-of-improvisation-00997", "https://www.richtmann.org/journal/index.php/jesr/article/view/13216", "https://en.wiktionary.org/wiki/%D1%81%D0%B0%D1%80%D0%B1%D0%B0%D0%B7", "https://en.wiktionary.org/wiki/%D0%B6%D3%99%D1%80%D0%BC%D0%B5%D2%A3%D0%BA%D0%B5"]
+  },
+  "SCOTLAND": {
+    "ability": [["worker", "SCIENCE", 2], ["connected", "PRODUCTION", 1], ["production", "SEA", 15]],
+    "buildings": [
+      [["worker", "SCIENCE", 2], ["worker", "PRODUCTION", 1]],
+      [["production", "SEA", 30], ["yield", "PRODUCTION", 3]]
+    ],
+    "quarter": [["wonder", 25], ["connected", "SCIENCE", 2]],
+    "military": [["combat", 5, "defend"], ["heal", 10]],
+    "scout": [["sight", 2], ["move", 1], ["ignore", "FOREST"]],
+    "improvement": ["Croft", "FARM", "FOOD", 3, ["connected", "HAPPINESS", 1]],
+    "civics": [
+      ["Union and Burghs", [], [["connected", "GOLD", 1]]],
+      ["Enlightenment Networks", [1], [["worker", "SCIENCE", 2]]],
+      ["Clyde Workshops", [1], [["production", "SEA", 20]]],
+      ["Practical Learning", [2], [["worker", "PRODUCTION", 1], ["yield", "SCIENCE", 2]]],
+      ["Railway Engineering", [3], [["wonder", 20]]],
+      ["Industrial Associations", [4, 5], [["connected", "PRODUCTION", 2], ["worker", "CULTURE", 1]]]
+    ],
+    "traditions": [
+      ["Practical Learning", 2, [["worker", "SCIENCE", 2]]],
+      ["Shipwright Skill", 3, [["production", "SEA", 25]]],
+      ["Mutual Improvement", 4, [["worker", "CULTURE", 1], ["yield", "HAPPINESS", 3]]],
+      ["Structural Engineering", 5, [["wonder", 20]]]
+    ],
+    "history": "The 1707 union joined Scotland and England within Great Britain while preserving important Scottish legal, religious, and educational institutions. Modern Scotland was therefore not an independent state throughout this period, even as its civic and cultural life remained distinctive. Enlightenment scholarship, universities, practical education, and urban associations helped connect intellectual exchange with industrial development. Glasgow's shipbuilding and heavy engineering became internationally important, while the Forth Bridge embodied the scale of late nineteenth-century technical achievement. These successes depended on labor and imperial markets and were entangled with slavery, colonial exploitation, and unequal wealth. The Highland Clearances displaced communities during profound changes in landholding and rural production. This kit balances industrial expertise with civic learning and croft livelihoods rather than presenting modernization as universally beneficial. Scottish infantry represents regiments within British service, not an invented independent national army; native models and independent gameplay are acknowledged abstractions.",
+    "elementHistory": {
+      "building1": "Glasgow Athenaeum opened in 1847 with ambitions for education, improvement, and recreation that included science, literature, and the arts. Its attested local English name replaces a generic institute label. Replication abstracts adult learning, not identical historical branches or an invented Gaelic institution; access and participation remained socially uneven.",
+      "building2": "Fairfield names Govan's attested shipbuilding enterprise and site, developed during the nineteenth century and formally reorganized under that company title in 1886. Its English proper name is locally authentic. Generic port assets approximate engineering and shipbuilding, not the yard's architecture, working conditions, or a new ship model.",
+      "quarter": "Burgh is an attested Scots municipal term for a chartered town with civic privileges, not an invented translation of an industrial district. The quarter combines urban institutions with engineering and learning for gameplay. It does not imply a standardized plan, equal political access, or universally shared industrial prosperity.",
+      "improvement": "Crofting townships combined small holdings with shared resources in parts of the Highlands and islands. Their history includes displacement and struggles over land rights. The improvement represents rural communities, not a romantic claim that crofting was always secure, uniformly prosperous, or untouched by commercial and political pressure.",
+      "military": "Highlander is a distinctive local English label used here for soldiers in Highland regiments serving the British army, not the title of a newly invented formation. Their campaigns included imperial warfare. Native infantry models do not reconstruct their uniforms or represent every Scottish soldier as a Highlander.",
+      "scout": "Ghillie is an attested Scots-English term for an attendant, particularly a Highland chief's attendant, and a fishing or hunting guide. The recon role adapts this practical route knowledge rather than inventing a Gaelic military corps. Native explorer art does not reproduce a particular household servant or modern camouflage suit."
+    },
+    "civicHistory": [
+      "Union in 1707 created a shared British parliament while preserving key Scottish institutions. It did not erase distinct identity or guarantee equal political influence.",
+      "Enlightenment networks linked universities, clubs, publishers, and correspondence. Intellectual achievement grew from institutions and exchange rather than one uniformly progressive national character.",
+      "Clyde workshops and yards developed within global commercial and imperial systems. Their technical skill cannot be separated from workers' labor or the markets their products served.",
+      "Practical education connected scientific knowledge with craft and industry. Adult learning initiatives expanded opportunity without automatically dissolving class or gender barriers.",
+      "The Forth Bridge, opened in 1890, exemplifies railway engineering at extraordinary scale. Such projects also involved dangerous labor and the priorities of industrial transport networks.",
+      "Industrial associations and mutual-improvement groups offered forms of collective action. They existed alongside labor conflict, urban deprivation, and divergent ideas about political reform."
+    ],
+    "sources": ["https://whc.unesco.org/en/list/1485/", "https://www.britannica.com/event/Act-of-Union-Great-Britain-1707", "https://www.britannica.com/event/Highland-Clearances", "https://www.merriam-webster.com/dictionary/ghillie", "https://www.rcs.ac.uk/about/our-history/", "https://www.glasgowheritage.org.uk/a-whirlwind-history-of-the-glasgow-athenaeum-since-its-establishment/", "https://www.fairfieldgovan.co.uk/visit/what-to-see", "https://glasgowhistory.co.uk/fairfield", "https://www.dsl.ac.uk/entry/snd/burgh_n1"]
+  },
+  "DOMINICAN": {
+    "ability": [["plot", "GOLD", 1, "farm"], ["connected", "CULTURE", 1], ["trade", 1]],
+    "buildings": [
+      [["resource", 2], ["connected", "GOLD", 2]],
+      [["worker", "CULTURE", 2], ["yield", "HAPPINESS", 3]]
+    ],
+    "quarter": [["connected", "HAPPINESS", 2], ["plot", "GOLD", 1, "farm"]],
+    "military": [["combat", 6, "defend"], ["ignore", "RAINFOREST"]],
+    "scout": [["move", 1], ["sight", 1], ["ignore", "RAINFOREST"]],
+    "improvement": ["Huerto", "FARM", "FOOD", 3, ["connected", "GOLD", 1]],
+    "civics": [
+      ["Cibao Smallholders", [], [["plot", "GOLD", 1, "farm"]]],
+      ["Port Brokerage", [1], [["resource", 1], ["connected", "GOLD", 1]]],
+      ["Republican Associations", [1], [["worker", "CULTURE", 1]]],
+      ["Regional Markets", [2], [["trade", 1], ["connected", "FOOD", 1]]],
+      ["Public Music", [3], [["yield", "HAPPINESS", 3], ["worker", "CULTURE", 1]]],
+      ["Restored Sovereignty", [4, 5], [["connected", "CULTURE", 2], ["production", "LAND", 15]]]
+    ],
+    "traditions": [
+      ["Tobacco Growers", 2, [["plot", "GOLD", 1, "farm"]]],
+      ["Public Music", 3, [["worker", "CULTURE", 2]]],
+      ["Market Gardens", 4, [["plot", "FOOD", 1, "farm"]]],
+      ["Restoration Networks", 5, [["connected", "HAPPINESS", 2], ["resource", 1]]]
+    ],
+    "history": "The Dominican Republic declared independence from Haitian government in 1844 after an island history shaped by Spanish colonization, slavery, emancipation, and shifting jurisdictions. Its nineteenth-century political life was not simply permanent conflict with its neighbor. Tobacco smallholders and merchants in the Cibao, coastal commerce, and regional institutions shaped competing visions of the republic. Pedro Santana's annexation agreement returned the country to Spanish rule in 1861; the Restoration struggle of 1863–1865 ended that renewed colonial occupation. Caudillo rivalries, debt, and foreign intervention continued to restrict republican aspirations. African-descended, European, and Indigenous inheritances contributed to cultural life, including musical traditions that developed through exchange rather than racial purity. This kit emphasizes farming, brokerage, and civic culture alongside the defense of sovereignty. Generic native infantry approximates Restoration fighters, while later tiers are gameplay progression rather than evidence of one unchanged national formation.",
+    "elementHistory": {
+      "building1": "Lonja is an attested Spanish term for a building where merchants conduct trade, used functionally for tobacco exchange rather than as an invented Dominican corporate title. Cibao growers dealt with brokers and overseas markets under unequal conditions. Generic stock-exchange assets do not reconstruct a particular building or guarantee shared prosperity.",
+      "building2": "La Filantrópica was established in 1840 within the movement preparing Dominican independence, using theatrical activity to circulate patriotic ideas. Its Spanish name anchors the cultural building in an attested association. Repetition abstracts civic performance rather than claiming that one society directed all later Dominican music or public opinion.",
+      "quarter": "Mercado cibaeño is a descriptive Spanish label meaning a Cibao market, combining attested words rather than naming a historical civic authority. Regional towns joined agricultural exchange with public associations and political interests. The quarter abstracts these connections without claiming one standard plan, equal participation, or cultural uniformity across the republic.",
+      "improvement": "Huerto is the Spanish term for a small cultivated plot growing vegetables, legumes, or fruit trees. This functional label highlights household provisioning alongside export agriculture. Generic farm assets do not establish an exclusively Dominican horticultural invention, a formal cooperative title, or one standardized nineteenth-century garden plan.",
+      "military": "Restaurador is a Spanish participant label associated here with the Restoration struggle of 1863–1865, not a newly invented regiment title. Regional leaders and local fighters opposed renewed Spanish rule with varied equipment. Native infantry approximates that service without assigning one uniform to all participants or defining Dominican culture solely through war.",
+      "scout": "Estafeta is an attested Spanish postal term that can denote a mounted courier as well as a post office. Here it names the messenger role linking Cibao communities and leaders. Native explorer art is approximate; the unit is not a documented specialized Dominican regiment or unique historical uniform."
+    },
+    "civicHistory": [
+      "Cibao tobacco production involved many smallholders whose interests differed from those of other export sectors. Regional economies helped shape political allegiances without producing a single popular viewpoint.",
+      "Ports connected growers and brokers with overseas demand. Access to credit and transport influenced who benefited from expanding commerce.",
+      "Republican associations expressed hopes for civic government after independence. Personal rule and rival claims to authority repeatedly constrained those aspirations.",
+      "Regional markets joined subsistence production to export exchange. Their importance challenges accounts that treat Dominican history only as the decisions of presidents and foreign governments.",
+      "Music developed through changing social settings and multiple cultural inheritances. National tradition was created through exchange, not preserved as a racially pure or politically uncontested form.",
+      "The Restoration War ended Spain's renewed occupation in 1865. Recovered sovereignty did not automatically resolve caudillo rivalry, debt, inequality, or later foreign intervention."
+    ],
+    "sources": ["https://whc.unesco.org/en/list/526/", "https://www.britannica.com/topic/history-of-Dominican-Republic", "https://www.britannica.com/place/Dominican-Republic/Caudillos", "https://elnacional.com.do/fama-y-vida/el-teatro-por-la-causa-la-filantropica_67495.html", "https://dle.rae.es/estafeta", "https://dle.rae.es/lonja", "https://dle.rae.es/huerto", "https://dle.rae.es/mercado", "https://dle.rae.es/cibae%C3%B1o", "https://dle.rae.es/restaurador", "https://dgm.gob.do/el-monumento-a-los-heroes-de-la-restauracion-se-ilumina-de-los-colores-de-la-bandera-en-el-161-aniversario-de-la-guerra-restauradora-y-17-anos-del-monumento-como-museo-historico-cultural/"]
+  },
+  "HAITI": {
+    "ability": [["plot", "CULTURE", 1, "farm"], ["connected", "FOOD", 1], ["growth", 15]],
+    "buildings": [
+      [["production", "LAND", 25], ["wonder", 20]],
+      [["worker", "CULTURE", 2], ["yield", "HAPPINESS", 4]]
+    ],
+    "quarter": [["connected", "HAPPINESS", 2], ["plot", "FOOD", 1, "farm"]],
+    "military": [["combat", 6, "defend"], ["heal", 10]],
+    "scout": [["move", 1], ["ignore", "RAINFOREST"], ["sight", 1]],
+    "improvement": ["Lakou", "FARM", "FOOD", 3, ["connected", "CULTURE", 1]],
+    "civics": [
+      ["Emancipation", [], [["growth", 15]]],
+      ["Defense of Independence", [1], [["production", "LAND", 20]]],
+      ["Lakou Communities", [1], [["plot", "FOOD", 1, "farm"]]],
+      ["Citadelle Construction", [2], [["wonder", 25]]],
+      ["Kreyòl and Cultural Memory", [3], [["worker", "CULTURE", 2]]],
+      ["National Cultural Legacy", [4, 5], [["connected", "HAPPINESS", 2], ["connected", "CULTURE", 1]]]
+    ],
+    "traditions": [
+      ["Shared Gardens", 2, [["plot", "FOOD", 1, "farm"]]],
+      ["Kreyòl Memory", 3, [["worker", "CULTURE", 2]]],
+      ["Rural Reciprocity", 4, [["connected", "HAPPINESS", 2]]],
+      ["Independent Horizons", 5, [["wonder", 20], ["resource", 1]]]
+    ],
+    "history": "The Haitian Revolution began in the French colony of Saint-Domingue in 1791 and transformed struggles over slavery, citizenship, and empire throughout the Atlantic world. Independence proclaimed in 1804 established a Black sovereign state after devastating warfare. Freedom nevertheless raised difficult questions about land, labor, and authority. Postindependence rulers pursued conflicting arrangements, sometimes enforcing coercive agricultural regimes against the aspirations of rural cultivators. The Citadelle and Sans Souci expressed sovereignty under Henri Christophe, while their construction also demanded extraordinary labor. France's imposed indemnity and international hostility burdened the new country without defining the whole of Haitian experience. Lakou communities sustained kinship, cultivation, and religious life; Kreyòl, Vodou, music, and visual culture carried an enduring national legacy. This kit gives those institutions equal weight with defense. Repeatable arsenals and generic infantry are gameplay approximations, not multiple Citadelles or a claim that all Haitian society was organized around war.",
+    "elementHistory": {
+      "building1": "Citadelle La Ferrière names Christophe's mountain fortress, intended to protect independence against feared foreign return. Its defenses and artillery stores anchor this production building. Repeatability is explicitly a gameplay abstraction: there was one Citadelle, built through demanding labor, and native assets do not reproduce its architecture.",
+      "building2": "Peristil is the Haitian Creole term used for covered ceremonial space in Vodou settings, supporting music, gathering, and relations with the lwa. Practices differ among communities. Generic cultural-building assets do not reconstruct a ritual plan, imply universal Haitian religious observance, or reduce a living religion to spectacle.",
+      "quarter": "Kominote is the Haitian Creole word for community, used functionally rather than presented as a formally chartered historical district. Households, cultivation, shared obligations, and cultural practice made independence tangible alongside state monuments. The quarter does not imply that rural life lacked hierarchy, conflict, or pressure from government.",
+      "improvement": "The lakou joins a shared yard with related households, land, memory, and often religious responsibilities. Its forms have changed over time and vary between communities. Representing it through a generic farm highlights cultivation and reciprocity without reducing this social institution to one crop, building plan, or romantic ideal.",
+      "military": "Lame Endijèn is the Haitian Creole rendering of Armée indigène, the army associated with the final independence struggle under Dessalines. Its participants had varied backgrounds and experiences. Generic infantry progression extends beyond that specific formation; military success alone does not explain Haitian freedom, community life, or cultural achievement.",
+      "scout": "Messengers moved through mountain routes linking communities and forces during revolutionary and postindependence conflicts. Local geographical knowledge also supported trade and ordinary travel. The Mountain Courier turns this broader expertise into reconnaissance mechanics without inventing a specialized national scout corps or depicting all rural mobility as military service."
+    },
+    "civicHistory": [
+      "Emancipation emerged through the action of enslaved people, political struggle, and revolutionary war. Freedom was not simply bestowed by a distant government or one leader.",
+      "The defense of independence responded to real fears of reconquest and reenslavement. Those pressures did not make coercive internal labor policies inevitable or uncontested.",
+      "Lakou communities connected households, cultivation, kinship, and religious practice. Their evolving forms offered ways of sustaining autonomy amid pressure from estates and state authorities.",
+      "The Citadelle symbolizes sovereign determination and remarkable construction. Its history also requires attention to the labor mobilized under Christophe and the inequalities of his regime.",
+      "Kreyòl and cultural memory carried experience through speech, storytelling, music, and ritual. Their importance should not be measured only through elite written institutions.",
+      "Haiti's cultural legacy extends beyond revolution to everyday creation and community life. International hostility and imposed debt are necessary context, not a definition of Haitian society."
+    ],
+    "sources": ["https://whc.unesco.org/en/list/180/", "https://scholarsbank.uoregon.edu/items/d889116f-c6f1-47e1-a727-0d74af491e9c", "https://www.smithsonianmag.com/arts-culture/explore-timeless-world-vodou-haiti-180963673/", "https://brill.com/view/journals/nwig/99/3-4/article-p403_24.xml", "https://thelakouproject.org/the-vodou-lakou", "https://en.wikipedia.org/wiki/Indigenous_Army", "https://en.wiktionary.org/wiki/kominote"]
+  },
+  "BRAZIL": {
+    "ability": [["plot", "SCIENCE", 1, "vegetated"], ["resource", 2], ["connected", "GOLD", 1]],
+    "buildings": [
+      [["resource", 3], ["connected", "GOLD", 2]],
+      [["worker", "SCIENCE", 2], ["plot", "CULTURE", 1, "vegetated"]]
+    ],
+    "quarter": [["connected", "PRODUCTION", 2], ["worker", "SCIENCE", 2]],
+    "military": [["combat", 5, "defend"], ["combat", 3, "coast"]],
+    "scout": [["sight", 2], ["ignore", "RAINFOREST"], ["move", 1]],
+    "improvement": ["Horto", "INSTITUTE", "SCIENCE", 3, ["plot", "GOLD", 1, "vegetated"]],
+    "civics": [
+      ["Constitutional Empire", [], [["yield", "HAPPINESS", 3]]],
+      ["Coffee and Rail", [1], [["connected", "PRODUCTION", 2]]],
+      ["Natural History Collections", [1], [["worker", "SCIENCE", 2]]],
+      ["Port Modernization", [2], [["trade", 1], ["resource", 2]]],
+      ["Abolitionist Publics", [3], [["connected", "CULTURE", 2], ["growth", 10]]],
+      ["Republican Crossroads", [4, 5], [["worker", "SCIENCE", 1], ["connected", "HAPPINESS", 2]]]
+    ],
+    "traditions": [
+      ["Railway Connections", 2, [["connected", "PRODUCTION", 2]]],
+      ["Naturalist Exchange", 3, [["plot", "SCIENCE", 1, "vegetated"]]],
+      ["Abolitionist Associations", 4, [["connected", "CULTURE", 2]]],
+      ["Coastal Commerce", 5, [["resource", 2], ["yield", "GOLD", 3]]]
+    ],
+    "history": "Brazil became an independent empire in 1822, retaining a monarchy and a plantation economy deeply dependent on enslaved labor. Pedro II's long reign saw expanding coffee exports, railways, scientific institutions, and new forms of public debate, alongside regional revolts and unequal political participation. Rio de Janeiro's Valongo Wharf preserves material evidence of the mass arrival of enslaved Africans whose labor and cultural contributions were foundational to the country. Abolition in 1888 followed sustained resistance by enslaved people and wider abolitionist mobilization; it did not provide land or equal citizenship in practice. A military coup replaced the monarchy with a republic in 1889. Coffee oligarchies and regional power shaped the early republican order even as cities and industries expanded. This kit joins railway commerce with natural-history learning and civic change, not an idealized plantation bonus. Native infantry, institutes, and warehouses approximate Brazilian institutions rather than supplying reconstructed uniforms or architecture.",
+    "elementHistory": {
+      "building1": "Armazém de Café is a descriptive Portuguese translation for a coffee warehouse, not a uniquely chartered historical institution. Such storage connected producers, railways, brokers, and ports. Its wealth depended first on slavery and later unequal labor arrangements; the commercial bonus does not celebrate coercion or imply uniformly shared prosperity.",
+      "building2": "Museu Nacional developed from the Museu Real founded in 1818 and moved to Quinta da Boa Vista in 1892. Its attested Portuguese name anchors research and collections. Replication abstracts scientific institutions without endorsing unequal collecting practices or claiming that all contributors' knowledge received recognition or consent.",
+      "quarter": "Pátio Ferroviário is a descriptive Portuguese label for a railway yard, not the proper name of a standardized historical district. Linking it with research abstracts infrastructure and technical expertise. Export priorities and concentrated ownership shaped rail development, so the quarter does not imply universally shared modernization or benefits.",
+      "improvement": "Horto is an attested Portuguese term for a garden or plant nursery, applied here to botanical cultivation and observation. Research relied partly on Indigenous and African-descended expertise that elite accounts minimized. The institute donor abstracts study rather than proving a uniform nationwide nineteenth-century field-station system.",
+      "military": "Voluntário da Pátria refers to Brazil's volunteer formations created for the Paraguayan War from 1865. Recruitment also involved coercion and unequal obligations, despite the title. Native infantry does not reconstruct their uniforms; later tiers abstract subsequent forces rather than extending one wartime organization unchanged into the republic.",
+      "scout": "Naturalista is the Portuguese term for someone studying natural science, not a claim to an official scout corps. Fieldwork depended on guides, boat crews, interpreters, and local expertise. Generic explorer art represents collaborative travel rather than a solitary discoverer entering empty land or an endorsement of dispossession."
+    },
+    "civicHistory": [
+      "Independence in 1822 created an empire rather than a Gran Colombian-style republic. Constitutional institutions coexisted with monarchical authority, restricted participation, and the continued enslavement of millions.",
+      "Coffee expansion helped finance railway connections and urban growth. These systems served export priorities and were built upon coercive labor and highly unequal landholding.",
+      "Natural-history collections and research networks expressed scientific ambition. Their production relied on many contributors whose knowledge was not always acknowledged or whose consent was disregarded.",
+      "Port modernization connected railways, warehouses, finance, and overseas shipping. Export success brought concentrated wealth rather than automatic prosperity for workers or the entire country.",
+      "Abolition in 1888 followed resistance, escape, organization, and public campaigning. Its legal victory did not deliver reparative land distribution or end racial exclusion.",
+      "The republic established in 1889 changed the regime without creating universal democracy. Regional oligarchies, military influence, and contested citizenship shaped its early decades."
+    ],
+    "sources": ["https://whc.unesco.org/en/list/1548/", "https://www.britannica.com/place/Brazil/The-collapse-of-the-empire", "https://www.britannica.com/place/Brazil/The-coffee-presidents", "https://www.britannica.com/place/Santos", "https://museuimperial.museus.gov.br/", "https://museunacional.ufrj.br/guiaMN/Guia/paginas/1/amaisantiga.htm", "https://bdex.eb.mil.br/jspui/handle/123456789/14975", "https://www.turismosantos.com.br/pt-br/content/museu-do-cafe", "https://www.infopedia.pt/dicionarios/lingua-portuguesa/naturalista", "https://www.infopedia.pt/dicionarios/lingua-portuguesa/horto"]
+  }
+}

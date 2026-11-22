@@ -25,7 +25,7 @@ Everything needed for a release is in this folder. Run **`Prepare Publish.bat`**
    - checks that every file listed in the modinfo exists;
    - mirrors the mod into `SteamWorkshop\anthroprocenia\`, leaving out development-only
      files (`scripts\`, `tests\`, `.git`, `*.disabled`, logs) and adding `README.md`
-     and `LICENSE.txt`;
+     `MODDING_GUIDE.txt`, and `LICENSE.txt`;
    - rebuilds the CivFanatics zip and `BUILD_INFO.txt`.
 
    Options (also usable from a terminal): `skiptests`, `force` (continue even if tests
@@ -40,8 +40,11 @@ Workshop uploads use the **Sid Meier's Civilization VII Development Tools** (Ste
 Library > Tools).
 
 1. Open the Development Tools' mod uploader.
-2. This mod is already published (item `3759409080`). **Update that item** rather than
-   creating a new one, so subscribers get the update.
+2. **Confirm the correct item and ownership before uploading.** The previously
+   recorded item `3759409080` currently opens as **REWIND: Replay Map History**,
+   not Anthroprocenia. Do not assume it is this release's upload target. Once
+   confirmed, update the intended existing Anthroprocenia item rather than
+   creating a duplicate.
 3. Content folder: `Publish\SteamWorkshop\anthroprocenia` (the folder that contains
    `anthroprocenia.modinfo`).
 4. Preview image: `Publish\SteamWorkshop\preview.png` (or `.jpg`).
@@ -63,4 +66,8 @@ Library > Tools).
 - The mod id `anthroprocenia_map_history` must not change. The layout file is loaded
   from `fs://game/anthroprocenia_map_history/...`, and changing it would make the mod a
   separate item for existing players.
-- `AffectsSavedGames` is `0`, so players can enable or disable the mod mid-campaign.
+- `AffectsSavedGames` is `1`. The mod includes gameplay setup, speed and calendar
+  changes; do not describe it as a purely cosmetic, freely toggleable add-on.
+  Back up saves before updating and fully restart the game.
+- Preparing these files does not upload them. A Workshop preview image is still
+  required if neither `Publish\preview.png` nor `Publish\preview.jpg` exists.

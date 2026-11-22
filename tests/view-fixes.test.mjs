@@ -4,7 +4,8 @@ import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 import { loadModule } from './load.mjs';
 
-const { CivIconUi } = await loadModule('anthroprocenia-civ-icon-ui.js');
+const { CivColorUi, CivIconUi } = await loadModule('anthroprocenia-civ-icon-ui.js');
+const { enhanceModButton, uiGlyph } = await loadModule('anthroprocenia-ui.js');
 
 const playback = await readFile(new URL('../anthroprocenia/ui/map/anthroprocenia-playback.js', import.meta.url), 'utf8');
 const ui = await readFile(new URL('../anthroprocenia/ui/map/anthroprocenia-ui.js', import.meta.url), 'utf8');
@@ -21,12 +22,27 @@ const slice = name => {
 
 test('while a leader scene (diplomacy) shows, every map layer and everything inside it is hidden', () => {
   const css = slice('ensureChromeOverlayStyle');
-  assert.match(css, /body\.anthro-leader-scene \.anthro-map-render-layer, body\.anthro-leader-scene \.anthro-map-render-layer \* \{ visibility: hidden !important; \}/);
+  assert.match(css, /body\.anthro-leader-scene \.anthro-map-render-layer \{ display: none !important; \}/);
   assert.match(css, /body\.anthro-game-overlay \.\$\{MAP_CHROME_CLASS\} \{ display: none !important; \}/);
-  // The labels are children that set visibility:visible for themselves, which a hidden parent alone does not override.
+  // An explicitly visible label cannot override a display:none render root.
   assert.match(playback, /style\.cssText = '[^']*visibility:visible;/);
   assert.match(slice('syncOverlayState'), /document\.body\.classList\.toggle\('anthro-leader-scene', leader\)/);
   assert.match(slice('syncOverlayState'), /const leader = mapVisible && !!LeaderModelManager\.isLeaderShowing/);
+});
+
+test('unchanged diplomacy/history focus polls do not rewrite native HUD classes', () => {
+  const classes = new Set(), writes = [];
+  const child = { classList: {
+    contains: name => classes.has(name),
+    toggle(name, enabled) { writes.push([name, enabled]); if (enabled) classes.add(name); else classes.delete(name); },
+  } };
+  const ctx = vm.createContext({ document: { body: { children: [child] } }, historyFocusObserver: null });
+  vm.runInContext(slice('syncHistoryFocus'), ctx);
+  for (let i = 0; i < 20; i++) ctx.syncHistoryFocus(false);
+  assert.deepEqual(writes, [], 'a restored HUD must not be restyled on every overlay poll');
+  classes.add('anthro-history-hidden');
+  ctx.syncHistoryFocus(false); ctx.syncHistoryFocus(false);
+  assert.deepEqual(writes, [['anthro-history-hidden', false]], 'restore hidden native UI exactly once');
 });
 
 test('every layer that can carry labels is a render layer, so the leader-scene rule reaches it', () => {
@@ -51,6 +67,44 @@ test('the buildings\' decorative squares are left out while the townscapes show,
   assert.match(playback, /^let townscapeShown = false;/m);
   assert.match(slice('syncTownscapes'), /unitDom.el.style.display = ''/);
   assert.match(slice('syncTownscapes'), /if \(townscapeActive\(\)\) for \(const slot of unitSlots\) if \(slot\) parkSlot\(slot\)/);
+});
+
+test('text and pre-rendered X controls share close styling without changing other actions', () => {
+  const control = (caption, label, icon = '') => {
+    const attrs = { 'aria-label': label };
+    let markup = icon, writes = 0;
+    return {
+      tagName: 'BUTTON', textContent: caption,
+      getAttribute: name => attrs[name],
+      setAttribute(name, value) { attrs[name] = value; writes++; },
+      get innerHTML() { return markup; }, set innerHTML(value) { markup = value; this.textContent = ''; },
+      querySelector(selector) {
+        return selector === 'svg[data-anthro-glyph="close"]'
+          ? markup.includes('data-anthro-glyph="close"') : markup.includes('<svg');
+      },
+      get writes() { return writes; },
+    };
+  };
+  const controls = [
+    control('X', 'Close Family Tree'),
+    control('', 'Close Skip Ahead', uiGlyph('close')),
+    control('', 'Reset map scale position', uiGlyph('close')),
+  ];
+  controls[1].tagName = 'DIV';
+  for (const button of controls) {
+    const label = button.getAttribute('aria-label');
+    enhanceModButton(button, text => text);
+    assert.equal(button.getAttribute('data-anthro-close'), 'true');
+    assert.equal(button.getAttribute('aria-label'), label, 'keep the original action and accessible name');
+    assert.match(button.innerHTML, /data-anthro-glyph="close"/);
+    const writes = button.writes;
+    enhanceModButton(button, text => text);
+    assert.equal(button.writes, writes, 'rescanning cannot generate a mutation loop');
+  }
+  for (const button of [control('Stop', 'Stop autoplay'), control('', 'Clear selection', uiGlyph('clear'))]) {
+    enhanceModButton(button, text => text);
+    assert.equal(button.getAttribute('data-anthro-close'), undefined);
+  }
 });
 
 test('menu mutations enhance only owned controls and tolerate native nodes without Element APIs', () => {
@@ -99,19 +153,19 @@ test('civilization-name observers cache batch work and avoid full-menu rescans o
   body.childNodes.push(menu);
   const ctx = vm.createContext({
     document: { body }, civUiObserver: null, civUiRescan: null, CIV_UI_ATTRIBUTES: ['title'],
-    CivIconUi, civUiDiplomacyMode: () => false, scheduleCivUiRescan() {},
+    CivColorUi, CivIconUi, civUiDiplomacyMode: () => false, scheduleCivUiRescan() {}, nativeWarUiReplacements: () => [],
     CIV_UI_MAIN_MENU_SELECTOR: 'fxs-main-menu', CIV_UI_SAVE_LOAD_SELECTOR: 'fxs-save-load-screen', CIV_POLITY_SUFFIX: '(?:Kingdom|Republic)',
     civUiReplacements: () => [{ type: 'ROME', term: 'Roman', original: 'Rome', adjective: true }, { type: 'ROME', term: 'Rome', original: 'Rome' }],
     currentCivUiName() { names++; return generated; }, err: message => assert.fail(message),
     RegExp: class extends RegExp { constructor(...args) { super(...args); patterns++; } },
     MutationObserver: class { constructor(fn) { notify = fn; } observe() {} },
   });
-  vm.runInContext(['isMapDom', 'civUiMode', 'insideParentheses', 'translateCivUiText', 'installCivNameUiOverrides'].map(slice).join('\n'), ctx);
+  vm.runInContext(['isMapDom', 'civUiMode', 'insideParentheses', 'translateCivUiText', 'civUiTextRun', 'installCivNameUiOverrides'].map(slice).join('\n'), ctx);
   ctx.installCivNameUiOverrides();
   assert.ok(texts.every(text => text.nodeValue === generated));
   assert.ok(texts.every(text => text.parentElement.attrs.title === generated));
   assert.equal(names, 1, 'one live civilization lookup per batch, not per text and attribute');
-  assert.equal(patterns, 2, 'compile each replacement once');
+  assert.equal(patterns, 3, 'compile each replacement and the generated-name suffix once');
   names = reads = 0;
   notify(texts.map(target => ({ type: 'characterData', target })));
   assert.equal(names, 0, 'self-generated mutations cannot query native civilization state again');
@@ -122,7 +176,7 @@ test('civilization-name observers cache batch work and avoid full-menu rescans o
   assert.equal(names, 0); assert.ok(reads < 20, 'unrelated body/menu classes must not walk every descendant');
   generated = 'The Roman Republic'; ctx.civUiRescan();
   assert.ok(texts.every(text => text.nodeValue === generated));
-  assert.equal(names, 1); assert.equal(patterns, 2);
+  assert.equal(names, 1); assert.equal(patterns, 3);
   menu.attrs.class = 'save-load';
   notify([{ type: 'attributes', attributeName: 'class', target: menu }]);
   assert.ok(texts.every(text => text.nodeValue === 'Rome'));
@@ -132,4 +186,29 @@ test('civilization-name observers cache batch work and avoid full-menu rescans o
   texts[0].nodeValue = `${generated} Civilization`;
   notify([{ type: 'characterData', target: texts[0] }]);
   assert.equal(texts[0].nodeValue, generated, 'native suffix updates cannot leave Civilization or duplicate articles');
+  generated = 'The Grand Roman Republic of Rome';
+  const fragment = (value, parent) => ({ nodeType: 3, nodeValue: value, parentNode: parent, parentElement: parent });
+  const tooltip = element(menu), span = element(tooltip);
+  tooltip.tagName = 'DIV'; span.tagName = 'SPAN';
+  const first = fragment('The Roman', span), suffix = fragment(' Republic Civilization', tooltip);
+  span.childNodes = [first]; tooltip.childNodes = [span, suffix];
+  menu.childNodes.push(tooltip);
+  notify([{ type: 'childList', target: menu, addedNodes: [tooltip] }]);
+  assert.equal(first.nodeValue + suffix.nodeValue, generated, 'one replacement spans native inline fragments');
+  assert.equal(tooltip.childNodes[0], span, 'native wrappers and handlers survive');
+  for (let render = 0; render < 3; render++) {
+    const clone = element(menu), text = fragment(`${generated} Civilization`, clone);
+    clone.childNodes = [text]; menu.childNodes.push(clone);
+    notify([{ type: 'childList', target: menu, addedNodes: [clone] }]);
+    assert.equal(text.nodeValue, generated, 'newly allocated native tooltip nodes cannot recursively expand');
+  }
+  suffix.nodeValue = ' Kingdom Civilization';
+  notify([{ type: 'characterData', target: suffix }]);
+  assert.equal(first.nodeValue + suffix.nodeValue, generated, 'partial native suffix updates use retained source fragments');
+  first.nodeValue = `${generated} `;
+  notify([{ type: 'characterData', target: first }]);
+  assert.equal(first.nodeValue + suffix.nodeValue, generated, 'expanded partial fragments cannot duplicate a retained native suffix');
+  texts[0].parentElement.attrs.title = `${generated} Civilization`;
+  notify([{ type: 'attributes', attributeName: 'title', target: texts[0].parentElement }]);
+  assert.equal(texts[0].parentElement.attrs.title, generated, 'tooltip attributes are idempotent too');
 });

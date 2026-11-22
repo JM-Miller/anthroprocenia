@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Database>
+  <Types>
+    <Row Type="UNIT_ANTHRO_PARTISAN" Kind="KIND_UNIT" />
+  </Types>
+  <Units>
+    <Row UnitType="UNIT_ANTHRO_PARTISAN" Name="LOC_UNIT_ANTHRO_PARTISAN_NAME" Description="LOC_UNIT_ANTHRO_PARTISAN_DESCRIPTION" Tier="2" Maintenance="5" BaseSightRange="2" BaseMoves="3" UnitMovementClass="UNIT_MOVEMENT_CLASS_FOOT" Domain="DOMAIN_LAND" CoreClass="CORE_CLASS_MILITARY" FormationClass="FORMATION_CLASS_LAND_COMBAT" ZoneOfControl="true" CanPurchase="true" MustPurchase="true" PurchaseYield="YIELD_GOLD" />
+  </Units>
+  <Unit_Stats>
+    <Row UnitType="UNIT_ANTHRO_PARTISAN" Combat="50" />
+  </Unit_Stats>
+  <Unit_Costs>
+    <Row UnitType="UNIT_ANTHRO_PARTISAN" YieldType="YIELD_PRODUCTION" Cost="320" />
+  </Unit_Costs>
+  <TypeTags>
+    <Row Type="UNIT_ANTHRO_PARTISAN" Tag="UNIT_CLASS_COMBAT" />
+    <Row Type="UNIT_ANTHRO_PARTISAN" Tag="UNIT_CLASS_MELEE" />
+    <Row Type="UNIT_ANTHRO_PARTISAN" Tag="UNIT_CLASS_INFANTRY" />
+    <Row Type="UNIT_ANTHRO_PARTISAN" Tag="UNIT_CLASS_ANTHRO_LAND_PRIVATEER" />
+  </TypeTags>
+  <Unit_Abilities>
+    <Row UnitType="UNIT_ANTHRO_PARTISAN" UnitAbilityType="ABILITY_ANTHRO_PIRATE" />
+  </Unit_Abilities>
+  <Unit_Advisories>
+    <Row UnitType="UNIT_ANTHRO_PARTISAN" AdvisoryClassType="ADVISORY_CLASS_MILITARY" />
+  </Unit_Advisories>
+  <ProgressionTreeNodeUnlocks>
+    <Row ProgressionTreeNodeType="NODE_TECH_MO_INDUSTRIALIZATION" TargetType="UNIT_ANTHRO_PARTISAN" TargetKind="KIND_UNIT" UnlockDepth="1" />
+  </ProgressionTreeNodeUnlocks>
+</Database>

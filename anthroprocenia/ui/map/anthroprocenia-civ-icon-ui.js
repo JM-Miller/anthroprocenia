@@ -24,6 +24,101 @@ export function civUiArtwork(type, owner, civilizations, choices, seed) {
   return owners.length ? choices.get(owners[0]) || null : countryIconChoice(type, seed);
 }
 
+const playerColorProperties = ['primary', 'secondary'].flatMap(kind =>
+  ['', '-more', '-text', '-accent'].map(suffix => `--player-color-${kind}${suffix}`));
+const diplomacyTintSelector = '.subsystem-frame__diplo-tint';
+const diplomacyTintProperty = 'fxs-background-image-tint';
+const unitGlyphSelector = '.unit-flag__icon';
+const colorOwnerSelector = `body, leader-icon, [data-player-id], [player-id], [data-district-id], .local-player, .local-player-leader-civ, .other-player-leader-civ, screen-end-results, screen-endgame, panel-diplomacy-actions, panel-player-diplomacy-actions, panel-other-player-diplomacy-actions, #panel-diplomacy-actions__civ-symbol, ${unitGlyphSelector}, ${diplomacyTintSelector}`;
+
+function colorPropertyPriority(element, property) {
+  if (typeof element.style.getPropertyPriority === 'function') return element.style.getPropertyPriority(property);
+  const declarations = element.style.cssText || element.getAttribute('style') || '';
+  return new RegExp(`(?:^|;)\\s*${property}\\s*:[^;]*!important\\s*(?:;|$)`, 'i').test(declarations) ? 'important' : '';
+}
+
+export class CivColorUi {
+  constructor({ MutationObserver, scopeMode, resolveOwner, resolveColors, reportError, resolveUnitColor = () => null }) {
+    this.scopeMode = scopeMode;
+    this.resolveOwner = resolveOwner;
+    this.resolveColors = resolveColors;
+    this.resolveUnitColor = resolveUnitColor;
+    this.states = new WeakMap();
+    this.observer = new MutationObserver(records => {
+      for (const element of new Set(records.map(record => record.target))) {
+        const state = this.states.get(element);
+        if (state && state.writtenStyle === element.getAttribute('style') &&
+            state.writtenBackground === element.getAttribute('bg-color')) continue;
+        try { this.sync(element); }
+        catch (error) { reportError(`civilization UI color update failed: ${error}`); }
+      }
+    });
+  }
+
+  sync(element) {
+    if (!element || element.nodeType !== 1 || !element.style?.setProperty || !element.getAttribute) return;
+    let state = this.states.get(element);
+    if (!state && !element.matches(colorOwnerSelector) &&
+        !playerColorProperties.some(property => element.style.getPropertyValue(property))) return;
+    if (state) {
+      for (const property of state.original.keys()) {
+        const value = element.style.getPropertyValue(property), priority = colorPropertyPriority(element, property);
+        const written = state.writes.get(property);
+        if (written && (value !== written[0] || priority !== written[1])) state.original.set(property, [value, priority]);
+      }
+      const background = element.getAttribute('bg-color');
+      if (background !== state.writtenBackground) state.background = background;
+      if (element.classList.contains('primary-color-is-lighter') !== state.writtenLighter) {
+        state.lighter = element.classList.contains('primary-color-is-lighter');
+      }
+    }
+    const normal = this.scopeMode(element) === 'normal', owner = normal ? this.resolveOwner(element) : null;
+    const unitGlyph = element.matches(unitGlyphSelector);
+    const glyphColor = normal && unitGlyph ? this.resolveUnitColor(owner) : null;
+    const colors = normal && !unitGlyph ? this.resolveColors(owner) : null;
+    if (!colors && !glyphColor && !state) return;
+    if (!state) {
+      state = {
+        original: new Map([...playerColorProperties, ...(unitGlyph || element.matches(diplomacyTintSelector) ? [diplomacyTintProperty] : [])].map(property => [property,
+          [element.style.getPropertyValue(property), colorPropertyPriority(element, property)]])),
+        writes: new Map(), background: element.getAttribute('bg-color'),
+        lighter: element.classList.contains('primary-color-is-lighter'),
+      };
+      this.states.set(element, state);
+      this.observer.observe(element, { attributes: true, attributeFilter: ['style', 'bg-color'] });
+    }
+    const values = new Map();
+    for (const kind of colors ? ['primary', 'secondary'] : []) {
+      const variants = colors && colors.variants[`${kind}Color`];
+      for (const [suffix, variant] of [['', 'mainColor'], ['-more', 'moreColor'], ['-text', 'textColor'], ['-accent', 'accentColor']]) {
+        const property = `--player-color-${kind}${suffix}`;
+        values.set(property, suffix ? variants[variant] : colors[`${kind}Css`]);
+      }
+    }
+    if (colors && element.matches(diplomacyTintSelector)) values.set(diplomacyTintProperty, colors.primaryCss);
+    if (glyphColor) values.set(diplomacyTintProperty, glyphColor);
+    for (const property of state.original.keys()) {
+      const [value, priority] = values.has(property) ? [values.get(property), 'important'] : state.original.get(property);
+      if (value) {
+        if (element.style.getPropertyValue(property) !== value || colorPropertyPriority(element, property) !== priority) {
+          element.style.setProperty(property, value, priority);
+        }
+      } else if (element.style.getPropertyValue(property)) element.style.removeProperty(property);
+      state.writes.set(property, [element.style.getPropertyValue(property), colorPropertyPriority(element, property)]);
+    }
+    const background = colors && element.matches('leader-icon') ? colors.primaryCss : state.background;
+    if (element.getAttribute('bg-color') !== background) {
+      if (background === null) element.removeAttribute('bg-color');
+      else element.setAttribute('bg-color', background);
+    }
+    const lighter = colors ? colors.variants.isPrimaryLighter : state.lighter;
+    if (element.classList.contains('primary-color-is-lighter') !== lighter) element.classList.toggle('primary-color-is-lighter', lighter);
+    state.writtenLighter = lighter;
+    state.writtenBackground = element.getAttribute('bg-color');
+    state.writtenStyle = element.getAttribute('style');
+  }
+}
+
 export class CivIconUi {
   constructor({ document, MutationObserver, scopeMode, resolveArtwork, typeForUrl, reportError,
     diplomacyMode = () => false,

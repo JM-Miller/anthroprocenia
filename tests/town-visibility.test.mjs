@@ -23,7 +23,7 @@ function element() {
     addEventListener(name, fn) { this.events[name] = fn; } };
 }
 function fixture() {
-  const ctx = vm.createContext({ ...town, townPaths: {}, townPeople: element(),
+  const ctx = vm.createContext({ ...town, showRoads: true, townPaths: {}, townPeople: element(),
     peopleSvg: { headwearLayer: element() }, document: { createElement: element }, ps: n => n });
   vm.runInContext(source.slice(source.indexOf('const TOWN_ROOF_PATHS ='), source.indexOf('let showNaturalFeatures =')), ctx);
   vm.runInContext(['syncTownElementVisibility', 'visibilityToggleGrid', 'personAt', 'clumpAt', 'townBuildingAt', 'townHomeAt'].map(slice).join('\n'), ctx);

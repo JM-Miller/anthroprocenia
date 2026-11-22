@@ -2,7 +2,17 @@
 <Database>
 	<EnglishText>
 		<Row Tag="LOC_ANTHRO_REALISTIC_SPEED"><Text>Realistic</Text></Row>
-		<Row Tag="LOC_ANTHRO_REALISTIC_SPEED_HELP"><Text>4,400 annual Antiquity turns, 5,400 seasonal Exploration turns, and 2,400 monthly Modern turns, ending December 1949. Research, civics and celebrations follow the extended ages.</Text></Row>
+		<Row Tag="LOC_ANTHRO_REALISTIC_SPEED_HELP"><Text>4,400 annual Antiquity turns, 5,400 seasonal Exploration turns, and 2,400 monthly Modern turns, ending December 1949. Research, civics and celebrations follow the extended ages. Other speed-adjusted costs use Marathon pacing.</Text></Row>
+		<Row Tag="LOC_ANTHRO_REALISTIC_SPEED_X2"><Text>Realistic x2</Text></Row>
+		<Row Tag="LOC_ANTHRO_REALISTIC_SPEED_X2_HELP"><Text>Calendar advances twice as fast as Realistic. Research, civics and celebrations use half the Realistic costs/durations; ages take half as many turns. Other speed-adjusted costs use Marathon pacing.</Text></Row>
+		<Row Tag="LOC_ANTHRO_REALISTIC_SPEED_X3"><Text>Realistic x3</Text></Row>
+		<Row Tag="LOC_ANTHRO_REALISTIC_SPEED_X3_HELP"><Text>Calendar advances 3 times as fast as Realistic. Research, civics and celebrations use 1/3 the Realistic costs/durations; ages take 1/3 as many turns, rounded up. Other speed-adjusted costs use Marathon pacing.</Text></Row>
+		<Row Tag="LOC_ANTHRO_REALISTIC_SPEED_X4"><Text>Realistic x4</Text></Row>
+		<Row Tag="LOC_ANTHRO_REALISTIC_SPEED_X4_HELP"><Text>Calendar advances 4 times as fast as Realistic. Research, civics and celebrations use 1/4 the Realistic costs/durations; ages take 1/4 as many turns. Other speed-adjusted costs use Marathon pacing.</Text></Row>
+		<Row Tag="LOC_ANTHRO_REALISTIC_SPEED_X5"><Text>Realistic x5</Text></Row>
+		<Row Tag="LOC_ANTHRO_REALISTIC_SPEED_X5_HELP"><Text>Calendar advances 5 times as fast as Realistic. Research, civics and celebrations use 1/5 the Realistic costs/durations; ages take 1/5 as many turns. Other speed-adjusted costs use Marathon pacing.</Text></Row>
+		<Row Tag="LOC_ANTHRO_REALISTIC_SPEED_X6"><Text>Realistic x6</Text></Row>
+		<Row Tag="LOC_ANTHRO_REALISTIC_SPEED_X6_HELP"><Text>Calendar advances 6 times as fast as Realistic. Research, civics and celebrations use 1/6 the Realistic costs/durations; ages take 1/6 as many turns, rounded up. Other speed-adjusted costs use Marathon pacing.</Text></Row>
 		<!-- Playback panel transport-button captions (fxs-button renders caption via data-l10n-id).
 		     The triangle glyphs render fine; avoid the pipe '|' char — Civ's loc system treats it as
 		     markup and drops it, so skip-to-start/end use DOUBLE triangles instead of a bar. -->

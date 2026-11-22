@@ -21,6 +21,9 @@
  */
 
 import { Icon } from '/core/ui/utilities/utilities-image.js';
+import { CivSwitchPicker, syncCivSwitchPauseMenu, CIV_SWITCH_PAUSE_STYLES } from './anthroprocenia-civ-switch.js';
+import { syncCivilizationUnitPortrait } from './anthroprocenia-civilization-art.js';
+import { DialogBoxManager } from '/core/ui/dialog-box/manager-dialog-box.js';
 import { ContextManager } from '/core/ui/context-manager/context-manager.js';
 import { InterfaceMode, InterfaceModeChangedEventName } from '/core/ui/interface-modes/interface-modes.js';
 import { InputEngineEvent, InputEngineEventName, NavigateInputEventName } from '/core/ui/input/input-support.js';
@@ -29,6 +32,8 @@ import { PlotCursor } from '/core/ui/input/plot-cursor.js';
 import { FocusManager } from '/core/ui-next/services/focus-manager.js';
 import PlotWorkersManager from '/base-standard/ui/plot-workers/plot-workers-manager.js';
 import LeaderModelManager from '/base-standard/ui/diplomacy/leader-model-manager.js';
+import DiplomacyManager from '/base-standard/ui/diplomacy/diplomacy-manager.js';
+import { CivColorUi, CivIconUi, civUiArtwork } from './anthroprocenia-civ-icon-ui.js';
 import { ComponentID } from '/core/ui/utilities/utilities-component-id.js';
 import { BuildingPlacementManager } from '/base-standard/ui/building-placement/building-placement-manager.js';
 import WorldInput from '/base-standard/ui/world-input/world-input.js';
@@ -39,22 +44,25 @@ import { render } from '/core/vendor/solid-js/web/dist/web.js';
 import { PlotTooltipContent, IsPlotTooltipVisible, SetIsPlotTooltipVisible } from '/base-standard/ui-next/tooltips/plot-tooltip/plot-tooltip.js';
 import { getPlacementGroups, placementYields, localCityAtPlot, dispatchPlacementSelection, validCameraAspect, placementYieldScale, siteLabelFontPx, unwrapPathPoints, pathTurnLabels } from './anthroprocenia-placement.js';
 import { siteNamesForTile, siteCategory } from './anthroprocenia-sites.js';
-import { personProfile, personRecord, personName, eraLabel, homePlan, occupationGroupLabel, walkerAction, workFamily, workplaceScore, landMilitaryUnit, leaderRole, leaderFamily, LEADERS_PER_HOME, NAME_LISTS_VERSION, PEOPLE_PROGRESSION_NODES } from './anthroprocenia-people.js';
+import { personProfile, personRecord, personGender, personName, eraLabel, homePlan, occupationGroupLabel, occupationYieldIndex, walkerAction, workFamily, workplaceScore, landMilitaryUnit, leaderRole, leaderFamily, LEADERS_PER_HOME, NAME_LISTS_VERSION, PEOPLE_PROGRESSION_NODES } from './anthroprocenia-people.js';
 import { WalkerClumps, CLUMP_SPLIT_SCREENS, formationPoint, nearestEncampment, runnerDestination, individualDotPaths, crowdScreenDots, crowdDotStride, occupationIconPaths } from './anthroprocenia-crowds.js';
 import { familyTreeLayout, FAMILY_COHORT_SIZE, simulateFamilies, ageCategory, lifeYearsPerTurn, seedNumber, mix as lifeMix, homeHazard, startLife, stepLife, expectedChange } from './anthroprocenia-demography.js';
 import { PeopleSelection, leaderRows, PAGE_SIZE, ROW_HEIGHT, formatThousands, buildPopulationTree, visibleRows, showMore, windowRows, wheelStep, scrollToRow, ancestorIds, isSelectableNode, personKey, personBaseId, stablePersonKey, revealPerson, personRowIndex, centerScroll, iconNodeId, rowHovered, nextSortMode, SORT_LABELS, occupationCounts, occupationTipLines, searchPopulation, withPinnedSection, normalizeQuery, buildingHousing, buildingPopulationRows } from './anthroprocenia-population-panel.js';
+import { RegionsPanel, regionRows } from './anthroprocenia-regions-panel.js';
 import { MAX_RECORD_CHARS, MAX_LIBRARY_ENTRIES, MAX_PLACEMENTS_PER_FRAME, encodeShapes, decodeShapes, encodePlacement, decodePlacement, encodePanelFrame, decodePanelFrame, trackRecord, createWriteQueue } from './anthroprocenia-persist.js';
 import { planTownLinks, segmentIntersection, nearestOnSegment, waterfrontLayout, bridgeRoadGaps, deckEdgeAllowed } from './anthroprocenia-townlinks.js';
+import { navigableRiverCourses, riverEndpoints, riverDelta, visibleRiverDeltas } from './anthroprocenia-river-deltas.js';
 import { validBuildingPolygon, buildingGroundClear, clearMinorRoads, buildingDoorPoint, quarterBuildingGroups, approachPath, nearestNodeLookup, majorRoadWidth } from './anthroprocenia-townscape.js';
 import { townLineName, townBuildingName, localFeatureName } from './anthroprocenia-linenames.js';
-import { familyEvents, CivilizationTimeline, LiveTimelineFeed, groupTimelineEvents } from './anthroprocenia-timeline.js';
-import { createSkipAheadPanel } from './anthroprocenia-skipahead.js';
-import { realisticCalendarEnabled } from './anthroprocenia-calendar.js';
+import { familyEventDateLabel, familyEvents, CivilizationTimeline, LiveTimelineFeed, groupTimelineEvents, timelineDateLabel } from './anthroprocenia-timeline.js';
+import { createSkipAheadPanel, installSkipAheadDiplomacy } from './anthroprocenia-skipahead.js';
+import { calendarDateLabel, realisticCalendarEnabled } from './anthroprocenia-calendar.js';
 import { mapDetailPaths, FOG_FRONTIER_BANDS } from './anthroprocenia-map-details.js';
-import { unitDestinationGroups, destinationPaths, UNIT_DESTINATION_STYLES } from './anthroprocenia-unit-highlights.js';
-import { uiGlyph, installModUi } from './anthroprocenia-ui.js';
+import { unitDestinationGroupSteps, destinationPathSteps, UNIT_DESTINATION_STYLES } from './anthroprocenia-unit-highlights.js';
+import { uiGlyph, installModUi, updateMapLoadingStatus } from './anthroprocenia-ui.js';
+import { countryIconAssignments } from './anthroprocenia-civ-icons.js';
 import { YIELDS, YIELD_LABELS, YIELD_COLORS, GAME_YIELDS, FULL_CROWD, commandMenu, resolveCommand, commandChance, commandsPerTurn, familyActions, ambientActions, familyInteraction, actionFits, yieldTotals, yieldShare, formatYield, meanderPath } from './anthroprocenia-commands.js';
-import { unitNamesForTile, unitSubcategory, estimatedWorldPopulation, parseGameYear, iconPopulation, formatCount, PILLAGED_FACTOR, unitPopulationFactor, settlementDamageFactor, populationWeight, populationVariation } from './anthroprocenia-units.js';
+import { unitNamesForTile, unitSubcategory, estimatedWorldPopulation, parseGameYear, iconPopulation, homePopulation, formatCount, PILLAGED_FACTOR, unitPopulationFactor, settlementDamageFactor, populationWeight, populationVariation } from './anthroprocenia-units.js';
 import { generateTownscape, townscapePaths, townRadiusHex, townEra, TOWN_CLASSES, polygonBounds, polygonsOverlap, pointInPolygon, polygonNearSegment, polygonNearCircle, pointNearSegment, walkEdgeCost, walkCreekAllowed, stepWalker, stepCommanded, routeTree, routeFromTree, visibleQuota, WALKER_FADE_SECONDS, townDecorations, viewportVegetation, townRoadWidths, decorationPath, decorationGroup, decorationTouchesWater, DECO_GROUPS, DECORATION_STROKE_FEET, DecorationIndex } from './anthroprocenia-townscape.js';
 
 const TAG = '[ANTHROPROCENIA]';
@@ -89,7 +97,7 @@ const MIN_TURN_MS = 45;                                 // floor between turn dr
 let speedIdx = 0;
 const LAYOUT_PAD = 8;                                    // inner padding within the available area
 const MAX_FILL = 0.97;                                   // map occupies at most this fraction of the zone (keeps a small margin)
-const SCRUB_RESERVE = 110;                               // px below the map for the scrub bar (used when there's no Exit button to bound it)
+const SCRUB_RESERVE = 110;                               // px below the map for the scrub bar
 const MIN_CW = 5, MAX_CW = 80;
 const MAP_MARKER_SCALE = 0.25;
 const DEFAULT_VIEW_ZOOM = 1.5;
@@ -155,17 +163,18 @@ function cfgGet(k) {
     return v;
   } catch (e) { return null; }
 }
-const unitHighlightState = { key: '', geometry: '', groups: null, paths: {}, legend: null, revision: 0, targets: null, styles: UNIT_DESTINATION_STYLES };
+const unitHighlightState = { key: '', geometry: '', groups: null, paths: {}, legend: null, revision: 0, targets: null, styles: UNIT_DESTINATION_STYLES, job: null, timer: 0 };
 function syncUnitHighlights() {
   const state = unitHighlightState;
   const visible = mapVisible && cmdLiveTurn() && !gameOverlayActive() && riverDom.el;
   for (const [kind, path] of Object.entries(state.paths)) path.style.display = visible && state.groups && state.groups[kind] && path.getAttribute('d') ? 'block' : 'none';
   if (state.legend) state.legend.style.display = 'none';
-  if (!visible) return;
+  if (!visible) { cancelUnitHighlightJob(); return; }
   const id = UI.Player.getHeadSelectedUnit();
   const unit = id && ComponentID.isValid(id) ? Units.get(id) : null;
   const definition = unit && GameInfo.Units.lookup(unit.type);
   if (!unit || !definition || unit.owner !== GameContext.localPlayerID) {
+    cancelUnitHighlightJob();
     for (const path of Object.values(state.paths)) path.style.display = 'none';
     state.key = ''; state.groups = null; return;
   }
@@ -173,6 +182,7 @@ function syncUnitHighlights() {
   const targets = state.targets && state.targets.id === ComponentID.toLogString(id) ? state.targets : null;
   if (!definition.FoundCity && !definition.MakeTradeRoute && !(definition.SpreadCharges > 0) &&
       lens !== 'fxs-discovery-lens' && lens !== 'fxs-continent-lens' && !targets) {
+    cancelUnitHighlightJob();
     for (const path of Object.values(state.paths)) path.style.display = 'none';
     state.key = ''; state.groups = null; return;
   }
@@ -180,34 +190,39 @@ function syncUnitHighlights() {
   if (state.key !== key) {
     state.key = ''; state.groups = null; state.geometry = '';
     for (const path of Object.values(state.paths)) path.style.display = 'none';
-    let continents = null;
-    if (lens === 'fxs-continent-lens') {
-      const layer = LensManager.layers.get('fxs-continent-layer');
-      if (!layer || !layer.continentsList) throw new Error('The native continent classifications are unavailable.');
-      continents = layer.continentsList.map(continent => ({ ...continent, plotList: continent.plotList.concat(layer.naturalWonderCoords) }));
-    }
-    state.styles = { ...UNIT_DESTINATION_STYLES };
-    if (continents) for (const [index, continent] of continents.entries()) {
-      const color = continent.color;
-      state.styles[`continent${index}`] = { color: `rgb(${color & 255},${color >>> 8 & 255},${color >>> 16 & 255})`, opacity: (color >>> 24) / 255, label: 'Native continent classification' };
-    }
-    state.groups = unitDestinationGroups({ unit, definition, lens, targets, continents, player: Players.get(unit.owner), map: GameplayMap,
-      districts: Districts, constructibles: MapConstructibles, cities: Cities, success: TradeRouteStatus.SUCCESS,
-      definitions: { wilderness: DistrictTypes.WILDERNESS, rural: DistrictTypes.RURAL,
-        getConstructible: component => Constructibles.getByComponentID(component), lookupConstructible: hash => GameInfo.Constructibles.lookup(hash) } });
+    const groups = advanceUnitHighlightJob(`destinations|${key}`, () => {
+      let continents = null;
+      if (lens === 'fxs-continent-lens') {
+        const layer = LensManager.layers.get('fxs-continent-layer');
+        if (!layer || !layer.continentsList) throw new Error('The native continent classifications are unavailable.');
+        continents = layer.continentsList.map(continent => ({ ...continent, plotList: continent.plotList.concat(layer.naturalWonderCoords) }));
+      }
+      state.styles = { ...UNIT_DESTINATION_STYLES };
+      if (continents) for (const [index, continent] of continents.entries()) {
+        const color = continent.color;
+        state.styles[`continent${index}`] = { color: `rgb(${color & 255},${color >>> 8 & 255},${color >>> 16 & 255})`, opacity: (color >>> 24) / 255, label: 'Native continent classification' };
+      }
+      return unitDestinationGroupSteps({ unit, definition, lens, targets, continents, player: Players.get(unit.owner), map: GameplayMap,
+        districts: Districts, constructibles: MapConstructibles, cities: Cities, success: TradeRouteStatus.SUCCESS,
+        definitions: { wilderness: DistrictTypes.WILDERNESS, rural: DistrictTypes.RURAL,
+          getConstructible: component => Constructibles.getByComponentID(component), lookupConstructible: hash => GameInfo.Constructibles.lookup(hash) } });
+    });
+    if (!groups) return;
+    state.groups = groups;
     state.key = key;
   }
   if (!state.groups) return;
   const geometry = `${key}|${naturalViewKey()}|${mapPanX}|${mapPanY}`;
-  if (state.geometry === geometry) { if (state.legend) state.legend.style.display = 'block'; return; }
-  state.geometry = geometry;
+  if (state.geometry === geometry) { cancelUnitHighlightJob(); if (state.legend) state.legend.style.display = 'block'; return; }
   const area = measureArea();
-  const result = destinationPaths(state.groups, hexVert, index => {
+  const result = advanceUnitHighlightJob(`geometry|${geometry}`, () => destinationPathSteps(state.groups, hexVert, index => {
     if (!basePos[index]) return false;
     const center = mapToScreen(basePos[index].x + hexW / 2, basePos[index].y + hexH / 2);
     return center.x + hexW * viewZoom / 2 >= area.x && center.x - hexW * viewZoom / 2 <= area.x + area.w
       && center.y + hexH * viewZoom * viewAspectY / 2 >= area.y && center.y - hexH * viewZoom * viewAspectY / 2 <= area.y + area.h;
-  });
+  }));
+  if (!result) return;
+  state.geometry = geometry;
   const labels = [];
   for (const [kind, data] of Object.entries(result.paths)) {
     const style = state.styles[kind];
@@ -228,6 +243,37 @@ function syncUnitHighlights() {
   }
   state.legend.textContent = (labels.join(' | ') || 'No currently legal, revealed destinations.') + (result.limited ? ' | Zoom in to display every highlighted site.' : '');
   state.legend.style.display = 'block';
+}
+function cancelUnitHighlightJob() {
+  if (unitHighlightState.timer) { clearTimeout(unitHighlightState.timer); unitHighlightState.timer = 0; }
+  unitHighlightState.job = null;
+}
+function advanceUnitHighlightJob(key, create) {
+  const state = unitHighlightState;
+  const resume = () => {
+    state.timer = setTimeout(() => {
+      state.timer = 0;
+      try { syncUnitHighlights(); }
+      catch (error) { cancelUnitHighlightJob(); err(`unit destination highlights failed: ${error}`); }
+    }, 16);
+  };
+  if (!state.job || state.job.key !== key) {
+    cancelUnitHighlightJob();
+    state.job = { key, steps: create() };
+    resume();
+    return null;
+  }
+  if (state.timer) return null;
+  const start = Date.now();
+  try {
+    for (let step = 0; step < 128; step++) {
+      const result = state.job.steps.next();
+      if (result.done) { state.job = null; return result.value; }
+      if (Date.now() - start >= 6) break;
+    }
+  } catch (error) { cancelUnitHighlightJob(); throw error; }
+  resume();
+  return null;
 }
 function prepareTownLeisure(entries) {
   if (!entries.length) return;
@@ -278,6 +324,8 @@ function readUnitsTurn(t) {
         if (Array.isArray(r.a)) for (let i = 0; i + 1 < r.a.length; i += 2) {
           if (arr[r.a[i]] && Number.isInteger(r.a[i + 1]) && r.a[i + 1] >= 1 && r.a[i + 1] <= 6) arr[r.a[i]][6] = r.a[i + 1];
         }
+        if (Array.isArray(r.i)) for (let i = 0; i < arr.length; i++) if (typeof r.i[i] === 'string') arr[i][7] = r.i[i];
+        if (Array.isArray(r.b)) for (const index of r.b) if (arr[index]) arr[index][8] = true;
       }
       if (r && Array.isArray(r.r)) { routes = new Map(); for (let i = 0; i + 1 < r.r.length; i += 2) routes.set(r.r[i], r.r[i + 1]); }
     }
@@ -291,7 +339,7 @@ function readUnitsTurn(t) {
   return arr;
 }
 function readRoutesTurn(t) { readUnitsTurn(t); return routesCache.get(t) || null; }
-// Units have no saved id, so each one is followed from turn to turn: a unit takes the id of the unit of the same owner (same
+// Older units have no saved native id, so replay lineage follows each one from turn to turn: a unit takes the id of the unit of the same owner (same
 // type first) standing where it came from on the turn before, then of one next to it; otherwise it is new. Kept per turn.
 const unitLineageCache = [];
 function unitLineage(t) {
@@ -473,7 +521,7 @@ function buildingsForPos() {
 // A `set` entry of length <= 1 is a removal (razed/absorbed).
 function reconstructSettlements(targetGi) {
   return replayState(targetGi, 'settlements', () => new Map(), state => new Map(state),
-    (state, rec, isSnap) => { if (isSnap) state.clear(); if (Array.isArray(rec.set)) for (const e of rec.set) { if (e.length <= 1) state.delete(e[0]); else state.set(e[0], [e[1], e[2], e[3], e[4]]); } });
+    (state, rec, isSnap) => { if (isSnap) state.clear(); if (Array.isArray(rec.set)) for (const e of rec.set) { if (e.length <= 1) state.delete(e[0]); else state.set(e[0], e.slice(1)); } });
 }
 let curSettlements = null, curSettlementsPos = -2;
 function settlementsForPos() {
@@ -485,14 +533,17 @@ function settlementsForPos() {
 // Local-observer visibility at frame gi (the `vis` delta rides on the records). Int8Array[w*h]:
 // 0 hidden / 1 revealed / 2 in-LOS. Missing tiles default to 0 (hidden).
 function reconstructVisibility(targetGi) {
-  const n = basePos ? basePos.length : ((manifest && manifest.w && manifest.h) ? manifest.w * manifest.h : 0);
+  const n = basePos && basePos.length ? basePos.length : ((manifest && manifest.w && manifest.h) ? manifest.w * manifest.h : 0);
+  const previous = reconstructionCaches.get('visibility');
+  if (previous && previous.state.length !== n) reconstructionCaches.delete('visibility');
   return replayState(targetGi, 'visibility', () => new Int8Array(n), state => state.slice(),
     (state, rec, isSnap) => { if (isSnap) state.fill(0); if (Array.isArray(rec.vis)) for (const v of rec.vis) { const i = unpackVisI(v); if (i >= 0 && i < n) state[i] = unpackVisS(v); } });
 }
 let curVis = null, curVisPos = -2;
 function visForPos() {
-  if (curVisPos === pos && curVis) return curVis;
-  curVis = frames.length ? reconstructVisibility(pos) : new Int8Array(0);
+  const n = basePos && basePos.length ? basePos.length : ((manifest && manifest.w && manifest.h) ? manifest.w * manifest.h : 0);
+  if (curVisPos === pos && curVis && curVis.length === n) return curVis;
+  curVis = frames.length ? reconstructVisibility(pos) : new Int8Array(n);
   curVisPos = pos;
   return curVis;
 }
@@ -568,8 +619,17 @@ function frameFor(gi) {
 }
 
 // --- colors ------------------------------------------------------------------
-const PALETTE = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4',
-  '#46f0f0', '#f032e6', '#bcf60c', '#fa8072', '#008080', '#e6beff', '#9a6324', '#aaffc3'];
+const PALETTE = [
+  '#ee2244', '#00ff00', '#33ddff', '#bb22ff', '#ffcc11', '#338833', '#ffaaee',
+  '#0077ff', '#aa7755', '#ff00aa', '#00ffcc', '#ff7700', '#aaee55', '#6677aa',
+  '#ccddaa', '#aa55cc', '#448877', '#cc5577', '#998811', '#ffcccc', '#00ee77',
+  '#ff0000', '#ffcc77', '#ff8866', '#bbccff', '#00aaff', '#22aa00', '#88dd88',
+  '#aa99ff', '#ff33ee', '#aa7788', '#88eedd', '#bb6611', '#ff0077', '#dddd55',
+  '#889955', '#aa66aa', '#8855ff', '#ee66bb', '#3399bb', '#00bb99', '#88aa00',
+  '#ffaa33', '#ff99aa', '#ccee00', '#ff88ff', '#66dd00', '#dd4422', '#aaddee',
+  '#bb99cc', '#bbaa88', '#00bb66', '#ff6677', '#eeaa88', '#4488ee', '#ccee88',
+  '#88bbaa', '#bb9955', '#cc33bb', '#66aa77', '#dd66ff', '#9977ff', '#22bbbb',
+];
 function hexToRgb(h) { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
 function intToRgb(c) { return [c & 255, (c >> 8) & 255, (c >> 16) & 255]; }   // R,G,B low->high
 function colorOk(c) { if (!c) return false; const r = c & 255, g = (c >> 8) & 255, b = (c >> 16) & 255; return !(r > 240 && g > 240 && b > 240); }
@@ -578,17 +638,23 @@ function blendCss(base, over, a) { return `rgb(${Math.round(base[0] * (1 - a) + 
 
 // Dual player colors. Usage (per user spec): inner fill + city-center dot = PRIMARY;
 // outer border + urban tiles = SECONDARY.
-// Cached per (pos, owner): a player's colors can differ per age (civ swap), so the recorded colors for the
-// CURRENT frame win; fall back to the live engine colors, then the palette.
+// The 63 default major-player slots share stable, distinct Map View and native UI identity colors.
+// Recorded identity colors and engine-side world rendering are not changed.
+// Other owners retain their recorded/live colors and independent-power styling.
 const ownerColorCache = new Map();
 function ownerColors(owner) {
   const ck = pos + ':' + owner;
   if (ownerColorCache.has(ck)) return ownerColorCache.get(ck);
   let primary = null, secondary = null;
-  const id2 = identityForPos().get(owner);   // recorded [leader, civ, adj, primaryInt, secondaryInt]
-  if (id2) { if (colorOk(id2[3])) primary = intToRgb(id2[3]); if (colorOk(id2[4])) secondary = intToRgb(id2[4]); }
-  if (!primary) { try { const c = UI.Player.getPrimaryColorValueAsHex(owner); if (colorOk(c)) primary = intToRgb(c); } catch (e) {} }
-  if (!secondary) { try { const c = UI.Player.getSecondaryColorValueAsHex(owner); if (colorOk(c)) secondary = intToRgb(c); } catch (e) {} }
+  if (Number.isInteger(owner) && owner >= 0 && owner < PALETTE.length && ownerMeta(owner).kind === 'major') {
+    primary = hexToRgb(PALETTE[owner]);
+    secondary = primary.map(v => Math.round(v * 0.55));
+  } else {
+    const id2 = identityForPos().get(owner);   // recorded [leader, civ, adj, primaryInt, secondaryInt]
+    if (id2) { if (colorOk(id2[3])) primary = intToRgb(id2[3]); if (colorOk(id2[4])) secondary = intToRgb(id2[4]); }
+    if (!primary) { try { const c = UI.Player.getPrimaryColorValueAsHex(owner); if (colorOk(c)) primary = intToRgb(c); } catch (e) {} }
+    if (!secondary) { try { const c = UI.Player.getSecondaryColorValueAsHex(owner); if (colorOk(c)) secondary = intToRgb(c); } catch (e) {} }
+  }
   if (!primary) primary = hexToRgb(PALETTE[((owner % PALETTE.length) + PALETTE.length) % PALETTE.length]);
   if (!secondary) secondary = primary.map(v => Math.round(v * 0.55));
   const out = { primary, primaryCss: rgbCss(primary), secondary, secondaryCss: rgbCss(secondary) };
@@ -693,6 +759,9 @@ function fullscreenActive() {
   return mapVisible && viewZoom >= FULLSCREEN_ZOOM && mapPxW * viewZoom >= iw && mapPxH * viewZoom * viewAspectY >= ih;
 }
 function measureArea() {
+  if (typeof civSwitchPicker !== 'undefined' && civSwitchPicker && civSwitchPicker.active) {
+    return mkArea(0, 0, window.innerWidth, window.innerHeight);
+  }
   if (fullscreenActive()) {
     return mkArea(0, 0, (typeof window !== 'undefined' && window.innerWidth) || 1920, (typeof window !== 'undefined' && window.innerHeight) || 1080);
   }
@@ -733,7 +802,8 @@ let layoutDims = '';
 // unchanged. mapRoot aliases the bg element for existence/geometry guards.
 const bgLayer    = { id: 'anthroprocenia-map-bg',    z: 100002, el: null, ctx: null };
 const stateLayer = { id: 'anthroprocenia-map-state', z: 100003, el: null, ctx: null };
-const LAYERS = [bgLayer, stateLayer];
+const fogLayer = { id: 'anthroprocenia-map-fog', z: 100040, el: null, ctx: null, paintKey: '', vis: null, base: null };
+const LAYERS = [bgLayer, stateLayer, fogLayer];
 // Per-game painted-once canvases. byAge maps a key (0 for the single natw canvas)
 // to a slot painted exactly once; showing one is a display swap. Under FOG both are hidden and their
 // content is drawn vis-gated in the state layer (a static canvas can't respect per-frame visibility).
@@ -776,7 +846,7 @@ const pathPreview = { active: false, unitId: null, dest: -1, plots: null, turns:
 let placementYieldStyle = null, placementYieldScaleKey = '', placementSlowLogKey = '';
 let mapDrag = null, lastMapDragEnd = 0;
 let miniMapHost = null, miniMapOriginalStyle = null, miniMapSavedOptions = null, miniMapBuiltFrameCount = '';
-let miniMapObserver = null, miniMapResizeObserver = null, miniMapUpdatePending = false, mapHudObserver = null, mapHudVisibilityTimer = null;
+let miniMapObserver = null, miniMapResizeObserver = null, miniMapUpdatePending = false;
 let miniMapViewport = null, miniMapViewportPath = null, miniMapViewportKey = '', miniMapCameraTimer = 0, miniMapViewportErrorLogged = false;
 let building = false, buildToken = 0, revealWhenBuilt = false;
 let mapOpenPending = false, mapOpenToken = 0;
@@ -789,6 +859,7 @@ function ensurePopupStyle() {
 }
 try { ensurePopupStyle(); } catch (e) { err(`popup layering: ${e}`); }
 let showTerritory = true, showBorders = false;   // layer toggles: cell fills / boundary segments + center markers
+let civSwitchPicker = null, civPickerSnapshot = null, civPickerGeography = null, civPickerTiles = null;
 // The map's control chrome (toggle panel, scrubber, camera buttons, close button) sits above the
 // game's DOM, so it is hidden while a game screen or popup (pause menu, diplomacy, city view...) is open.
 const MAP_CHROME_CLASS = 'anthro-map-chrome';
@@ -822,7 +893,8 @@ function computeGameOverlayActive() {
   try {
     if (typeof ViewManager !== 'undefined' && ViewManager.current) {
       const name = ViewManager.current.getName();
-      if (name && name !== 'World' && name !== 'Unset') return true;
+      // Selecting a unit switches the native world harness to Unit after its lens first appears.
+      if (name && name !== 'World' && name !== 'Unset' && name !== 'Unit') return true;
     }
   } catch (e) {}
   try {
@@ -841,16 +913,19 @@ const diplomacyTransition = { token: 0, closing: false };
 function showDiplomacyLoading() {
   if (!mapVisible) return;
   const token = ++diplomacyTransition.token;
-  showLoading('Loading Map...');
+  const deadline = Date.now() + 10000;
+  showLoading('Loading...');
   const finish = () => {
     if (token !== diplomacyTransition.token) return;
     const manager = LeaderModelManager;
-    const pending = manager.isClosing || manager.isClosingFallback || manager.cameraDollyQueued ||
-      manager.cameraDollyDelayed || manager.leaderSequenceGate?.waitingForForegroundCameraId;
-    if (mapVisible && pending) { nextPaint(finish); return; }
-    if (els.loading && els.loading.textContent === 'Loading Map...' && !building && !mapOpenPending) hideLoading();
+    const closing = manager.isClosing || manager.isClosingFallback;
+    const pending = closing || !manager.isLeaderShowing && (manager.cameraDollyQueued ||
+      manager.cameraDollyDelayed || manager.leaderSequenceGate?.waitingForForegroundCameraId);
+    if (mapVisible && pending && Date.now() < deadline) { setTimeout(finish, 100); return; }
+    if (mapVisible && pending) err('Diplomacy loading cover timed out; releasing it so native controls remain accessible.');
+    if (els.loading && els.loading.textContent === 'Loading...' && !building && !mapOpenPending) hideLoading();
   };
-  nextPaint(finish);
+  setTimeout(finish, 100);
 }
 window.addEventListener('raise-diplomacy', showDiplomacyLoading, true);
 window.addEventListener('diplomacy-dialog-request-close', showDiplomacyLoading, true);
@@ -861,7 +936,8 @@ function syncHistoryFocus(active = mapVisible && historyControlsExpanded && !gam
   if (!document.body) return;
   for (const child of document.body.children) {
     const allowed = child.classList.contains('anthro-map-render-layer') || child.classList.contains('anthro-history-ui');
-    child.classList.toggle('anthro-history-hidden', active && !allowed);
+    const hidden = active && !allowed;
+    if (child.classList.contains('anthro-history-hidden') !== hidden) child.classList.toggle('anthro-history-hidden', hidden);
   }
   if (active && !historyFocusObserver && typeof MutationObserver === 'function') {
     historyFocusObserver = new MutationObserver(() => syncHistoryFocus());
@@ -889,21 +965,45 @@ function syncOverlayState() {
   const on = mapVisible && (gameOverlayActive() || leader);
   if (on) closeGamepadControls();
   if (on !== overlayShown) { overlayShown = on; document.body.classList.toggle('anthro-game-overlay', on); }
-  document.body.classList.toggle('anthro-leader-scene', leader);
+  if (document.body.classList.contains('anthro-leader-scene') !== leader) document.body.classList.toggle('anthro-leader-scene', leader);
   syncHistoryFocus();
   syncExpansionOverlay();
-  if (routeDom.el) syncRouteWidths();
+  if (routeDom.el && !leader && !closing) syncRouteWidths();
   try { syncPopulationUi(); } catch (e) { if (!popState.errorLogged) err(`population panel sync failed: ${e}`); popState.errorLogged = true; }
+  try { syncRegionsUi(); els.regionErrorLogged = false; }
+  catch (e) {
+    if (els.regionPanel) els.regionPanel.style.display = 'none';
+    hideRegionHover();
+    if (!els.regionErrorLogged) err(`regions panel sync failed: ${e}`);
+    els.regionErrorLogged = true;
+  }
   syncMapScale();
   try { syncUnitHighlights(); } catch (error) { err(`unit destination highlights failed: ${error}`); }
+  syncMapLoadingStatus();
   syncWorldTimeline();
+}
+function syncMapLoadingStatus() {
+  const stages = [];
+  if ((mapVisible || mapOpenPending) && !gameOverlayActive() && !LeaderModelManager.isLeaderShowing) {
+    if (building || mapOpenPending) stages.push('Terrain and recorded history');
+    if (scatterJob || scatterContinueTimer) stages.push('Map markers');
+    if (townRender.accessJob) stages.push(`Townscapes: ${townRender.accessJob.phase || 'preparing'}`);
+    else if (townRender.pending) stages.push('Townscapes');
+    if (townRender.decoJob) stages.push('Decorations');
+    if (townRender.walkJob) stages.push('Walking network');
+    if (geographyRefreshTimer) stages.push('Geographic labels');
+    if (unitHighlightState.job) stages.push(unitHighlightState.job.key.indexOf('destinations|') === 0 ? 'Unit destinations' : 'Unit lens geometry');
+  }
+  const occupied = stages.length ? arrowControlRects().concat(
+    [els.cmdPanel, els.familyPanel, els.clumpPanel, els.mapScale].filter(el => el && el.style.display !== 'none')
+      .map(el => el.getBoundingClientRect())) : [];
+  els.mapLoadingStatus = updateMapLoadingStatus(document, els.mapLoadingStatus, stages, ps(1), measureArea(), occupied);
 }
 function ensureChromeOverlayStyle() {
   if (!document.head || document.getElementById('anthro-chrome-overlay-style')) return;
   const st = document.createElement('style'); st.id = 'anthro-chrome-overlay-style';
-  // Label text and other children set `visibility:visible` themselves, which would show through a hidden parent, so the
-  // leader-scene rule covers every descendant as well.
-  st.textContent = `body.anthro-game-overlay .${MAP_CHROME_CLASS} { display: none !important; } body.anthro-leader-scene .anthro-map-render-layer, body.anthro-leader-scene .anthro-map-render-layer * { visibility: hidden !important; }
+  // Suspend entire render roots instead of restyling every explicitly visible map label.
+  st.textContent = `body.anthro-game-overlay .${MAP_CHROME_CLASS} { display: none !important; } body.anthro-leader-scene .anthro-map-render-layer { display: none !important; }
 .anthro-history-hidden, .anthro-history-hidden * { visibility:hidden!important;pointer-events:none!important; }`;
   document.head.appendChild(st);
 }
@@ -925,6 +1025,10 @@ let showTradeRoutes = false;
 let showSettlements = true;
 let showBuildingLabels = false;                  // per-building/district/quarter labels, off by default (dense)
 let showRegionLabels = true, showRegionBorders = false, showGeographicLabels = true, showRiverNames = true;
+let showIslandNames = true, showWaterNames = true, showMountainNames = true;
+let showWarNames = true;
+const warBorderState = { group: null };
+let showRivers = true, showRoads = true, showBuildingDots = true, showUnitDots = true;
 let showRegionBoundaries = false, showPreviousMovement = true, showLabelArches = true;
 let showTownLabels = true;
 const TOWN_ROOF_PATHS = [...TOWN_CLASSES, 'tents', 'battleBuildings', 'detail', 'tentDetail'];
@@ -948,9 +1052,10 @@ const DEFAULT_MAP_OPTIONS = {
   countryLabels: true, civIcons: true,   tradeRoutes: false, settlements: true, buildingLabels: false,
   regionLabels: true, regionBorders: false, geographicLabels: true, riverNames: true, naturalFeatures: true,
   previousMovement: true, regionBoundaries: false, labelArches: true,
-  resources: false, fog: false, townLabels: true,
+  islandNames: true, waterNames: true, mountainNames: true, rivers: true, roads: true, buildingDots: true, unitDots: true,
+  resources: false, fog: true, townLabels: true, warNames: true,
 };
-let fogMode = false, suppressFog = false;
+let fogMode = DEFAULT_MAP_OPTIONS.fog, suppressFog = false;
 let showFogFootprint = true;
 const mapDetailsState = { data: null, checked: 0, key: '', paths: {}, limited: false };
 function syncMapDetailVisibility() {
@@ -1440,7 +1545,7 @@ const MAP_DEPTH = 300000;
 // engine's world view but below the HUD's DOM); in the minimap they keep their high z so they show over it.
 function applyLayerDepth() {
   if (!document.body) return;
-  const behind = mapVisible;
+  const behind = mapVisible && !(typeof civSwitchPicker !== 'undefined' && civSwitchPicker && civSwitchPicker.active);
   for (const el of document.body.children) {
     const st = el.style;
     if (!st || st.position !== 'fixed' || el.id === 'anthroprocenia-turnlabel') continue;
@@ -1455,12 +1560,14 @@ function applyLayerDepth() {
 }
 function setMapVisible(on) {
   mapVisible = on; ensureMapRoot();
+  if (!on) hideRegionHover(true);
   syncNativePlotTooltip();
   if (!on) {
     stopPeople();
     resetWorldTimeline();
     if (townRender.timer) { clearTimeout(townRender.timer); townRender.timer = 0; }
     townRender.viewKey = ''; townRender.inputKey = ''; townRender.pending = false;
+    townRender.accessJob = null; townRender.walkJob = null; townRender.decoJob = null;
   }
   if (on && typeof window.AnthroproceniaRequestCapture === 'function') window.AnthroproceniaRequestCapture();
   if (!on && els.mapScale) els.mapScale.style.display = 'none';
@@ -1496,7 +1603,6 @@ function setMapVisible(on) {
       (document.head || document.body).appendChild(st);
     }
   } catch (e) {}
-  try { syncMapHudButton(); } catch (e) {}
   try { ensurePopupStyle(); } catch (e) { err(`popup layering: ${e}`); }
   try { applyLayerDepth(); } catch (e) {}
   const visible = on || miniMapVisible;
@@ -1511,9 +1617,9 @@ function setMapVisible(on) {
   if (riverDom.el) riverDom.el.style.opacity = visible ? '1' : '0';
   if (tradeRouteDom.el) tradeRouteDom.el.style.opacity = visible && showTradeRoutes ? '1' : '0';
   if (routeDom.el) routeDom.el.style.opacity = visible ? '1' : '0';
-  if (regionBorderDom.el) regionBorderDom.el.style.opacity = visible && (showRegionBorders || showRegionBoundaries) ? '1' : '0';
+  if (regionBorderDom.el) regionBorderDom.el.style.opacity = visible && (showRegionBorders || showRegionBoundaries || showWarNames) ? '1' : '0';
   if (regionLabelDom.el) regionLabelDom.el.style.opacity = visible && showRegionLabels ? '1' : '0';
-  if (geographicLabelDom.el) geographicLabelDom.el.style.opacity = visible && (showGeographicLabels || showRiverNames) ? '1' : '0';
+  if (geographicLabelDom.el) geographicLabelDom.el.style.opacity = visible && (showGeographicLabels || showRiverNames || showWarNames) ? '1' : '0';
   if (unitDom.el) { unitDom.el.style.opacity = visible ? '1' : '0'; unitDom.el.style.pointerEvents = on ? 'auto' : 'none'; }
   if (iconDom.el && !on) iconDom.el.style.display = 'none';
   if (mapFrame) mapFrame.style.display = visible ? 'block' : 'none';
@@ -1598,6 +1704,7 @@ function computeLayout(w, h, area) {
 // DPR transform after.
 function applyLayerBox(L) {
   const cv = L.el; if (!cv) return;
+  L.paintKey = '';
   cv.width = Math.max(1, Math.round(mapPxW * mapDpr)); cv.height = Math.max(1, Math.round(mapPxH * mapDpr));
   cv.style.left = mapX + 'px'; cv.style.top = mapY + 'px';
   cv.style.width = mapPxW + 'px'; cv.style.height = mapPxH + 'px';
@@ -1631,6 +1738,7 @@ function syncMapSvgViewport(svg) {
   svg.style.transformOrigin = '0px 0px'; svg.style.transform = 'none'; svg.style.clip = 'auto';
 }
 function applyMapView() {
+  hideRegionHover();
   syncNaturalVisibility();
   syncCrowdVisibility();
   syncTownVisibility();
@@ -1640,6 +1748,7 @@ function applyMapView() {
   try { applyLayerDepth(); } catch (e) {}
   if (miniMapVisible && !mapVisible) {
     syncMapSvgViewport(riverDom.el);
+    syncGeographyLabelViewport();
     applyMiniMapView();
     return;
   }
@@ -1669,7 +1778,10 @@ function applyMapView() {
     el.style.transform = transform;
     el.style.clip = clip;
   }
+  syncGeographyLabelViewport();
   syncTownCompass();
+  if (routePaths) syncRouteStatus(fogMode ? visForPos() : null);
+  if (mapVisible) scheduleGeographyLabelRefresh();
   syncExpansionOverlay();
   if (mapVisible) { try { refreshSiteLabels(); } catch (e) { err(`label zoom refresh failed: ${e}`); } }
   if (pathPreview.active && pathPreview.plots) { try { renderPathPreview(); } catch (e) { err(`movement path preview: ${e}`); } }
@@ -1903,7 +2015,9 @@ function applyColumnShift(newShift) {
     try {
       // Commit the new, fog-filtered terrain before yielding to the deferred marker rebuild.
       ensureBackground();
-      drawStateLayer(curFrame, fogMode ? visForPos() : null);
+      const vis = fogMode ? visForPos() : null;
+      drawStateLayer(curFrame, vis);
+      drawFogLayer(vis);
       for (const layer of [bgLayer, stateLayer]) if (layer.el) layer.el.style.visibility = '';
       columnShiftCanvasStale = false;
     } catch (e) { err(`column shift terrain repaint failed: ${e}`); }
@@ -1929,18 +2043,6 @@ function syncFullscreenState() {
     st.textContent = 'body.anthroprocenia-map-fullscreen .anthroprocenia-victories-tab-root,body.anthroprocenia-map-fullscreen .anthroprocenia-victories-tab-list{visibility:hidden!important}';
     (document.head || document.body).appendChild(st);
   }
-  positionExitButton();
-}
-function positionExitButton() {
-  if (!els.exitBtn) return;
-  els.exitBtn.style.display = mapVisible ? 'flex' : 'none';
-  if (!mapVisible) return;
-  const area = measureArea();
-  const size = ps(44);
-  els.exitBtn.style.fontSize = Math.round(size * 0.6) + 'px';
-  els.exitBtn.style.width = size + 'px'; els.exitBtn.style.height = size + 'px';
-  els.exitBtn.style.left = Math.round(area.x + area.w - size - ps(8)) + 'px';
-  els.exitBtn.style.top = Math.round(area.y + ps(96)) + 'px';
 }
 function changeMapZoom(factor, defer) {
   popStopCameraTrip();
@@ -2263,12 +2365,11 @@ function edgePanVector() {
   const x = camInput.mx, y = camInput.my, a = measureArea(), band = ps(EDGE_PAN_BAND);
   if (x < a.x || y < a.y || x > a.x + a.w || y > a.y + a.h) return [0, 0];
   if (overControlPanels(x, y)) return [0, 0];
-  if (els.exitBtn && pointInRect(x, y, els.exitBtn.getBoundingClientRect())) return [0, 0];
   const ramp = d => Math.max(0, Math.min(1, 1 - d / band));
   return [ramp(x - a.x) - ramp(a.x + a.w - x), ramp(y - a.y) - ramp(a.y + a.h - y)];
 }
 function camLoopStep() {
-  if (!mapVisible || settlementExpansionActive() || LeaderModelManager.isLeaderShowing) {
+  if (!mapVisible || LeaderModelManager.isLeaderShowing) {
     camInput.running = false; camInput.keys.clear(); camInput.wheel = 0;
     camInput.stick.x = 0; camInput.stick.y = 0; camInput.trigger = 0; camInput.pinchDelta = null;
     return;
@@ -2314,14 +2415,14 @@ function kickCamLoop() {
   scheduleCamLoop(false);
 }
 function onCamKeyDown(e) {
-  if (!mapVisible || settlementExpansionActive() || LeaderModelManager.isLeaderShowing || !CAM_KEYS[e.key] || isEditableMapTarget(e.target) || e.ctrlKey || e.altKey || e.metaKey) return;
+  if (!mapVisible || LeaderModelManager.isLeaderShowing || !CAM_KEYS[e.key] || isEditableMapTarget(e.target) || e.ctrlKey || e.altKey || e.metaKey) return;
   e.preventDefault(); e.stopPropagation();
   camInput.keys.add(e.key);
   kickCamLoop();
 }
 function onCamKeyUp(e) { if (CAM_KEYS[e.key]) camInput.keys.delete(e.key); }
 function onMapZoomKeyDown(e) {
-  if (!mapVisible || settlementExpansionActive() || LeaderModelManager.isLeaderShowing || e.defaultPrevented ||
+  if (!mapVisible || LeaderModelManager.isLeaderShowing || e.defaultPrevented ||
       isEditableMapTarget(e.target) || e.ctrlKey || e.altKey || e.metaKey) return;
   const zoomIn = e.code === 'NumpadAdd' || e.key === '+' || e.key === '=';
   const zoomOut = e.code === 'NumpadSubtract' || e.key === '-' || e.key === '_';
@@ -2332,7 +2433,7 @@ function onMapZoomKeyDown(e) {
   changeMapZoom(zoomIn ? 1.25 : 0.8);
 }
 function onCamWheel(e) {
-  if (!mapVisible || settlementExpansionActive() || LeaderModelManager.isLeaderShowing) return;
+  if (!mapVisible || LeaderModelManager.isLeaderShowing) return;
   const a = measureArea();
   if (!pointInRect(e.clientX, e.clientY, a)) return;
   if (overControlPanels(e.clientX, e.clientY)) return;
@@ -2364,7 +2465,6 @@ const touchState = { mode: 0, blocked: false, x: 0, y: 0, d: 0 };
 function touchBlocked(t) {
   if (!pointInRect(t.clientX, t.clientY, measureArea())) return true;
   if (overControlPanels(t.clientX, t.clientY)) return true;
-  if (els.exitBtn && pointInRect(t.clientX, t.clientY, els.exitBtn.getBoundingClientRect())) return true;
   return false;
 }
 function touchBegin(e) {
@@ -2374,14 +2474,14 @@ function touchBegin(e) {
   else { touchState.mode = 1; touchState.x = ts[0].clientX; touchState.y = ts[0].clientY; }
 }
 function onTouchStart(e) {
-  if (!mapVisible || settlementExpansionActive() || LeaderModelManager.isLeaderShowing || !e.touches || !e.touches.length) return;
+  if (!mapVisible || LeaderModelManager.isLeaderShowing || !e.touches || !e.touches.length) return;
   if (touchState.blocked || touchBlocked(e.touches[0])) { touchState.blocked = true; return; }
   e.preventDefault();
   hideTip();
   touchBegin(e);
 }
 function onTouchMove(e) {
-  if (!mapVisible || settlementExpansionActive() || LeaderModelManager.isLeaderShowing || !touchState.mode || !e.touches || !e.touches.length) return;
+  if (!mapVisible || LeaderModelManager.isLeaderShowing || !touchState.mode || !e.touches || !e.touches.length) return;
   e.preventDefault();
   const ts = e.touches;
   if (ts.length >= 2) {
@@ -2403,7 +2503,7 @@ function onTouchEnd(e) {
   if (!touchState.mode) return;
   if (e.touches && e.touches.length) touchBegin(e); else touchState.mode = 0;
 }
-function onCamMouseMove(e) { camInput.mx = e.clientX; camInput.my = e.clientY; camInput.mouseIn = true; if (mapVisible && !settlementExpansionActive() && !LeaderModelManager.isLeaderShowing) kickCamLoop(); }
+function onCamMouseMove(e) { camInput.mx = e.clientX; camInput.my = e.clientY; camInput.mouseIn = true; if (mapVisible && !LeaderModelManager.isLeaderShowing) kickCamLoop(); }
 function onCamMouseLeave() { camInput.mouseIn = false; }
 try {
   window.addEventListener('keydown', onCamKeyDown, true);
@@ -2509,7 +2609,7 @@ function fitViewRow() {
 // True when the point is over the toggle panel or the playback panel.
 function overControlPanels(x, y) {
   const panels = historyControlsExpanded ? [els.playbackPanel, els.historyButton]
-    : [els.panel, els.playbackPanel, els.popPanel, els.popBtn, els.leadPanel, els.leadBtn, els.walkerPause, els.walkerSpeed, els.civTimelineButton, els.skipAheadButton, els.skipAheadPanel, els.skipAheadPause, els.townCompass, els.civTimelinePanel, els.cmdPanel, els.familyPanel, els.clumpPanel, els.mapScale];
+    : [els.panel, els.playbackPanel, els.popPanel, els.popBtn, els.regionPanel, els.regionBtn, els.leadPanel, els.leadBtn, els.walkerPause, els.walkerSpeed, els.civTimelineButton, els.skipAheadButton, els.skipAheadPanel, els.skipAheadPause, els.townCompass, els.civTimelinePanel, els.cmdPanel, els.familyPanel, els.clumpPanel, els.mapScale];
   for (const panel of panels) {
     if (panel && panel.style.display !== 'none' && pointInRect(x, y, panel.getBoundingClientRect())) return true;
   }
@@ -2646,7 +2746,7 @@ function collectTileBorders(i, frame, edges, stars, edgesTop, vis) {
     const nv = ni >= 0 ? frame.get(ni) : undefined;
     const no = nv !== undefined ? ((nv >> 3) & 63) : -1;
     if (no === o) continue;   // same owner → interior edge, no border
-    if (meta.kind !== 'citystate' && nv !== undefined && (!vis || vis[ni] !== 0) && ownerMeta(no).kind !== 'village') {
+    if (meta.kind !== 'citystate' && nv !== undefined && (!vis || vis[ni] > 0) && ownerMeta(no).kind !== 'village') {
       const nConq = (nv & 7) >= 1 && conqueredAt(ni, no);
       if (nConq && !selfConq) continue;                     // conqueror always draws this edge
       if (nConq === selfConq && (nv & 7) > c) continue;     // tie → higher class draws
@@ -2739,7 +2839,7 @@ function natWonderRings(vis, only) {
   let any = false;
   mapCtx.beginPath();
   for (const idx of naturalWonders) {
-    if (!basePos[idx] || (vis && vis[idx] === 0)) continue;
+    if (!basePos[idx] || (vis && !(vis[idx] > 0))) continue;
     if (only && !only.has(idx)) continue;
     any = true;
     const cx = Math.round(basePos[idx].x + hexW / 2) + NATW_DX, cy = Math.round(basePos[idx].y + hexH / 2 + yo);
@@ -2761,8 +2861,54 @@ function drawNatw() {
 }
 function syncLayerDisplays() {
   const visible = mapVisible || miniMapVisible;
+  if (fogLayer.el) fogLayer.el.style.display = visible && fogMode ? 'block' : 'none';
   if (natwLayer.el) natwLayer.el.style.display = (visible && showWonders && !fogMode) ? 'block' : 'none';
   if (wonDom.el) wonDom.el.style.display = (visible && showWonders) ? 'block' : 'none';   // display cycles measured free
+}
+function drawFogLayer(vis) {
+  if (!fogLayer.el || !fogLayer.ctx || !basePos) return;
+  fogLayer.el.style.display = fogMode && (mapVisible || miniMapVisible) ? 'block' : 'none';
+  if (!fogMode) return;
+  const key = `${mapPxW}|${mapPxH}|${hexW}|${hexH}|${colShift}`;
+  if (fogLayer.paintKey === key && fogLayer.base === basePos) {
+    if (fogLayer.vis === vis) return;
+    let unchanged = true;
+    for (let i = 0; i < basePos.length; i++) {
+      if (!!(vis && vis[i] > 0) !== !!(fogLayer.vis && fogLayer.vis[i] > 0)) { unchanged = false; break; }
+    }
+    if (unchanged) { fogLayer.vis = vis; return; }
+  }
+  const previousCtx = mapCtx;
+  mapCtx = fogLayer.ctx;
+  try {
+    mapCtx.clearRect(0, 0, mapPxW, mapPxH);
+    mapCtx.beginPath();
+    let hidden = false;
+    for (let i = 0; i < basePos.length; i++) {
+      if (vis && vis[i] > 0) continue;
+      hexSubpath(i);
+      hidden = true;
+    }
+    // Cover retained SVG geometry and labels that extend beyond their revealed anchor tile.
+    if (hidden) { mapCtx.fillStyle = FOG_HIDDEN; mapCtx.fill(); }
+    fogLayer.paintKey = key; fogLayer.vis = vis; fogLayer.base = basePos;
+  } finally { mapCtx = previousCtx; }
+}
+function setFogVisibility(on) {
+  if (suppressFog || fogLocked) return;
+  fogMode = on;
+  markBgDirty();
+  cancelPendingMapDraws();
+  drawFogLayer(on ? visForPos() : null);
+  if (on) {
+    fogMarkersStale = true;
+    for (const layer of [terrainMarkerDom, iconDom]) if (layer.el) layer.el.style.display = 'none';
+    placeIcons();
+    try { syncTownscapes(); } catch (error) { err(`fog toggle townscape sync failed: ${error}`); }
+  }
+  nextPaint(() => {
+    try { redraw(); } catch (error) { err(`fog toggle redraw failed: ${error}`); }
+  });
 }
 function recycleAllLayers() {   // layout changed / recording changed → per-age/static canvases stale
   if (townRender.timer) { clearTimeout(townRender.timer); townRender.timer = 0; }
@@ -2792,6 +2938,7 @@ function drawMap(frame) {
   HB.draws++;   // HB counter
   ensureBackground();
   const vis = fogMode ? visForPos() : null;
+  drawFogLayer(vis);
   drawStateLayer(frame, vis);
   if (showWonders && !fogMode) drawNatw();
   syncLayerDisplays();
@@ -2838,7 +2985,7 @@ function sharedTerritoryClaim(i, frame, vis) {
   if (!showTerritory) return null;
   const claims = new Map();
   for (const n of neighborsByIndex[i] || []) {
-    if (n < 0 || !basePos[n] || (vis && vis[n] === 0)) continue;
+    if (n < 0 || !basePos[n] || (vis && !(vis[n] > 0))) continue;
     const value = frame.get(n);
     if (value === undefined) continue;
     const fill = cellKeyFill(n, frame);
@@ -2874,7 +3021,7 @@ function territoryClip(i, frame, vis) {
     const wrapWidth = layoutCols * hexW;
     if (wrapWidth && Math.abs(dx) > wrapWidth / 2) dx -= Math.sign(dx) * wrapWidth;
     const dy = basePos[n].y - here.y, len = Math.hypot(dx, dy) || 1, ux = dx / len, uy = dy / len;
-    const nv = vis && vis[n] === 0 ? undefined : frame.get(n);
+    const nv = vis && !(vis[n] > 0) ? undefined : frame.get(n);
     if (nv !== undefined && ((nv >> 3) & 63) === owner) { ownDirs.push([ux, uy]); sx += ux; sy += uy; same++; }
     if (river && (terrain[n] === 10 || features.get(n) === 5)) riverDirs.push([ux, uy]);
   }
@@ -2923,7 +3070,7 @@ function splitTerritoryFill(i, frame, vis, clip, color, top) {
   const adjacent = [], byDirection = new Map();
   let edge = false;
   for (let d = 0; d < 6; d++) {
-    const n = neighbors[d], nv = n >= 0 && !(vis && vis[n] === 0) ? frame.get(n) : undefined;
+    const n = neighbors[d], nv = n >= 0 && !(vis && !(vis[n] > 0)) ? frame.get(n) : undefined;
     const neighborFill = nv === undefined ? null : cellKeyFill(n, frame);
     if (!neighborFill || neighborFill.key === 'T') { edge = true; continue; }
     const neighborOwner = (nv >> 3) & 63;
@@ -2988,7 +3135,7 @@ function splitTerritoryFill(i, frame, vis, clip, color, top) {
 }
 function stateFillPush(i, frame, vis, base, top) {
   if (!basePos[i]) return;
-  if (vis) { if (vis[i] === 0) return; }
+  if (vis) { if (!(vis[i] > 0)) return; }
   else if (terrain && terrain[i] === 0) return;
   const kf = cellKeyFill(i, frame);
   const clip = kf.key !== 'T' || frame.get(i) === undefined ? territoryClip(i, frame, vis) : null;
@@ -3023,7 +3170,7 @@ function tileShownColor(i, frame, vis, memo) {
   let c = memo.get(i);
   if (c !== undefined) return c;
   c = null;
-  if (basePos[i] && !(vis && vis[i] === 0) && !territoryClip(i, frame, vis)) {   // a clipped tile has no uniform colour, so no fringe teeth
+  if (basePos[i] && !(vis && !(vis[i] > 0)) && !territoryClip(i, frame, vis)) {   // a clipped tile has no uniform colour, so no fringe teeth
     c = (vis && vis[i] === 1) ? dimCss(landFillCss(i, frame)) : landFillCss(i, frame);
   }
   memo.set(i, c);
@@ -3103,7 +3250,7 @@ function paintEdgeFringe(set, frame, vis, fullSet) {
       if (done.has(key)) continue;
       done.add(key);
       if (Math.abs(basePos[n].x - basePos[i].x) > hexW * 1.6) continue;   // wrapped neighbor across the map seam
-      if ((vis && (vis[n] === 0 || vis[i] === 0))) continue;              // never reveal hidden tiles
+      if ((vis && (!(vis[n] > 0) || !(vis[i] > 0)))) continue;              // never reveal hidden tiles
       const cLo = tileShownColor(lo, frame, vis, memo), cHi = tileShownColor(hi, frame, vis, memo);
       if (!cLo || !cHi || cLo === cHi) continue;
       const nbl = neighborsByIndex[lo]; let dl = -1;
@@ -3243,7 +3390,7 @@ function tryPartialState(frame, vis) {
   if (showBorders) {
     const cx = i => basePos[i].x + hexW / 2, cy = i => basePos[i].y + hexH / 2;
     const edges = new Map(), stars = new Map(), edgesTop = new Map();
-    for (const i of withNeighbors(R)) { if (vis && vis[i] === 0) continue; collectTileBorders(i, frame, edges, stars, edgesTop, vis); }
+    for (const i of withNeighbors(R)) { if (vis && !(vis[i] > 0)) continue; collectTileBorders(i, frame, edges, stars, edgesTop, vis); }
     strokeBorderTiers(edges, edgesTop, stars, cx, cy);
   }
   if (showWonders && vis) natWonderRings(vis, R);
@@ -3269,7 +3416,7 @@ function drawStateLayer(frame, vis) {
   // borders + capital stars (city dots are DOM)
   if (showBorders) {
     const edges = new Map(), stars = new Map(), edgesTop = new Map();
-    for (const [i] of frame) { if (vis && vis[i] === 0) continue; collectTileBorders(i, frame, edges, stars, edgesTop, vis); }
+    for (const [i] of frame) { if (vis && !(vis[i] > 0)) continue; collectTileBorders(i, frame, edges, stars, edgesTop, vis); }
     strokeBorderTiers(edges, edgesTop, stars, cx, cy);
   }
   // natural-wonder rings under FOG only (vis-gated; the hole shows the state fill painted above)
@@ -3305,7 +3452,7 @@ function drawWonderLayer(frame, vis) {
   const wr = Math.max(1, Math.round(hexW * 0.32 * MAP_MARKER_SCALE)), yo = Math.round(hexH * 0.07), h = Math.round(2 * wr * TRI_RATIO), geom = 'w' + wr;
   let n = 0;
   for (const [idx, e] of wondersForPos()) {
-    if (!basePos[idx] || (vis && vis[idx] === 0)) continue;
+    if (!basePos[idx] || (vis && !(vis[idx] > 0))) continue;
     const x = Math.round(basePos[idx].x + hexW / 2 - wr), y = Math.round(basePos[idx].y + hexH / 2 + yo - 2 * h / 3);
     placeWon(wonSlotAt(n++), geom, wr, h, x, y, ownerColors(e[0]).secondaryCss);
   }
@@ -3336,8 +3483,11 @@ const FEATURE_STYLES = {
   16: ['#5b6543|#a3af7b', 'feature', 'blob', FEATURE_MARKERS_PER_TILE],
 };
 // Build this turn's visible mountain/unit markers with one record per triangle or unit dot.
-function unitMapFor(p, vis, frame) {
+function unitMapFor(p, vis, frame, rect = null) {
   const dots = [];
+  const inView = index => basePos[index] && (!rect ||
+    (basePos[index].x + hexW * 2 >= rect.x0 && basePos[index].x - hexW <= rect.x1 &&
+      basePos[index].y + hexH * 2 >= rect.y0 && basePos[index].y - hexH <= rect.y1));
   const unitRadius = Math.max(0.5, Math.round(hexW * 0.05 * MAP_MARKER_SCALE));
   const mountainMarkerCount = MOUNTAIN_MARKERS_PER_TILE;
   const mountainRadius = Math.max(1, Math.round(hexW * 0.035 * MAP_MARKER_SCALE));
@@ -3345,7 +3495,7 @@ function unitMapFor(p, vis, frame) {
   const featureMarkers = readMapFeatureMarkers();
   if (showResources && frames.length) {
     for (const [index, code] of resourcesForPos()) {
-      if (!basePos[index] || (vis && vis[index] === 0)) continue;
+      if (!inView(index) || (vis && !(vis[index] > 0))) continue;
       const item = { kind: 'resource', index, type: resourceTypeForPos(index), code };
       const color = RESOURCE_COLOR[code] || '#dddddd';
       const t = terrain ? terrain[index] : 8;
@@ -3360,7 +3510,7 @@ function unitMapFor(p, vis, frame) {
     if (showNaturalFeatures && naturalDecorActive()) {
       pushDecorMarkers(dots, vis, featureMarkers, mountainRadius, featureRadius, mountainMarkerCount);
       for (let index = 0; index < terrain.length; index++) {
-        if (terrain[index] === 9 && basePos[index] && (!vis || vis[index] !== 0)) {
+        if (terrain[index] === 9 && inView(index) && (!vis || vis[index] > 0)) {
           dots.push({ index, cols: '#082b61|#0b3b7a', seed: index * 97 + 11, kind: 'unit', radius: featureRadius, natural: true });
         }
       }
@@ -3368,7 +3518,7 @@ function unitMapFor(p, vis, frame) {
     if (frames.length && manifest && Array.isArray(manifest.buildingTypes)) {
       // one dot per improvement; they use the unit-dot placement, so they steer clear of river lines
       for (const [index, list] of buildingsForPos()) {
-        if (!basePos[index] || (vis && vis[index] === 0)) continue;
+        if (!inView(index) || (vis && !(vis[index] > 0))) continue;
         let n = 0;
         const seenTypes = new Map();
         for (const typeIndex of list) {
@@ -3391,7 +3541,7 @@ function unitMapFor(p, vis, frame) {
         }
       }
     }
-    if (showSettlements && frame instanceof Map) {
+    if (showSettlements && !townscapeActive() && frame instanceof Map) {
       const citiesByOwner = new Map();
       for (const [index, settlement] of settlementsForPos()) {
         const value = frame.get(index);
@@ -3429,7 +3579,7 @@ function unitMapFor(p, vis, frame) {
         const color = ownerColors((frame.get(city.index) >> 3) & 63);
         for (let population = 0; population < city.population; population++) {
           const index = tiles[population % tiles.length];
-          if (vis && vis[index] === 0) continue;
+          if (!inView(index) || (vis && !(vis[index] > 0))) continue;
           if (specialistDots >= MAX_SPECIALIST_DOTS) break;
           for (let d = 0; d < DOTS_PER_ITEM; d++) {
             specialistDots++;
@@ -3451,7 +3601,7 @@ function unitMapFor(p, vis, frame) {
     const unitRows = readUnitsTurn(p);
     for (let row = 0; row < unitRows.length; row++) {
       const [index, owner, type, health] = unitRows[row];
-      if (!basePos[index] || (vis && vis[index] !== 2)) continue;
+      if (!inView(index) || (vis && vis[index] !== 2)) continue;
       const ordinal = onTile.get(index) || 0; onTile.set(index, ordinal + 1);
       const count = Math.min(10, Math.ceil(Math.max(0, health) / 10));
       const cols = playerBorderColor(owner) + '|' + unitColor(owner);
@@ -3459,7 +3609,7 @@ function unitMapFor(p, vis, frame) {
       const cat = ut ? ut[2] : 0, t0 = terrain ? terrain[index] : 8;
       // naval and air units, and anything standing on water (embarked), may sit over rivers and sea decorations
       const free = cat === 1 || cat === 3 || t0 === 0 || t0 === 1 || t0 === 9 || t0 === 10;
-      const shape = cat === 1 ? 'hull' : cat === 3 ? 'air' : 'block';
+      const shape = cat === 1 ? 'hull' : cat === 3 ? 'air' : cat === 0 ? 'triangle' : 'block';
       const unitItem = { kind: 'unit', owner, type, index, health, row, turn: p, bonus: unitRows[row][5] || 0,
         activity: unitRows[row][6] || 0, moving: unitRows[row][4] >= 0 && unitRows[row][4] !== index };
       for (let dot = 0; dot < count; dot++) dots.push({ index, cols, seed: index * 131 + owner * 17 + type * 7 + dot + ordinal * 104729, kind: 'unit', radius: unitRadius, shape, free, extra: dot !== 0, item: unitItem });
@@ -3526,7 +3676,7 @@ function scheduleDecorRefresh() {
   if (tier <= 1 && naturalRender.viewKey === naturalViewKey()) { decorDrawnRect = null; return; }
   const view = tier === detailD ? decorViewRect(0) : null;
   const contains = d => view && d && view.x0 >= d.x0 && view.x1 <= d.x1 && view.y0 >= d.y0 && view.y1 <= d.y1;
-  if (scatterJob && !contains(scatterJob.decorRect)) scatterJob = null;
+  if (scatterJob && scatterJob.viewKey !== naturalViewKey()) scatterJob = null;
   if (naturalRender.viewKey === naturalViewKey() && contains(scatterJob ? scatterJob.decorRect : decorDrawnRect)) {
     if (decorRefreshTimer) { clearTimeout(decorRefreshTimer); decorRefreshTimer = 0; }
     return;
@@ -3554,7 +3704,7 @@ function pushDecorMarkers(dots, vis, featureMarkers, mountainRadius, featureRadi
   let wanted = 0;
   const take = (cacheKey, index, baseCount, make) => {
     const p = basePos[index];
-    if (!p || (vis && vis[index] === 0)) return;
+    if (!p || (vis && !(vis[index] > 0))) return;
     if (rect && (p.x + hexW < rect.x0 || p.x > rect.x1 || p.y + hexH < rect.y0 || p.y > rect.y1)) return;
     entries.push({ cacheKey, want: baseCount * D, make });
     wanted += baseCount * D;
@@ -3704,6 +3854,14 @@ function polyRect(cx, cy, hw, hh) {
   return `M${(cx - hw).toFixed(1)},${(cy - hh).toFixed(1)}L${(cx + hw).toFixed(1)},${(cy - hh).toFixed(1)}L${(cx + hw).toFixed(1)},${(cy + hh).toFixed(1)}L${(cx - hw).toFixed(1)},${(cy + hh).toFixed(1)}Z`;
 }
 function polyPts(cx, cy, pts) { return pts.map((p, k) => (k ? 'L' : 'M') + (cx + p[0]).toFixed(1) + ',' + (cy + p[1]).toFixed(1)).join('') + 'Z'; }
+function polyStar(cx, cy, radius, points = 12) {
+  const vertices = [];
+  for (let k = 0; k < points * 2; k++) {
+    const angle = k * Math.PI / points - Math.PI / 2, r = radius * (k % 2 ? 0.58 : 1);
+    vertices.push([Math.cos(angle) * r, Math.sin(angle) * r]);
+  }
+  return polyPts(cx, cy, vertices);
+}
 function shapePaths(shape, x, y, r, bw) {
   const ri = Math.max(0.3, r - bw);
   switch (shape) {
@@ -3726,6 +3884,10 @@ function shapePaths(shape, x, y, r, bw) {
     };
     case 'building': return { outer: polyRect(x, y, r, r * 0.75), inner: polyRect(x, y, ri * 0.8, Math.max(0.25, r * 0.75 - bw) * 0.8) };
     case 'block': return { outer: polyRect(x, y, r * 0.9, r * 0.9), inner: polyRect(x, y, ri * 0.55, ri * 0.55) };
+    case 'triangle': return {
+      outer: polyPts(x, y, [[0, -r], [r, r * 0.8], [-r, r * 0.8]]),
+      inner: polyPts(x, y, [[0, -ri * 0.55], [ri * 0.55, ri * 0.44], [-ri * 0.55, ri * 0.44]]),
+    };
     case 'hull': return {
       outer: polyPts(x, y, [[r * 1.4, 0], [r * 0.6, r * 0.6], [-r * 1.1, r * 0.6], [-r * 1.1, -r * 0.6], [r * 0.6, -r * 0.6]]),
       inner: polyPts(x, y, [[r * 0.7, 0], [r * 0.3, r * 0.3], [-r * 0.6, r * 0.3], [-r * 0.6, -r * 0.3], [r * 0.3, -r * 0.3]]),
@@ -3774,6 +3936,39 @@ function iconSlot(n) {
     iconSlots[n] = m;
   }
   return m;
+}
+function syncIconGlyph(slot, css, item) {
+  slot.el.style.backgroundImage = css || 'none';
+  slot.el.style.fxsBackgroundImageTint = item.kind === 'unit' ? unitColor(item.owner) : '';
+}
+function syncUnitIconHealth(slot, item) {
+  if (item.kind !== 'unit') {
+    if (slot.healthSvg) slot.healthSvg.style.display = 'none';
+    return;
+  }
+  if (!slot.healthSvg) {
+    const ns = 'http://www.w3.org/2000/svg', svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 100 100');
+    svg.style.cssText = 'position:absolute;left:-8%;top:-8%;width:116%;height:116%;overflow:visible;pointer-events:none;';
+    for (const color of ['#101722', '#69c46d']) {
+      const circle = document.createElementNS(ns, 'circle');
+      for (const [key, value] of Object.entries({ cx: 50, cy: 50, r: 46, fill: 'none', stroke: color, 'stroke-width': 6 })) circle.setAttribute(key, String(value));
+      svg.appendChild(circle);
+      slot.healthCircle = circle;
+    }
+    slot.el.appendChild(svg); slot.healthSvg = svg;
+  }
+  const health = Math.max(0, Math.min(100, item.health));
+  if (!Number.isFinite(health)) { err('invalid unit icon health'); slot.healthSvg.style.display = 'none'; return; }
+  if (slot.healthValue !== health) {
+    const circumference = 2 * Math.PI * 46;
+    slot.healthCircle.setAttribute('stroke-dasharray', `${circumference * health / 100} ${circumference}`);
+    slot.healthCircle.setAttribute('transform', 'rotate(-90 50 50)');
+    slot.healthCircle.setAttribute('stroke', health > 60 ? '#69c46d' : health > 30 ? '#e7b94b' : '#df5757');
+    slot.healthSvg.setAttribute('aria-label', `Unit health: ${health}%`);
+    slot.healthValue = health;
+  }
+  slot.healthSvg.style.display = '';
 }
 // Per-tile scatter results, reused while a tile's markers, rivers and islets are unchanged (the common case when scrubbing).
 const scatterCache = new Map();
@@ -3828,9 +4023,6 @@ function tileLayoutSig(index, group) {
 }
 function drawUnitLayer(frame, vis, continuation = null) {
   if (!unitDom.el) return false;
-  const naturalFresh = syncNaturalVisibility();
-  if (mapVisible && !naturalFresh && Date.now() - lastMapInputTs < 250) { scheduleScatterContinuation(); return false; }
-  if (!showNaturalFeatures || !naturalDecorActive()) hideNaturalMarkers();
   if (markerRendered && vis && vis !== markerRenderedVis) {
     let restricted = !markerRenderedVis || markerRenderedVis.length !== vis.length;
     if (!restricted) {
@@ -3840,9 +4032,14 @@ function drawUnitLayer(frame, vis, continuation = null) {
     }
     if (restricted) {
       fogMarkersStale = true;
-      for (const layer of [terrainMarkerDom, iconDom]) if (layer.el) layer.el.style.visibility = 'hidden';
+      for (const layer of [terrainMarkerDom, iconDom]) if (layer.el) layer.el.style.display = 'none';
+      placeIcons();
+      try { syncTownscapes(); } catch (error) { err(`fog restriction townscape sync failed: ${error}`); }
     }
   }
+  const naturalFresh = syncNaturalVisibility();
+  if (mapVisible && !naturalFresh && Date.now() - lastMapInputTs < 250) { scheduleScatterContinuation(); return false; }
+  if (!showNaturalFeatures || !naturalDecorActive()) hideNaturalMarkers();
   const markerSvg = terrainMarkerDom.el;
   for (const [name, value] of [['width', String(mapPxW)], ['height', String(mapPxH)], ['viewBox', `0 0 ${mapPxW} ${mapPxH}`]]) {
     if (markerSvg.getAttribute(name) !== value) markerSvg.setAttribute(name, value);
@@ -3851,11 +4048,13 @@ function drawUnitLayer(frame, vis, continuation = null) {
   detailD = mapVisible ? labelTier() : 1;
   const iconMode = iconModeActive();
   const viewKey = naturalViewKey();
-  let job = continuation && continuation === scatterJob && continuation.frame === frame && continuation.pos === pos && continuation.viewKey === viewKey
-    ? continuation : null;
+  const layerKey = `${showResources}|${showNaturalFeatures}|${showSettlements}|${showUnits}|${showBuildingDots}|${showUnitDots}|${iconMode}|${townscapeActive()}`;
+  const pending = continuation || scatterJob;
+  let job = pending && pending === scatterJob && pending.frame === frame && pending.pos === pos &&
+    pending.viewKey === viewKey && pending.layerKey === layerKey && pending.vis === vis ? pending : null;
   if (!job) {
     decorPendingRect = null;
-    const unsorted = unitMapFor(pos, vis, frame);
+    const unsorted = unitMapFor(pos, vis, frame, decorViewRect(0.35));
     const limits = naturalRenderLimits(), townscapeOn = townscapeActive();
     const candidates = townscapeOn ? [] : unsorted.filter(marker => marker.decor || marker.natural);
     const samples = new Set(), count = Math.min(limits.shapes, candidates.length);
@@ -3872,7 +4071,7 @@ function drawUnitLayer(frame, vis, continuation = null) {
       if (!group) { group = []; byTile.set(marker.index, group); }
       group.push(marker);
     }
-    job = { frame, pos, vis, viewKey, markers, byTile, candidateCount: candidates.length, decorRect: decorPendingRect, tiles: Array.from(byTile), nextTile: 0, scattered: new Map() };
+    job = { frame, pos, vis, viewKey, layerKey, markers, byTile, candidateCount: candidates.length, decorRect: decorPendingRect, tiles: Array.from(byTile), nextTile: 0, scattered: new Map() };
     scatterJob = job;
   }
   vis = job.vis;
@@ -3949,6 +4148,8 @@ function drawUnitLayer(frame, vis, continuation = null) {
     if (marker.labelKey) improvementDotPos.set(marker.labelKey, { x: point.x, y: point.y, radius });
     if (iconMode && marker.item) iconPoints.push({ x: point.x, y: point.y, s: radius * 2.4, item: marker.item, fog: !!vis && vis[marker.index] === 1 });
     if (marker.item && marker.item.kind === 'unit' && !marker.extra) unitFlagPoints.push({ x: point.x, y: point.y, s: radius * 2.4, item: marker.item, fog: !!vis && vis[marker.index] === 1 });
+    if (!marker.decor && !marker.natural && marker.item?.kind !== 'resource' &&
+        (marker.item?.kind === 'building' ? !showBuildingDots : marker.kind === 'unit' && !showUnitDots)) continue;
     // (building and improvement squares, and the rectangles under units)
     if (townscapeOn && marker.item && marker.item.kind !== 'resource') continue;
     // ...and so are the decorative unit dots (a city's specialists and other item-less unit dots), whose people walk the townscapes.
@@ -3990,7 +4191,7 @@ function drawUnitLayer(frame, vis, continuation = null) {
   const isletView = mapVisible ? decorViewRect(0.05) : null;
   if (naturalDetailActive() && terrain && basePos && neighborsByIndex) {
     for (let i = 0; i < terrain.length; i++) {
-      if (!basePos[i] || (vis && vis[i] === 0) || (terrain[i] !== 0 && terrain[i] !== 1)) continue;
+      if (!basePos[i] || (vis && !(vis[i] > 0)) || (terrain[i] !== 0 && terrain[i] !== 1)) continue;
       const origin = basePos[i];
       if (isletView && (origin.x + hexW * 2 < isletView.x0 || origin.x - hexW > isletView.x1 ||
           origin.y + hexH * 2 < isletView.y0 || origin.y - hexH > isletView.y1)) continue;
@@ -4034,11 +4235,15 @@ function drawUnitLayer(frame, vis, continuation = null) {
       const outerD = pathData.outer.join(''), innerD = pathData.inner.join('');
       if (paths.lastOuter !== outerD) { paths.outer.setAttribute('d', outerD); paths.lastOuter = outerD; }
       if (paths.lastInner !== innerD) { paths.inner.setAttribute('d', innerD); paths.lastInner = innerD; }
+      paths.outer.style.display = outerD && (natural || !townscapeOn) ? '' : 'none';
+      paths.inner.style.display = innerD && (natural || !townscapeOn) ? '' : 'none';
     }
     for (const [cols, paths] of pool) {
       if (shapes.has(cols)) continue;
       if (paths.lastOuter) { paths.outer.setAttribute('d', ''); paths.lastOuter = ''; }
       if (paths.lastInner) { paths.inner.setAttribute('d', ''); paths.lastInner = ''; }
+      // Gameface can retain the last nonempty SVG drawing after d is cleared.
+      paths.outer.style.display = paths.inner.style.display = 'none';
     }
   }
   for (const m of unitSlots) if (m) parkSlot(m);   // legacy dot divs are no longer used
@@ -4046,7 +4251,7 @@ function drawUnitLayer(frame, vis, continuation = null) {
   markerRenderedVis = vis;
   townPanScene.key = '';
   if (columnShiftMarkersStale || fogMarkersStale) {
-    for (const layer of [terrainMarkerDom, iconDom]) if (layer.el) layer.el.style.visibility = '';
+    for (const layer of [terrainMarkerDom, iconDom]) if (layer.el) { layer.el.style.visibility = ''; layer.el.style.display = ''; }
     columnShiftMarkersStale = false;
     fogMarkersStale = false;
   }
@@ -4069,36 +4274,50 @@ const iconPoints = [], unitFlagPoints = [], flagHits = [];
 const MAX_ICON_SLOTS = 500;
 // Icon mode: every unit/building/improvement/resource dot shows its in-game icon. Only dots inside the
 // viewport get a DOM icon (capped), so panning just re-runs this cheap cull.
+function townscapeIconKey(item, x, y) {
+  return `${item.kind}|${item.index}|${item.typeIndex}|${item.type}|${item.row}|${item.dot || 0}|${x.toFixed(6)}|${y.toFixed(6)}`;
+}
+function visibleTownscapeIconKeys() {
+  if (!townscapeReady() || !townElementVisibility.townRoofs) return new Set();
+  const entries = townRender.accessJob ? townRender.accessJob.roofEntries : townHits.map(hit => hit.entry);
+  return new Set(entries.filter(entry => entry && entry.final && entry.final.length)
+    .map(entry => townscapeIconKey(entry.item, entry.center.x, entry.center.y)));
+}
 function placeIcons() {
   iconHits.length = 0;
+  flagHits.length = 0;
   if (!iconDom.el) return;
   if (columnShiftMarkersStale || fogMarkersStale) { iconDom.el.style.display = 'none'; return; }
   iconDom.el.style.display = iconModeActive() || flagsActive() ? 'block' : 'none';
-  flagHits.length = 0;
   let n = 0;
-  const iconScale = townscapeActive() ? 0.1 : 1;   // the icon circles shrink to a tenth while a townscape is drawn under them
+  const iconScale = townscapeReady() ? 0.1 : 1;
+  const townscapeOn = townscapeActive();
+  const townIcons = visibleTownscapeIconKeys();
   if (iconModeActive() && iconPoints.length && mapPxW) {
     const iw = window.innerWidth, ih = window.innerHeight, cx = mapPxW / 2, cy = mapPxH / 2;
     const x0 = (0 - mapX - mapPanX - cx) / viewZoom + cx, x1 = (iw - mapX - mapPanX - cx) / viewZoom + cx;
     const y0 = (0 - mapY - mapPanY - cy) / (viewZoom * viewAspectY) + cy, y1 = (ih - mapY - mapPanY - cy) / (viewZoom * viewAspectY) + cy;
     for (const p of iconPoints) {
-      if (townscapeActive() && p.item.kind !== 'resource') continue;
+      if (townIcons.has(townscapeIconKey(p.item, p.x, p.y))) continue;
+      if (p.item.kind === 'unit' && (!showUnits || !townscapeOn && !showUnitDots)) continue;
+      if (p.item.kind === 'building' && !townscapeOn && !showBuildingDots) continue;
       if (p.x < x0 - p.s || p.x > x1 + p.s || p.y < y0 - p.s || p.y > y1 + p.s) continue;
       if (n >= MAX_ICON_SLOTS) break;
       const css = itemIconCss(p.item), m = iconSlot(n++);
       const owner = p.item.kind === 'unit' ? p.item.owner : -1;
       const border = owner >= 0 ? playerBorderColor(owner) : p.item.kind === 'resource' ? (RESOURCE_COLOR[p.item.code] || '#dddddd') : '#d9a441';
-      const screen = mapToScreen(p.x, p.y), size = Math.max(16, p.s * viewZoom) * (iconScale);
+      const screen = mapToScreen(p.x, p.y), size = Math.max(16, p.s * viewZoom * iconScale);
       const k = `${css}|${border}|${screen.x.toFixed(1)}|${screen.y.toFixed(1)}|${size.toFixed(1)}|${p.fog ? 1 : 0}`;
       if (m.k !== k) {
         m.k = k;
         const st = m.el.style;
         st.left = (screen.x - size / 2) + 'px'; st.top = (screen.y - size / 2) + 'px'; st.width = st.height = size + 'px';
-        st.backgroundImage = css || 'none';
         st.border = Math.max(1, size * 0.06) + 'px solid ' + (p.fog ? dimCss(border) : border);
         st.opacity = p.fog ? '0.45' : '1';
       }
+      syncIconGlyph(m, css, p.item);
       if (!m.shown) { m.el.style.display = 'block'; m.shown = true; }
+      syncUnitIconHealth(m, p.item);
       iconHits.push({ x: p.x, y: p.y, r: size / (2 * viewZoom), item: p.item });
     }
   }
@@ -4115,18 +4334,19 @@ function placeIcons() {
         m.k = k;
         const st = m.el.style;
         st.left = (screen.x - size / 2) + 'px'; st.top = (cy - size / 2) + 'px'; st.width = st.height = size + 'px';
-        st.backgroundImage = css || 'none';
         st.border = Math.max(1, size * 0.06) + 'px solid ' + (p.fog ? dimCss(border) : border);
         st.opacity = p.fog ? '0.45' : '1';
       }
+      syncIconGlyph(m, css, p.item);
       if (!m.shown) { m.el.style.display = 'block'; m.shown = true; }
+      syncUnitIconHealth(m, p.item);
       flagHits.push({ x: screen.x, y: cy, r: size / 2, item: p.item });
     }
   }
   for (let s = n; s < iconSlots.length; s++) if (iconSlots[s] && iconSlots[s].shown) { iconSlots[s].el.style.display = 'none'; iconSlots[s].shown = false; }
 }
 // Unit flags show while the map is zoomed out far enough for them to be useful but not yet in icon mode.
-function flagsActive() { return mapVisible && showUnits && !iconModeActive() && hexW * viewZoom >= 10; }
+function flagsActive() { return mapVisible && showUnits && showUnitDots && !iconModeActive() && hexW * viewZoom >= 10; }
 function flagAt(clientX, clientY) {
   for (let k = flagHits.length - 1; k >= 0; k--) { const h = flagHits[k]; if (Math.hypot(clientX - h.x, clientY - h.y) <= h.r) return h; }
   return null;
@@ -4217,6 +4437,8 @@ function onUnitIconConsumedClick(event) {
 // (or too large) is simply rebuilt, since every record is a cache of something deterministic.
 const OBJ_VIEW = 'view';
 const viewData = { index: null, lib: null, twKey: '', twPlace: null, sigKey: '', sig: '', errorLogged: false };
+let civIconSeed = null;
+let civIconLayout = null;
 const viewQueue = createWriteQueue((key, value) => {
   const store = window.AnthroproceniaViewStore;
   if (!store || !store.write(key, value)) throw new Error('game configuration store is unavailable');
@@ -4225,6 +4447,19 @@ viewQueue.onError = (key, e) => { if (!viewData.errorLogged) err(`saving map vie
 function viewRead(key) {
   try { const raw = getCatalog().getObject(OBJ_VIEW).read(key); return raw ? JSON.parse(raw) : null; }
   catch (e) { err(`saved map view data (${key}) unreadable: ${e}`); return null; }
+}
+function countryIconSeed() {
+  if (civIconSeed !== null) return civIconSeed;
+  const saved = viewRead('civicons');
+  if (saved && saved.v === 1 && Number.isInteger(saved.seed) && saved.seed >= 0 && saved.seed <= 4294967295) {
+    civIconSeed = saved.seed;
+  } else {
+    if (saved !== null) err('saved civilization icon seed is invalid; choosing a replacement');
+    civIconSeed = Math.floor(Math.random() * 4294967296);
+    const seed = civIconSeed;
+    viewQueue.enqueue('civicons', () => JSON.stringify({ v: 1, seed }), 0);
+  }
+  return civIconSeed;
 }
 function viewIndex() {
   if (!viewData.index) { const saved = viewRead('idx'); viewData.index = Array.isArray(saved) ? saved : []; }
@@ -4247,6 +4482,12 @@ function viewSave(key, produce, track = true) {
 }
 function resetViewData() {
   viewQueue.clear();
+  civIconSeed = null;
+  civIconLayout = null;
+  townRender.accessJob = null;
+  townRender.walkJob = null;
+  townRender.deferredPaths = null;
+  townRender.decoJob = null;
   viewData.index = null; viewData.lib = null; viewData.twKey = ''; viewData.twPlace = null; viewData.sigKey = ''; viewData.errorLogged = false;
   townShapeCache.clear(); townPathCache.clear(); townEntryCache.clear(); townPanScene.key = '';
   townDecoScene.key = ''; townDecoScene.placements = []; townDecoScene.rect = null;
@@ -4370,7 +4611,7 @@ function syncTownVisibility() {
 }
 function syncTownElementVisibility() {
   if (townPaths) for (const [name, , paths] of TOWN_ELEMENT_OPTIONS) {
-    const display = townElementVisibility[name] ? '' : 'none';
+    const display = townElementVisibility[name] && (name !== 'townRoads' || showRoads) ? '' : 'none';
     for (const key of paths) if (townPaths[key] && townPaths[key].style.display !== display) townPaths[key].style.display = display;
   }
   const dots = townElementVisibility.walkerDots ? '' : 'none', hats = townElementVisibility.walkerHats ? '' : 'none';
@@ -4384,7 +4625,7 @@ function scheduleTownRefresh() {
     if (!mapVisible) return;
     try { syncTownscapes(); }
     catch (e) { err(`settled townscape refresh failed: ${e}`); }
-  }, Math.max(1, 250 - (Date.now() - Math.max(lastMapInputTs, townRender.changedAt))));
+  }, Math.max(townRender.accessJob || townRender.walkJob || townRender.decoJob ? 16 : 1, 250 - (Date.now() - Math.max(lastMapInputTs, townRender.changedAt))));
 }
 function submitTownGeometry(paths, maxCommands = 8192, maxChars = 262144) {
   const cost = d => (d.match(/[MLHVQCTSAZ]/gi) || []).length;
@@ -4472,6 +4713,10 @@ function townLocationTipText(hit) {
 }
 function townscapeActive() {
   return mapVisible && iconModeActive() && hexW * viewZoom > (window.innerWidth || 1920) && hexH * viewZoom * viewAspectY > (window.innerHeight || 1080);
+}
+function townscapeReady() {
+  return townscapeActive() && townRender.geometryRetained && townLayer && townLayer.style.display === 'block'
+    && townRender.layoutKey === townZoomKey(false);
 }
 // --- people walking between a townscape's buildings and along the roads; shown (and their paths worked out) only when
 // the map is zoomed in far beyond the townscapes themselves -------------------------------------------------------
@@ -4611,135 +4856,150 @@ function townPointBlocked(entry, x, y) {
   return entry.obstacles.circles.some(o => Math.hypot(o.x - x, o.y - y) < o.r) ||
     entry.obstacles.segments.some(s => !s.road && pointNearSegment(x, y, s.x1, s.y1, s.x2, s.y2, s.clear)) || isWaterAt(x, y);
 }
-function buildWalkGraph(entry) {
-  const shapes = entry.shapes, c = entry.center, r = entry.radius, nodes = [], adj = [], roadNodes = new Set();
-  const blocked = (x, y) => townPointBlocked(entry, x, y);
-  const map = shapes.nodes.map(([x, y]) => {
-    const px = c.x + x * r, py = c.y + y * r;
-    if (blocked(px, py)) return -1;
-    nodes.push({ x: px, y: py }); adj.push([]);
-    return nodes.length - 1;
-  });
-  const townNodes = nodes.length, joinNodes = (i, j) => { if (i !== j && !adj[i].includes(j)) { adj[i].push(j); adj[j].push(i); } };
-  for (const [a, b] of shapes.edges) if (map[a] >= 0 && map[b] >= 0) joinNodes(map[a], map[b]);
-  // Roads within reach of the town: their points become nodes, joined to the nearest street node when close.
-  const roadEnds = [];
-  for (const road of entry.obstacles.roads.concat(entry.linkRoads || [])) {
-    let previous = -1;
-    for (const pt of road.pts) {
-      if (Math.hypot(pt.x - c.x, pt.y - c.y) > r * 1.7) { previous = -1; continue; }
-      nodes.push({ x: pt.x, y: pt.y }); adj.push([]);
-      const id = nodes.length - 1;
-      roadNodes.add(id);
-      if (previous >= 0) joinNodes(previous, id); else roadEnds.push(id);
-      previous = id;
-      let best = -1, bestDistance = r * 0.3;
-      for (let k = 0; k < townNodes; k++) { const d = Math.hypot(nodes[k].x - pt.x, nodes[k].y - pt.y); if (d < bestDistance) { bestDistance = d; best = k; } }
-      if (best >= 0) joinNodes(id, best);
-      for (let k = townNodes; k < id - 1; k++) if (Math.hypot(nodes[k].x - pt.x, nodes[k].y - pt.y) < hexW * 0.01) joinNodes(id, k);
+function buildWalkGraph(entry, incremental = false) {
+  const steps = (function* () {
+    const shapes = entry.shapes, c = entry.center, r = entry.radius, nodes = [], adj = [], roadNodes = new Set();
+    const blocked = (x, y) => townPointBlocked(entry, x, y);
+    const map = [];
+    for (const [x, y] of shapes.nodes) {
+      yield;
+      const px = c.x + x * r, py = c.y + y * r;
+      if (blocked(px, py)) { map.push(-1); continue; }
+      nodes.push({ x: px, y: py }); adj.push([]);
+      map.push(nodes.length - 1);
     }
-  }
-  const approachDoors = new Map();
-  const approachNodes = new Map(nodes.map((point, id) => [`${point.x},${point.y}|${point.harborKey || ''}`, id]));
-  const approachNode = (point, harborKey) => {
-    const key = `${point.x},${point.y}|${harborKey || ''}`;
-    if (approachNodes.has(key)) return approachNodes.get(key);
-    const id = nodes.length;
-    nodes.push({ x: point.x, y: point.y, harborKey }); adj.push([]);
-    approachNodes.set(key, id);
-    return id;
-  };
-  const approachIndex = entry.accessRoads && entry.accessRoads.length ? new DecorationIndex(Math.max(0.01, r * 0.05)) : null;
-  const indexEdge = (a, b) => approachIndex.add({ a, b, box: { x0: Math.min(nodes[a].x, nodes[b].x), x1: Math.max(nodes[a].x, nodes[b].x),
-    y0: Math.min(nodes[a].y, nodes[b].y), y1: Math.max(nodes[a].y, nodes[b].y) } });
-  if (approachIndex) for (let a = 0; a < adj.length; a++) for (const b of adj[a]) if (a < b) indexEdge(a, b);
-  for (const road of entry.accessRoads || []) {
-    const start = road.pts[0];
-    let best = null, edge = null;
-    for (const reach of [0.05, 0.2, 0.5, 2]) {
-      for (const candidate of approachIndex.recordsInBox({ x0: start.x - r * reach, x1: start.x + r * reach, y0: start.y - r * reach, y1: start.y + r * reach })) {
-        const a = nodes[candidate.a], b = nodes[candidate.b], hit = nearestOnSegment(start.x, start.y, a.x, a.y, b.x, b.y);
-        if ((!best || hit.d < best.d) && (!segmentTouchesWater(hit, start) ||
-            (road.harbor && a.harborKey === entry.pathKey && b.harborKey === entry.pathKey && hit.d < r * 0.001))) { best = hit; edge = candidate; }
+    const townNodes = nodes.length, joinNodes = (i, j) => { if (i !== j && !adj[i].includes(j)) { adj[i].push(j); adj[j].push(i); } };
+    for (const [a, b] of shapes.edges) if (map[a] >= 0 && map[b] >= 0) joinNodes(map[a], map[b]);
+    // Roads within reach of the town: their points become nodes, joined to the nearest street node when close.
+    const roadEnds = [];
+    for (const road of entry.obstacles.roads.concat(entry.linkRoads || [])) {
+      let previous = -1;
+      for (const pt of road.pts) {
+        yield;
+        if (Math.hypot(pt.x - c.x, pt.y - c.y) > r * 1.7) { previous = -1; continue; }
+        nodes.push({ x: pt.x, y: pt.y }); adj.push([]);
+        const id = nodes.length - 1;
+        roadNodes.add(id);
+        if (previous >= 0) joinNodes(previous, id); else roadEnds.push(id);
+        previous = id;
+        let best = -1, bestDistance = r * 0.3;
+        for (let k = 0; k < townNodes; k++) { const d = Math.hypot(nodes[k].x - pt.x, nodes[k].y - pt.y); if (d < bestDistance) { bestDistance = d; best = k; } }
+        if (best >= 0) joinNodes(id, best);
+        for (let k = townNodes; k < id - 1; k++) if (Math.hypot(nodes[k].x - pt.x, nodes[k].y - pt.y) < hexW * 0.01) joinNodes(id, k);
       }
-      if (best) break;
     }
-    if (!best) { err(`No walking-network attachment for townscape approach ${entry.pathKey}:${road.sourceIndex}`); continue; }
-    const harborKey = road.harbor ? entry.pathKey : undefined;
-    let previous = approachNode(best, harborKey);
-    joinNodes(previous, edge.a); joinNodes(previous, edge.b);
-    for (const point of road.pts) {
-      const id = approachNode(point, harborKey);
-      if (previous !== id) { joinNodes(previous, id); indexEdge(previous, id); }
-      roadNodes.add(id); previous = id;
+    const approachDoors = new Map();
+    const approachNodes = new Map(nodes.map((point, id) => [`${point.x},${point.y}|${point.harborKey || ''}`, id]));
+    const approachNode = (point, harborKey) => {
+      const key = `${point.x},${point.y}|${harborKey || ''}`;
+      if (approachNodes.has(key)) return approachNodes.get(key);
+      const id = nodes.length;
+      nodes.push({ x: point.x, y: point.y, harborKey }); adj.push([]);
+      approachNodes.set(key, id);
+      return id;
+    };
+    const approachIndex = entry.accessRoads && entry.accessRoads.length ? new DecorationIndex(Math.max(0.01, r * 0.05)) : null;
+    const indexEdge = (a, b) => approachIndex.add({ a, b, box: { x0: Math.min(nodes[a].x, nodes[b].x), x1: Math.max(nodes[a].x, nodes[b].x),
+      y0: Math.min(nodes[a].y, nodes[b].y), y1: Math.max(nodes[a].y, nodes[b].y) } });
+    if (approachIndex) for (let a = 0; a < adj.length; a++) for (const b of adj[a]) if (a < b) indexEdge(a, b);
+    for (const road of entry.accessRoads || []) {
+      yield;
+      const start = road.pts[0];
+      let best = null, edge = null;
+      for (const reach of [0.05, 0.2, 0.5, 2]) {
+        for (const candidate of approachIndex.recordsInBox({ x0: start.x - r * reach, x1: start.x + r * reach, y0: start.y - r * reach, y1: start.y + r * reach })) {
+          yield;
+          const a = nodes[candidate.a], b = nodes[candidate.b], hit = nearestOnSegment(start.x, start.y, a.x, a.y, b.x, b.y);
+          if ((!best || hit.d < best.d) && (!segmentTouchesWater(hit, start) ||
+              (road.harbor && a.harborKey === entry.pathKey && b.harborKey === entry.pathKey && hit.d < r * 0.001))) { best = hit; edge = candidate; }
+        }
+        if (best) break;
+      }
+      if (!best) { err(`No walking-network attachment for townscape approach ${entry.pathKey}:${road.sourceIndex}`); continue; }
+      const harborKey = road.harbor ? entry.pathKey : undefined;
+      let previous = approachNode(best, harborKey);
+      joinNodes(previous, edge.a); joinNodes(previous, edge.b);
+      for (const point of road.pts) {
+        const id = approachNode(point, harborKey);
+        if (previous !== id) { joinNodes(previous, id); indexEdge(previous, id); }
+        roadNodes.add(id); previous = id;
+      }
+      if (road.sourceIndex !== undefined) approachDoors.set(road.sourceIndex, previous);
     }
-    if (road.sourceIndex !== undefined) approachDoors.set(road.sourceIndex, previous);
-  }
-  // Doors sit on the roof boundary, so entering a building includes a walk off the street.
-  const doors = new Set(), doorForms = new Map(), doorBuildings = new Map(), avoidBuildings = [];
-  for (const b of entry.final) {
-    const box = b.box, mx = (box.x0 + box.x1) / 2, my = (box.y0 + box.y1) / 2;
-    let best = -1, bestDistance = Infinity;
-    for (let k = 0; k < townNodes; k++) { const d = Math.hypot(nodes[k].x - mx, nodes[k].y - my); if (d < bestDistance) { bestDistance = d; best = k; } }
-    let door = approachDoors.get(b.sourceIndex) ?? best;
-    const point = best >= 0 ? buildingDoorPoint(b.poly, nodes[best]) : null;
-    if (approachDoors.has(b.sourceIndex)) {
-      doors.add(door); doorForms.set(door, b.form); doorBuildings.set(door, { pathKey: entry.pathKey, sourceIndex: b.sourceIndex });
-    } else if (!entry.accessRoads && point && !blocked(point.x, point.y)) {
-      door = nodes.length;
-      nodes.push(point); adj.push([]);
-      joinNodes(door, best);
-      doors.add(door); doorForms.set(door, b.form); doorBuildings.set(door, { pathKey: entry.pathKey, sourceIndex: b.sourceIndex });
+    // Doors sit on the roof boundary, so entering a building includes a walk off the street.
+    const doors = new Set(), doorForms = new Map(), doorBuildings = new Map(), avoidBuildings = [];
+    for (const b of entry.final) {
+      yield;
+      const box = b.box, mx = (box.x0 + box.x1) / 2, my = (box.y0 + box.y1) / 2;
+      let best = -1, bestDistance = Infinity;
+      for (let k = 0; k < townNodes; k++) { const d = Math.hypot(nodes[k].x - mx, nodes[k].y - my); if (d < bestDistance) { bestDistance = d; best = k; } }
+      let door = approachDoors.get(b.sourceIndex) ?? best;
+      const point = best >= 0 ? buildingDoorPoint(b.poly, nodes[best]) : null;
+      if (approachDoors.has(b.sourceIndex)) {
+        doors.add(door); doorForms.set(door, b.form); doorBuildings.set(door, { pathKey: entry.pathKey, sourceIndex: b.sourceIndex });
+      } else if (!entry.accessRoads && point && !blocked(point.x, point.y)) {
+        door = nodes.length;
+        nodes.push(point); adj.push([]);
+        joinNodes(door, best);
+        doors.add(door); doorForms.set(door, b.form); doorBuildings.set(door, { pathKey: entry.pathKey, sourceIndex: b.sourceIndex });
+      }
+      avoidBuildings.push({ poly: b.poly, box, door });
     }
-    avoidBuildings.push({ poly: b.poly, box, door });
-  }
-  // Spots people walk out to and spend a while at: trees, riverbanks, resources, improvements and other natural features
-  // around the town, each a node just outside the thing itself, joined to the nearest street or road.
-  const spots = new Map(), walkable = nodes.length;
-  for (const spot of townSpots(entry)) {
-    if (blocked(spot.x, spot.y)) continue;
-    let best = -1, bestDistance = r * 0.7;
-    const leisure = spot.kind === 'square';
-    for (let k = 0; k < walkable; k++) {
-      if (leisure && doors.has(k)) continue;
-      const d = Math.hypot(nodes[k].x - spot.x, nodes[k].y - spot.y);
-      if (d < bestDistance && (!leisure || walkEdgeCost(nodes[k], spot, { circles: entry.obstacles.circles, buildings: avoidBuildings }) <= d * 1.001)) { bestDistance = d; best = k; }
+    // Spots people walk out to and spend a while at: trees, riverbanks, resources, improvements and other natural features
+    // around the town, each a node just outside the thing itself, joined to the nearest street or road.
+    const spots = new Map(), walkable = nodes.length;
+    for (const spot of townSpots(entry)) {
+      if (blocked(spot.x, spot.y)) continue;
+      let best = -1, bestDistance = r * 0.7;
+      const leisure = spot.kind === 'square';
+      for (let k = 0; k < walkable; k++) {
+        if (k % 32 === 0) yield;
+        if (leisure && doors.has(k)) continue;
+        const d = Math.hypot(nodes[k].x - spot.x, nodes[k].y - spot.y);
+        if (d < bestDistance && (!leisure || walkEdgeCost(nodes[k], spot, { circles: entry.obstacles.circles, buildings: avoidBuildings }) <= d * 1.001)) { bestDistance = d; best = k; }
+      }
+      if (best < 0) continue;
+      nodes.push({ x: spot.x, y: spot.y }); adj.push([]);
+      joinNodes(best, nodes.length - 1);
+      spots.set(nodes.length - 1, { kind: spot.kind, name: spot.name || '' });
     }
-    if (best < 0) continue;
-    nodes.push({ x: spot.x, y: spot.y }); adj.push([]);
-    joinNodes(best, nodes.length - 1);
-    spots.set(nodes.length - 1, { kind: spot.kind, name: spot.name || '' });
-  }
-  const leisure = [...spots].filter(([, spot]) => spot.kind === 'square').map(([node]) => node);
-  for (let a = 0; a < leisure.length; a++) for (let b = a + 1; b < leisure.length; b++) {
-    const from = nodes[leisure[a]], to = nodes[leisure[b]], d = Math.hypot(to.x - from.x, to.y - from.y);
-    if (d < r * 0.6 && walkEdgeCost(from, to, { circles: entry.obstacles.circles, buildings: avoidBuildings }) <= d * 1.001) joinNodes(leisure[a], leisure[b]);
-  }
-  // What each edge costs to walk: people go round trees, rivers and buildings (other than through their own doors) when they can.
-  const avoid = { circles: entry.obstacles.circles, segments: entry.obstacles.segments.filter(s => !s.road), buildings: avoidBuildings };
-  const costIndex = new DecorationIndex(Math.max(0.01, r * 0.05));
-  for (const circle of avoid.circles) costIndex.add({ circle, box: { x0: circle.x - circle.r, x1: circle.x + circle.r,
-    y0: circle.y - circle.r, y1: circle.y + circle.r } });
-  for (const segment of avoid.segments) costIndex.add({ segment, box: { x0: Math.min(segment.x1, segment.x2) - segment.clear,
-    x1: Math.max(segment.x1, segment.x2) + segment.clear, y0: Math.min(segment.y1, segment.y2) - segment.clear,
-    y1: Math.max(segment.y1, segment.y2) + segment.clear } });
-  for (const building of avoid.buildings) costIndex.add({ building, box: building.box });
-  const cost = adj.map(() => []);
-  for (let i = 0; i < adj.length; i++) for (let k = 0; k < adj[i].length; k++) {
-    const j = adj[i][k];
-    if (j < i) { cost[i][k] = cost[j][adj[j].indexOf(i)]; continue; }
-    const a = nodes[i], b = nodes[j], nearby = { circles: [], segments: [], buildings: [] };
-    for (const record of costIndex.recordsInBox({ x0: Math.min(a.x, b.x), x1: Math.max(a.x, b.x),
-      y0: Math.min(a.y, b.y), y1: Math.max(a.y, b.y) })) {
-      if (record.circle) nearby.circles.push(record.circle);
-      if (record.segment) nearby.segments.push(record.segment);
-      if (record.building) nearby.buildings.push(record.building);
+    const leisure = [...spots].filter(([, spot]) => spot.kind === 'square').map(([node]) => node);
+    for (let a = 0; a < leisure.length; a++) for (let b = a + 1; b < leisure.length; b++) {
+      yield;
+      const from = nodes[leisure[a]], to = nodes[leisure[b]], d = Math.hypot(to.x - from.x, to.y - from.y);
+      if (d < r * 0.6 && walkEdgeCost(from, to, { circles: entry.obstacles.circles, buildings: avoidBuildings }) <= d * 1.001) joinNodes(leisure[a], leisure[b]);
     }
-    cost[i][k] = walkEdgeCost(a, b, nearby, i, j);
-  }
-  // A townscape with fewer than two doors still gets people, walking between its street nodes.
-  const destinations = doors.size >= 2 ? [...doors] : nodes.slice(0, townNodes).map((_, i) => i);
-  return { nodes, adj, cost, destinations, roadEnds, doorForms, doorBuildings, spots, roadNodes };
+    // What each edge costs to walk: people go round trees, rivers and buildings (other than through their own doors) when they can.
+    const avoid = { circles: entry.obstacles.circles, segments: entry.obstacles.segments.filter(s => !s.road), buildings: avoidBuildings };
+    const costIndex = new DecorationIndex(Math.max(0.01, r * 0.05));
+    for (const circle of avoid.circles) costIndex.add({ circle, box: { x0: circle.x - circle.r, x1: circle.x + circle.r,
+      y0: circle.y - circle.r, y1: circle.y + circle.r } });
+    for (const segment of avoid.segments) costIndex.add({ segment, box: { x0: Math.min(segment.x1, segment.x2) - segment.clear,
+      x1: Math.max(segment.x1, segment.x2) + segment.clear, y0: Math.min(segment.y1, segment.y2) - segment.clear,
+      y1: Math.max(segment.y1, segment.y2) + segment.clear } });
+    for (const building of avoid.buildings) costIndex.add({ building, box: building.box });
+    const cost = adj.map(() => []);
+    for (let i = 0; i < adj.length; i++) for (let k = 0; k < adj[i].length; k++) {
+      yield;
+      const j = adj[i][k];
+      if (j < i) { cost[i][k] = cost[j][adj[j].indexOf(i)]; continue; }
+      const a = nodes[i], b = nodes[j], nearby = { circles: [], segments: [], buildings: [] };
+      for (const record of costIndex.recordsInBox({ x0: Math.min(a.x, b.x), x1: Math.max(a.x, b.x),
+        y0: Math.min(a.y, b.y), y1: Math.max(a.y, b.y) })) {
+        if (record.circle) nearby.circles.push(record.circle);
+        if (record.segment) nearby.segments.push(record.segment);
+        if (record.building) nearby.buildings.push(record.building);
+      }
+      cost[i][k] = walkEdgeCost(a, b, nearby, i, j);
+    }
+    // A townscape with fewer than two doors still gets people, walking between its street nodes.
+    const destinations = doors.size >= 2 ? [...doors] : nodes.slice(0, townNodes).map((_, i) => i);
+    return { nodes, adj, cost, destinations, roadEnds, doorForms, doorBuildings, spots, roadNodes };
+  })();
+  if (incremental) return steps;
+  let result = steps.next();
+  while (!result.done) result = steps.next();
+  return result.value;
 }
 const SPOT_KIND = { forest: 'tree', taiga: 'tree', savanna: 'tree', marsh: 'feature', flowers: 'feature', steppe: 'feature', volcano: 'feature', ice: 'feature', improvement: 'field' };
 const SPOT_LIMIT = { tree: 5, river: 4, field: 3, feature: 2, resource: 4 };
@@ -4773,10 +5033,20 @@ function townSpots(entry) {
   return spots.concat(entry.leisureSpots || []);
 }
 // A townscape's walk graph, kept until its roads (or what it is built from) change.
-function walkGraphFor(entry) {
-  const key = `${entry.final.map(b => b.sourceIndex).join(',')}|${(entry.linkRoads || []).concat(entry.accessRoads || []).map(r => r.pts.map(p => p.x.toFixed(6) + ',' + p.y.toFixed(6)).join(';')).join('|')}|${(entry.leisureSpots || []).map(p => `${p.x.toFixed(6)},${p.y.toFixed(6)}`).join(';')}`;
-  if (!entry.walkGraph || entry.walkGraphKey !== key) { entry.walkGraph = buildWalkGraph(entry); entry.walkGraphKey = key; }
-  return entry.walkGraph;
+function walkGraphFor(entry, incremental = false) {
+  const steps = (function* () {
+    const key = `${entry.final.map(b => b.sourceIndex).join(',')}|${(entry.linkRoads || []).concat(entry.accessRoads || []).map(r => r.pts.map(p => p.x.toFixed(6) + ',' + p.y.toFixed(6)).join(';')).join('|')}|${(entry.leisureSpots || []).map(p => `${p.x.toFixed(6)},${p.y.toFixed(6)}`).join(';')}`;
+    if (!entry.walkGraph || entry.walkGraphKey !== key) {
+      const graph = yield* buildWalkGraph(entry, true);
+      entry.walkGraph = graph;
+      entry.walkGraphKey = key;
+    }
+    return entry.walkGraph;
+  })();
+  if (incremental) return steps;
+  let result = steps.next();
+  while (!result.done) result = steps.next();
+  return result.value;
 }
 function townWalkCrossings(entries, plan) {
   const thin = Math.max(0.005, hexW * 0.0005), cell = Math.max(0.1, hexW * 0.02);
@@ -4805,135 +5075,151 @@ function townWalkCrossings(entries, plan) {
 // One walking network for all the visible townscapes, so people can walk from one to another without ever leaving the map:
 // the townscapes' own graphs side by side, joined between townscapes on the same tile (at their nearest streets) and along the
 // roads planned between adjacent ones. Every edge must stay off water, and cross a river only on a bridge.
-function buildTownWorld(entries, plan) {
-  const graph = { nodes: [], adj: [], cost: [], destinations: [], roadEnds: [], roadNodes: new Set(), doorForms: new Map(), doorBuildings: new Map(), spots: new Map(), casualPauses: true }, parts = new Map();
-  const rivers = plan && plan.rivers ? plan.rivers : [], bridges = plan && plan.bridges ? plan.bridges : [];
-  const crossings = townWalkCrossings(entries, plan);
-  const pools = new DecorationIndex(hexW * 0.04);
-  for (const entry of entries) if (entry.shapes) for (const shape of entry.shapes.pools || []) {
-    const poly = shape.map(([x, y]) => [entry.center.x + x * entry.radius, entry.center.y + y * entry.radius]);
-    pools.add({ poly, box: polygonBounds(poly) });
-  }
-  const harbors = new Map(entries.filter(e => e.waterfrontAccepted && e.waterfront).map(e => [e.pathKey, e.waterfront.decks]));
-  graph.edgeAllowed = (a, b) => {
-    if (a.harborKey && a.harborKey === b.harborKey) {
-      const decks = harbors.get(a.harborKey);
-      if (decks && deckEdgeAllowed(a, b, decks)) return true;
+function buildTownWorld(entries, plan, incremental = false, key = townKey) {
+  const steps = (function* () {
+    yield;
+    const graph = { nodes: [], adj: [], cost: [], destinations: [], roadEnds: [], roadNodes: new Set(), doorForms: new Map(), doorBuildings: new Map(), spots: new Map(), casualPauses: true }, parts = new Map();
+    const rivers = plan && plan.rivers ? plan.rivers : [], bridges = plan && plan.bridges ? plan.bridges : [];
+    const crossings = townWalkCrossings(entries, plan);
+    const pools = new DecorationIndex(hexW * 0.04);
+    for (const entry of entries) if (entry.shapes) for (const shape of entry.shapes.pools || []) {
+      const poly = shape.map(([x, y]) => [entry.center.x + x * entry.radius, entry.center.y + y * entry.radius]);
+      pools.add({ poly, box: polygonBounds(poly) });
     }
-    const box = { x0: Math.min(a.x, b.x), x1: Math.max(a.x, b.x), y0: Math.min(a.y, b.y), y1: Math.max(a.y, b.y) };
-    if (!walkEdgeAllowed(a, b, rivers, bridges, pools.recordsInBox(box))) return false;
-    return walkCreekAllowed(a, b, crossings.creeks.recordsInBox(box), crossings.roads.recordsInBox(box));
-  };
-  const bendObstacles = new DecorationIndex(hexW * 0.04);
-  for (const entry of entries) {
-    for (const circle of entry.obstacles.circles) bendObstacles.add({ circle, box: { x0: circle.x - circle.r, x1: circle.x + circle.r, y0: circle.y - circle.r, y1: circle.y + circle.r } });
-    for (const building of entry.final || []) {
-      bendObstacles.add({ building, box: building.box });
-      for (const poly of building.parts || []) {
-        const box = polygonBounds(poly);
+    const harbors = new Map(entries.filter(e => e.waterfrontAccepted && e.waterfront).map(e => [e.pathKey, e.waterfront.decks]));
+    graph.edgeAllowed = (a, b) => {
+      if (a.harborKey && a.harborKey === b.harborKey) {
+        const decks = harbors.get(a.harborKey);
+        if (decks && deckEdgeAllowed(a, b, decks)) return true;
+      }
+      const box = { x0: Math.min(a.x, b.x), x1: Math.max(a.x, b.x), y0: Math.min(a.y, b.y), y1: Math.max(a.y, b.y) };
+      if (!walkEdgeAllowed(a, b, rivers, bridges, pools.recordsInBox(box))) return false;
+      return walkCreekAllowed(a, b, crossings.creeks.recordsInBox(box), crossings.roads.recordsInBox(box));
+    };
+    const bendObstacles = new DecorationIndex(hexW * 0.04);
+    for (const entry of entries) {
+      yield;
+      for (const circle of entry.obstacles.circles) bendObstacles.add({ circle, box: { x0: circle.x - circle.r, x1: circle.x + circle.r, y0: circle.y - circle.r, y1: circle.y + circle.r } });
+      for (const building of entry.final || []) {
+        yield;
+        bendObstacles.add({ building, box: building.box });
+        for (const poly of building.parts || []) {
+          const box = polygonBounds(poly);
+          bendObstacles.add({ building: { poly, box }, box });
+        }
+      }
+      if (entry.shapes) for (const pool of entry.shapes.pools || []) {
+        const poly = pool.map(([x, y]) => [entry.center.x + x * entry.radius, entry.center.y + y * entry.radius]), box = polygonBounds(poly);
         bendObstacles.add({ building: { poly, box }, box });
       }
     }
-    if (entry.shapes) for (const pool of entry.shapes.pools || []) {
-      const poly = pool.map(([x, y]) => [entry.center.x + x * entry.radius, entry.center.y + y * entry.radius]), box = polygonBounds(poly);
-      bendObstacles.add({ building: { poly, box }, box });
+    graph.bendLimit = hexW * 0.0012;
+    graph.bendAllowed = (a, b) => {
+      if (!graph.edgeAllowed(a, b)) return false;
+      const records = bendObstacles.recordsInBox({ x0: Math.min(a.x, b.x), x1: Math.max(a.x, b.x), y0: Math.min(a.y, b.y), y1: Math.max(a.y, b.y) });
+      const avoid = { circles: [], buildings: [] };
+      for (const record of records) {
+        if (record.circle) avoid.circles.push(record.circle);
+        if (record.building) avoid.buildings.push({ poly: record.building.poly, box: record.building.box });
+      }
+      return walkEdgeCost(a, b, avoid) <= Math.hypot(b.x - a.x, b.y - a.y) * 1.001;
+    };
+    const connect = (i, j, cost) => {
+      if (i < 0 || j < 0 || i === j) return false;
+      if (graph.adj[i].includes(j)) return true;
+      if (!graph.edgeAllowed(graph.nodes[i], graph.nodes[j])) return false;
+      const c = cost >= 0 ? cost : Math.hypot(graph.nodes[j].x - graph.nodes[i].x, graph.nodes[j].y - graph.nodes[i].y);
+      graph.adj[i].push(j); graph.adj[j].push(i); graph.cost[i].push(c); graph.cost[j].push(c);
+      return true;
+    };
+    for (const entry of entries) {
+      if (!entry.final) continue;
+      const g = incremental ? yield* walkGraphFor(entry, true) : walkGraphFor(entry), offset = graph.nodes.length;
+      for (const node of g.nodes) { yield; graph.nodes.push(node); graph.adj.push([]); graph.cost.push([]); }
+      for (let i = 0; i < g.adj.length; i++) for (let k = 0; k < g.adj[i].length; k++) {
+        yield;
+        const j = g.adj[i][k];
+        if (j > i) connect(i + offset, j + offset, g.cost && g.cost[i] ? g.cost[i][k] : -1);
+      }
+      for (const [node, form] of g.doorForms) graph.doorForms.set(node + offset, form);
+      for (const [node, building] of g.doorBuildings) graph.doorBuildings.set(node + offset, building);
+      const spots = [];
+      if (g.spots) for (const [node, spot] of g.spots) { graph.spots.set(node + offset, spot); spots.push(node + offset); }
+      for (const i of g.roadEnds) graph.roadEnds.push(i + offset);
+      for (const i of g.roadNodes || []) graph.roadNodes.add(i + offset);
+      const destinations = g.destinations.map(i => i + offset);
+      for (const i of destinations) graph.destinations.push(i);
+      const streets = [];
+      for (let k = offset; k < graph.nodes.length; k++) if (!graph.doorForms.has(k) && !graph.spots.has(k)) streets.push(k);
+      parts.set(entry.pathKey, { offset, count: g.nodes.length, destinations, spots, streets, entry, localGraph: g });
     }
-  }
-  graph.bendLimit = hexW * 0.0012;
-  graph.bendAllowed = (a, b) => {
-    if (!graph.edgeAllowed(a, b)) return false;
-    const records = bendObstacles.recordsInBox({ x0: Math.min(a.x, b.x), x1: Math.max(a.x, b.x), y0: Math.min(a.y, b.y), y1: Math.max(a.y, b.y) });
-    const avoid = { circles: [], buildings: [] };
-    for (const record of records) {
-      if (record.circle) avoid.circles.push(record.circle);
-      if (record.building) avoid.buildings.push({ poly: record.building.poly, box: record.building.box });
+    const streetLookups = new Map([...parts.values()].map(part => [part, nearestNodeLookup(graph.nodes, part.streets)]));
+    const nearestIn = (part, x, y) => streetLookups.get(part)(x, y);
+    const list = [...parts.values()];
+    // Townscapes on the same tile: their nearest streets are joined.
+    for (let a = 0; a < list.length; a++) for (let b = a + 1; b < list.length; b++) {
+      if (list[a].entry.item.index !== list[b].entry.item.index) continue;
+      const pairs = [];
+      for (const i of list[a].streets) {
+        yield;
+        const from = graph.nodes[i], j = nearestIn(list[b], from.x, from.y);
+        if (j >= 0) pairs.push({ i, j, d: Math.hypot(from.x - graph.nodes[j].x, from.y - graph.nodes[j].y) });
+      }
+      pairs.sort((p, q) => p.d - q.d);
+      let joined = 0;
+      for (const pair of pairs.slice(0, 8)) if (connect(pair.i, pair.j) && ++joined >= 2) break;
     }
-    return walkEdgeCost(a, b, avoid) <= Math.hypot(b.x - a.x, b.y - a.y) * 1.001;
-  };
-  const connect = (i, j, cost) => {
-    if (i < 0 || j < 0 || i === j) return false;
-    if (graph.adj[i].includes(j)) return true;
-    if (!graph.edgeAllowed(graph.nodes[i], graph.nodes[j])) return false;
-    const c = cost >= 0 ? cost : Math.hypot(graph.nodes[j].x - graph.nodes[i].x, graph.nodes[j].y - graph.nodes[i].y);
-    graph.adj[i].push(j); graph.adj[j].push(i); graph.cost[i].push(c); graph.cost[j].push(c);
-    return true;
-  };
-  for (const entry of entries) {
-    if (!entry.final) continue;
-    const g = walkGraphFor(entry), offset = graph.nodes.length;
-    for (const node of g.nodes) { graph.nodes.push(node); graph.adj.push([]); graph.cost.push([]); }
-    g.adj.forEach((list, i) => list.forEach((j, k) => { if (j > i) connect(i + offset, j + offset, g.cost && g.cost[i] ? g.cost[i][k] : -1); }));
-    for (const [node, form] of g.doorForms) graph.doorForms.set(node + offset, form);
-    for (const [node, building] of g.doorBuildings) graph.doorBuildings.set(node + offset, building);
-    const spots = [];
-    if (g.spots) for (const [node, spot] of g.spots) { graph.spots.set(node + offset, spot); spots.push(node + offset); }
-    for (const i of g.roadEnds) graph.roadEnds.push(i + offset);
-    for (const i of g.roadNodes || []) graph.roadNodes.add(i + offset);
-    const destinations = g.destinations.map(i => i + offset);
-    for (const i of destinations) graph.destinations.push(i);
-    const streets = [];
-    for (let k = offset; k < graph.nodes.length; k++) if (!graph.doorForms.has(k) && !graph.spots.has(k)) streets.push(k);
-    parts.set(entry.pathKey, { offset, count: g.nodes.length, destinations, spots, streets, entry, localGraph: g });
-  }
-  const streetLookups = new Map([...parts.values()].map(part => [part, nearestNodeLookup(graph.nodes, part.streets)]));
-  const nearestIn = (part, x, y) => streetLookups.get(part)(x, y);
-  const list = [...parts.values()];
-  // Townscapes on the same tile: their nearest streets are joined.
-  for (let a = 0; a < list.length; a++) for (let b = a + 1; b < list.length; b++) {
-    if (list[a].entry.item.index !== list[b].entry.item.index) continue;
-    const pairs = [];
-    for (const i of list[a].streets) {
-      const from = graph.nodes[i], j = nearestIn(list[b], from.x, from.y);
-      if (j >= 0) pairs.push({ i, j, d: Math.hypot(from.x - graph.nodes[j].x, from.y - graph.nodes[j].y) });
-    }
-    pairs.sort((p, q) => p.d - q.d);
-    let joined = 0;
-    for (const pair of pairs.slice(0, 8)) if (connect(pair.i, pair.j) && ++joined >= 2) break;
-  }
-  // Follow the actual road spine, including bends and shared major-road junctions.
-  const roadNodes = new Map();
-  graph.roadKeys = roadNodes;
-  const roadNode = point => {
-    const key = `${point.x.toFixed(6)},${point.y.toFixed(6)}`;
-    if (roadNodes.has(key)) return roadNodes.get(key);
-    const id = graph.nodes.length;
-    graph.nodes.push({ x: point.x, y: point.y }); graph.adj.push([]); graph.cost.push([]);
-    graph.roadNodes.add(id); roadNodes.set(key, id);
-    return id;
-  };
-  if (plan) for (const road of plan.roads) {
-    if (road.towns.length !== 2 && road.kind !== 'bridge') continue;
-    let previous = -1;
-    for (const point of road.pts) {
-      const id = roadNode(point);
-      if (previous >= 0) connect(previous, id);
-      previous = id;
-      for (const town of road.towns) {
-        const part = parts.get(town);
-        if (!part) continue;
-        const street = nearestIn(part, point.x, point.y);
-        const reach = Math.max(hexW * 0.01, (part.entry.radius || 0) * 0.3);
-        if (street >= 0 && Math.hypot(graph.nodes[street].x - point.x, graph.nodes[street].y - point.y) <= reach) connect(id, street);
+    // Follow the actual road spine, including bends and shared major-road junctions.
+    const roadNodes = new Map();
+    graph.roadKeys = roadNodes;
+    const roadNode = point => {
+      const key = `${point.x.toFixed(6)},${point.y.toFixed(6)}`;
+      if (roadNodes.has(key)) return roadNodes.get(key);
+      const id = graph.nodes.length;
+      graph.nodes.push({ x: point.x, y: point.y }); graph.adj.push([]); graph.cost.push([]);
+      graph.roadNodes.add(id); roadNodes.set(key, id);
+      return id;
+    };
+    if (plan) for (const road of plan.roads) {
+      if (road.towns.length !== 2 && road.kind !== 'bridge') continue;
+      let previous = -1;
+      for (const point of road.pts) {
+        yield;
+        const id = roadNode(point);
+        if (previous >= 0) connect(previous, id);
+        previous = id;
+        for (const town of road.towns) {
+          const part = parts.get(town);
+          if (!part) continue;
+          const street = nearestIn(part, point.x, point.y);
+          const reach = Math.max(hexW * 0.01, (part.entry.radius || 0) * 0.3);
+          if (street >= 0 && Math.hypot(graph.nodes[street].x - point.x, graph.nodes[street].y - point.y) <= reach) connect(id, street);
+        }
       }
     }
-  }
-  graph.visits = new Map(); graph.activityDoors = new Map();
-  for (const part of parts.values()) {
-    const roofs = new Map(part.entry.final.map(building => [building.sourceIndex, building]));
-    for (const door of part.destinations) {
-      const ref = graph.doorBuildings.get(door);
-      if (!ref) continue;
-      const building = roofs.get(ref.sourceIndex);
-      if (!building) continue;
-      graph.activityDoors.set(door, { building, part });
-      for (const street of graph.adj[door]) {
-        const visits = graph.visits.get(street) || [];
-        visits.push({ door, building, entry: part.entry });
-        graph.visits.set(street, visits);
+    graph.visits = new Map(); graph.activityDoors = new Map();
+    for (const part of parts.values()) {
+      const roofs = new Map(part.entry.final.map(building => [building.sourceIndex, building]));
+      for (const door of part.destinations) {
+        yield;
+        const ref = graph.doorBuildings.get(door);
+        if (!ref) continue;
+        const building = roofs.get(ref.sourceIndex);
+        if (!building) continue;
+        graph.activityDoors.set(door, { building, part });
+        for (const street of graph.adj[door]) {
+          const visits = graph.visits.get(street) || [];
+          visits.push({ door, building, entry: part.entry });
+          graph.visits.set(street, visits);
+        }
       }
     }
-  }
-  return { key: townKey, graph, parts };
+    return { key, graph, parts };
+  })();
+  if (incremental) return steps;
+  let result = steps.next();
+  while (!result.done) result = steps.next();
+  return result.value;
 }
 function walkerTrade(group, person) {
   if (person.tradeKey === popState.builtKey && person.trade) return person.trade;
@@ -5167,14 +5453,14 @@ function walkerScreenPoint(person) {
   return mapToScreen(point.x, point.y);
 }
 function walkerFormationTraits(item) {
-  if (item.kind !== 'unit') return { unitSub: '', unitState: '' };
+  if (item.kind !== 'unit') return { unitSub: '', unitState: '', battleReady: false };
   const unit = popIconTraits(item).unit;
   const row = readUnitsTurn(Number.isInteger(item.turn) ? item.turn : pos)[item.row];
   const activity = item.activity || (row && row[6]) || 0;
   let state = ['', 'alert', 'sleeping', 'fortified', 'holding', 'healing', 'idle'][activity] || '';
   const moving = item.moving || (row && row[4] >= 0 && row[4] !== row[0]);
   if (moving && (!state || state === 'idle')) state = 'moving';
-  return { unitSub: unit ? unit.sub : '', unitState: state };
+  return { unitSub: unit ? unit.sub : '', unitState: state, battleReady: row?.[8] === true };
 }
 // People of one townscape; person i is the panel's person i of its icon circle. They live in the shared network (world), so they
 // may walk into the neighbouring townscapes too.
@@ -5242,6 +5528,10 @@ function createWalkers(entry, world) {
   syncPinnedWalkers(group, part, graph);
   return group;
 }
+function walkerBaseSpeed(unitSub) {
+  const scale = mapScaleMetrics(hexW, hexW);
+  return scale.pixels * 4.4 / (scale.miles * 5280) * (unitSub === 'cavalry' ? 2 : 1);
+}
 function newWalker(group, part, graph, i, indoors, quota) {
   const destinations = group.destinations;
   const residence = townHousingFor(group.entry).sourceOf(i);
@@ -5251,7 +5541,7 @@ function newWalker(group, part, graph, i, indoors, quota) {
   }) ?? destinations[i % destinations.length];
   const node = indoors ? home : destinations[Math.floor(Math.random() * destinations.length)];
   const wait = indoors ? WALKER_FADE_SECONDS + Math.random() * 5 : Math.random() * 3;
-  const speed = hexW * 0.0025 * (0.7 + Math.random() * 0.6);
+  const speed = walkerBaseSpeed(group.unitSub);
   return {
     node, home, homeLocal: home - part.offset, residence, id: i, key: `${group.nodeId}#${i}`, x: graph.nodes[node].x, y: graph.nodes[node].y, route: null, leg: 0, t: 0,
     wait, waitTotal: indoors ? wait + WALKER_FADE_SECONDS : wait, inside: indoors, exiting: false, fade: indoors ? 0 : 1, quota,
@@ -5290,7 +5580,7 @@ function peopleTick() {
   peopleLoop = 0;
   syncCrowdVisibility();
   if (!peopleActive() || !townLayer || !peopleSvg || !townWorld) { stopPeople(); return; }
-  if (townInterturn.active || townRender.pending) { peopleLast = nowMs(); return; }
+  if (townInterturn.active || townRender.pending || townRender.walkJob) { peopleLast = nowMs(); return; }
   const now = nowMs(), coarse = walkerCrowdsActive();
   const w = window.innerWidth || 1920, h = window.innerHeight || 1080, sizeKey = w + 'x' + h;
   const viewKey = peopleCameraKey();
@@ -5299,7 +5589,7 @@ function peopleTick() {
     peopleLoop = typeof requestAnimationFrame === 'function' ? requestAnimationFrame(peopleTick) : setTimeout(peopleTick, 33);
     return;
   }
-  const dt = advance && !popState.peoplePaused ? Math.min(0.1, Math.max(0, (now - peopleLast) / 1000)) * (popState.walkerSpeed || 1) / 5 : 0;
+  const dt = advance && !popState.peoplePaused ? Math.min(0.1, Math.max(0, (now - peopleLast) / 1000)) * (popState.walkerSpeed || 1) : 0;
   if (advance) peopleLast = now;
   if (sizeKey !== peopleSizeKey) { peopleSizeKey = sizeKey; sizeScreenSvg(peopleSvg); }
   const radius = walkerDotRadius();
@@ -5432,12 +5722,13 @@ function syncCrowdDots(markers, radius) {
   const stride = crowdDotStride(hexH * viewZoom * viewAspectY / (window.innerHeight || 1080));
   syncWalkerDots(crowdScreenDots(markers, radius, viewAspectY, ps(2), stride), peopleClumpPaths);
 }
-function syncPeople(entries) {
+function syncPeople(entries, preparedWorld = null) {
   if (!peopleActive()) { stopPeople(); return; }
   ensurePeopleLayer();
   if (!townWorld || townWorld.key !== townKey) {
     const oldWorld = townWorld;
-    townWorld = buildTownWorld(entries, townPlan);
+    if (preparedWorld && preparedWorld.key !== townKey) throw new Error('Prepared walking network belongs to a stale townscape scene');
+    townWorld = preparedWorld || buildTownWorld(entries, townPlan);
     const keep = new Set(), graph = townWorld.graph;
     const doors = new Map();
     for (const [node, b] of graph.doorBuildings) doors.set(`${b.pathKey}|${b.sourceIndex}`, node);
@@ -5461,7 +5752,6 @@ function syncPeople(entries) {
       // rebuilt network, wherever in it they were, so nobody vanishes when the neighbouring townscapes change.
       group.entry = entry; group.destinations = part.destinations; group.spots = part.spots;
       group.graph = graph; group.runnerCamps = null;
-      Object.assign(group, walkerFormationTraits(entry.item));
       walkerGroupStreets(group, part, graph);
       for (const person of group.people) {
         // their own door keeps its place in their townscape's part of the rebuilt network
@@ -5499,6 +5789,20 @@ function syncPeople(entries) {
     for (const key of [...townWalkers.keys()]) if (!keep.has(key)) townWalkers.delete(key);
     if (popState.open) popRender();
     if (leadState.open) leadRender();
+  }
+  for (const entry of entries) {
+    const group = townWalkers.get(entry.pathKey);
+    if (!group) continue;
+    const traits = walkerFormationTraits(entry.item);
+    if (group.battleReady !== traits.battleReady || group.unitSub !== traits.unitSub) clumpsAt = -Infinity;
+    group.entry = entry;
+    Object.assign(group, traits);
+    const speed = walkerBaseSpeed(group.unitSub);
+    for (const person of group.people) if (person.baseSpeed !== speed) {
+      person.baseSpeed = person.speed = speed;
+      person.groupTravel = null; person.groupPace = 0;
+      clumpsAt = -Infinity;
+    }
   }
   if (peopleViewKey !== peopleCameraKey()) {
     if (peopleLoop && typeof cancelAnimationFrame === 'function') cancelAnimationFrame(peopleLoop);
@@ -5855,6 +6159,7 @@ function cmdLedger() {
   return cmdState.ledger;
 }
 function cmdSaveLedger() {
+  settlementPopulationSnapshots.clear();
   const ledger = cmdLedger();
   for (const k of ['y', 'd', 'p']) if (ledger[k].length > CMD_LEDGER_MAX) ledger[k] = ledger[k].slice(-CMD_LEDGER_MAX);
   cmdState.popMap = null; cmdState.deathMap = null;
@@ -5882,7 +6187,7 @@ function cmdDeathsFor(key) {
 }
 function cmdIconKey(item) { return `${item.index}|${popIconId(item)}`; }
 // How many people commands have added to (or taken from) an icon circle's Home Location up to the viewed turn.
-function cmdPopulationDelta(item) {
+function cmdPopulationDelta(item, turn = pos) {
   if (!cmdState.popMap) {
     const map = new Map();
     for (const [k, t, d] of cmdLedger().p) {
@@ -5896,7 +6201,7 @@ function cmdPopulationDelta(item) {
   const list = cmdState.popMap.get(cmdIconKey(item));
   if (!list) return 0;
   let sum = 0;
-  for (const [t, d] of list) if (t <= pos) sum += d;
+  for (const [t, d] of list) if (t <= turn) sum += d;
   return sum;
 }
 // Yields commands have brought in on a turn, by yield.
@@ -6927,125 +7232,246 @@ function polygonPath(poly) {
 }
 // --- tiny plants and rocks scattered over a townscape's open ground at individual-walker zoom -----------------------
 function townDecoActive() {
-  return townscapeActive() || mapVisible && hexW * viewZoom >= (window.innerWidth || 1920) * 0.25
-    && hexH * viewZoom * viewAspectY >= (window.innerHeight || 1080) * 0.25;
+  return townscapeActive() || mapVisible && (townDecoAtScale() || hexW * viewZoom >= (window.innerWidth || 1920) * 0.125
+    && hexH * viewZoom * viewAspectY >= (window.innerHeight || 1080) * 0.125);
+}
+function townDecoAtScale() {
+  return mapScaleForView().miles * 5280 < 1000;
+}
+function townDecoFullDetail() {
+  return townscapeActive() || !walkerCrowdsActive() || townDecoAtScale();
 }
 function syncTownDecorationVisibility() {
   if (!townDecorationLayer) return;
-  const on = townDecoActive() && townElementVisibility.townDecorations && !columnShiftMarkersStale && !fogMarkersStale;
+  if (townDecoScene.fullDetail && townDecoScene.screenKey !== peopleCameraKey() && townscapeActive() &&
+      !columnShiftMarkersStale && !fogMarkersStale) showTownDecorationPreview(townPanScene.entries || []);
+  const screenSpace = townDecoScene.fullDetail;
+  const on = townDecoActive() && townElementVisibility.townDecorations && !columnShiftMarkersStale && !fogMarkersStale &&
+    (!screenSpace || townDecoScene.screenKey === peopleCameraKey());
   townDecorationLayer.style.display = on ? 'block' : 'none';
-  if (on) syncMapSvgViewport(townDecorationLayer);
+  if (on) {
+    if (screenSpace) sizeScreenSvg(townDecorationLayer);
+    else syncMapSvgViewport(townDecorationLayer);
+  }
 }
-function townDecorationIndex(entries, plan, sceneBounds) {
-  const bounds = sceneBounds || {
-    x0: Math.min(...entries.map(e => e.center.x - e.radius * 1.3)), x1: Math.max(...entries.map(e => e.center.x + e.radius * 1.3)),
-    y0: Math.min(...entries.map(e => e.center.y - e.radius * 1.3)), y1: Math.max(...entries.map(e => e.center.y + e.radius * 1.3)),
-  };
-  const index = new DecorationIndex(Math.max(0.01, Math.min(hexW * 0.015,
-    Math.sqrt((bounds.x1 - bounds.x0) * (bounds.y1 - bounds.y0) / 24000))), bounds), seen = new Set(), thin = Math.max(0.005, hexW * 0.0005);
-  const segment = (x1, y1, x2, y2, clear) => {
-    const key = `${x1},${y1},${x2},${y2},${clear}`;
-    if (!seen.has(key)) { seen.add(key); index.segment(x1, y1, x2, y2, clear); }
-  };
-  for (const entry of entries) {
-    const c = entry.center, r = entry.radius, shapes = { ...entry.shapes, streets: entry.minorRoads || entry.shapes.streets, mainStreets: entry.dryMainRoads || entry.shapes.mainStreets };
-    const local = poly => poly.map(([x, y]) => [c.x + x * r, c.y + y * r]);
-    for (const b of entry.final || entry.polys) {
-      index.polygon(b.poly, thin * 0.3);
-      for (const part of b.parts || []) index.polygon(part, thin * 0.3);
-    }
-    for (const poly of entry.waterfront && entry.waterfrontAccepted !== false ? entry.waterfront.decks : []) index.polygon(poly, thin * 0.125);
-    for (const key of ['plazas', 'pools', 'parks', 'tents', 'fires']) for (const poly of shapes[key] || []) index.polygon(local(poly), thin * 0.4);
-    for (const [key, clear, stroke] of [['streets', 0.03, 0.2], ['mainStreets', 0.04, 0.375], ['water', 0.045, 0.45], ['walls', 0.03, 0.75], ['accents', 0.01, 0.55], ['fires', 0.02, 0]]) {
-      for (const line of shapes[key] || []) for (let k = 1; k < line.length; k++) {
-        const road = key === 'streets' || key === 'mainStreets';
-        segment(c.x + line[k - 1][0] * r, c.y + line[k - 1][1] * r, c.x + line[k][0] * r, c.y + line[k][1] * r, road ? stroke * thin / 20 : Math.max(clear * r, stroke * thin));
+function townDecorationIndex(entries, plan, sceneBounds, incremental = false) {
+  const steps = (function* () {
+    yield;
+    const bounds = sceneBounds || {
+      x0: Math.min(...entries.map(e => e.center.x - e.radius * 1.3)), x1: Math.max(...entries.map(e => e.center.x + e.radius * 1.3)),
+      y0: Math.min(...entries.map(e => e.center.y - e.radius * 1.3)), y1: Math.max(...entries.map(e => e.center.y + e.radius * 1.3)),
+    };
+    const index = new DecorationIndex(Math.max(0.01, Math.min(hexW * 0.015,
+      Math.sqrt((bounds.x1 - bounds.x0) * (bounds.y1 - bounds.y0) / 24000))), bounds), seen = new Set(), thin = Math.max(0.005, hexW * 0.0005);
+    const segment = (x1, y1, x2, y2, clear) => {
+      const key = `${x1},${y1},${x2},${y2},${clear}`;
+      if (!seen.has(key)) { seen.add(key); index.segment(x1, y1, x2, y2, clear); }
+    };
+    for (const entry of entries) {
+      const c = entry.center, r = entry.radius, shapes = { ...entry.shapes, streets: entry.minorRoads || entry.shapes.streets, mainStreets: entry.dryMainRoads || entry.shapes.mainStreets };
+      const local = poly => poly.map(([x, y]) => [c.x + x * r, c.y + y * r]);
+      for (const b of entry.final || entry.polys) {
+        yield;
+        index.polygon(b.poly, thin * 0.3);
+        for (const part of b.parts || []) { yield; index.polygon(part, thin * 0.3); }
+      }
+      for (const poly of entry.waterfront && entry.waterfrontAccepted !== false ? entry.waterfront.decks : []) { yield; index.polygon(poly, thin * 0.125); }
+      for (const key of ['plazas', 'pools', 'parks', 'tents', 'fires']) for (const poly of shapes[key] || []) { yield; index.polygon(local(poly), thin * 0.4); }
+      for (const [key, clear, stroke] of [['streets', 0.03, 0.2], ['mainStreets', 0.04, 0.375], ['water', 0.045, 0.45], ['walls', 0.03, 0.75], ['accents', 0.01, 0.55], ['fires', 0.02, 0]]) {
+        for (const line of shapes[key] || []) for (let k = 1; k < line.length; k++) {
+          yield;
+          const road = key === 'streets' || key === 'mainStreets';
+          segment(c.x + line[k - 1][0] * r, c.y + line[k - 1][1] * r, c.x + line[k][0] * r, c.y + line[k][1] * r, road ? stroke * thin / 20 : Math.max(clear * r, stroke * thin));
+        }
+      }
+      for (const circle of entry.obstacles.circles) {
+        yield;
+        const key = `c${circle.x},${circle.y},${circle.r}`;
+        if (!seen.has(key)) { seen.add(key); index.circle(circle.x, circle.y, circle.r); }
+      }
+      for (const s of entry.obstacles.segments) { yield; segment(s.x1, s.y1, s.x2, s.y2, s.clear); }
+      for (const road of entry.obstacles.roads) for (let k = 1; k < road.pts.length; k++) {
+        yield;
+        const a = road.pts[k - 1], b = road.pts[k];
+        segment(a.x, a.y, b.x, b.y, road.half);
+      }
+      for (const road of entry.accessRoads || []) for (let k = 1; k < road.pts.length; k++) {
+        yield;
+        const a = road.pts[k - 1], b = road.pts[k];
+        segment(a.x, a.y, b.x, b.y, thin * 0.02 / 20);
       }
     }
-    for (const circle of entry.obstacles.circles) {
-      const key = `c${circle.x},${circle.y},${circle.r}`;
-      if (!seen.has(key)) { seen.add(key); index.circle(circle.x, circle.y, circle.r); }
+    if (plan) {
+      for (const key of ['roads', 'water']) for (const line of plan[key]) for (let k = 1; k < line.pts.length; k++) {
+        yield;
+        const a = line.pts[k - 1], b = line.pts[k];
+        segment(a.x, a.y, b.x, b.y, thin * (key === 'water' ? 0.45 : 0.375 / 20));
+      }
+      for (const s of plan.rivers) { yield; segment(s.x1, s.y1, s.x2, s.y2, s.clear); }
+      for (const bridge of plan.bridges) { yield; index.polygon(bridge.poly, thin * 0.35); }
+      for (const wall of plan.tileWalls || []) { yield; index.segment(wall.x1, wall.y1, wall.x2, wall.y2, wall.clear); }
     }
-    for (const s of entry.obstacles.segments) segment(s.x1, s.y1, s.x2, s.y2, s.clear);
-    for (const road of entry.obstacles.roads) for (let k = 1; k < road.pts.length; k++) {
-      const a = road.pts[k - 1], b = road.pts[k];
-      segment(a.x, a.y, b.x, b.y, road.half);
-    }
-    for (const road of entry.accessRoads || []) for (let k = 1; k < road.pts.length; k++) {
-      const a = road.pts[k - 1], b = road.pts[k];
-      segment(a.x, a.y, b.x, b.y, thin * 0.02 / 20);
-    }
-  }
-  if (plan) {
-    for (const key of ['roads', 'water']) for (const line of plan[key]) for (let k = 1; k < line.pts.length; k++) {
-      const a = line.pts[k - 1], b = line.pts[k];
-      segment(a.x, a.y, b.x, b.y, thin * (key === 'water' ? 0.45 : 0.375 / 20));
-    }
-    for (const s of plan.rivers) segment(s.x1, s.y1, s.x2, s.y2, s.clear);
-    for (const bridge of plan.bridges) index.polygon(bridge.poly, thin * 0.35);
-    for (const wall of plan.tileWalls || []) index.segment(wall.x1, wall.y1, wall.x2, wall.y2, wall.clear);
-  }
-  return index;
+    return index;
+  })();
+  if (incremental) return steps;
+  let result = steps.next();
+  while (!result.done) result = steps.next();
+  return result.value;
 }
-function townDecoPlacements(entry, index, rect, limit = Infinity) {
-  const c = entry.center, r = entry.radius, out = [];
-  if (limit <= 0) return out;
-  const count = Math.min(12000, 4 * Math.max(600, Math.min(4000, Math.round(600 + 8000 * r / Math.max(1, hexW))))), unit = hexW / (100 * 5280);
-  if (!entry.decoCandidates) entry.decoCandidates = townDecorations(hashString('deco|' + entry.pathKey), count);
-  for (const deco of entry.decoCandidates) {
-    const px = c.x + deco.x * r, py = c.y + deco.y * r;
-    // Circumscribed footprint includes the widest rotated shape, stroke and coordinate rounding.
-    const pad = unit * (deco.size * 1.15 + 0.2) + 0.000000001;
-    if (rect && (px + pad < rect.x0 || px - pad > rect.x1 || py + pad < rect.y0 || py - pad > rect.y1)) continue;
-    if (index.blocks(px, py, pad) || decorationTouchesWater(px, py, pad, isWaterAt)) continue;
-    index.circle(px, py, pad);
-    out.push({ deco, x: px, y: py, unit, pad });
-    if (out.length >= limit) break;
-  }
-  return out;
+function townDecoPlacements(entry, index, rect, limit = Infinity, incremental = false) {
+  const steps = (function* () {
+    yield;
+    const c = entry.center, r = entry.radius, out = [];
+    if (limit <= 0) return out;
+    const count = Math.min(12000, 6 * Math.max(600, Math.min(4000, Math.round(600 + 8000 * r / Math.max(1, hexW))))), unit = hexW / (100 * 5280);
+    if (!entry.decoCandidates) entry.decoCandidates = townDecorations(hashString('deco|' + entry.pathKey), count, entry.era ? entry.era.age : 0);
+    for (const deco of entry.decoCandidates) {
+      yield;
+      const px = c.x + deco.x * r, py = c.y + deco.y * r;
+      // Circumscribed footprint includes the widest rotated shape, stroke and coordinate rounding.
+      const pad = unit * (deco.size * 1.15 + 0.2) + 0.000000001;
+      if (rect && (px + pad < rect.x0 || px - pad > rect.x1 || py + pad < rect.y0 || py - pad > rect.y1)) continue;
+      if (index.blocks(px, py, pad) || decorationTouchesWater(px, py, pad, isWaterAt)) continue;
+      index.circle(px, py, pad);
+      out.push({ deco, x: px, y: py, unit, pad });
+      if (out.length >= limit) break;
+    }
+    return out;
+  })();
+  if (incremental) return steps;
+  let result = steps.next();
+  while (!result.done) result = steps.next();
+  return result.value;
 }
-function townDecoPaths(placements, rect, maxShapes = 4096, pixelsPerUnit = Infinity) {
-  const out = {};
-  for (const name of DECO_GROUPS) out[name] = [];
-  const visible = placements.filter(placed => !(placed.x + placed.pad < rect.x0 || placed.x - placed.pad > rect.x1 ||
-    placed.y + placed.pad < rect.y0 || placed.y - placed.pad > rect.y1));
-  // Sample the whole view, then reserve a per-shape share of the native path budget.
-  const count = Math.min(maxShapes, visible.length);
-  const commandShare = Math.floor(8192 / Math.max(1, count)), charShare = Math.floor(262144 / Math.max(1, count));
-  const unit = placements.length ? placements[0].unit : 0;
-  const preview = unit * 2 * pixelsPerUnit < 1;
-  out.strokeWidth = preview ? Math.max(unit * DECORATION_STROKE_FEET, 0.65 / pixelsPerUnit) : unit * DECORATION_STROKE_FEET;
-  let rendered = 0, simplified = false;
-  for (let i = 0; i < count; i++) {
-    const placed = visible[Math.floor(i * visible.length / count)];
-    if (preview || commandShare < 5) {
-      const group = placed.path ? placed.path[0] : decorationGroup(placed.deco.kind);
-      const size = preview ? 0.15 / pixelsPerUnit : placed.unit * (Math.max(2, Math.min(8, placed.deco.size)) - DECORATION_STROKE_FEET);
-      const dx = Math.cos(placed.deco.a) * size * 0.5, dy = Math.sin(placed.deco.a) * size * 0.5;
-      const f = value => value.toFixed(9).replace(/\.?0+$/, '');
-      const simple = `M${f(placed.x - dx)},${f(placed.y - dy)}L${f(placed.x + dx)},${f(placed.y + dy)}`;
-      if (commandShare >= 2 && simple.length <= charShare) { out[group].push(simple); rendered++; }
-      simplified = true;
-      continue;
+function townDecoPaths(placements, rect, maxShapes = 4096, pixelsPerUnit = Infinity, fullDetail = false, project = null) {
+  const steps = townDecoPathSteps(placements, rect, maxShapes, pixelsPerUnit, fullDetail, project);
+  let result = steps.next();
+  while (!result.done) result = steps.next();
+  return result.value;
+}
+function townDecoPathSteps(placements, rect, maxShapes = 4096, pixelsPerUnit = Infinity, fullDetail = false, project = null) {
+  return (function* () {
+    const out = {};
+    for (const name of DECO_GROUPS) out[name] = [];
+    const visible = placements.filter(placed => !(placed.x + placed.pad < rect.x0 || placed.x - placed.pad > rect.x1 ||
+      placed.y + placed.pad < rect.y0 || placed.y - placed.pad > rect.y1));
+    // Sample the whole view, then reserve a per-shape share of the native path budget.
+    const count = Math.min(maxShapes, fullDetail ? 1536 : maxShapes, visible.length);
+    let sampled = visible;
+    if (fullDetail && visible.length > count) {
+      const groups = DECO_GROUPS.map(name => visible.filter(placed =>
+        (placed.path ? placed.path[0] : decorationGroup(placed.deco.kind)) === name)).filter(group => group.length);
+      sampled = [];
+      let slots = count, remaining = visible.length;
+      for (let i = 0; i < groups.length && slots; i++) {
+        const group = groups[i], reserve = Math.min(slots - 1, groups.length - i - 1);
+        const take = Math.max(1, Math.min(group.length, slots - reserve, Math.floor(slots * group.length / remaining)));
+        for (let j = 0; j < take; j++) sampled.push({ placed: group[Math.floor(j * group.length / take)], order: j / take });
+        slots -= take; remaining -= group.length;
+      }
+      sampled.sort((a, b) => a.order - b.order);
+      sampled = sampled.map(sample => sample.placed);
     }
-    if (!placed.path) placed.path = decorationPath(placed.deco, placed.x, placed.y, placed.unit);
-    const [group, d] = placed.path;
-    const cost = (d.match(/[MLHVQCTSAZ]/gi) || []).length;
-    if (cost > commandShare || d.length > charShare) {
-      simplified = true;
-      const s = placed.unit * (Math.max(2, Math.min(8, placed.deco.size)) - DECORATION_STROKE_FEET) * 0.5;
-      const simple = `M${placed.x - s},${placed.y}L${placed.x},${placed.y - s}L${placed.x + s},${placed.y}L${placed.x},${placed.y + s}Z`;
-      if (simple.length <= charShare) { out[group].push(simple); rendered++; }
-      continue;
+    const commandShare = Math.floor(8192 / Math.max(1, count)), charShare = Math.floor(262144 / Math.max(1, count));
+    const unit = placements.length ? placements[0].unit * (project ? pixelsPerUnit : 1) : 0;
+    const preview = !fullDetail && unit * 2 * pixelsPerUnit < 1;
+    out.strokeWidth = preview ? Math.max(unit * DECORATION_STROKE_FEET, 0.65 / pixelsPerUnit)
+      : fullDetail ? Math.max(unit * DECORATION_STROKE_FEET, project ? 0.35 : 0.35 / pixelsPerUnit) : unit * DECORATION_STROKE_FEET;
+    let rendered = 0, simplified = false, commandsLeft = 8192, charsLeft = 262144;
+    for (let i = 0; i < count; i++) {
+      yield;
+      const placed = sampled[Math.floor(i * sampled.length / count)];
+      if (preview || !fullDetail && commandShare < 5) {
+        const group = placed.path ? placed.path[0] : decorationGroup(placed.deco.kind);
+        const size = preview ? 0.35 / pixelsPerUnit : placed.unit * (Math.max(2, Math.min(8, placed.deco.size)) - DECORATION_STROKE_FEET);
+        const dx = Math.cos(placed.deco.a) * size * 0.5, dy = Math.sin(placed.deco.a) * size * 0.5;
+        const f = value => value.toFixed(9).replace(/\.?0+$/, '');
+        const simple = `M${f(placed.x - dx)},${f(placed.y - dy)}L${f(placed.x + dx)},${f(placed.y + dy)}`;
+        if (commandShare >= 2 && simple.length <= charShare) { out[group].push(simple); rendered++; }
+        simplified = true;
+        continue;
+      }
+      // Only the cartographic silhouette gets a screen-size floor; physical walking footprints stay unchanged.
+      const physicalUnit = placed.unit * (project ? pixelsPerUnit : 1);
+      const drawUnit = fullDetail ? Math.max(physicalUnit, 3 / ((project ? 1 : pixelsPerUnit) * Math.max(2, Math.min(8, placed.deco.size)))) : physicalUnit;
+      let shape;
+      if (project) {
+        const at = project(placed.x, placed.y);
+        shape = decorationPath(placed.deco, at.x, at.y, drawUnit);
+      } else {
+        if (!placed.path) placed.path = decorationPath(placed.deco, placed.x, placed.y, placed.unit);
+        shape = drawUnit === placed.unit ? placed.path : decorationPath(placed.deco, placed.x, placed.y, drawUnit);
+      }
+      const [group, d] = shape;
+      const cost = (d.match(/[MLHVQCTSAZ]/gi) || []).length;
+      if (cost > (fullDetail ? commandsLeft : commandShare) || d.length > (fullDetail ? charsLeft : charShare)) {
+        simplified = true;
+        if (fullDetail) continue;
+        const s = placed.unit * (Math.max(2, Math.min(8, placed.deco.size)) - DECORATION_STROKE_FEET) * 0.5;
+        const simple = `M${placed.x - s},${placed.y}L${placed.x},${placed.y - s}L${placed.x + s},${placed.y}L${placed.x},${placed.y + s}Z`;
+        if (simple.length <= charShare) { out[group].push(simple); rendered++; }
+        continue;
+      }
+      out[group].push(d);
+      commandsLeft -= cost; charsLeft -= d.length;
+      rendered++;
     }
-    out[group].push(d);
-    rendered++;
-  }
-  for (const name of DECO_GROUPS) out[name] = out[name].join('');
-  out.detailLimited = rendered < visible.length || !preview && simplified;
-  return out;
+    for (const name of DECO_GROUPS) out[name] = out[name].join('');
+    out.detailLimited = rendered < visible.length || !preview && simplified;
+    out.rendered = rendered;
+    return out;
+  })();
 }
 const townDecoScene = { key: '', placements: [], rect: null };
+function showTownDecorationPreview(entries) {
+  if (!entries.length || !townElementVisibility.townDecorations || !townDecoActive() ||
+      columnShiftMarkersStale || fogMarkersStale) return;
+  const sceneKey = townRender.accessJob ? townRender.accessJob.key : townKey;
+  if (townDecoScene.key === sceneKey && townDecoScene.fullDetail && townDecoScene.screenKey === peopleCameraKey()) return;
+  const ground = townRender.accessJob ? townRender.accessJob.decorationGround : townDecoScene.previewGround;
+  const key = `${sceneKey}|${townViewKey()}|${entries.length}`;
+  if (townDecoScene.previewKey === key && townDecoScene.previewInput === ground) return;
+  const cx = mapPxW / 2, cy = mapPxH / 2, zy = viewZoom * viewAspectY;
+  const rect = { x0: (0 - mapX - mapPanX - cx) / viewZoom + cx,
+    x1: ((window.innerWidth || 1920) - mapX - mapPanX - cx) / viewZoom + cx,
+    y0: (0 - mapY - mapPanY - cy) / zy + cy,
+    y1: ((window.innerHeight || 1080) - mapY - mapPanY - cy) / zy + cy };
+  const placements = [], unit = hexW / (100 * 5280);
+  const cached = townDecoScene.key === sceneKey ? townDecoScene.placements : [];
+  for (const placed of cached) {
+    if (placed.x < rect.x0 || placed.x > rect.x1 || placed.y < rect.y0 || placed.y > rect.y1) continue;
+    placements.push(placed);
+    if (placements.length >= 128) break;
+  }
+  if (!placements.length && ground) {
+    let attempts = 0;
+    for (const entry of entries) {
+      const c = entry.center, r = entry.radius;
+      const x0 = Math.max(rect.x0, c.x - r * 1.15), x1 = Math.min(rect.x1, c.x + r * 1.15);
+      const y0 = Math.max(rect.y0, c.y - r * 1.15), y1 = Math.min(rect.y1, c.y + r * 1.15);
+      if (x1 <= x0 || y1 <= y0) continue;
+      for (const deco of townDecorations(hashString(`deco-preview|${entry.pathKey}`), Math.max(8, Math.floor(192 / entries.length)), entry.era ? entry.era.age : 0)) {
+        if (++attempts > 192) break;
+        const x = x0 + (deco.x + 1.2) / 2.4 * (x1 - x0), y = y0 + (deco.y + 1.2) / 2.4 * (y1 - y0);
+        const pad = unit * (deco.size * 1.15 + 0.2) + 0.000000001;
+        if (ground(x, y, pad) && !decorationTouchesWater(x, y, pad, isWaterAt)) placements.push({ deco, x, y, pad, unit });
+        if (placements.length >= 128) break;
+      }
+      if (placements.length >= 128 || attempts >= 192) break;
+    }
+  }
+  if (!placements.length) return;
+  const paths = townDecoPaths(placements, rect, 128, viewZoom * Math.min(1, viewAspectY), true);
+  for (const name of DECO_GROUPS) {
+    const path = townPaths[name];
+    path.setAttribute('d', paths[name]); path.setAttribute('stroke-width', String(paths.strokeWidth));
+    path.decorationHasGeometry = !!paths[name]; path.style.display = paths[name] ? '' : 'none'; path.style.visibility = '';
+  }
+  townDecoScene.fullDetail = false; townDecoScene.screenKey = '';
+  townDecoScene.previewKey = key; townDecoScene.previewInput = ground;
+  syncMapSvgViewport(townDecorationLayer);
+  townDecorationLayer.style.display = 'block';
+}
 const tileDecoCandidates = new Map();
 function townDecoTiles(rect) {
   const tiles = new Set(), stepX = hexW * 0.4, stepY = hexH * 0.3;
@@ -7066,113 +7492,169 @@ function townDecoTiles(rect) {
     return base.x + shift <= rect.x1 && base.x + shift + hexW >= rect.x0 && base.y <= rect.y1 && base.y + hexH >= rect.y0;
   }).sort((a, b) => a - b);
 }
-function tileDecoPlacements(tiles, rect, index, limit = 24000) {
-  const out = [], unit = hexW / (100 * 5280), step = hexW / 16;
-  if (limit <= 0) return out;
-  const midX = (rect.x0 + rect.x1) / 2;
-  for (const tile of tiles) {
-    const tileLimit = Math.min(limit, out.length + Math.max(1, Math.floor(limit / tiles.length)));
-    const base = basePos[tile], wrapWidth = layoutCols * hexW;
-    const shift = wrapWidth ? Math.round((midX - base.x - hexW / 2) / wrapWidth) * wrapWidth : 0;
-    const bx = base.x + shift, by = base.y;
-    const minX = Math.max(0, Math.floor((rect.x0 - bx) / step)), maxX = Math.min(15, Math.floor((rect.x1 - bx) / step));
-    const minY = Math.max(0, Math.floor((rect.y0 - by) / step)), maxY = Math.min(Math.ceil(hexH / step) - 1, Math.floor((rect.y1 - by) / step));
-    cells: for (let y = minY; y <= maxY; y++) for (let x = minX; x <= maxX; x++) {
-      const key = `${tile}|${x}|${y}`;
-      let candidates = tileDecoCandidates.get(key);
-      if (!candidates) {
-        candidates = townDecorations(hashString(`tile-deco|${key}`), 360);
-        tileDecoCandidates.set(key, candidates);
-        if (tileDecoCandidates.size > 32) tileDecoCandidates.delete(tileDecoCandidates.keys().next().value);
+function tileDecoPlacements(tiles, rect, index, limit = 24000, incremental = false) {
+  const steps = (function* () {
+    yield;
+    const out = [], unit = hexW / (100 * 5280), step = hexW / 16;
+    if (limit <= 0) return out;
+    const midX = (rect.x0 + rect.x1) / 2;
+    for (const tile of tiles) {
+      const tileLimit = Math.min(limit, out.length + Math.max(1, Math.floor(limit / tiles.length)));
+      const base = basePos[tile], wrapWidth = layoutCols * hexW;
+      const shift = wrapWidth ? Math.round((midX - base.x - hexW / 2) / wrapWidth) * wrapWidth : 0;
+      const bx = base.x + shift, by = base.y;
+      const minX = Math.max(0, Math.floor((rect.x0 - bx) / step)), maxX = Math.min(15, Math.floor((rect.x1 - bx) / step));
+      const minY = Math.max(0, Math.floor((rect.y0 - by) / step)), maxY = Math.min(Math.ceil(hexH / step) - 1, Math.floor((rect.y1 - by) / step));
+      cells: for (let y = minY; y <= maxY; y++) for (let x = minX; x <= maxX; x++) {
+        const key = `${tile}|${x}|${y}`;
+        let candidates = tileDecoCandidates.get(key);
+        if (!candidates) {
+          candidates = townDecorations(hashString(`tile-deco|${key}`), 360);
+          tileDecoCandidates.set(key, candidates);
+          if (tileDecoCandidates.size > 32) tileDecoCandidates.delete(tileDecoCandidates.keys().next().value);
+        }
+        for (const candidate of candidates) {
+          yield;
+          const px = bx + (x + (candidate.x + 1.2) / 2.4) * step, py = by + (y + (candidate.y + 1.2) / 2.4) * step;
+          const pad = unit * (candidate.size * 1.15 + 0.2) + 0.000000001;
+          if (px < rect.x0 || px > rect.x1 || py < rect.y0 || py > rect.y1 ||
+              tileAtMapPoint(px, py) !== tile || index.blocks(px, py, pad) || decorationTouchesWater(px, py, pad, isWaterAt)) continue;
+          const deco = ['plant', 'bush', 'rock', 'pebbles'].includes(candidate.kind) ? candidate : { ...candidate, kind: 'plant' };
+          index.circle(px, py, pad);
+          out.push({ deco, x: px, y: py, unit, pad });
+          if (out.length >= tileLimit) break cells;
+        }
       }
-      for (const candidate of candidates) {
-        const px = bx + (x + (candidate.x + 1.2) / 2.4) * step, py = by + (y + (candidate.y + 1.2) / 2.4) * step;
-        const pad = unit * (candidate.size * 1.15 + 0.2) + 0.000000001;
-        if (px < rect.x0 || px > rect.x1 || py < rect.y0 || py > rect.y1 ||
-            tileAtMapPoint(px, py) !== tile || index.blocks(px, py, pad) || decorationTouchesWater(px, py, pad, isWaterAt)) continue;
-        const deco = ['plant', 'bush', 'rock', 'pebbles'].includes(candidate.kind) ? candidate : { ...candidate, kind: 'plant' };
-        index.circle(px, py, pad);
-        out.push({ deco, x: px, y: py, unit, pad });
-        if (out.length >= tileLimit) break cells;
+      if (out.length >= tileLimit) continue;
+      const bounds = { x0: bx, x1: bx + hexW, y0: by, y1: by + hexH };
+      for (const deco of viewportVegetation(hashString(`dense-tile|${tile}`), rect, bounds, 360 * 0.91 * 49 * 256 / (step * step), Math.max(1, tileLimit - out.length))) {
+        yield;
+        const pad = unit * (deco.size * 1.15 + 0.2) + 0.000000001;
+        if (tileAtMapPoint(deco.x, deco.y) !== tile || index.blocks(deco.x, deco.y, pad) ||
+            decorationTouchesWater(deco.x, deco.y, pad, isWaterAt)) continue;
+        index.circle(deco.x, deco.y, pad);
+        out.push({ deco, x: deco.x, y: deco.y, unit, pad });
+        if (out.length >= tileLimit) break;
       }
     }
-    if (out.length >= tileLimit) continue;
-    const bounds = { x0: bx, x1: bx + hexW, y0: by, y1: by + hexH };
-    for (const deco of viewportVegetation(hashString(`dense-tile|${tile}`), rect, bounds, 360 * 0.91 * 49 * 256 / (step * step), Math.max(1, tileLimit - out.length))) {
-      const pad = unit * (deco.size * 1.15 + 0.2) + 0.000000001;
-      if (tileAtMapPoint(deco.x, deco.y) !== tile || index.blocks(deco.x, deco.y, pad) ||
-          decorationTouchesWater(deco.x, deco.y, pad, isWaterAt)) continue;
-      index.circle(deco.x, deco.y, pad);
-      out.push({ deco, x: deco.x, y: deco.y, unit, pad });
-      if (out.length >= tileLimit) break;
-    }
-  }
-  return out;
+    return out;
+  })();
+  if (incremental) return steps;
+  let result = steps.next();
+  while (!result.done) result = steps.next();
+  return result.value;
 }
-function syncTownDecorations(entries) {
-  const on = townElementVisibility.townDecorations && townDecoActive();
-  for (const name of DECO_GROUPS) {
-    const display = on && townPaths[name].decorationHasGeometry ? '' : 'none';
-    if (townPaths[name].style.display !== display) townPaths[name].style.display = display;
-  }
-  if (!on) return;
-  const cx = mapPxW / 2, cy = mapPxH / 2, zy = viewZoom * viewAspectY;
-  const x0 = (0 - mapX - mapPanX - cx) / viewZoom + cx, x1 = ((window.innerWidth || 1920) - mapX - mapPanX - cx) / viewZoom + cx;
-  const y0 = (0 - mapY - mapPanY - cy) / zy + cy, y1 = ((window.innerHeight || 1080) - mapY - mapPanY - cy) / zy + cy;
-  const pixelsPerUnit = viewZoom * Math.min(1, viewAspectY), drawLimit = 4096, placementBudget = 6144;
-  const sceneKey = entries.length ? townKey : `preview|${pos}|${fogMode}|${hexW}|${hexH}|${colShift}`;
-  const prior = townDecoScene.rect;
-  if (townDecoScene.key === sceneKey && townDecoScene.detail === drawLimit && townDecoScene.scale === pixelsPerUnit && prior && x0 >= prior.x0 && x1 <= prior.x1 && y0 >= prior.y0 && y1 <= prior.y1) return;
-  const mx = (x1 - x0) * 0.25, my = (y1 - y0) * 0.25;
-  const rect = { x0: x0 - mx, x1: x1 + mx, y0: y0 - my, y1: y1 + my };
-  const tiles = townDecoTiles(rect), midX = (rect.x0 + rect.x1) / 2;
-  const surroundings = tiles.map(tile => ({
-    center: { x: basePos[tile].x + hexW / 2, y: basePos[tile].y + hexH / 2 }, radius: hexW,
-    shapes: {}, final: [], obstacles: townObstacles(tile, midX),
-  }));
-  const index = townDecorationIndex(entries.concat(surroundings), townPlan, rect);
-  const placements = [];
-  for (const entry of entries) {
-    if (placements.length >= placementBudget) break;
-    if (entry.decorations) {
-      for (const placed of entry.decorations) {
-        if (placed.x + placed.pad < rect.x0 || placed.x - placed.pad > rect.x1 || placed.y + placed.pad < rect.y0 || placed.y - placed.pad > rect.y1) continue;
-        index.circle(placed.x, placed.y, placed.pad); placements.push(placed);
-        if (placements.length >= placementBudget) break;
-      }
-    } else placements.push(...townDecoPlacements(entry, index, rect, placementBudget - placements.length));
-    entry.decoCandidates = null;
-  }
-  for (const entry of entries) {
-    const r = entry.radius, c = entry.center;
-    const count = Math.min(12000, 4 * Math.max(600, Math.min(4000, Math.round(600 + 8000 * r / Math.max(1, hexW)))));
-    const bounds = { x0: c.x - r * 1.2, x1: c.x + r * 1.2, y0: c.y - r * 1.2, y1: c.y + r * 1.2 };
-    const density = count * 0.695 * 49 * 256 / (Math.PI * (r * 1.15) ** 2);
-    const unit = hexW / (100 * 5280);
-    for (const deco of viewportVegetation(hashString(`dense-deco|${entry.pathKey}`), rect, bounds, density, Math.max(1, (placementBudget - placements.length) / entries.length))) {
-      if (placements.length >= placementBudget) break;
-      if (Math.hypot(deco.x - c.x, deco.y - c.y) > r * 1.15) continue;
-      const pad = unit * (deco.size * 1.15 + 0.2) + 0.000000001;
-      if (index.blocks(deco.x, deco.y, pad) || decorationTouchesWater(deco.x, deco.y, pad, isWaterAt)) continue;
-      index.circle(deco.x, deco.y, pad);
-      placements.push({ deco, x: deco.x, y: deco.y, unit, pad });
+function syncTownDecorations(entries, incremental = false) {
+  const steps = (function* () {
+    yield;
+    const on = townElementVisibility.townDecorations && townDecoActive();
+    for (const name of DECO_GROUPS) {
+      const display = on && townPaths[name].decorationHasGeometry ? '' : 'none';
+      if (townPaths[name].style.display !== display) townPaths[name].style.display = display;
     }
+    if (!on) return;
+    const cx = mapPxW / 2, cy = mapPxH / 2, zy = viewZoom * viewAspectY;
+    const x0 = (0 - mapX - mapPanX - cx) / viewZoom + cx, x1 = ((window.innerWidth || 1920) - mapX - mapPanX - cx) / viewZoom + cx;
+    const y0 = (0 - mapY - mapPanY - cy) / zy + cy, y1 = ((window.innerHeight || 1080) - mapY - mapPanY - cy) / zy + cy;
+    const pixelsPerUnit = viewZoom * Math.min(1, viewAspectY), drawLimit = 4096, placementBudget = 9216;
+    const fullDetail = townDecoFullDetail();
+    const screenKey = fullDetail ? peopleCameraKey() : '';
+    const sceneKey = entries.length ? (townRender.accessJob ? townRender.accessJob.key : townKey) : `preview|${pos}|${fogMode}|${hexW}|${hexH}|${colShift}`;
+    const prior = townDecoScene.rect;
+    const reuse = townDecoScene.key === sceneKey && prior && x0 >= prior.x0 && x1 <= prior.x1 && y0 >= prior.y0 && y1 <= prior.y1;
+    if (reuse && townDecoScene.detail === drawLimit && townDecoScene.scale === pixelsPerUnit && townDecoScene.fullDetail === fullDetail &&
+        townDecoScene.screenKey === screenKey) return;
+    const mx = (x1 - x0) * 0.25, my = (y1 - y0) * 0.25;
+    const rect = reuse ? prior : { x0: x0 - mx, x1: x1 + mx, y0: y0 - my, y1: y1 + my };
+    let placements = townDecoScene.placements;
+    if (!reuse) {
+      const tiles = townDecoTiles(rect), midX = (rect.x0 + rect.x1) / 2;
+      const surroundings = tiles.map(tile => ({
+        center: { x: basePos[tile].x + hexW / 2, y: basePos[tile].y + hexH / 2 }, radius: hexW,
+        shapes: {}, final: [], obstacles: townObstacles(tile, midX),
+      }));
+      const index = incremental ? yield* townDecorationIndex(entries.concat(surroundings), townPlan, rect, true)
+        : townDecorationIndex(entries.concat(surroundings), townPlan, rect);
+      placements = [];
+      for (const entry of entries) {
+        if (placements.length >= placementBudget) break;
+        if (entry.decorations) {
+          for (const placed of entry.decorations) {
+            yield;
+            if (placed.x + placed.pad < rect.x0 || placed.x - placed.pad > rect.x1 || placed.y + placed.pad < rect.y0 || placed.y - placed.pad > rect.y1) continue;
+            index.circle(placed.x, placed.y, placed.pad); placements.push(placed);
+            if (placements.length >= placementBudget) break;
+          }
+        } else {
+          const added = incremental ? yield* townDecoPlacements(entry, index, rect, placementBudget - placements.length, true)
+            : townDecoPlacements(entry, index, rect, placementBudget - placements.length);
+          placements.push(...added);
+        }
+        entry.decoCandidates = null;
+      }
+      for (const entry of entries) {
+        const r = entry.radius, c = entry.center;
+        const count = Math.min(12000, 6 * Math.max(600, Math.min(4000, Math.round(600 + 8000 * r / Math.max(1, hexW)))));
+        const bounds = { x0: c.x - r * 1.2, x1: c.x + r * 1.2, y0: c.y - r * 1.2, y1: c.y + r * 1.2 };
+        const density = count * 0.695 * 49 * 256 / (Math.PI * (r * 1.15) ** 2);
+        const unit = hexW / (100 * 5280);
+        for (const deco of viewportVegetation(hashString(`dense-deco|${entry.pathKey}`), rect, bounds, density, Math.max(1, (placementBudget - placements.length) / entries.length))) {
+          yield;
+          if (placements.length >= placementBudget) break;
+          if (Math.hypot(deco.x - c.x, deco.y - c.y) > r * 1.15) continue;
+          const pad = unit * (deco.size * 1.15 + 0.2) + 0.000000001;
+          if (index.blocks(deco.x, deco.y, pad) || decorationTouchesWater(deco.x, deco.y, pad, isWaterAt)) continue;
+          index.circle(deco.x, deco.y, pad);
+          placements.push({ deco, x: deco.x, y: deco.y, unit, pad });
+        }
+      }
+      const added = incremental ? yield* tileDecoPlacements(tiles, rect, index, placementBudget - placements.length, true)
+        : tileDecoPlacements(tiles, rect, index, placementBudget - placements.length);
+      placements.push(...added);
+    }
+    const paths = incremental ? yield* townDecoPathSteps(placements, rect, drawLimit, pixelsPerUnit, fullDetail, fullDetail ? mapToScreen : null)
+      : townDecoPaths(placements, rect, drawLimit, pixelsPerUnit, fullDetail, fullDetail ? mapToScreen : null);
+    if (paths.detailLimited && !townDecoScene.limitReported) {
+      console.warn(`${TAG} Townscape decoration render budget reached; using viewport detail sampling to bound renderer commands`);
+      townDecoScene.limitReported = true;
+    }
+    for (const name of DECO_GROUPS) {
+      const path = townPaths[name];
+      path.setAttribute('d', paths[name]); path.setAttribute('stroke-width', String(paths.strokeWidth));
+      path.decorationHasGeometry = !!paths[name]; path.style.display = paths[name] ? '' : 'none'; path.style.visibility = '';
+    }
+    townDecoScene.key = sceneKey; townDecoScene.placements = placements; townDecoScene.rect = rect;
+    townDecoScene.detail = drawLimit; townDecoScene.scale = pixelsPerUnit;
+    townDecoScene.previewKey = ''; townDecoScene.previewGround = null; townDecoScene.previewInput = null;
+    townDecoScene.fullDetail = fullDetail; townDecoScene.screenKey = screenKey;
+    syncTownDecorationVisibility();
+  })();
+  if (incremental) return steps;
+  for (let result = steps.next(); !result.done; result = steps.next()) {}
+}
+function advanceTownDecorations(entries) {
+  if (!townElementVisibility.townDecorations || !townDecoActive() || columnShiftMarkersStale || fogMarkersStale) {
+    townRender.decoJob = null;
+    syncTownDecorationVisibility();
+    return;
   }
-  placements.push(...tileDecoPlacements(tiles, rect, index, placementBudget - placements.length));
-  townDecoScene.key = sceneKey; townDecoScene.placements = placements;
-  townDecoScene.detail = drawLimit;
-  townDecoScene.scale = pixelsPerUnit;
-  const paths = townDecoPaths(townDecoScene.placements, rect, drawLimit, pixelsPerUnit);
-  if (paths.detailLimited && !townDecoScene.limitReported) {
-    console.warn(`${TAG} Townscape decoration render budget reached; using viewport detail sampling to bound renderer commands`);
-    townDecoScene.limitReported = true;
+  const sceneKey = entries.length ? (townRender.accessJob ? townRender.accessJob.key : townKey) : `preview|${pos}|${fogMode}|${hexW}|${hexH}|${colShift}`;
+  const key = `${townZoomKey()}|${mapPanX}|${mapPanY}|${sceneKey}|${townDecoFullDetail()}`;
+  showTownDecorationPreview(entries);
+  let job = townRender.decoJob;
+  if (!job || job.key !== key) job = townRender.decoJob = { key, steps: syncTownDecorations(entries, true) };
+  const started = Date.now();
+  try {
+    for (let step = 0; step < 64; step++) {
+      if (job.steps.next().done) { townRender.decoJob = null; break; }
+      if (Date.now() - started >= 8) break;
+    }
+  } catch (error) {
+    townRender.decoJob = null;
+    townDecoScene.key = '';
+    throw error;
   }
-  for (const name of DECO_GROUPS) {
-    const path = townPaths[name];
-    path.setAttribute('d', paths[name]); path.setAttribute('stroke-width', String(paths.strokeWidth));
-    path.decorationHasGeometry = !!paths[name]; path.style.display = paths[name] ? '' : 'none'; path.style.visibility = '';
-  }
-  townDecoScene.rect = rect;
+  if (townRender.decoJob) scheduleTownRefresh();
 }
 function linePath(points) {
   return points.map(([x, y], i) => `${i ? 'L' : 'M'}${(Math.round(x * 1000000) / 1000000)},${(Math.round(y * 1000000) / 1000000)}`).join('');
@@ -7241,18 +7723,23 @@ function townscapeCached(p) {
 function planEntryLinks(entries) {
   const thin = Math.max(0.005, hexW * 0.0005), riverKeys = new Set(), rivers = [];
   const cameraTile = townLinkTile(), cameraPos = basePos[cameraTile];
+  const tiles = new Set(entries.map(entry => entry.item.index));
+  if (cameraTile >= 0) tiles.add(cameraTile);
+  for (const tile of [...tiles]) for (const neighbor of neighborsByIndex[tile] || []) if (neighbor >= 0) tiles.add(neighbor);
   const mapRoads = [], seenRoads = new Set(), centerX = entries.length ? entries[0].center.x : cameraPos ? cameraPos.x + hexW / 2 : 0;
   const wrap = x => mapPxW ? Math.round((centerX - x) / mapPxW) * mapPxW : 0;
-  for (const list of roadLines.values()) for (const road of list) {
+  for (const tile of tiles) for (const road of roadLines.get(tile) || []) {
     if (seenRoads.has(road) || !road.pts.length) continue;
     seenRoads.add(road);
     const shift = wrap(road.pts[0].x);
     mapRoads.push(road.pts.map(p => ({ x: p.x + shift, y: p.y })));
   }
-  for (const [tile, list] of riverTileSegs) {
+  const riverTiles = new Set(tiles);
+  for (const tile of tiles) for (const neighbor of neighborsByIndex[tile] || []) if (neighbor >= 0) riverTiles.add(neighbor);
+  for (const tile of riverTiles) {
     if (!basePos[tile]) continue;
     const at = basePos[tile], tx = at.x + hexW / 2, ty = at.y + hexH / 2, shift = wrap(tx);
-    for (const s of list) {
+    for (const s of riverTileSegs.get(tile) || []) {
       const river = { x1: tx + s.x1 + shift, y1: ty + s.y1, x2: tx + s.x2 + shift, y2: ty + s.y2, clear: s.hw };
       const key = [river.x1, river.y1, river.x2, river.y2].map(v => Math.round(v * 100)).join(',');
       if (!riverKeys.has(key)) { riverKeys.add(key); rivers.push(river); }
@@ -7278,13 +7765,10 @@ function planEntryLinks(entries) {
       water: (entry.shapes.water || []).map(line => line.map(([x, y]) => ({ x: c.x + x * r, y: c.y + y * r }))),
     };
   });
-  const tiles = new Set(entries.map(entry => entry.item.index));
-  if (cameraTile >= 0) tiles.add(cameraTile);
-  for (const tile of [...tiles]) for (const neighbor of neighborsByIndex[tile] || []) if (neighbor >= 0) tiles.add(neighbor);
   const vis = fogMode ? visForPos() : null;
   for (const point of iconPoints) {
     const item = point.item;
-    if (item.kind === 'resource' || !tiles.has(item.index) || (vis && vis[item.index] === 0)) continue;
+    if (item.kind === 'resource' || !tiles.has(item.index) || (vis && !(vis[item.index] > 0))) continue;
     const x = point.x + wrap(point.x), y = point.y;
     if (entries.some(entry => entry.item.kind === item.kind && entry.item.index === item.index && entry.item.typeIndex === item.typeIndex &&
       entry.item.row === item.row && Math.hypot(entry.center.x - x, entry.center.y - y) < hexW * 0.001)) continue;
@@ -7299,13 +7783,19 @@ function planEntryLinks(entries) {
       roads: [], water: [],
     });
   }
-  const reach = towns.length ? {
-    x0: Math.min(...towns.map(town => town.x - town.radius * 2)), x1: Math.max(...towns.map(town => town.x + town.radius * 2)),
-    y0: Math.min(...towns.map(town => town.y - town.radius * 2)), y1: Math.max(...towns.map(town => town.y + town.radius * 2)),
+  // Road spines can bend outside roof bounds; retain rivers along those bends too.
+  const bounds = towns.flatMap(town => [
+    { x: town.x - town.radius * 2, y: town.y - town.radius * 2 },
+    { x: town.x + town.radius * 2, y: town.y + town.radius * 2 },
+  ]);
+  for (const road of mapRoads) bounds.push(...road);
+  const reach = bounds.length ? {
+    x0: Math.min(...bounds.map(point => point.x)), x1: Math.max(...bounds.map(point => point.x)),
+    y0: Math.min(...bounds.map(point => point.y)), y1: Math.max(...bounds.map(point => point.y)),
   } : null;
   const localRivers = rivers.filter(s => reach && Math.max(s.x1, s.x2) + s.clear >= reach.x0 && Math.min(s.x1, s.x2) - s.clear <= reach.x1 &&
     Math.max(s.y1, s.y2) + s.clear >= reach.y0 && Math.min(s.y1, s.y2) - s.clear <= reach.y1);
-  const plan = planTownLinks({ towns, rivers, mapRoads, width: thin * 3, allow: (a, b) => !segmentTouchesWater(a, b) });
+  const plan = planTownLinks({ towns, rivers: localRivers, mapRoads, width: thin * 3, allow: (a, b) => !segmentTouchesWater(a, b) });
   if (plan.disconnectedTiles.length) err(`No dry road connection between all townscapes on tiles: ${plan.disconnectedTiles.join(', ')}`);
   plan.tileWalls = townTileWalls(entries);
   plan.rivers = localRivers;
@@ -7355,234 +7845,277 @@ function townWaterfronts(entries) {
   }
   return decks;
 }
-function townAccessRoads(entries) {
-  const index = new DecorationIndex(Math.max(0.01, hexW * 0.01));
-  const water = new DecorationIndex(Math.max(0.01, hexW * 0.01)), thin = Math.max(0.005, hexW * 0.0005);
-  for (const entry of entries) {
-    for (const building of entry.final) {
-      index.add({ building, poly: building.poly, box: building.box });
-      for (const poly of building.parts || []) index.add({ building, poly, box: polygonBounds(poly) });
-    }
-    for (const circle of entry.obstacles.circles) index.circle(circle.x, circle.y, circle.r);
-    const local = poly => poly.map(([x, y]) => [entry.center.x + x * entry.radius, entry.center.y + y * entry.radius]);
-    for (const shape of entry.shapes.pools || []) water.polygon(local(shape));
-    for (const shape of entry.shapes.water || []) {
-      const line = local(shape);
-      for (let i = 1; i < line.length; i++) water.segment(...line[i - 1], ...line[i], thin * 0.45);
-    }
-    for (const s of entry.obstacles.segments) if (!s.road) water.segment(s.x1, s.y1, s.x2, s.y2, s.clear);
-  }
-  let unreachable = 0;
-  for (const entry of entries) {
-    const c = entry.center, r = entry.radius, streets = new DecorationIndex(Math.max(0.01, r * 0.05));
-    const addStreet = (a, z) => streets.add({ points: [a, z], box: {
-      x0: Math.min(a.x, z.x), x1: Math.max(a.x, z.x), y0: Math.min(a.y, z.y), y1: Math.max(a.y, z.y) } });
-    for (const line of [...(entry.minorRoads || entry.shapes.streets || []), ...(entry.dryMainRoads || entry.shapes.mainStreets || [])]) {
-      const points = line.map(([x, y]) => ({ x: c.x + x * r, y: c.y + y * r }));
-      for (let i = 1; i < points.length; i++) addStreet(points[i - 1], points[i]);
-    }
-    entry.accessRoads = [];
-    const targets = [], parents = new Map(), connectedParents = new Map();
-    for (const building of entry.final) {
-      if (building.form === 'dock' && !entry.waterfrontAccepted) continue;
-      if (building.subdivisionParent !== undefined) {
-        let group = parents.get(building.subdivisionParent);
-        if (!group) { group = []; parents.set(building.subdivisionParent, group); }
-        group.push(building);
-      } else targets.push({ building });
-    }
-    for (const [parentId, group] of parents) {
-      const box = polygonBounds(group.flatMap(b => b.poly));
-      targets.push({ point: group[0].subdivisionCenter || { x: (box.x0 + box.x1) / 2, y: (box.y0 + box.y1) / 2 }, parentId, harbor: group[0].form === 'dock' });
-      for (const building of group) targets.push({ building, harbor: building.form === 'dock' });
-    }
-    if (entry.waterfrontAccepted && entry.waterfront && entry.waterfront.landing) {
-      targets.unshift({ point: entry.waterfront.landing, landing: true });
-      for (const deck of entry.waterfront.decks) {
-        const [a, z] = deck;
-        targets.push({ point: { x: (a[0] + z[0]) / 2, y: (a[1] + z[1]) / 2 }, harbor: true, deck: true });
+function townAccessRoads(entries, incremental = false) {
+  const steps = (function* () {
+    const index = new DecorationIndex(Math.max(0.01, hexW * 0.01));
+    const water = new DecorationIndex(Math.max(0.01, hexW * 0.01)), thin = Math.max(0.005, hexW * 0.0005);
+    for (const entry of entries) {
+      for (const building of entry.final) {
+        yield;
+        index.add({ building, poly: building.poly, box: building.box });
+        for (const poly of building.parts || []) index.add({ building, poly, box: polygonBounds(poly) });
       }
+      for (const circle of entry.obstacles.circles) index.circle(circle.x, circle.y, circle.r);
+      const local = poly => poly.map(([x, y]) => [entry.center.x + x * entry.radius, entry.center.y + y * entry.radius]);
+      for (const shape of entry.shapes.pools || []) water.polygon(local(shape));
+      for (const shape of entry.shapes.water || []) {
+        const line = local(shape);
+        for (let i = 1; i < line.length; i++) water.segment(...line[i - 1], ...line[i], thin * 0.45);
+      }
+      for (const s of entry.obstacles.segments) if (!s.road) water.segment(s.x1, s.y1, s.x2, s.y2, s.clear);
     }
-    for (const target of targets) {
-      const b = target.building;
-      if (target.harbor && !entry.waterfrontAccepted) continue;
-      const center = target.point || { x: (b.box.x0 + b.box.x1) / 2, y: (b.box.y0 + b.box.y1) / 2 };
-      const preferred = b && connectedParents.get(b.subdivisionParent);
-      let candidates = [];
-      for (const reach of preferred ? [] : [0.05, 0.2, 0.5, 2]) {
-        candidates = streets.recordsInBox({ x0: center.x - r * reach, x1: center.x + r * reach, y0: center.y - r * reach, y1: center.y + r * reach });
-        if (candidates.length) break;
+    let unreachable = 0;
+    for (const entry of entries) {
+      const c = entry.center, r = entry.radius, streets = new DecorationIndex(Math.max(0.01, r * 0.05));
+      const addStreet = (a, z) => streets.add({ points: [a, z], box: {
+        x0: Math.min(a.x, z.x), x1: Math.max(a.x, z.x), y0: Math.min(a.y, z.y), y1: Math.max(a.y, z.y) } });
+      for (const line of [...(entry.minorRoads || entry.shapes.streets || []), ...(entry.dryMainRoads || entry.shapes.mainStreets || [])]) {
+        const points = line.map(([x, y]) => ({ x: c.x + x * r, y: c.y + y * r }));
+        for (let i = 1; i < points.length; i++) addStreet(points[i - 1], points[i]);
       }
-      const starts = candidates.map(({ points: [a, z] }) => nearestOnSegment(center.x, center.y, a.x, a.y, z.x, z.y)).sort((a, z) => a.d - z.d).slice(0, 8);
-      if (preferred) starts.splice(0, starts.length, preferred);
-      else if (target.harbor) starts.splice(0, starts.length, entry.waterfront.landing);
-      let accepted = null;
-      for (const start of starts) {
-        const end = b ? buildingDoorPoint(b.poly, start) : center;
-        if (!end) continue;
-        const margin = Math.max(0.00000001, Math.min(r * 0.0005, b ? Math.min(b.box.x1 - b.box.x0, b.box.y1 - b.box.y0) * 0.02 : r * 0.0005));
-        const bounds = { x0: Math.min(start.x, end.x) - r * 0.15, x1: Math.max(start.x, end.x) + r * 0.15,
-          y0: Math.min(start.y, end.y) - r * 0.15, y1: Math.max(start.y, end.y) + r * 0.15 };
-        const waypoints = () => {
-          const nearby = index.recordsInBox(bounds), points = [];
-          if (target.harbor) for (const deck of entry.waterfront.decks) {
-            const cx = deck.reduce((n, p) => n + p[0], 0) / deck.length, cy = deck.reduce((n, p) => n + p[1], 0) / deck.length;
-            points.push({ x: cx, y: cy });
-            for (const p of deck) points.push({ x: cx + (p[0] - cx) * 0.98, y: cy + (p[1] - cy) * 0.98 });
-          }
-          for (const record of nearby) {
-            if (record.building && record.building !== b) {
-              const box = record.box;
-              for (const [x, y] of [[box.x0 - margin, box.y0 - margin], [box.x1 + margin, box.y0 - margin],
-                [box.x1 + margin, box.y1 + margin], [box.x0 - margin, box.y1 + margin]]) points.push({ x, y });
-            } else if (record.kind === 'circle') {
-              for (let i = 0; i < 8; i++) points.push({ x: record.x + Math.cos(i * Math.PI / 4) * (record.r * 1.1 + margin),
-                y: record.y + Math.sin(i * Math.PI / 4) * (record.r * 1.1 + margin) });
-            }
-            if (points.length >= 64) break;
-          }
-          return points;
-        };
-        const clear = (a, z) => {
-          if (b && [0.000001, 0.5, 0.999999].some(t => pointInPolygon(a.x + (z.x - a.x) * t, a.y + (z.y - a.y) * t, b.poly))) return false;
-          const box = { x0: Math.min(a.x, z.x), x1: Math.max(a.x, z.x), y0: Math.min(a.y, z.y), y1: Math.max(a.y, z.y) };
-          if (index.recordsInBox(box, margin).some(record => (!b || record.building !== b) &&
-            (record.poly ? polygonNearSegment(record.poly, a.x, a.y, z.x, z.y, margin * 0.2) :
-              record.kind === 'circle' && pointNearSegment(record.x, record.y, a.x, a.y, z.x, z.y, record.r + margin)))) return false;
-          if (target.harbor) return deckEdgeAllowed(a, z, entry.waterfront.decks);
-          if (water.recordsInBox(box).some(record => record.poly ?
-            polygonNearSegment(record.poly, a.x, a.y, z.x, z.y, 0) : !walkCreekAllowed(a, z, [record], []))) return false;
-          return !segmentTouchesWater(a, z);
-        };
-        accepted = approachPath(start, end, { seed: hashString(`${entry.pathKey}|${b ? b.sourceIndex : 'landing'}`),
-          amplitude: preferred ? Math.min(r * 0.008, margin * 2) : r * 0.008, clear, waypoints });
-        if (accepted) break;
+      entry.accessRoads = [];
+      const targets = [], parents = new Map(), connectedParents = new Map();
+      for (const building of entry.final) {
+        if (building.form === 'dock' && !entry.waterfrontAccepted) continue;
+        if (building.subdivisionParent !== undefined) {
+          let group = parents.get(building.subdivisionParent);
+          if (!group) { group = []; parents.set(building.subdivisionParent, group); }
+          group.push(building);
+        } else targets.push({ building });
       }
-      if (accepted) {
-        entry.accessRoads.push({ pts: accepted, sourceIndex: b ? b.sourceIndex : undefined, harbor: !!target.harbor });
-        if (target.parentId !== undefined) connectedParents.set(target.parentId, target.point);
-        for (let i = 1; i < accepted.length; i++) addStreet(accepted[i - 1], accepted[i]);
+      for (const [parentId, group] of parents) {
+        const box = polygonBounds(group.flatMap(b => b.poly));
+        targets.push({ point: group[0].subdivisionCenter || { x: (box.x0 + box.x1) / 2, y: (box.y0 + box.y1) / 2 }, parentId, harbor: group[0].form === 'dock' });
+        for (const building of group) targets.push({ building, harbor: building.form === 'dock' });
       }
-      else if (target.parentId === undefined) {
-        unreachable++;
-        if (target.landing || target.deck) {
-          entry.waterfrontAccepted = false;
-          entry.final = entry.final.filter(building => building.form !== 'dock');
-          entry.accessRoads = entry.accessRoads.filter(road => !road.harbor);
+      if (entry.waterfrontAccepted && entry.waterfront && entry.waterfront.landing) {
+        targets.unshift({ point: entry.waterfront.landing, landing: true });
+        for (const deck of entry.waterfront.decks) {
+          const [a, z] = deck;
+          targets.push({ point: { x: (a[0] + z[0]) / 2, y: (a[1] + z[1]) / 2 }, harbor: true, deck: true });
         }
       }
+      for (const target of targets) {
+        yield;
+        const b = target.building;
+        if (target.harbor && !entry.waterfrontAccepted) continue;
+        const center = target.point || { x: (b.box.x0 + b.box.x1) / 2, y: (b.box.y0 + b.box.y1) / 2 };
+        const preferred = b && connectedParents.get(b.subdivisionParent);
+        let candidates = [];
+        for (const reach of preferred ? [] : [0.05, 0.2, 0.5, 2]) {
+          candidates = streets.recordsInBox({ x0: center.x - r * reach, x1: center.x + r * reach, y0: center.y - r * reach, y1: center.y + r * reach });
+          if (candidates.length) break;
+        }
+        const starts = candidates.map(({ points: [a, z] }) => nearestOnSegment(center.x, center.y, a.x, a.y, z.x, z.y)).sort((a, z) => a.d - z.d).slice(0, 8);
+        if (preferred) starts.splice(0, starts.length, preferred);
+        else if (target.harbor) starts.splice(0, starts.length, entry.waterfront.landing);
+        let accepted = null;
+        for (const start of starts) {
+          const end = b ? buildingDoorPoint(b.poly, start) : center;
+          if (!end) continue;
+          const margin = Math.max(0.00000001, Math.min(r * 0.0005, b ? Math.min(b.box.x1 - b.box.x0, b.box.y1 - b.box.y0) * 0.02 : r * 0.0005));
+          const bounds = { x0: Math.min(start.x, end.x) - r * 0.15, x1: Math.max(start.x, end.x) + r * 0.15,
+            y0: Math.min(start.y, end.y) - r * 0.15, y1: Math.max(start.y, end.y) + r * 0.15 };
+          const waypoints = () => {
+            const nearby = index.recordsInBox(bounds), points = [];
+            if (target.harbor) for (const deck of entry.waterfront.decks) {
+              const cx = deck.reduce((n, p) => n + p[0], 0) / deck.length, cy = deck.reduce((n, p) => n + p[1], 0) / deck.length;
+              points.push({ x: cx, y: cy });
+              for (const p of deck) points.push({ x: cx + (p[0] - cx) * 0.98, y: cy + (p[1] - cy) * 0.98 });
+            }
+            for (const record of nearby) {
+              if (record.building && record.building !== b) {
+                const box = record.box;
+                for (const [x, y] of [[box.x0 - margin, box.y0 - margin], [box.x1 + margin, box.y0 - margin],
+                  [box.x1 + margin, box.y1 + margin], [box.x0 - margin, box.y1 + margin]]) points.push({ x, y });
+              } else if (record.kind === 'circle') {
+                for (let i = 0; i < 8; i++) points.push({ x: record.x + Math.cos(i * Math.PI / 4) * (record.r * 1.1 + margin),
+                  y: record.y + Math.sin(i * Math.PI / 4) * (record.r * 1.1 + margin) });
+              }
+              if (points.length >= 64) break;
+            }
+            return points;
+          };
+          const clear = (a, z) => {
+            if (b && [0.000001, 0.5, 0.999999].some(t => pointInPolygon(a.x + (z.x - a.x) * t, a.y + (z.y - a.y) * t, b.poly))) return false;
+            const box = { x0: Math.min(a.x, z.x), x1: Math.max(a.x, z.x), y0: Math.min(a.y, z.y), y1: Math.max(a.y, z.y) };
+            if (index.recordsInBox(box, margin).some(record => (!b || record.building !== b) &&
+              (record.poly ? polygonNearSegment(record.poly, a.x, a.y, z.x, z.y, margin * 0.2) :
+                record.kind === 'circle' && pointNearSegment(record.x, record.y, a.x, a.y, z.x, z.y, record.r + margin)))) return false;
+            if (target.harbor) return deckEdgeAllowed(a, z, entry.waterfront.decks);
+            if (water.recordsInBox(box).some(record => record.poly ?
+              polygonNearSegment(record.poly, a.x, a.y, z.x, z.y, 0) : !walkCreekAllowed(a, z, [record], []))) return false;
+            return !segmentTouchesWater(a, z);
+          };
+          accepted = approachPath(start, end, { seed: hashString(`${entry.pathKey}|${b ? b.sourceIndex : 'landing'}`),
+            amplitude: preferred ? Math.min(r * 0.008, margin * 2) : r * 0.008, clear, waypoints });
+          if (accepted) break;
+        }
+        if (accepted) {
+          entry.accessRoads.push({ pts: accepted, sourceIndex: b ? b.sourceIndex : undefined, harbor: !!target.harbor });
+          if (target.parentId !== undefined) connectedParents.set(target.parentId, target.point);
+          for (let i = 1; i < accepted.length; i++) addStreet(accepted[i - 1], accepted[i]);
+        }
+        else if (target.parentId === undefined) {
+          unreachable++;
+          if (target.landing || target.deck) {
+            entry.waterfrontAccepted = false;
+            entry.final = entry.final.filter(building => building.form !== 'dock');
+            entry.accessRoads = entry.accessRoads.filter(road => !road.harbor);
+          }
+        }
+      }
+      entry.accessRoadPath = entry.accessRoads.map(road => linePath(road.pts.map(p => [p.x, p.y]))).join('');
     }
-    entry.accessRoadPath = entry.accessRoads.map(road => linePath(road.pts.map(p => [p.x, p.y]))).join('');
-  }
-  if (unreachable) err(`${unreachable} townscape entrances have no obstacle-clear road approach in this scene`);
+    if (unreachable) err(`${unreachable} townscape entrances have no obstacle-clear road approach in this scene`);
+  })();
+  if (incremental) return steps;
+  for (const step of steps) {}
 }
-function townBuildingGround(entries, plan) {
-  const cell = Math.max(0.1, hexW * 0.02), roads = new DecorationIndex(cell), water = new DecorationIndex(cell), pools = new DecorationIndex(cell);
-  const thin = Math.max(0.005, hexW * 0.0005);
-  const segments = (line, clear, target) => {
-    for (let i = 1; i < line.length; i++) target.segment(line[i - 1][0], line[i - 1][1], line[i][0], line[i][1], clear);
-  };
-  for (const entry of entries) {
-    const local = line => line.map(([x, y]) => [entry.center.x + x * entry.radius, entry.center.y + y * entry.radius]);
-    for (const line of entry.dryMinorRoads || entry.shapes.streets || []) segments(local(line), thin * 0.2 / 20, roads);
-    for (const line of entry.dryMainRoads || entry.shapes.mainStreets || []) segments(local(line), thin * 0.375 / 20, roads);
-    for (const line of entry.shapes.water || []) segments(local(line), thin * 0.45, water);
-    for (const poly of entry.shapes.pools || []) pools.polygon(local(poly));
-    for (const s of entry.obstacles.segments) (s.road ? roads : water).segment(s.x1, s.y1, s.x2, s.y2, s.clear);
-  }
-  for (const line of plan.roads) segments(line.pts.map(p => [p.x, p.y]), thin * 0.375 / 20, roads);
-  for (const line of plan.water) segments(line.pts.map(p => [p.x, p.y]), thin * 0.45, water);
-  return { clear(poly, margin) {
-    const box = polygonBounds(poly);
-    return buildingGroundClear(poly, roads.recordsInBox(box, margin), water.recordsInBox(box), pools.recordsInBox(box).map(record => record.poly), margin);
-  } };
-}
-function townMinorRoads(entries) {
-  const index = new DecorationIndex(Math.max(0.1, hexW * 0.02));
-  for (const entry of entries) for (const building of entry.final) {
-    index.polygon(building.poly);
-    for (const part of building.parts) index.polygon(part);
-  }
-  const thin = Math.max(0.005, hexW * 0.0005), clearance = (thin * 0.22 + 0.002) / 20;
-  for (const entry of entries) {
-    const c = entry.center, r = entry.radius;
-    const lines = (entry.dryMinorRoads || entry.shapes.streets || []).map(line => line.map(([x, y]) => [c.x + x * r, c.y + y * r]));
-    const cleared = clearMinorRoads(lines, index, clearance);
-    entry.minorRoads = cleared.map(line => line.map(([x, y]) => [(x - c.x) / r, (y - c.y) / r]));
-    entry.minorRoadPath = cleared.map(linePath).join('');
-  }
-}
-function townDryRoads(entries, plan) {
-  const index = new DecorationIndex(Math.max(0.1, hexW * 0.02)), thin = Math.max(0.005, hexW * 0.0005);
-  const addLine = (line, width) => {
-    for (let i = 1; i < line.length; i++) index.segment(line[i - 1][0], line[i - 1][1], line[i][0], line[i][1], width);
-  };
-  const tiles = new Set();
-  for (const entry of entries) {
-    const c = entry.center, r = entry.radius, local = line => line.map(([x, y]) => [c.x + x * r, c.y + y * r]);
-    for (const line of entry.shapes.water || []) addLine(local(line), thin * 0.45);
-    for (const pool of entry.shapes.pools || []) index.polygon(local(pool));
-    for (const s of entry.obstacles.segments) if (!s.road) index.segment(s.x1, s.y1, s.x2, s.y2, s.clear);
-    tiles.add(entry.item.index);
-    for (const tile of neighborsByIndex[entry.item.index] || []) if (tile >= 0) tiles.add(tile);
-  }
-  for (const stream of plan.water) addLine(stream.pts.map(p => [p.x, p.y]), thin * 0.45);
-  for (const s of plan.rivers) index.segment(s.x1, s.y1, s.x2, s.y2, s.clear);
-  const centerX = entries.length ? entries[0].center.x : 0;
-  for (const tile of tiles) if (terrain && [0, 1, 9, 10].includes(terrain[tile]) && basePos[tile]) {
-    const shift = mapPxW ? Math.round((centerX - basePos[tile].x - hexW / 2) / mapPxW) * mapPxW : 0;
-    index.polygon(Array.from({ length: 6 }, (_, k) => { const p = hexVert(tile, k); return [p[0] + shift, p[1]]; }));
-  }
-  for (const entry of entries) {
-    const c = entry.center, r = entry.radius;
-    for (const [source, target, half] of [['streets', 'dryMinorRoads', 0.2], ['mainStreets', 'dryMainRoads', 0.375]]) {
-      const lines = (entry.shapes[source] || []).map(line => line.map(([x, y]) => [c.x + x * r, c.y + y * r]));
-      const dry = clearMinorRoads(lines, index, (thin * half + 0.002) / 20);
-      entry[target] = dry.map(line => line.map(([x, y]) => [(x - c.x) / r, (y - c.y) / r]));
-      if (source === 'mainStreets') entry.dryMainRoadPath = dry.map(linePath).join('');
+function townBuildingGround(entries, plan, incremental = false) {
+  const steps = (function* () {
+    const cell = Math.max(0.1, hexW * 0.02), roads = new DecorationIndex(cell), water = new DecorationIndex(cell), pools = new DecorationIndex(cell);
+    const thin = Math.max(0.005, hexW * 0.0005);
+    const segments = (line, clear, target) => {
+      for (let i = 1; i < line.length; i++) target.segment(line[i - 1][0], line[i - 1][1], line[i][0], line[i][1], clear);
+    };
+    for (const entry of entries) {
+      yield;
+      const local = line => line.map(([x, y]) => [entry.center.x + x * entry.radius, entry.center.y + y * entry.radius]);
+      for (const line of entry.dryMinorRoads || entry.shapes.streets || []) segments(local(line), thin * 0.2 / 20, roads);
+      for (const line of entry.dryMainRoads || entry.shapes.mainStreets || []) segments(local(line), thin * 0.375 / 20, roads);
+      for (const line of entry.shapes.water || []) segments(local(line), thin * 0.45, water);
+      for (const poly of entry.shapes.pools || []) pools.polygon(local(poly));
+      for (const s of entry.obstacles.segments) (s.road ? roads : water).segment(s.x1, s.y1, s.x2, s.y2, s.clear);
     }
-  }
-  plan.roads = plan.roads.flatMap(road => clearMinorRoads([road.pts.map(p => [p.x, p.y])], index, (thin * 0.375 + 0.02) / 20)
-    .map(line => ({ ...road, pts: line.map(([x, y]) => ({ x, y })) })));
-  for (const entry of entries) entry.linkRoads = plan.roads.filter(road => (road.towns || []).includes(entry.pathKey));
+    for (const line of plan.roads) segments(line.pts.map(p => [p.x, p.y]), thin * 0.375 / 20, roads);
+    for (const line of plan.water) segments(line.pts.map(p => [p.x, p.y]), thin * 0.45, water);
+    return { clear(poly, margin) {
+      const box = polygonBounds(poly);
+      return buildingGroundClear(poly, roads.recordsInBox(box, margin), water.recordsInBox(box), pools.recordsInBox(box).map(record => record.poly), margin);
+    } };
+  })();
+  if (incremental) return steps;
+  let result = steps.next();
+  while (!result.done) result = steps.next();
+  return result.value;
 }
-function townBridgeRoads(entries, plan) {
-  const width = Math.max(0.01, hexW * 0.0015) / 20, maxSpan = hexW * 0.08;
-  const creekHalf = Math.max(0.005, hexW * 0.0005) * 0.45;
-  const wet = new DecorationIndex(Math.max(0.01, maxSpan)), obstacles = new DecorationIndex(Math.max(0.01, maxSpan));
-  const roads = plan.roads.slice();
-  for (const entry of entries) {
-    const local = line => line.map(([x, y]) => [entry.center.x + x * entry.radius, entry.center.y + y * entry.radius]);
-    for (const pool of entry.shapes.pools || []) wet.polygon(local(pool));
-    for (const line of entry.shapes.water || []) {
-      const points = local(line);
-      for (let i = 1; i < points.length; i++) wet.segment(...points[i - 1], ...points[i], creekHalf);
+function townMinorRoads(entries, incremental = false) {
+  const steps = (function* () {
+    const index = new DecorationIndex(Math.max(0.1, hexW * 0.02));
+    for (const entry of entries) for (const building of entry.final) {
+      yield;
+      index.polygon(building.poly);
+      for (const part of building.parts) index.polygon(part);
     }
-    for (const source of ['dryMinorRoads', 'dryMainRoads']) for (const line of entry[source] || []) {
-      roads.push({ pts: local(line).map(([x, y]) => ({ x, y })), towns: [entry.pathKey] });
+    const thin = Math.max(0.005, hexW * 0.0005), clearance = (thin * 0.22 + 0.002) / 20;
+    for (const entry of entries) {
+      const c = entry.center, r = entry.radius;
+      const lines = (entry.dryMinorRoads || entry.shapes.streets || []).map(line => line.map(([x, y]) => [c.x + x * r, c.y + y * r]));
+      const cleared = [];
+      for (const line of lines) {
+        yield;
+        cleared.push(...clearMinorRoads([line], index, clearance));
+      }
+      entry.minorRoads = cleared.map(line => line.map(([x, y]) => [(x - c.x) / r, (y - c.y) / r]));
+      entry.minorRoadPath = cleared.map(linePath).join('');
     }
-    for (const circle of entry.obstacles.circles) obstacles.circle(circle.x, circle.y, circle.r);
-  }
-  for (const stream of plan.water) for (let i = 1; i < stream.pts.length; i++) {
-    const a = stream.pts[i - 1], b = stream.pts[i];
-    wet.segment(a.x, a.y, b.x, b.y, creekHalf);
-  }
-  for (const river of plan.rivers) wet.segment(river.x1, river.y1, river.x2, river.y2, river.clear);
-  const result = bridgeRoadGaps(roads, {
-    width, maxSpan, limit: 256, minFacing: 0.7, isWet: (x, y) => isWaterAt(x, y) || wet.blocks(x, y, 0),
-    clear: (a, b, half) => !obstacles.recordsInBox({ x0: Math.min(a.x, b.x), x1: Math.max(a.x, b.x), y0: Math.min(a.y, b.y), y1: Math.max(a.y, b.y) }, half)
-      .some(record => record.kind === 'circle' && pointNearSegment(record.x, record.y, a.x, a.y, b.x, b.y, record.r + half)),
-  });
-  plan.bridges = result.bridges;
-  plan.roads.push(...result.roads);
-  for (const entry of entries) entry.linkRoads = plan.roads.filter(road => (road.towns || []).includes(entry.pathKey));
+  })();
+  if (incremental) return steps;
+  for (const step of steps) {}
+}
+function townDryRoads(entries, plan, incremental = false) {
+  const steps = (function* () {
+    const index = new DecorationIndex(Math.max(0.1, hexW * 0.02)), thin = Math.max(0.005, hexW * 0.0005);
+    const addLine = (line, width) => {
+      for (let i = 1; i < line.length; i++) index.segment(line[i - 1][0], line[i - 1][1], line[i][0], line[i][1], width);
+    };
+    const tiles = new Set();
+    for (const entry of entries) {
+      yield;
+      const c = entry.center, r = entry.radius, local = line => line.map(([x, y]) => [c.x + x * r, c.y + y * r]);
+      for (const line of entry.shapes.water || []) addLine(local(line), thin * 0.45);
+      for (const pool of entry.shapes.pools || []) index.polygon(local(pool));
+      for (const s of entry.obstacles.segments) if (!s.road) index.segment(s.x1, s.y1, s.x2, s.y2, s.clear);
+      tiles.add(entry.item.index);
+      for (const tile of neighborsByIndex[entry.item.index] || []) if (tile >= 0) tiles.add(tile);
+    }
+    for (const stream of plan.water) addLine(stream.pts.map(p => [p.x, p.y]), thin * 0.45);
+    for (const s of plan.rivers) index.segment(s.x1, s.y1, s.x2, s.y2, s.clear);
+    const centerX = entries.length ? entries[0].center.x : 0;
+    for (const tile of tiles) if (terrain && [0, 1, 9, 10].includes(terrain[tile]) && basePos[tile]) {
+      const shift = mapPxW ? Math.round((centerX - basePos[tile].x - hexW / 2) / mapPxW) * mapPxW : 0;
+      index.polygon(Array.from({ length: 6 }, (_, k) => { const p = hexVert(tile, k); return [p[0] + shift, p[1]]; }));
+    }
+    for (const entry of entries) {
+      const c = entry.center, r = entry.radius;
+      for (const [source, target, half] of [['streets', 'dryMinorRoads', 0.2], ['mainStreets', 'dryMainRoads', 0.375]]) {
+        const lines = (entry.shapes[source] || []).map(line => line.map(([x, y]) => [c.x + x * r, c.y + y * r]));
+        const dry = [];
+        for (const line of lines) {
+          yield;
+          dry.push(...clearMinorRoads([line], index, (thin * half + 0.002) / 20));
+        }
+        entry[target] = dry.map(line => line.map(([x, y]) => [(x - c.x) / r, (y - c.y) / r]));
+        if (source === 'mainStreets') entry.dryMainRoadPath = dry.map(linePath).join('');
+      }
+    }
+    const roads = [];
+    for (const road of plan.roads) {
+      yield;
+      roads.push(...clearMinorRoads([road.pts.map(p => [p.x, p.y])], index, (thin * 0.375 + 0.02) / 20)
+        .map(line => ({ ...road, pts: line.map(([x, y]) => ({ x, y })) })));
+    }
+    plan.roads = roads;
+    for (const entry of entries) entry.linkRoads = plan.roads.filter(road => (road.towns || []).includes(entry.pathKey));
+  })();
+  if (incremental) return steps;
+  for (let result = steps.next(); !result.done; result = steps.next()) {}
+}
+function townBridgeRoads(entries, plan, incremental = false) {
+  const steps = (function* () {
+    const width = Math.max(0.01, hexW * 0.0015) / 20, maxSpan = hexW * 0.08;
+    const creekHalf = Math.max(0.005, hexW * 0.0005) * 0.45;
+    const wet = new DecorationIndex(Math.max(0.01, maxSpan)), obstacles = new DecorationIndex(Math.max(0.01, maxSpan));
+    const roads = plan.roads.slice();
+    for (const entry of entries) {
+      yield;
+      const local = line => line.map(([x, y]) => [entry.center.x + x * entry.radius, entry.center.y + y * entry.radius]);
+      for (const pool of entry.shapes.pools || []) wet.polygon(local(pool));
+      for (const line of entry.shapes.water || []) {
+        const points = local(line);
+        for (let i = 1; i < points.length; i++) wet.segment(...points[i - 1], ...points[i], creekHalf);
+      }
+      for (const source of ['dryMinorRoads', 'dryMainRoads']) for (const line of entry[source] || []) {
+        roads.push({ pts: local(line).map(([x, y]) => ({ x, y })), towns: [entry.pathKey] });
+      }
+      for (const circle of entry.obstacles.circles) obstacles.circle(circle.x, circle.y, circle.r);
+    }
+    for (const stream of plan.water) for (let i = 1; i < stream.pts.length; i++) {
+      const a = stream.pts[i - 1], b = stream.pts[i];
+      wet.segment(a.x, a.y, b.x, b.y, creekHalf);
+    }
+    for (const river of plan.rivers) wet.segment(river.x1, river.y1, river.x2, river.y2, river.clear);
+    const result = yield* bridgeRoadGaps(roads, {
+      incremental: true,
+      width, maxSpan, limit: 256, minFacing: 0.7, isWet: (x, y) => isWaterAt(x, y) || wet.blocks(x, y, 0),
+      clear: (a, b, half) => !obstacles.recordsInBox({ x0: Math.min(a.x, b.x), x1: Math.max(a.x, b.x), y0: Math.min(a.y, b.y), y1: Math.max(a.y, b.y) }, half)
+        .some(record => record.kind === 'circle' && pointNearSegment(record.x, record.y, a.x, a.y, b.x, b.y, record.r + half)),
+    });
+    plan.bridges = result.bridges;
+    plan.roads.push(...result.roads);
+    for (const entry of entries) entry.linkRoads = plan.roads.filter(road => (road.towns || []).includes(entry.pathKey));
+  })();
+  if (incremental) return steps;
+  for (let result = steps.next(); !result.done; result = steps.next()) {}
 }
 function syncTownscapes() {
   syncTownVisibility();
+  syncRiverDeltas();
   syncMapLabelVisibility();
   for (const paths of terrainMarkerPaths.values()) {
-    const display = townscapeActive() ? 'none' : '';
-    if (paths.outer.style.display !== display) paths.outer.style.display = paths.inner.style.display = display;
+    paths.outer.style.display = !townscapeActive() && paths.lastOuter ? '' : 'none';
+    paths.inner.style.display = !townscapeActive() && paths.lastInner ? '' : 'none';
   }
   // Keep the transparent map input surface: hiding it sends hover and clicks to the game's world UI underneath.
   if (unitDom.el) {
@@ -7614,6 +8147,9 @@ function syncTownscapes() {
     }
     hideTownLabels();
     townKey = '';
+    townRender.accessJob = null;
+    townRender.walkJob = null;
+    if (!decoActive) townRender.decoJob = null;
     townRender.viewKey = ''; townRender.zoomKey = ''; townRender.pending = false;
     if (townRender.timer) { clearTimeout(townRender.timer); townRender.timer = 0; }
     townPanScene.key = '';
@@ -7623,12 +8159,17 @@ function syncTownscapes() {
       if (Date.now() - Math.max(lastMapInputTs, townRender.changedAt) < 250) scheduleTownRefresh();
       else {
         ensureTownscapeLayer();
-        townPlan = null; syncTownDecorations([]); syncTownDecorationVisibility();
+        townPlan = null; advanceTownDecorations([]); syncTownDecorationVisibility();
       }
     }
     return;
   }
   if (townInterturn.active) return;
+  if (scatterJob) {
+    townRender.pending = true;
+    if (townLayer && !townRender.geometryRetained) townLayer.style.display = 'none';
+    return;
+  }
   if (townLayer && townRender.geometryRetained && townRender.layoutKey === townZoomKey(false)) {
     syncMapSvgViewport(townLayer);
   }
@@ -7639,57 +8180,140 @@ function syncTownscapes() {
   const iw = window.innerWidth, ih = window.innerHeight, cx = mapPxW / 2, cy = mapPxH / 2, zy = viewZoom * viewAspectY;
   const x0 = (0 - mapX - mapPanX - cx) / viewZoom + cx, x1 = (iw - mapX - mapPanX - cx) / viewZoom + cx;
   const y0 = (0 - mapY - mapPanY - cy) / zy + cy, y1 = (ih - mapY - mapPanY - cy) / zy + cy;
-  const entries = townSceneEntries(x0, x1, y0, y1);
+  let entries = townSceneEntries(x0, x1, y0, y1);
+  let preparedWorld = null;
   const key = `${pos}|${detailD}|${fogMode ? 1 : 0}|${hexW}|${hexH}|${mapPxW}|${townLinkTile()}|${iconPoints.length}|` + entries.map(e => e.pathKey).join('|');
   if (key !== townKey) {
-    releaseTownSceneEntries(entries);
-    const waterfronts = townWaterfronts(entries);
-    const plan = planEntryLinks(entries);
-    townDryRoads(entries, plan);
-    townBridgeRoads(entries, plan);
-    const ground = townBuildingGround(entries, plan);
-    townPlan = plan;
-    // No two buildings may overlap, whether in the same townscape or in neighbouring ones. Accepted buildings are
-    // bucketed on a grid so each new one is only tested against those near it.
-    const accepted = new Map(), gap = hexW * 0.00015, cell = Math.max(0.1, hexW * 0.01);
-    const perHomeBudget = Math.max(1, Math.floor(6000 / Math.max(1, entries.length)));
-    const cellsOf = (box, fn) => {
-      const cx0 = Math.floor((box.x0 - gap) / cell), cx1 = Math.floor((box.x1 + gap) / cell), cy0 = Math.floor((box.y0 - gap) / cell), cy1 = Math.floor((box.y1 + gap) / cell);
-      for (let gx = cx0; gx <= cx1; gx++) for (let gy = cy0; gy <= cy1; gy++) if (fn(gx + ',' + gy) === false) return false;
-      return true;
-    };
-    townHits = [];
-    for (const entry of entries) {
-      entry.final = [];
-      for (const group of quarterBuildingGroups(entry.polys)) {
-        if (entry.final.length + group.length > perHomeBudget) break;
-        const footprints = group.flatMap(b => [b.poly, ...b.parts]).map(poly => ({ poly, box: polygonBounds(poly) }));
-        if (!footprints.every(footprint => validBuildingPolygon(footprint.poly))) {
-          err(`invalid townscape building polygon: ${entry.pathKey}:${group[0].sourceIndex}`);
-          continue;
+    townRender.walkJob = null;
+    townRender.decoJob = null;
+    let accessJob = townRender.accessJob;
+    if (!accessJob || accessJob.key !== key) {
+      accessJob = townRender.accessJob = { key, entries, plan: null, hits: [], roofEntries: [], steps: null, done: false, phase: '' };
+      accessJob.steps = (function* () {
+        yield 'planning';
+        releaseTownSceneEntries(entries);
+        const waterfronts = townWaterfronts(entries);
+        const plan = planEntryLinks(entries);
+        accessJob.plan = plan;
+        yield 'pools and lakes';
+        for (const path of Object.values(townPaths)) {
+          path.setAttribute('d', ''); path.townShape = ''; path.style.visibility = 'hidden';
+          path.decorationHasGeometry = false;
         }
-        if (!footprints.every(footprint => ground.clear(footprint.poly, hexW * 0.000015))) continue;
-        if (group[0].form === 'dock' && !entry.waterfrontAccepted) continue;
-        if (waterfronts.some(deck => group.some(b => (b.form !== 'dock' || deck.entry !== entry) && polygonsOverlap(b.poly, deck.poly, gap)))) continue;
-        const clear = footprints.every(footprint => cellsOf(footprint.box, k => {
-          for (const a of accepted.get(k) || []) {
-            if (a.box.x1 + gap < footprint.box.x0 || a.box.x0 - gap > footprint.box.x1 || a.box.y1 + gap < footprint.box.y0 || a.box.y0 - gap > footprint.box.y1) continue;
-            if (polygonsOverlap(a.poly, footprint.poly, gap)) return false;
+        submitTownGeometry({
+          pools: entries.map(entry => entry.paths.pools || '').join(''),
+          water: entries.map(entry => entry.paths.water || '').join(''),
+          linkWater: plan.water.map(stream => linePath(stream.pts.map(point => [point.x, point.y]))).join(''),
+        });
+        const waterThin = Math.max(0.005, hexW * 0.0005);
+        for (const [name, width] of [['pools', waterThin * 0.8], ['water', waterThin * 0.9], ['linkWater', waterThin * 0.9]]) {
+          townPaths[name].setAttribute('stroke-width', String(width)); townPaths[name].style.visibility = 'visible';
+        }
+        townHits = []; townKey = ''; townHighlightKey = null; townRender.deferredPaths = null;
+        townDecoScene.key = ''; townDecoScene.previewKey = '';
+        hideTownLabels(); clearPeopleVisuals();
+        townRender.geometryRetained = ['pools', 'water', 'linkWater'].some(name => !!townPaths[name].townShape);
+        townRender.layoutKey = townZoomKey(false);
+        townRender.zoomKey = townZoomKey();
+        syncMapSvgViewport(townLayer); townLayer.style.display = 'block';
+        syncTownElementVisibility();
+        yield 'dry roads';
+        yield* townDryRoads(entries, plan, true);
+        yield 'bridges';
+        yield* townBridgeRoads(entries, plan, true);
+        yield 'building ground';
+        const ground = yield* townBuildingGround(entries, plan, true);
+        // No two buildings may overlap, whether in the same townscape or in neighbouring ones. Accepted buildings are
+        // bucketed on a grid so each new one is only tested against those near it.
+        const gap = hexW * 0.00015, cell = Math.max(0.1, hexW * 0.01), accepted = new DecorationIndex(cell);
+        accessJob.decorationGround = (x, y, pad) => {
+          const poly = [[x - pad, y - pad], [x + pad, y - pad], [x + pad, y + pad], [x - pad, y + pad]];
+          return ground.clear(poly, 0) && !accepted.recordsInBox(polygonBounds(poly))
+            .some(record => polygonsOverlap(record.poly, poly, 0));
+        };
+        const perHomeBudget = Math.max(1, Math.floor(6000 / Math.max(1, entries.length)));
+        for (const entry of entries) {
+          entry.final = [];
+          accessJob.roofEntries.push(entry);
+          yield 'building footprints';
+          for (const group of quarterBuildingGroups(entry.polys)) {
+            yield;
+            if (entry.final.length + group.length > perHomeBudget) break;
+            const footprints = group.flatMap(b => [b.poly, ...b.parts]).map(poly => ({ poly, box: polygonBounds(poly) }));
+            if (!footprints.every(footprint => validBuildingPolygon(footprint.poly))) {
+              err(`invalid townscape building polygon: ${entry.pathKey}:${group[0].sourceIndex}`);
+              continue;
+            }
+            if (!footprints.every(footprint => ground.clear(footprint.poly, hexW * 0.000015))) continue;
+            if (group[0].form === 'dock' && !entry.waterfrontAccepted) continue;
+            if (waterfronts.some(deck => group.some(b => (b.form !== 'dock' || deck.entry !== entry) && polygonsOverlap(b.poly, deck.poly, gap)))) continue;
+            const clear = footprints.every(footprint => !accepted.recordsInBox(footprint.box, gap)
+              .some(a => polygonsOverlap(a.poly, footprint.poly, gap)));
+            if (!clear) continue;
+            for (const footprint of footprints) accepted.add(footprint);
+            entry.final.push(...group);
           }
-        }) !== false);
-        if (!clear) continue;
-        for (const footprint of footprints) cellsOf(footprint.box, k => { const list = accepted.get(k); if (list) list.push(footprint); else accepted.set(k, [footprint]); });
-        entry.final.push(...group);
-      }
-      townHits.push({ item: entry.item, key: entry.pathKey, polys: entry.final, entry, d: '' });
+          accessJob.hits.push({ item: entry.item, key: entry.pathKey, polys: entry.final, entry, d: '' });
+        }
+        yield 'minor roads';
+        yield* townMinorRoads(entries, true);
+        yield 'entrance roads';
+        yield* townAccessRoads(entries, true);
+        yield 'leisure preparation';
+        prepareTownLeisure(entries);
+        yield 'geometry submission';
+      })();
     }
-    townMinorRoads(entries);
-    townAccessRoads(entries);
-    for (const hit of townHits) {
+    // Marker redraws recreate the scene array, not necessarily its geometry.
+    entries = accessJob.entries;
+    const started = Date.now();
+    try {
+      for (let step = 0; !accessJob.done && step < 64; step++) {
+        const progress = accessJob.steps.next();
+        accessJob.done = progress.done;
+        if (typeof progress.value === 'string' && accessJob.phase !== progress.value) {
+          accessJob.phase = progress.value;
+          if (typeof TAG === 'string') console.warn(`${TAG} townscape preparation: ${accessJob.phase}`);
+        }
+        if (Date.now() - started >= 8) break;
+      }
+    } catch (error) {
+      townRender.accessJob = null;
+      throw error;
+    }
+    if (!accessJob.done) {
+      const roofs = accessJob.roofEntries.reduce((count, entry) => count + entry.final.length, 0), viewKey = townViewKey();
+      if (roofs && (!accessJob.preview || accessJob.previewView !== viewKey ||
+          roofs !== accessJob.previewRoofs && Date.now() - accessJob.previewAt >= 100)) {
+        if (!accessJob.preview) {
+          submitTownGeometry(Object.fromEntries(Object.keys(townPaths).filter(name => !TOWN_ROOF_PATHS.includes(name) && !DECO_GROUPS.includes(name) && !['pools', 'water', 'linkWater'].includes(name)).map(name => [name, ''])));
+          townKey = '';
+          townHits = []; townHighlightKey = null;
+          clearPeopleVisuals();
+        }
+        townRoofScene.rect = null;
+        syncTownRoofs(accessJob.roofEntries, x0, x1, y0, y1);
+        for (const name of TOWN_ROOF_PATHS) {
+          townPaths[name].setAttribute('stroke-width', '0');
+          townPaths[name].style.visibility = 'visible';
+        }
+        syncMapSvgViewport(townLayer);
+        townRender.geometryRetained = true;
+        townRender.layoutKey = townZoomKey(false); townRender.zoomKey = townZoomKey();
+        townLayer.style.display = 'block';
+        placeIcons();
+        showTownDecorationPreview(accessJob.roofEntries);
+        syncTownElementVisibility();
+        Object.assign(accessJob, { preview: true, previewRoofs: roofs, previewAt: Date.now(), previewView: viewKey });
+      }
+      townRender.pending = true; scheduleTownRefresh(); return;
+    }
+    const plan = accessJob.plan;
+    const hits = accessJob.hits;
+    for (const hit of hits) {
       hit.polys = hit.entry.final;
       hit.d = hit.polys.map(f => polygonPath(f.poly) + f.parts.map(polygonPath).join('')).join('');
     }
-    prepareTownLeisure(entries);
     const joined = {};
     for (const name of Object.keys(townPaths)) joined[name] = '';
     for (const road of plan.roads) joined.links += linePath(road.pts.map(p => [p.x, p.y]));
@@ -7707,6 +8331,12 @@ function syncTownscapes() {
       joined.accessRoads += entry.accessRoadPath || '';
     }
     submitTownGeometry(Object.fromEntries(Object.keys(townPaths).filter(name => name !== 'highlight' && !DECO_GROUPS.includes(name) && !TOWN_ROOF_PATHS.includes(name)).map(name => [name, joined[name]])));
+    // Keep the shared geometry budget while publishing the prepared paths in visual stages.
+    const roadNames = ['streets', 'mainStreets', 'accessRoads', 'links', 'bridges', 'bridgeRails', 'quays'];
+    const extraNames = Object.keys(townPaths).filter(name => !roadNames.includes(name) && name !== 'highlight' &&
+      !TOWN_ROOF_PATHS.includes(name) && !DECO_GROUPS.includes(name) && !['pools', 'water', 'linkWater'].includes(name));
+    townRender.deferredPaths = { roads: roadNames, extras: extraNames };
+    for (const name of [...roadNames, ...extraNames]) townPaths[name].style.visibility = 'hidden';
     const thin = Math.max(0.005, hexW * 0.0005);
     const widths = { ...townRoadWidths(hexW), fields: thin * 0.4, pools: thin * 0.8, water: thin * 0.9, walls: thin * 1.5, tileWalls: Math.max(0.16, hexW * 0.006), accents: thin * 0.9,
       ...Object.fromEntries(DECO_GROUPS.map(name => [name, hexW * DECORATION_STROKE_FEET / (100 * 5280)])),
@@ -7714,25 +8344,61 @@ function syncTownscapes() {
       detail: thin * 0.04 / 4, tentDetail: thin * 0.015 / 4, battleBuildings: thin * 0.05 / 4, battleAccents: thin * 1.1, highlight: thin * 1.4,
       linkWater: thin * 0.9, bridges: thin * 0.5 / 20, bridgeRails: thin * 0.7 / 20, quays: thin * 0.25 };
     for (const name of Object.keys(widths)) townPaths[name].setAttribute('stroke-width', String(widths[name]));
-    townHighlightKey = townHighlightKey && townHits.some(h => h.key === townHighlightKey) ? townHighlightKey : null;
-    submitTownGeometry({ highlight: townHighlightKey ? townHits.find(h => h.key === townHighlightKey).d : '' }, 4096, 131072);
+    townHighlightKey = townHighlightKey && hits.some(h => h.key === townHighlightKey) ? townHighlightKey : null;
+    submitTownGeometry({ highlight: townHighlightKey ? hits.find(h => h.key === townHighlightKey).d : '' }, 4096, 131072);
+    townHits = hits;
+    townPlan = plan;
     townKey = key;
+    townDecoScene.previewGround = accessJob.decorationGround;
+    townRender.accessJob = null;
   }
+  if (!townRender.geometryRetained && typeof TAG === 'string') console.warn(`${TAG} townscape commit: roofs`);
   syncTownRoofs(entries, x0, x1, y0, y1);
   const roadWidths = townRoadWidths(hexW, viewZoom * Math.min(1, viewAspectY));
   for (const [name, width] of Object.entries(roadWidths)) townPaths[name].setAttribute('stroke-width', String(width));
-  syncTownDecorations(entries);
   syncMapSvgViewport(townLayer);
-  try { syncTownLabels(entries, x0, x1, y0, y1); } catch (e) { err(`townscape labels failed: ${e}`); }
   townRender.viewKey = townViewKey(); townRender.zoomKey = townZoomKey(); townRender.pending = false;
   townRender.layoutKey = townZoomKey(false);
-  for (const path of Object.values(townPaths)) if (path.style.visibility !== 'visible') path.style.visibility = 'visible';
+  const deferred = new Set(townRender.deferredPaths ? [...townRender.deferredPaths.roads, ...townRender.deferredPaths.extras] : []);
+  for (const [name, path] of Object.entries(townPaths)) if (!deferred.has(name) && path.style.visibility !== 'visible') path.style.visibility = 'visible';
   townRender.geometryRetained = true;
   townLayer.style.display = 'block';
+  placeIcons();
   syncTownElementVisibility();
   syncTownCompass();
   revalidateTownHover();
-  syncPeople(entries);
+  advanceTownDecorations(entries);
+  if (townRender.decoJob) { clearPeopleVisuals(); scheduleTownRefresh(); return; }
+  if (townRender.deferredPaths) {
+    for (const name of townRender.deferredPaths.roads) townPaths[name].style.visibility = 'visible';
+    townRender.deferredPaths.roads = [];
+  }
+  if (peopleActive() && (!townWorld || townWorld.key !== townKey)) {
+    let walkJob = townRender.walkJob;
+    if (!walkJob || walkJob.key !== townKey) {
+      walkJob = townRender.walkJob = { key: townKey, steps: buildTownWorld(entries, townPlan, true, townKey) };
+      if (typeof TAG === 'string') console.warn(`${TAG} townscape preparation: walking network (town geometry visible)`);
+    }
+    const started = Date.now();
+    try {
+      for (let step = 0; step < 64; step++) {
+        const progress = walkJob.steps.next();
+        if (progress.done) { preparedWorld = progress.value; townRender.walkJob = null; break; }
+        if (Date.now() - started >= 8) break;
+      }
+    } catch (error) {
+      townRender.walkJob = null;
+      throw error;
+    }
+    if (townRender.walkJob) { clearPeopleVisuals(); scheduleTownRefresh(); return; }
+  }
+  if (preparedWorld && typeof TAG === 'string') console.warn(`${TAG} townscape commit: people (prepared walking network)`);
+  syncPeople(entries, preparedWorld);
+  if (townRender.deferredPaths) {
+    for (const name of townRender.deferredPaths.extras) townPaths[name].style.visibility = 'visible';
+    townRender.deferredPaths = null;
+  }
+  try { syncTownLabels(entries, x0, x1, y0, y1); } catch (e) { err(`townscape labels failed: ${e}`); }
   if (!townRender.logged) {
     const shapes = Object.values(townPaths).map(path => path.townShape || '');
     const commands = shapes.reduce((sum, d) => sum + (d.match(/[MLHVQCTSAZ]/gi) || []).length, 0), chars = shapes.reduce((sum, d) => sum + d.length, 0);
@@ -7926,9 +8592,10 @@ function townLabelVisible(kind) {
 }
 function syncMapLabelVisibility() {
   const display = townscapeActive() ? 'none' : '';
-  for (const layer of [countryDom, civIconDom, settlementDom, regionLabelDom, geographicLabelDom]) {
+  for (const layer of [countryDom, civIconDom, settlementDom]) {
     if (layer.el && layer.el.style.display !== display) layer.el.style.display = display;
   }
+  for (const layer of [regionLabelDom, geographicLabelDom]) if (layer.el) layer.el.style.display = '';
 }
 function syncTownLabels(entries, x0, x1, y0, y1) {
   if (!showTownLabels || Date.now() - lastMapInputTs < 250) { hideTownLabels(); return; }
@@ -8197,6 +8864,45 @@ function scatterMarkerPosition(marker, prior, radius, indexedClear) {
 const MARKER_GAP = 2;
 let relaxAvoid = false;
 let riverTileSegs = new Map(), cityTiles = new Set(), riverEdges = new Set(), riverEdgeHw = new Map(), roadLines = new Map();   // riverEdges: lo * 1048576 + hi of every tile pair a river line joins; riverEdgeHw: that line's half-width
+let riverDeltas = [], riverDeltaPaths = new Map(), riverDeltaViewKey = '';
+function syncRiverDeltas() {
+  syncRiverVisibility();
+  if (!riverDom.el) return;
+  const active = townscapeActive() && showRivers, key = `${riverPathKey}|${active}|${townViewKey()}`;
+  if (riverDeltaViewKey === key) return;
+  for (const path of riverDeltaPaths.values()) path.style.display = active && showRivers ? '' : 'none';
+  if (!active) { riverDeltaViewKey = key; return; }
+  const cx = mapPxW / 2, cy = mapPxH / 2, zy = viewZoom * viewAspectY;
+  const rect = {
+    x0: (0 - mapX - mapPanX - cx) / viewZoom + cx,
+    x1: (window.innerWidth - mapX - mapPanX - cx) / viewZoom + cx,
+    y0: (0 - mapY - mapPanY - cy) / zy + cy,
+    y1: (window.innerHeight - mapY - mapPanY - cy) / zy + cy,
+  };
+  const data = new Map();
+  let commands = 0, chars = 0;
+  for (const { delta, shift } of visibleRiverDeltas(riverDeltas, rect, mapPxW)) {
+    const css = delta.dim ? dimCss(delta.css) : delta.css;
+    const d = delta.polygons.map(poly => polygonPath(poly.map(([x, y]) => [x + shift, y]))).join('');
+    commands += delta.polygons.reduce((sum, poly) => sum + poly.length + 1, 0);
+    chars += d.length;
+    if (commands > 8192 || chars > 262144) throw new Error('Visible river deltas exceed native SVG drawing budget');
+    data.set(css, (data.get(css) || '') + d);
+  }
+  for (const [css, path] of riverDeltaPaths) if (!data.has(css)) path.setAttribute('d', '');
+  for (const [css, d] of data) {
+    let path = riverDeltaPaths.get(css);
+    if (!path) {
+      path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('fill', css); path.setAttribute('stroke', 'none');
+      path.setAttribute('pointer-events', 'none');
+      riverDom.el.appendChild(path); riverDeltaPaths.set(css, path);
+    }
+    path.style.display = '';
+    path.setAttribute('d', d);
+  }
+  riverDeltaViewKey = key;
+}
 function cityCenterSet(frame) {
   const centers = new Set();
   if (!frames.length) return centers;
@@ -8270,7 +8976,13 @@ function markerHitsRiver(index, x, y, radius) {
   }
   return false;
 }
+function syncRiverVisibility() {
+  for (const path of [riverPath, minorRiverPath, coastRiverPath, oceanRiverPath, lakeRiverPath, ...riverTwins.values()]) {
+    if (path) path.style.display = showRivers ? '' : 'none';
+  }
+}
 function drawRiverLayer(vis, frame) {
+  syncRiverVisibility();
   if (!riverDom.el || !riverPath || !minorRiverPath || !coastRiverPath || !oceanRiverPath || !lakeRiverPath || !terrain || !basePos || !neighborsByIndex) return;
   const cities = cityCenterSet(frame);
   cityTiles = cities;
@@ -8279,15 +8991,16 @@ function drawRiverLayer(vis, frame) {
   riverTileSegs = new Map();
   riverEdges = new Set();
   riverEdgeHw = new Map();
+  const deltaSegments = [];
   const navigable = [], minor = [], coast = [], ocean = [], lake = [], featureMarkers = readMapFeatureMarkers();
   const navigableD = [], minorD = [], coastD = [], oceanD = [], lakeD = [];
   const dimOf = new Map([[navigable, navigableD], [minor, minorD], [coast, coastD], [ocean, oceanD], [lake, lakeD]]);
   const extByTerrain = { 0: ocean, 1: coast, 9: lake };
   const minorRiver = index => featureMarkers.get(index) === 5;
   const isWaterRaw = i => terrain[i] === 1 || terrain[i] === 10;
-  // A city center touching coastal sea or a navigable river counts as a navigable river tile.
-  const effT = i => (cities.has(i) && (neighborsByIndex[i] || []).some(n => n >= 0 && isWaterRaw(n))) ? 10 : terrain[i];
-  const navHw = Math.max(2, hexW * 0.075) / 2, minorHw = Math.max(0.3, hexW * 0.011) / 2;
+  const effT = i => terrain[i];
+  const navHw = Math.max(0.6, hexW * 0.018) / 2, minorHw = Math.max(0.3, hexW * 0.011) / 2;
+  const courses = navigableRiverCourses(terrain, neighborsByIndex, basePos, hexW, hexH, mapPxW);
   const clipGap = hw => dotR + hw + MARKER_GAP;
   const recordSeg = (index, x1, y1, x2, y2, hw) => {
     let list = riverTileSegs.get(index);
@@ -8295,26 +9008,27 @@ function drawRiverLayer(vis, frame) {
     list.push({ x1, y1, x2, y2, hw });
   };
   // Draw the stretch t0..t1 of the a->b center line, stopping short of city dots, and remember it for both tiles.
-  const seg = (list0, a, b, t0, t1, hw) => {
+  const seg = (list0, a, b, t0, t1, hw, geometry = null) => {
     const list = (vis && vis[a] === 1) ? (dimOf.get(list0) || list0) : list0;
     const pa = basePos[a], pb = basePos[b];
-    const ax = pa.x + hexW / 2, ay = pa.y + hexH / 2;
-    let dx = pb.x + hexW / 2 - ax;
-    const dy = pb.y + hexH / 2 - ay;
+    const ax = geometry ? geometry.from[0] : pa.x + hexW / 2, ay = geometry ? geometry.from[1] : pa.y + hexH / 2;
+    let dx = (geometry ? geometry.to[0] : pb.x + hexW / 2) - ax;
+    const dy = (geometry ? geometry.to[1] : pb.y + hexH / 2) - ay;
     if (mapPxW && Math.abs(dx) > mapPxW / 2) dx -= Math.sign(dx) * mapPxW;
     const len = Math.hypot(dx, dy) || 1;
-    if (cities.has(a)) t0 = Math.max(t0, clipGap(hw) / len);
-    if (t1 === 1 && cities.has(b)) t1 = Math.min(t1, 1 - clipGap(hw) / len);
+    if (!geometry && cities.has(a)) t0 = Math.max(t0, clipGap(hw) / len);
+    if (!geometry && t1 === 1 && cities.has(b)) t1 = Math.min(t1, 1 - clipGap(hw) / len);
     if (t0 >= t1) return;
     riverEdges.add(Math.min(a, b) * 1048576 + Math.max(a, b));
     const edgeKey = Math.min(a, b) * 1048576 + Math.max(a, b);
     if (hw > (riverEdgeHw.get(edgeKey) || 0)) riverEdgeHw.set(edgeKey, hw);
     const wrapX = x => mapPxW ? ((x % mapPxW) + mapPxW) % mapPxW : x;
-    // Meander: a smooth sideways wobble that is zero at tile centres (so joints line up) and identical
+    // Meander: a smooth sideways wobble that is zero at segment endpoints (so joints line up) and identical
     // whichever tile the edge is drawn from (canonical lo->hi orientation).
     const lo = Math.min(a, b), flip = a > b;
     const ph1 = layoutRand(lo, Math.max(a, b), 5) * 6.283, ph2 = layoutRand(lo, Math.max(a, b), 9) * 6.283;
-    const amp = Math.min(hexW * 0.16, len * 0.2);
+    const bend = geometry ? (hw === navHw ? 0.04 : 0.015) : 0.16;
+    const amp = Math.min(hexW * bend, len * 0.2);
     const nx = (flip ? dy : -dy) / len, ny = (flip ? -dx : dx) / len;
     const off = t => {
       const s = flip ? 1 - t : t;
@@ -8325,8 +9039,23 @@ function drawRiverLayer(vis, frame) {
     for (let k = 1; k <= steps; k++) {
       const t = t0 + (t1 - t0) * k / steps, qx = dx * t + nx * off(t), qy = dy * t + ny * off(t);
       addLine(list, wrapX(ax + px), ay + py, ax + qx, ay + qy);
-      recordSeg(a, px, py, qx, qy, hw);
-      recordSeg(b, px - dx, py - dy, qx - dx, qy - dy, hw);
+      for (const tile of a === b ? [a] : [a, b]) {
+        const at = basePos[tile];
+        let ox = ax - at.x - hexW / 2;
+        if (mapPxW) ox -= Math.round(ox / mapPxW) * mapPxW;
+        const oy = ay - at.y - hexH / 2;
+        recordSeg(tile, px + ox, py + oy, qx + ox, qy + oy, hw);
+      }
+      const suppressCenter = tile => (vis && !(vis[tile] > 0)) || cities.has(tile) || (neighborsByIndex[tile] || []).some(n =>
+        n >= 0 && vis && !(vis[n] > 0) && ([0, 1, 9, 10].includes(effT(n)) || minorRiver(n)));
+      deltaSegments.push({
+        x1: ax + px, y1: ay + py, x2: ax + qx, y2: ay + qy, hw, tile: a, endTile: b,
+        navigable: hw === navHw,
+        dim: !!(vis && vis[a] === 1),
+        waterTerrain: list0 === ocean ? 0 : list0 === lake ? 9 : 1,
+        suppressStart: k === 1 && (cities.has(a) || t0 === 0 && suppressCenter(a)),
+        suppressEnd: k === steps && (cities.has(b) || t1 === 1 && suppressCenter(b)),
+      });
       px = qx; py = qy;
     }
   };
@@ -8343,35 +9072,37 @@ function drawRiverLayer(vis, frame) {
     } else segments.push(`M${ax},${ay}L${endX},${by}`);
   };
   const connectMinor = (from, water) => {
-    if (effT(water) === 10) seg(minor, from, water, 0, 1, minorHw);
+    if (effT(water) === 10) seg(minor, from, water, 0, 1, minorHw, {
+      from: [basePos[from].x + hexW / 2, basePos[from].y + hexH / 2], to: courses.anchors.get(water),
+    });
     else seg(minor, from, water, 0, 0.5, minorHw);
   };
+  for (const course of courses.segments) {
+    let { a, b } = course;
+    if (vis && !(vis[a] > 0)) {
+      if (terrain[b] !== 10 || !(vis[b] > 0)) continue;
+      [a, b] = [b, a];
+    }
+    if (course.water && vis && !(vis[b] > 0)) continue;
+    seg(course.water ? extByTerrain[terrain[b]] : navigable, a, b, 0, 1, navHw, course);
+  }
   for (let index = 0; index < terrain.length; index++) {
-    if (!basePos[index] || (vis && vis[index] === 0)) continue;
-    const isNavigable = effT(index) === 10;
-    const isMinor = minorRiver(index);
-    if (!isNavigable && !isMinor) continue;
-    const segments0 = isNavigable ? navigable : minor;
+    if (!basePos[index] || (vis && !(vis[index] > 0))) continue;
+    if (effT(index) === 10 || !minorRiver(index)) continue;
+    const segments0 = minor;
     const segments = (vis && vis[index] === 1) ? dimOf.get(segments0) : segments0;
-    const hw = isNavigable ? navHw : minorHw;
+    const hw = minorHw;
     const origin = basePos[index];
     const ax = origin.x + hexW / 2, ay = origin.y + hexH / 2;
     let connected = false;
     for (const neighbor of neighborsByIndex[index] || []) {
-      if (neighbor < 0 || !basePos[neighbor] || (vis && vis[neighbor] === 0)) continue;
-      const sameRiver = isNavigable ? effT(neighbor) === 10 : minorRiver(neighbor);
+      if (neighbor < 0 || !basePos[neighbor] || (vis && !(vis[neighbor] > 0))) continue;
+      const sameRiver = effT(neighbor) !== 10 && minorRiver(neighbor);
       if (sameRiver) {
         connected = true;
         if (neighbor > index) seg(segments, index, neighbor, 0, 1, hw);
       }
-      const extSegments = isNavigable ? extByTerrain[terrain[neighbor]] : null;
-      if (extSegments && effT(neighbor) !== 10) {
-        // every water tile a ship could enter: river color up to the tile boundary, that water's color beyond it
-        seg(segments, index, neighbor, 0, 0.5, navHw);
-        seg(extSegments, index, neighbor, 0.5, 1, navHw);
-        connected = true;
-      }
-      if (isMinor && !isNavigable && isWaterRaw(neighbor)) {
+      if (isWaterRaw(neighbor)) {
         connectMinor(index, neighbor);
         connected = true;
       }
@@ -8379,17 +9110,22 @@ function drawRiverLayer(vis, frame) {
     if (!connected && !cities.has(index)) {
       segments.push(`M${ax - hexW * 0.22},${ay}L${ax + hexW * 0.22},${ay}`);
       recordSeg(index, -hexW * 0.22, 0, hexW * 0.22, 0, hw);
+      deltaSegments.push({ x1: ax - hexW * 0.22, y1: ay, x2: ax + hexW * 0.22, y2: ay, hw, tile: index,
+        dim: !!(vis && vis[index] === 1), waterTerrain: 1,
+        suppressStart: (neighborsByIndex[index] || []).some(n => n >= 0 && vis && !(vis[n] > 0) && ([0, 1, 9, 10].includes(effT(n)) || minorRiver(n))),
+        suppressEnd: (neighborsByIndex[index] || []).some(n => n >= 0 && vis && !(vis[n] > 0) && ([0, 1, 9, 10].includes(effT(n)) || minorRiver(n))),
+      });
     }
   }
   // Every minor river must reach a coastal or navigable-river tile; bridge stranded ones over land.
   const minorSeen = new Set();
   for (let start = 0; start < terrain.length; start++) {
-    if (minorSeen.has(start) || !basePos[start] || !minorRiver(start) || (vis && vis[start] === 0)) continue;
+    if (minorSeen.has(start) || !basePos[start] || effT(start) === 10 || !minorRiver(start) || (vis && !(vis[start] > 0))) continue;
     const component = [start];
     minorSeen.add(start);
     for (let i = 0; i < component.length; i++) {
       for (const neighbor of neighborsByIndex[component[i]] || []) {
-        if (neighbor < 0 || minorSeen.has(neighbor) || !basePos[neighbor] || !minorRiver(neighbor) || (vis && vis[neighbor] === 0)) continue;
+        if (neighbor < 0 || minorSeen.has(neighbor) || !basePos[neighbor] || !minorRiver(neighbor) || (vis && !(vis[neighbor] > 0))) continue;
         minorSeen.add(neighbor);
         component.push(neighbor);
       }
@@ -8401,7 +9137,7 @@ function drawRiverLayer(vis, frame) {
     let found = null;
     for (let i = 0; i < queue.length && found === null; i++) {
       for (const neighbor of neighborsByIndex[queue[i]] || []) {
-        if (neighbor < 0 || parent.has(neighbor) || !basePos[neighbor] || (vis && vis[neighbor] === 0)) continue;
+        if (neighbor < 0 || parent.has(neighbor) || !basePos[neighbor] || (vis && !(vis[neighbor] > 0))) continue;
         if (isWaterRaw(neighbor) || effT(neighbor) === 10) { parent.set(neighbor, queue[i]); found = neighbor; break; }
         if (terrain[neighbor] === 0 || terrain[neighbor] === 9) continue;
         parent.set(neighbor, queue[i]);
@@ -8416,7 +9152,7 @@ function drawRiverLayer(vis, frame) {
     }
   }
   syncMapSvgViewport(riverDom.el);
-  const navW = Math.max(2, hexW * 0.075), minW = Math.max(0.3, hexW * 0.011);
+  const navW = navHw * 2, minW = minorHw * 2;
   const twinOf = riverTwins;
   const applyRiver = (path, data, dataDim, css, width) => {
     path.setAttribute('stroke', css); path.setAttribute('stroke-width', String(width)); path.setAttribute('stroke-opacity', '1');
@@ -8429,6 +9165,7 @@ function drawRiverLayer(vis, frame) {
     }
     t.setAttribute('stroke', dimCss(css)); t.setAttribute('stroke-width', String(width)); t.setAttribute('stroke-opacity', '1');
     t.setAttribute('d', dataDim.join(''));
+    t.style.display = showRivers ? '' : 'none';
   };
   const coastCss = `rgb(${TERRAIN_RGB[1].join(',')})`;
   applyRiver(riverPath, navigable, navigableD, coastCss, navW);
@@ -8436,13 +9173,23 @@ function drawRiverLayer(vis, frame) {
   applyRiver(coastRiverPath, coast, coastD, coastCss, navW);
   applyRiver(oceanRiverPath, ocean, oceanD, `rgb(${TERRAIN_RGB[0].join(',')})`, navW);
   applyRiver(lakeRiverPath, lake, lakeD, `rgb(${TERRAIN_RGB[9].join(',')})`, navW);
+  riverDeltas = riverEndpoints(deltaSegments, mapPxW).map(endpoint => riverDelta({
+    ...endpoint, css: `rgb(${TERRAIN_RGB[endpoint.waterTerrain].join(',')})`,
+  }, hexW));
+  for (const delta of riverDeltas) {
+    const tile = delta.tile, at = basePos[tile], tx = at.x + hexW / 2, ty = at.y + hexH / 2;
+    const shift = mapPxW ? Math.round((tx - delta.x) / mapPxW) * mapPxW : 0;
+    for (const s of delta.segments) recordSeg(tile, s.x1 + shift - tx, s.y1 - ty, s.x2 + shift - tx, s.y2 - ty, s.hw);
+  }
   riverPathKey = key;
+  riverDeltaViewKey = '';
+  syncRiverDeltas();
 }
 // --- roads, railroads, unit motion paths and the attack arrow (one SVG layer, map coordinates) ----------
 // Roads/railroads come from the per-turn record (live game for old recordings' newest frame); like rivers they
 // are drawn centre-to-centre between adjacent route tiles, thinner and in their own colours. Railroads also get
 // perpendicular ties along their length. Motion paths join a unit's previous tile to its current one.
-let routePaths = null, routeKey = '', liveRouteCache = null, liveRouteTurn = -2;
+let routePaths = null, routeKey = '', routeVis = null, liveRouteCache = null, liveRouteTurn = -2;
 function ensureRoutePaths() {
   if (routePaths || !routeDom.el) return;
   const mk = attrs => {
@@ -8462,6 +9209,9 @@ function ensureRoutePaths() {
     moveUnder: mk({ fill: 'none', stroke: '#000', 'stroke-opacity': '0.55' }),
     move: mk({ fill: 'none', stroke: '#f6f2e0' }),
     moveHead: mk({ fill: '#f6f2e0', stroke: '#000', 'stroke-opacity': '0.7' }),
+    fort: mk({ fill: '#69543b', stroke: '#ead39a' }),
+    defenseUnder: mk({ fill: 'none', stroke: '#101722' }),
+    defense: mk({ fill: 'none', stroke: '#69c46d' }),
     atkUnder: mk({ fill: 'none', stroke: '#3a0000', 'stroke-opacity': '0.7' }),
     atk: mk({ fill: 'none', stroke: '#e32727' }),
     atkHead: mk({ fill: '#e32727', stroke: '#3a0000' }),
@@ -8471,11 +9221,12 @@ function syncRouteWidths() {
   if (!routePaths) return;
   const ratio = mapVisible ? Math.min(hexW * viewZoom / (window.innerWidth || 1920), hexH * viewZoom * viewAspectY / (window.innerHeight || 1080)) : 0;
   const width = String(majorRoadWidth(hexW, ratio));
-  const display = mapVisible && ratio > 1 && !townElementVisibility.townRoads ? 'none' : '';
+  const display = !showRoads || mapVisible && ratio > 1 && !townElementVisibility.townRoads ? 'none' : '';
   for (const path of [routePaths.road, routePaths.roadDim]) {
     if (path.mapWidth !== width) { path.setAttribute('stroke-width', width); path.mapWidth = width; }
     if (path.style.display !== display) path.style.display = display;
   }
+  for (const key of ['rail', 'ties', 'railDim', 'tiesDim']) if (routePaths[key]) routePaths[key].style.display = showRoads ? '' : 'none';
 }
 function liveRoutes() {
   const turn = (typeof Game !== 'undefined' && Game.turn != null) ? Game.turn : -1;
@@ -8614,10 +9365,46 @@ function routeEdgePoints(a, b, slight, half = hexW * 0.011) {
 function polylinePath(pts) {
   return pts.map((p, k) => (k ? 'L' : 'M') + p.x.toFixed(1) + ',' + p.y.toFixed(1)).join('');
 }
+function syncRouteStatus(vis) {
+  if (!routePaths || !basePos) return;
+  const fort = [];
+  if (showUnits && mapVisible) {
+    for (const unit of readUnitsTurn(pos)) {
+      if (unit[6] !== 3 || !basePos[unit[0]] || vis && vis[unit[0]] !== 2) continue;
+      const p = basePos[unit[0]], x = p.x + hexW / 2, y = p.y + hexH * 0.7;
+      const screen = mapToScreen(x, y);
+      if (screen.x < -40 || screen.x > window.innerWidth + 40 || screen.y < -40 || screen.y > window.innerHeight + 40) continue;
+      if (fort.length >= 500) break;
+      const r = Math.max(hexW * 0.12, 6 / viewZoom);
+      fort.push(`M${x - r},${y + r / 2}V${y - r / 2}h${r / 3}v${r / 3}h${r / 3}v${-r / 3}h${r / 3}v${r / 3}h${r / 3}v${-r / 3}h${r / 3}v${r / 3}h${r / 3}V${y + r / 2}Z`);
+    }
+  }
+  routePaths.fort.setAttribute('d', fort.join(''));
+  routePaths.fort.style.display = fort.length ? '' : 'none';
+  routePaths.fort.setAttribute('stroke-width', String(Math.max(hexW * 0.015, 1 / viewZoom)));
+  const under = [], health = [], width = Math.max(hexW * 0.45, 22 / viewZoom);
+  if (mapVisible && showSettlements) for (const [index, settlement] of settlementsForPos()) {
+    if (under.length >= 500) break;
+    const hp = settlement[4], p = basePos[index];
+    if (!p || vis && !(vis[index] > 0) || !Array.isArray(hp) || !Number.isFinite(hp[0]) || !(hp[1] > 0) || hp[0] >= hp[1]) continue;
+    const x = p.x + hexW / 2, y = p.y + hexH * 0.9, screen = mapToScreen(x, y);
+    if (screen.x < -40 || screen.x > window.innerWidth + 40 || screen.y < -40 || screen.y > window.innerHeight + 40) continue;
+    under.push(`M${x - width / 2},${y}h${width}`);
+    health.push(`M${x - width / 2},${y}h${width * Math.max(0, Math.min(1, hp[0] / hp[1]))}`);
+  }
+  const stroke = Math.max(hexW * 0.025, 3 / viewZoom);
+  routePaths.defenseUnder.setAttribute('d', under.join(''));
+  routePaths.defenseUnder.style.display = under.length ? '' : 'none';
+  routePaths.defenseUnder.setAttribute('stroke-width', String(stroke + 2 / viewZoom));
+  routePaths.defense.setAttribute('d', health.join(''));
+  routePaths.defense.style.display = health.length ? '' : 'none';
+  routePaths.defense.setAttribute('stroke-width', String(stroke));
+}
 function drawRouteLayer(vis) {
-  if (!routeDom.el || !basePos || !neighborsByIndex) return;
+  if (!routeDom.el || !basePos || !neighborsByIndex || !terrain) return;
   ensureRoutePaths();
   if (!routePaths) return;
+  syncRouteStatus(vis);
   routeDom.el.setAttribute('width', String(mapPxW));
   routeDom.el.setAttribute('height', String(mapPxH));
   routeDom.el.setAttribute('viewBox', `0 0 ${mapPxW} ${mapPxH}`);
@@ -8625,18 +9412,19 @@ function drawRouteLayer(vis) {
   if (!routes && frames.length && pos === frames.length - 1) routes = liveRoutes();
   const key = `${pos}|${hexW}|${hexH}|${mapPxW}|${colShift}|${vis ? 1 : 0}|${showUnits ? 1 : 0}|${showPreviousMovement}|${routes ? routes.size : -1}|${riverEdges.size}|${showNaturalFeatures ? 1 : 0}`;
   routeDom.el.style.opacity = mapVisible || miniMapVisible ? '1' : '0';
-  if (key === routeKey) return;
+  if (key === routeKey && vis === routeVis) return;
   routeKey = key;
+  routeVis = vis;
   roadLines = new Map();
   const roadD = [], railD = [], tiesD = [], roadF = [], railF = [], tiesF = [], c = i => [basePos[i].x + hexW / 2, basePos[i].y + hexH / 2];
   if (routes) {
     const spacing = Math.max(2, hexW * 0.1), tie = Math.max(1.2, hexW * 0.04);
     for (const [i, lv] of routes) {
       const nb = neighborsByIndex[i];
-      if (!nb || !basePos[i] || (vis && vis[i] === 0)) continue;
+      if (!nb || !basePos[i] || [0, 1, 9].includes(terrain[i]) || (vis && !(vis[i] > 0))) continue;
       for (let d = 0; d < 6; d++) {
         const n = nb[d];
-        if (n <= i || !basePos[n] || (vis && vis[n] === 0)) continue;
+        if (n <= i || !basePos[n] || [0, 1, 9].includes(terrain[n]) || (vis && !(vis[n] > 0))) continue;
         const l2 = routes.get(n);
         if (!l2 || Math.abs(basePos[n].x - basePos[i].x) > hexW * 1.6) continue;
         const rail = Math.min(lv, l2) >= 2, half = rail ? Math.max(1.2, hexW * 0.04) : Math.max(0.25, hexW * 0.011);
@@ -8671,7 +9459,7 @@ function drawRouteLayer(vis) {
     for (const u of readUnitsTurn(pos)) {
       const to = u[0], from = u[4];
       if (!(from >= 0) || from === to || !basePos[to] || !basePos[from]) continue;
-      if (vis && (vis[to] !== 2 && vis[from] !== 2)) continue;
+      if (vis && (!(vis[to] > 0) || !(vis[from] > 0) || (vis[to] !== 2 && vis[from] !== 2))) continue;
       const k = from + '>' + to + '>' + u[1];
       if (seen.has(k)) continue;
       seen.add(k);
@@ -8688,6 +9476,7 @@ function drawRouteLayer(vis) {
   routePaths.moveUnder.setAttribute('stroke-width', String(mw * 2)); routePaths.moveUnder.setAttribute('d', moveD.join(''));
   routePaths.move.setAttribute('stroke-width', String(mw)); routePaths.move.setAttribute('d', moveD.join(''));
   routePaths.moveHead.setAttribute('stroke-width', String(Math.max(0.3, mw * 0.4))); routePaths.moveHead.setAttribute('d', headD.join(''));
+  for (const path of [routePaths.moveUnder, routePaths.move, routePaths.moveHead]) path.style.display = moveD.length ? '' : 'none';
 }
 // Red arched attack arrow: shown while one of your units is selected in the live game and an enemy unit's
 // tile is hovered on the map.
@@ -8799,7 +9588,7 @@ function drawTradeRouteLayer(vis) {
     if (indices.length > 1 && indices[0] === destination && indices[indices.length - 1] === origin) indices = indices.slice().reverse();
     const uniqueIndices = indices.filter((index, i) => i === 0 || index !== indices[i - 1]);
     if (uniqueIndices.length < 2) continue;
-    if (vis && uniqueIndices.some(index => vis[index] === 0)) continue;
+    if (vis && uniqueIndices.some(index => !(vis[index] > 0))) continue;
     // Each link follows the road where there is one, the river where there is one, and otherwise a very slightly
     // meandering path around the tiles' shapes.
     const whole = [];
@@ -8848,7 +9637,7 @@ function geographySlot(kind, n) {
   let slot = slots[n];
   if (!slot) {
     const el = document.createElement('div');
-    el.style.cssText = 'position:absolute;display:flex;align-items:center;justify-content:center;overflow:visible;pointer-events:none;white-space:nowrap;text-align:center;color:#fff4d2;font-family:sans-serif;font-weight:600;-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision;-webkit-text-stroke:1px #111;text-shadow:0 0 3px #000,0 1px 2px #000;';
+    el.style.cssText = 'position:absolute;display:flex;align-items:center;justify-content:center;overflow:visible;pointer-events:none;visibility:visible;white-space:nowrap;text-align:center;color:#fff4d2;font-family:sans-serif;font-weight:700;-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision;-webkit-text-stroke:1px #111;text-shadow:0 0 3px #000,0 1px 2px #000;background:transparent;';
     const parent = kind === 'regions' ? regionLabelDom.el : geographicLabelDom.el;
     parent.appendChild(el);
     slot = { el, text: '', visible: false };
@@ -8865,7 +9654,7 @@ function rememberName(key, name) {
   try { const store = window.AnthroproceniaNames; return store ? store.remember(key, name) : name; }
   catch (e) { err(`label name storage failed: ${e}`); return name; }
 }
-function connectedBoundaryPaths(rawEdges) {
+function connectedBoundaryPaths(rawEdges, project = null, clip = null) {
   // Snap endpoints that differ only by pixel rounding onto one shared vertex so neighbouring regions' edges meet exactly.
   const cell = Math.max(1, hexW * 0.12), canon = new Map();
   const snap = ([x, y]) => {
@@ -8902,7 +9691,7 @@ function connectedBoundaryPaths(rawEdges) {
   for (let i = 0; i < segments.length; i++) {
     if (segments[i].used) continue;
     const start = segments[i].a, startKey = vertexKey(start);
-    let currentKey = startKey, path = `M${start[0]},${start[1]}`;
+    let currentKey = startKey, points = [start], closed = false;
     while (true) {
       const next = (adjacency.get(currentKey) || []).find(index => !segments[index].used);
       if (next === undefined) break;
@@ -8910,12 +9699,29 @@ function connectedBoundaryPaths(rawEdges) {
       segment.used = true;
       const current = vertexKey(segment.a) === currentKey ? segment.b : segment.a;
       currentKey = vertexKey(current);
-      path += `L${current[0]},${current[1]}`;
+      points.push(current);
       if (currentKey === startKey) {
-        path += 'Z';
+        closed = true;
         break;
       }
     }
+    if (project) points = points.map(project);
+    if (clip) {
+      if (!closed) continue;
+      let polygon = points.flat();
+      for (const plane of [
+        { nx: 1, ny: 0, offset: -clip.x0 }, { nx: -1, ny: 0, offset: clip.x1 },
+        { nx: 0, ny: 1, offset: -clip.y0 }, { nx: 0, ny: -1, offset: clip.y1 },
+      ]) {
+        polygon = clipTerritoryPolygon(polygon, plane, 1);
+        if (!polygon) break;
+      }
+      if (!polygon) continue;
+      points = [];
+      for (let k = 0; k < polygon.length; k += 2) points.push([polygon[k], polygon[k + 1]]);
+    }
+    const coordinate = value => project ? Math.round(value * 10) / 10 : value;
+    const path = points.map(([x, y], k) => `${k ? 'L' : 'M'}${coordinate(x)},${coordinate(y)}`).join('') + (closed ? 'Z' : '');
     paths.push(path);
   }
   return paths;
@@ -8972,7 +9778,7 @@ function makeLabelBoxIndex(cellSize) {
 // Longest run of visible river tiles that continues in one hex direction; returns its midpoint, angle (-90..90] and pixel length.
 const OPPOSITE_DIR = [1, 0, 5, 4, 3, 2];   // neighbour order is E,W,NE,NW,SE,SW
 function longestRiverStretch(tileIndices, vis) {
-  const set = new Set(tileIndices.filter(i => basePos[i] && (!vis || vis[i] !== 0)));
+  const set = new Set(tileIndices.filter(i => basePos[i] && (!vis || vis[i] > 0)));
   let best = null;
   for (const start of set) {
     const around = neighborsByIndex[start] || [];
@@ -8994,19 +9800,47 @@ function longestRiverStretch(tileIndices, vis) {
   if (angle > 90) angle -= 180; else if (angle <= -90) angle += 180;
   return { x: (a.x + b.x) / 2 + hexW / 2, y: (a.y + b.y) / 2 + hexH / 2, angle, length: Math.hypot(dx, dy) + hexW };
 }
+let geographyRefreshTimer = 0;
+function scheduleGeographyLabelRefresh() {
+  if (geographyRefreshTimer) clearTimeout(geographyRefreshTimer);
+  geographyRefreshTimer = setTimeout(() => {
+    geographyRefreshTimer = 0;
+    if (!mapVisible || !curFrame) return;
+    if (Date.now() - lastMapInputTs < 250) { scheduleGeographyLabelRefresh(); return; }
+    geographyLabelCache.layout = null;
+    try { drawGeographyLayers(curFrame, fogMode ? visForPos() : null); }
+    catch (e) { err(`geography navigation refresh failed: ${e}`); }
+  }, 250);
+}
 function placeGeographyLabels(kind, labels, vis, fontScale, occupied = null) {
   const slots = geographyLabelSlots[kind];
+  const visibleTile = index => {
+    if (!basePos[index] || vis && !(vis[index] > 0)) return false;
+    if (typeof window === 'undefined' || !Number.isFinite(window.innerWidth) || !mapVisible) return true;
+    const point = mapToScreen(basePos[index].x + hexW / 2, basePos[index].y + hexH / 2);
+    const marginX = Math.max(40, hexW * viewZoom / 2), marginY = Math.max(40, hexH * viewZoom * viewAspectY / 2);
+    return point.x >= -marginX && point.x <= window.innerWidth + marginX &&
+      point.y >= -marginY && point.y <= window.innerHeight + marginY;
+  };
+  const placedEarthNames = new Set();
   let count = 0;
   const locationFont = Math.max(14, Math.min(17, hexW * 0.42)) * (1 / 3) * 1.25 * 0.5;
-  const minRegionFont = Math.max(locationFont / 5, ps(kind === 'regions' ? 11 : 10) / Math.max(0.01, viewZoom * townLabelScale()));
+  const textZoom = Math.max(0.000001, viewZoom * townLabelScale() *
+    (kind === 'rivers' ? Math.min(1, viewAspectY) : 1));
+  const minRegionFont = Math.max(locationFont / 5, ps(kind === 'regions' ? 11 : 10)) / textZoom;
+  const maxRegionFont = ps(24) / textZoom;
   const REGION_RES = Math.max(1, labelTier());
   const placedBoxes = occupied || makeLabelBoxIndex(Math.max(16, hexW * 4));
-  labels = labels.slice().sort((a, b) => (b.tiles || []).length - (a.tiles || []).length);
+  labels = labels.slice().sort((a, b) => Number(!!b.requiredEarthName) - Number(!!a.requiredEarthName) ||
+    (b.tiles || []).length - (a.tiles || []).length);
   for (const label of labels) {
+    if (count >= 256) break;
     const index = label.center;
     if (index == null || !basePos[index]) continue;
     const text = mapLabelText(label.name);
     if (!text) continue;
+    if (!(label.tiles || [index]).some(visibleTile)) continue;
+    if (label.nativeEarthName && placedEarthNames.has(text)) continue;
     let riverStretch = null;
     if (kind === 'rivers') {
       // A river is named wherever part of it is visible; its network's centre tile may be hidden or off in a corner.
@@ -9016,7 +9850,7 @@ function placeGeographyLabels(kind, labels, vis, fontScale, occupied = null) {
     let geometry = null, tiles = null;
     if (kind !== 'rivers') {
       tiles = (label.tiles || [index])
-        .filter(tileIndex => basePos[tileIndex] && (!vis || vis[tileIndex] !== 0))
+        .filter(visibleTile)
         .map(tileIndex => ({ index: tileIndex, x: basePos[tileIndex].x + hexW / 2, y: basePos[tileIndex].y + hexH / 2 }));
       if (!tiles.length) continue;
       geometry = countryLabelGeometry(tiles);
@@ -9026,15 +9860,15 @@ function placeGeographyLabels(kind, labels, vis, fontScale, occupied = null) {
     const longestLine = Math.max(1, ...lines.map(l => l.length));
     const rows = lines.length;
     const initialSize = geometry
-      ? Math.max(minRegionFont, Math.min(12, fontScale / 2, geometry.span / Math.max(1, longestLine * 0.68) / 2))
+      ? Math.max(minRegionFont, Math.min(maxRegionFont, 12, fontScale / 2, geometry.span / Math.max(1, longestLine * 0.68) / 2))
       : Math.max(minRegionFont, Math.min(fontScale, hexW * 0.48) * 1.25);
     const metricsFor = size => {
       const characterWidth = geometry ? size * 0.68 : Math.max(9, size * 0.68);
       return {
         fontSize: size,
         characterWidth,
-        width: geometry ? longestLine * characterWidth + 4 : Math.max(hexW * 2, longestLine * size * 0.58 + 8),
-        height: geometry ? size * (1.6 + 1.2 * (rows - 1)) : rows * (size + 3) + 3,
+        width: geometry ? longestLine * characterWidth + size * 0.35 : Math.max(hexW * 2, longestLine * size * 0.58 + 8),
+        height: size * (1.4 + 2.1 * (rows - 1)),
       };
     };
     let metrics = metricsFor(initialSize);
@@ -9093,7 +9927,7 @@ function placeGeographyLabels(kind, labels, vis, fontScale, occupied = null) {
       let candidates = [];
       if (geometry) {
         const step = Math.max(1, Math.ceil((label.tiles || []).length / 80));
-        candidates = (label.tiles || []).filter((t, i) => i % step === 0 && basePos[t] && (!vis || vis[t] !== 0) && isWaterTile(t));
+        candidates = (label.tiles || []).filter((t, i) => i % step === 0 && visibleTile(t) && isWaterTile(t));
       } else {
         const seen = new Set([index]);
         let ring = [index];
@@ -9122,7 +9956,13 @@ function placeGeographyLabels(kind, labels, vis, fontScale, occupied = null) {
     if (geometry) {
       // Keep region names from overlapping: try the region's own tile centers, then shrink the text and retry.
       // (" sea" names were already moved offshore above.)
-      const boxAt = (x, y, m) => ({ x, y, w: m.width, h: m.height, angle: geometry.angle });
+      const boxAt = (x, y, m) => {
+        const angle = geometry.angle * Math.PI / 180;
+        const screenAngle = Math.atan2(Math.sin(angle) * viewAspectY, Math.cos(angle));
+        const c = Math.abs(Math.cos(screenAngle)), s = Math.abs(Math.sin(screenAngle)), scale = townLabelScale();
+        return { x, y, w: (m.width * c + m.height * s) * scale,
+          h: (m.width * s + m.height * c) * scale / Math.max(0.000001, viewAspectY), angle: 0 };
+      };
       const clear = box => !placedBoxes.overlaps(box);
       let box = boxAt(geometry.x, geometry.y, metrics);
       if (!clear(box)) {
@@ -9137,8 +9977,9 @@ function placeGeographyLabels(kind, labels, vis, fontScale, occupied = null) {
             if (clear(candidate)) { found = candidate; foundMetrics = m; break; }
           }
         }
-        if (!found) continue;
-        box = found; metrics = foundMetrics;
+        if (!found && !label.requiredEarthName) continue;
+        metrics = foundMetrics || metricsFor(minRegionFont);
+        box = found || boxAt(geometry.x, geometry.y, metrics);
       }
       point = { ...geometry, x: box.x, y: box.y };
       placedBoxes.add(box);
@@ -9162,46 +10003,239 @@ function placeGeographyLabels(kind, labels, vis, fontScale, occupied = null) {
     }
     const slot = geographySlot(kind, count++);
     const { fontSize, characterWidth, width, height } = metrics;
-    const K = geometry ? REGION_RES : labelTier();
-    slot.el.style.left = Math.round(point.x - width * K / 2) + 'px';
-    slot.el.style.top = Math.round(point.y - height * K / 2) + 'px';
-    slot.el.style.width = Math.round(width * K) + 'px';
-    slot.el.style.height = Math.round(height * K) + 'px';
+    // Rasterize readable text before scaling into tiny map-space boxes.
+    const K = Math.max(geometry ? REGION_RES : labelTier(), 16 / fontSize);
+    slot.el.style.left = (point.x - width * K / 2) + 'px';
+    slot.el.style.top = (point.y - height * K / 2) + 'px';
+    slot.el.style.width = (width * K) + 'px';
+    slot.el.style.height = (height * K) + 'px';
     slot.el.style.transformOrigin = '50% 50%';
     const kScale = K > 1 ? ` scale(${1 / K})` : '';
     const tk = townLabelScale(), tScale = tk < 1 ? ` scale(${tk})` : '';
-    slot.el.style.transform = geometry ? `rotate(${geometry.angle}deg) scale(${tk / K})` : (riverAngle ? `rotate(${riverAngle}deg)${kScale}${tScale}` : ((kScale + tScale).trim() || 'none'));
+    if (geometry) {
+      const angle = geometry.angle * Math.PI / 180;
+      const screenAngle = Math.atan2(Math.sin(angle) * viewAspectY, Math.cos(angle)) * 180 / Math.PI;
+      slot.el.style.transform = `scale(${tk / K},${tk / (K * Math.max(0.000001, viewAspectY))}) rotate(${screenAngle}deg)`;
+    } else slot.el.style.transform = riverAngle ? `rotate(${riverAngle}deg)${kScale}${tScale}` : ((kScale + tScale).trim() || 'none');
+    slot.layout = { x: point.x, y: point.y, width: width * K, height: height * K,
+      scale: tk / K, zoom: viewZoom, angle: geometry ? geometry.angle : riverAngle, compensated: !!geometry,
+      transform: slot.el.style.transform };
     slot.el.style.zIndex = kind === 'regions' ? '1' : '2';
     slot.el.style.opacity = '1';
     const geometryKey = `${lines.join('/')}|${K}|${showLabelArches}|${geometry ? `${width}|${height}|${fontSize}|${geometry.angle}` : (kind === 'rivers' ? fontSize : height)}`;
     if (slot.text !== geometryKey) {
       slot.el.textContent = '';
-      slot.el.style.flexDirection = rows > 1 ? 'column' : 'row';
+      slot.el.style.flexDirection = 'column';
       {
         // One text run per line, rather than a transformed/shadowed DOM element per glyph.
         slot.el.style.fontSize = (fontSize * K) + 'px';
         slot.el.style.lineHeight = ((rows > 1 ? fontSize + 3 : height) * K) + 'px';
-        if (showLabelArches && kind === 'regions') setArchedLines(slot.el, lines, width * K, height * K, fontSize * K);
+        if (showLabelArches && kind !== 'rivers') setArchedLines(slot.el, lines, width * K, height * K, fontSize * K);
         else if (rows > 1) setPlainLines(slot.el, lines); else slot.el.textContent = text;
       }
       slot.text = geometryKey;
     }
     slot.visible = true;
+    if (label.nativeEarthName) placedEarthNames.add(text);
   }
   for (let i = count; i < slots.length; i++) {
     const slot = slots[i];
     if (slot && slot.visible) { slot.el.style.opacity = '0'; slot.visible = false; }
   }
 }
+function syncGeographyLabelViewport() {
+  const area = mapVisible ? measureArea() : null;
+  for (const dom of [regionLabelDom, geographicLabelDom]) {
+    if (!dom.el) continue;
+    const style = dom.el.style;
+    style.width = (area ? area.w : mapPxW) + 'px';
+    style.height = (area ? area.h : mapPxH) + 'px';
+    if (area) {
+      style.left = area.x + 'px'; style.top = area.y + 'px';
+      style.transformOrigin = '0px 0px'; style.transform = 'none'; style.clip = 'auto';
+    }
+  }
+  for (const slots of Object.values(geographyLabelSlots)) for (const slot of slots) {
+    if (!slot.visible || !slot.layout) continue;
+    const layout = slot.layout, style = slot.el.style;
+    const point = area ? mapToScreen(layout.x, layout.y) : layout;
+    style.left = (point.x - (area ? area.x : 0) - layout.width / 2) + 'px';
+    style.top = (point.y - (area ? area.y : 0) - layout.height / 2) + 'px';
+    if (area) {
+      const scale = layout.scale * layout.zoom;
+      const angle = layout.angle * Math.PI / 180;
+      const screenAngle = Math.atan2(Math.sin(angle) * viewAspectY, Math.cos(angle)) * 180 / Math.PI;
+      style.transform = layout.compensated ? `scale(${scale}) rotate(${screenAngle}deg)`
+        : `scale(${scale},${scale * viewAspectY}) rotate(${layout.angle}deg)`;
+    } else style.transform = layout.transform;
+  }
+}
+function meanderingWarPath(edges) {
+  return connectedBoundaryPaths(edges).map(path => {
+    const vertices = path.match(/[ML][^MLZ]+/g).map(point => point.slice(1).split(',').map(Number));
+    const closed = path.endsWith('Z'), points = [vertices[0]];
+    for (let i = 1; i < vertices.length; i++) {
+      const a = vertices[i - 1], b = vertices[i], dx = b[0] - a[0], dy = b[1] - a[1];
+      const length = Math.hypot(dx, dy);
+      if (!length) continue;
+      const seed = [a.join(','), b.join(',')].sort().join('|');
+      const bend = Math.min(hexW * 0.08, length * 0.14) * (hashString(seed) & 1 ? 1 : -1);
+      for (const [t, sign] of [[1 / 3, 1], [2 / 3, -1]]) {
+        points.push([a[0] + dx * t - dy / length * bend * sign, a[1] + dy * t + dx / length * bend * sign]);
+      }
+      points.push(b);
+    }
+    if (closed) points.pop();
+    let result = `M${points[0].join(',')}`;
+    const count = closed ? points.length : points.length - 1;
+    for (let i = 0; i < count; i++) {
+      const a = points[i], b = points[(i + 1) % points.length];
+      const previous = points[i ? i - 1 : closed ? points.length - 1 : 0];
+      const next = points[i + 2 < points.length ? i + 2 : closed ? (i + 2) % points.length : points.length - 1];
+      result += `C${a[0] + (b[0] - previous[0]) / 6},${a[1] + (b[1] - previous[1]) / 6}`
+        + ` ${b[0] - (next[0] - a[0]) / 6},${b[1] - (next[1] - a[1]) / 6} ${b.join(',')}`;
+    }
+    return result + (closed ? 'Z' : '');
+  }).join('');
+}
+function warFrontCenters(geometry, spacing, visible = () => true) {
+  const lines = [];
+  let line = null, previous = null;
+  for (const command of geometry.match(/[MCZ][^MCZ]*/g) || []) {
+    const values = (command.slice(1).match(/-?\d+(?:\.\d+)?(?:e[+-]?\d+)?/gi) || []).map(Number);
+    if (command[0] === 'M') {
+      previous = values; line = [previous]; lines.push(line);
+    } else if (command[0] === 'C') {
+      const [x, y] = previous, [ax, ay, bx, by, ex, ey] = values;
+      const length = Math.hypot(ax - x, ay - y) + Math.hypot(bx - ax, by - ay) + Math.hypot(ex - bx, ey - by);
+      const steps = Math.max(4, Math.min(64, Math.ceil(length / spacing * 2)));
+      for (let step = 1; step <= steps; step++) {
+        const t = step / steps, u = 1 - t;
+        line.push([u * u * u * x + 3 * u * u * t * ax + 3 * u * t * t * bx + t * t * t * ex,
+          u * u * u * y + 3 * u * u * t * ay + 3 * u * t * t * by + t * t * t * ey]);
+      }
+      previous = [ex, ey];
+    } else if (line && line.length) line.push(line[0]);
+  }
+  const centers = [];
+  for (const points of lines) {
+    let remaining = 0;
+    for (let index = 1; index < points.length; index++) {
+      const [x, y] = points[index - 1], [ex, ey] = points[index], length = Math.hypot(ex - x, ey - y);
+      if (!length) continue;
+      while (remaining <= length) {
+        const center = [x + (ex - x) * remaining / length, y + (ey - y) * remaining / length];
+        if (visible(center)) {
+          centers.push(center);
+          if (centers.length === 1024) return centers;
+        }
+        remaining += spacing;
+      }
+      remaining -= length;
+    }
+  }
+  return centers;
+}
+function drawWarBorders(frame, vis) {
+  const state = warBorderState;
+  if (!showWarNames || !terrain || !(mapVisible || miniMapVisible)) {
+    if (state.group) state.group.style.display = 'none';
+    return;
+  }
+  if (!state.group) {
+    const make = tag => document.createElementNS('http://www.w3.org/2000/svg', tag);
+    state.group = make('g');
+    const defs = make('defs');
+    state.group.appendChild(defs);
+    state.gradients = [];
+    state.strokes = [];
+    for (const [name, colors, widths] of [
+      ['warm', ['#ff642e', '#ffbb62', '#ff853e'], [24, 20, 16]],
+      ['red', ['#ff3048', '#ff7968', '#ff4554'], [10, 7, 5]],
+    ]) {
+      const gradient = make('linearGradient'), id = `anthroprocenia-war-front-${name}`;
+      gradient.setAttribute('id', id); gradient.setAttribute('gradientUnits', 'userSpaceOnUse');
+      for (let i = 0; i < colors.length; i++) {
+        const stop = make('stop');
+        stop.setAttribute('offset', `${i * 50}%`);
+        stop.setAttribute('stop-color', colors[i]);
+        stop.setAttribute('stop-opacity', i === 1 ? '1' : '0.9');
+        gradient.appendChild(stop);
+      }
+      defs.appendChild(gradient); state.gradients.push(gradient);
+      for (let i = 0; i < widths.length; i++) {
+        const path = make('path');
+        path.setAttribute('fill', `url(#${id})`); path.setAttribute('stroke', 'none');
+        path.setAttribute('fill-opacity', String([0.2, 0.5, 1][i]));
+        path.setAttribute('pointer-events', 'none');
+        state.group.appendChild(path); state.strokes.push({ path, width: widths[i] });
+      }
+    }
+    regionBorderDom.el.appendChild(state.group);
+  }
+  const relations = relationshipForPos(), key = `${hexW}|${hexH}|${colShift}`;
+  if (state.frame !== frame || state.vis !== vis || state.relations !== relations || state.positions !== basePos || state.terrain !== terrain || state.key !== key) {
+    const edges = [];
+    for (const [index, value] of frame) {
+      if (!basePos[index] || isWaterTile(index) || vis && !(vis[index] > 0)) continue;
+      const owner = (value >> 3) & 63, around = neighborsByIndex[index] || [];
+      for (let direction = 0; direction < 6; direction++) {
+        const neighbor = around[direction];
+        if (!(neighbor > index) || !basePos[neighbor] || isWaterTile(neighbor) || vis && !(vis[neighbor] > 0)) continue;
+        if (Math.abs(basePos[neighbor].x - basePos[index].x) > hexW * 1.6) continue;
+        const otherValue = frame.get(neighbor);
+        if (otherValue === undefined) continue;
+        const other = (otherValue >> 3) & 63;
+        if (owner === other || relations.get(`${Math.min(owner, other)},${Math.max(owner, other)}`) !== 4) continue;
+        const vertices = EDGE_VERTS[direction];
+        edges.push({ a: hexVert(index, vertices[0]), b: hexVert(index, vertices[1]) });
+      }
+    }
+    state.geometry = meanderingWarPath(edges);
+    state.markerKey = '';
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const edge of edges) for (const [x, y] of [edge.a, edge.b]) {
+      x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y);
+    }
+    for (const gradient of state.gradients) {
+      gradient.setAttribute('x1', String(edges.length ? x0 : 0)); gradient.setAttribute('y1', String(edges.length ? y0 : 0));
+      gradient.setAttribute('x2', String(edges.length ? x1 : 1)); gradient.setAttribute('y2', String(edges.length ? y1 : 1));
+    }
+    state.frame = frame; state.vis = vis; state.relations = relations; state.positions = basePos; state.terrain = terrain; state.key = key;
+  }
+  const scale = 1 / Math.max(mapVisible ? viewZoom : miniMapScale, 0.01);
+  const area = measureArea(), origin = mapVisible ? mapToScreen(0, 0) : { x: 0, y: 0 };
+  const markerKey = `${scale}|${ps(32)}|${origin.x}|${origin.y}|${viewAspectY}|${area.x}|${area.y}|${area.w}|${area.h}|${mapVisible}`;
+  if (state.markerKey !== markerKey) {
+    const margin = ps(14);
+    const centers = warFrontCenters(state.geometry, ps(32) * scale, ([x, y]) => {
+      if (!mapVisible) return true;
+      const screen = mapToScreen(x, y);
+      return screen.x >= area.x - margin && screen.x <= area.x + area.w + margin &&
+        screen.y >= area.y - margin && screen.y <= area.y + area.h + margin;
+    });
+    for (const { path, width } of state.strokes) {
+      const data = centers.map(([x, y]) => polyStar(x, y, ps(width) * scale / 2)).join('');
+      path.setAttribute('d', data);
+      path.style.display = data ? '' : 'none';
+    }
+    state.markerKey = markerKey;
+  }
+  state.group.style.display = 'block';
+  regionBorderDom.el.setAttribute('viewBox', `0 0 ${mapPxW} ${mapPxH}`);
+  regionBorderDom.el.setAttribute('width', String(mapPxW)); regionBorderDom.el.setAttribute('height', String(mapPxH));
+  regionBorderDom.el.style.opacity = '1';
+}
 function historicalWarLabels(frame, geography, vis) {
   const relations = relationshipForPos(), wars = new Map();
+  let territory = null;
   for (const [index, value] of frame) {
-    if (!basePos[index] || isWaterTile(index) || (vis && vis[index] === 0)) continue;
+    if (!basePos[index] || isWaterTile(index) || (vis && !(vis[index] > 0))) continue;
     const owner = (value >> 3) & 63;
     if (ownerMeta(owner).kind !== 'major') continue;
     const neighbors = neighborsByIndex[index] || [];
     for (const neighbor of neighbors) {
-      if (neighbor <= index || neighbor < 0 || (vis && vis[neighbor] === 0)) continue;
+      if (neighbor <= index || neighbor < 0 || (vis && !(vis[neighbor] > 0))) continue;
       const neighborValue = frame.get(neighbor);
       if (neighborValue === undefined || isWaterTile(neighbor)) continue;
       const other = (neighborValue >> 3) & 63;
@@ -9210,7 +10244,11 @@ function historicalWarLabels(frame, geography, vis) {
       if (relations.get(key) !== 4 || wars.has(key)) continue;
       const regionId = geography.regionForTile.get(index) || geography.regionForTile.get(neighbor);
       const region = geography.regions.find(entry => entry.id === regionId);
-      if (region) wars.set(key, { id: `war:${key}`, type: 'war', name: window.AnthroproceniaGeography.rememberWarName(`war:${key}:${region.id}`, region.name), center: index });
+      if (region) {
+        const service = window.AnthroproceniaGeography;
+        if (!territory) territory = new Map([...frame].map(([plot, value]) => [plot, (value >> 3) & 63]));
+        wars.set(key, { id: `war:${key}`, type: 'war', name: service.warNameForPlayers(owner, other, territory, geography), center: index });
+      }
     }
   }
   return Array.from(wars.values());
@@ -9262,7 +10300,7 @@ function drawCivBorderLabels(frame, vis, placements) {
     const names = new Map(placements.map(entry => [entry.owner, entry.text]));
     const edges = new Map(), stars = new Map(), edgesTop = new Map();
     for (const [index] of frame) {
-      if (!basePos[index] || (vis && vis[index] === 0)) continue;
+      if (!basePos[index] || (vis && !(vis[index] > 0))) continue;
       collectTileBorders(index, frame, edges, stars, edgesTop, vis);
     }
     // The last stroke at a shared edge determines its actual visible color and owner.
@@ -9282,11 +10320,14 @@ function drawCivBorderLabels(frame, vis, placements) {
 }
 function drawGeographyLayers(frame, vis) {
   if (!regionLabelDom.el || !regionBorderPath || !geographicLabelDom.el) return;
+  drawWarBorders(frame, vis);
   regionLabelDom.el.style.opacity = (mapVisible || miniMapVisible) && showRegionLabels ? '1' : '0';
-  geographicLabelDom.el.style.opacity = (mapVisible || miniMapVisible) && (showGeographicLabels || showRiverNames) ? '1' : '0';
+  geographicLabelDom.el.style.opacity = (mapVisible || miniMapVisible) && (showGeographicLabels || showRiverNames || showWarNames) ? '1' : '0';
   const service = typeof window !== 'undefined' ? window.AnthroproceniaGeography : null;
-  const geography = service && typeof service.getMapData === 'function' ? service.getMapData() : null;
+  if (!service || typeof service.getMapData !== 'function') throw new Error('Geographic naming service is unavailable');
+  const geography = service.getMapData();
   if (!geography) {
+    hideRegionHover();
     drawRegionBoundaries(null, vis);
     geographyLabelCache.regions = geographyLabelCache.rivers = geographyLabelCache.layout = null;
     for (const kind of ['regions', 'features', 'rivers']) {
@@ -9297,7 +10338,7 @@ function drawGeographyLayers(frame, vis) {
     placeBorderLabels('continent', new Map());
     return;
   }
-  const labelKey = `${hexW}|${hexH}|${colShift}|${labelTier()}|${townLabelScale()}|${viewZoom}|${showLabelArches}|${showRegionLabels}|${showGeographicLabels}|${showRiverNames}`;
+  const labelKey = `${hexW}|${hexH}|${colShift}|${labelTier()}|${townLabelScale()}|${viewZoom}|${mapPanX}|${mapPanY}|${viewAspectY}|${window.innerWidth}|${window.innerHeight}|${showLabelArches}|${showRegionLabels}|${showGeographicLabels}|${showIslandNames}|${showWaterNames}|${showMountainNames}|${showRiverNames}|${showWarNames}|${showWarNames ? pos : -1}`;
   const cachedLabels = geographyLabelCache.layout;
   if (!cachedLabels || cachedLabels.geography !== geography || cachedLabels.positions !== basePos ||
       cachedLabels.vis !== vis || cachedLabels.frame !== frame || cachedLabels.key !== labelKey) {
@@ -9307,9 +10348,11 @@ function drawGeographyLayers(frame, vis) {
     geographyLabelCache.regions = null;
     for (const slot of geographyLabelSlots.regions) if (slot && slot.visible) { slot.el.style.opacity = '0'; slot.visible = false; }
   }
-  if (showGeographicLabels) {
-    const labels = geography.features.filter(feature => feature.type !== 'river')
-      .concat(historicalWarLabels(frame, geography, vis));
+  if (showGeographicLabels || showWarNames) {
+    const riverNames = new Set(geography.features.filter(feature => feature.type === 'river').map(feature => feature.name));
+    const labels = (showGeographicLabels ? geography.regions.filter(region => (region.island ? showIslandNames : (region.water || region.id.startsWith('water:')) && showWaterNames) && !riverNames.has(region.name))
+      .concat(geography.features.filter(feature => /^(island|archipelago)$/.test(feature.type) ? showIslandNames : /^mountains?$/.test(feature.type) ? showMountainNames : feature.type !== 'river' && showWaterNames))
+      : []).concat(showWarNames ? historicalWarLabels(frame, geography, vis) : []);
     placeGeographyLabels('features', labels, vis, 12, occupied);
   } else {
     for (const slot of geographyLabelSlots.features) if (slot && slot.visible) { slot.el.style.opacity = '0'; slot.visible = false; }
@@ -9321,9 +10364,31 @@ function drawGeographyLayers(frame, vis) {
   }
   geographyLabelCache.layout = { geography, positions: basePos, vis, frame, key: labelKey };
   }
+  syncGeographyLabelViewport();
   drawRegionBoundaries(geography, vis);
+  syncRegionHover();
+  const diagnosticKey = `${mapVisible}|${showRegionLabels}|${showGeographicLabels}|${showRiverNames}`;
+  if (mapVisible && (geographyLabelCache.diagnosticGeography !== geography || geographyLabelCache.diagnosticKey !== diagnosticKey)) {
+    const labels = {};
+    for (const kind of ['regions', 'features', 'rivers']) {
+      const visible = geographyLabelSlots[kind].filter(slot => slot.visible), first = visible[0];
+      labels[kind] = { placed: visible.length, first: first ? {
+        text: first.el.textContent, left: first.el.style.left, top: first.el.style.top,
+        font: first.el.style.fontSize, transform: first.el.style.transform,
+      } : null };
+    }
+    console.warn(`${TAG} Geographic labels: ${JSON.stringify({
+      regions: geography.regions.length, features: geography.features.length, labels,
+      window: [window.innerWidth, window.innerHeight], area: measureArea(),
+      regionRoot: { left: regionLabelDom.el.style.left, top: regionLabelDom.el.style.top,
+        width: regionLabelDom.el.style.width, height: regionLabelDom.el.style.height,
+        opacity: regionLabelDom.el.style.opacity, transform: regionLabelDom.el.style.transform },
+    })}`);
+    geographyLabelCache.diagnosticGeography = geography;
+    geographyLabelCache.diagnosticKey = diagnosticKey;
+  }
   if (!showRegionBorders) {
-    regionBorderDom.el.style.opacity = (mapVisible || miniMapVisible) && showRegionBoundaries ? '1' : '0';
+    regionBorderDom.el.style.opacity = (mapVisible || miniMapVisible) && (showRegionBoundaries || showWarNames) ? '1' : '0';
     regionBorderPath.setAttribute('d', '');
     regionBorderKey = '';
     placeBorderLabels('continent', new Map());
@@ -9344,11 +10409,11 @@ function drawGeographyLayers(frame, vis) {
         if (Math.abs(basePos[neighbor].x - basePos[index].x) > hexW * 1.6) continue;   // never across the map seam
         const other = continentTypeForTile(neighbor);
         if (other === continent || (other != null && neighbor < index)) continue;
-        if (vis && vis[index] === 0 && vis[neighbor] === 0) continue;
+        if (vis && !(vis[index] > 0) && !(vis[neighbor] > 0)) continue;
         const vertices = EDGE_VERTS[direction];
         paths.push({ a: hexVert(index, vertices[0]), b: hexVert(index, vertices[1]) });
-        if (!vis || vis[index] !== 0) considerBorderLabel(labels, continent, continentNameForType(continent), REGION_BORDER_COLOR, index, direction);
-        if (other != null && (!vis || vis[neighbor] !== 0)) {
+        if (!vis || vis[index] > 0) considerBorderLabel(labels, continent, continentNameForType(continent), REGION_BORDER_COLOR, index, direction);
+        if (other != null && (!vis || vis[neighbor] > 0)) {
           considerBorderLabel(labels, other, continentNameForType(other), REGION_BORDER_COLOR, neighbor, OPPOSITE_DIR[direction]);
         }
       }
@@ -9395,14 +10460,14 @@ function dotMapFor(frame, vis) {
   if (!(showSettlements && frames.length)) return m;
   for (const [i, v] of frame) {
     if (!basePos[i]) continue;
-    if (vis && vis[i] === 0) continue;
+    if (vis && !(vis[i] > 0)) continue;
     if ((v & 7) !== 2) continue;
     const o = (v >> 3) & 63, meta = ownerMeta(o);
     if (meta.kind === 'village') continue;
     if (meta.kind === 'citystate') m.set(i, meta.dotType);
   }
   for (const i of settlementsForPos().keys()) {
-    if (!basePos[i] || (vis && vis[i] === 0)) continue;
+    if (!basePos[i] || (vis && !(vis[i] > 0))) continue;
     const v = frame.get(i);
     if (v === undefined) continue;
     const owner = (v >> 3) & 63;
@@ -9439,7 +10504,7 @@ function countryLabelSlot(n) {
     icon.style.cssText = 'position:absolute;pointer-events:none;background-position:center;background-repeat:no-repeat;background-size:100% 100%;mask-position:center;-webkit-mask-position:center;mask-repeat:no-repeat;-webkit-mask-repeat:no-repeat;mask-size:100% 100%;-webkit-mask-size:100% 100%;';
     countryDom.el.appendChild(el);
     civIconDom.el.appendChild(icon);
-    m = { el, icon, op: 1, x: -1, y: -1, geometry: '', text: '', iconCiv: '', iconUrl: '', iconColor: '' };
+    m = { el, icon, alternateSvg: null, alternatePath: null, iconArtwork: '', op: 1, x: -1, y: -1, geometry: '', text: '', iconCiv: '', iconUrl: '', iconColor: '' };
     countryLabelSlots[n] = m;
   }
   return m;
@@ -9452,7 +10517,10 @@ function drawCountryLabelLayer(frame, vis) {
     placeBorderLabels('civ', new Map());
     return;
   }
-  const territories = countryTerritories(frame, vis), names = majorCountryNames(frame, territories), identity = identityForPos();
+  const territories = countryTerritories(frame, vis), details = new Map(), identity = identityForPos();
+  const names = shortCountryLabels(majorCountryNames(frame, countryTerritories(frame, null), identity, settlementsForPos(), replayEraKey(), pos, details), details);
+  const iconSeed = iconsOn ? countryIconSeed() : 0;
+  const iconChoices = iconsOn ? countryIconsForFrame(frame, identity, iconSeed) : null;
   const placements = [];
   for (const [owner, tiles] of territories) {
     const id = identity.get(owner);
@@ -9470,13 +10538,25 @@ function drawCountryLabelLayer(frame, vis) {
     for (const m of countryLabelSlots) if (m && m.op) { m.el.style.opacity = '0'; m.icon.style.opacity = '0'; m.op = 0; }
     return;
   }
-  placements.sort((a, b) => b.tiles.length - a.tiles.length);   // big territories claim their spot first
+  const labelPlacements = [];
+  const capitalOwners = new Set([...frame].filter(([, value]) => (value & 7) === 4).map(([, value]) => (value >> 3) & 63));
+  for (const placement of placements) {
+    if (placement.minor) { labelPlacements.push(placement); continue; }
+    const components = countryLabelComponents(frame, placement.tiles, placement.owner);
+    for (let i = 0; i < components.length; i++) {
+      const component = components[i], detached = !component.capital && (capitalOwners.has(placement.owner) || i > 0);
+      if (detached && !labelsOn) continue;
+      labelPlacements.push({ ...placement, tiles: component.tiles, detached });
+    }
+  }
+  labelPlacements.sort((a, b) => b.tiles.length - a.tiles.length);   // big territories claim their spot first
   const placedLabels = [];
   let n = 0;
-  for (const { owner, id, text, tiles, minor } of placements) {
-    const m = countryLabelSlot(n++);
+  for (const { owner, id, text, tiles, minor, detached } of labelPlacements) {
     const baseGeometry = countryLabelGeometry(tiles);
     const fit = labelsOn ? fitCountryLabel(tiles, text, baseGeometry, placedLabels, minor) : null;
+    if (!fit && !(iconsOn && !minor && !detached)) continue;
+    const m = countryLabelSlot(n++);
     if (fit) placedLabels.push({ x: fit.x, y: fit.y, w: fit.width, h: fit.height, angle: fit.angle });
     const geometry = fit ? { ...baseGeometry, x: fit.x, y: fit.y, angle: fit.angle } : baseGeometry;
     const size = fit ? fit.size : 0;
@@ -9491,11 +10571,13 @@ function drawCountryLabelLayer(frame, vis) {
     m.el.style.transformOrigin = '50% 50%';
     m.el.style.transform = `rotate(${geometry.angle}deg) scale(${townLabelScale() / CS})`;
     const civType = minor ? '' : (id[5] || '');
-    const symbol = iconsOn && !minor ? civSymbolFor(civType) : '';
+    const alternative = iconsOn && !minor && !detached ? iconChoices.get(owner) : null;
+    const artwork = alternative ? alternative.path : '';
+    const symbol = iconsOn && !minor && !detached && !artwork ? civSymbolFor(civType) : '';
     const iconOffset = labelsOn ? height / 2 + 4 : 0;   // icon sits under its label, or at the territory center when labels are off
     const iconTargetX = x - Math.sin(geometry.angle * Math.PI / 180) * iconOffset;
     const iconTargetY = y + Math.cos(geometry.angle * Math.PI / 180) * iconOffset;
-    const iconTile = symbol ? countryIconTile(tiles, iconTargetX, iconTargetY) : null;
+    const iconTile = symbol || artwork ? countryIconTile(tiles, iconTargetX, iconTargetY) : null;
     const desiredIconSize = Math.max(hexW * 2.6, 32);
     const iconSize = iconTile ? Math.min(desiredIconSize, iconTile.maxIconSize) : 0;
     const iconCenterX = iconTile ? iconTile.x : iconTargetX;
@@ -9506,19 +10588,36 @@ function drawCountryLabelLayer(frame, vis) {
     m.icon.style.width = iconSize + 'px';
     m.icon.style.height = iconSize + 'px';
     m.icon.style.transform = 'none';
-    if (m.iconCiv !== civType || m.iconUrl !== symbol) {
+    const artworkChanged = m.iconArtwork !== artwork;
+    if (artwork && !m.alternateSvg) {
+      const NS = 'http://www.w3.org/2000/svg';
+      m.alternateSvg = document.createElementNS(NS, 'svg');
+      m.alternateSvg.setAttribute('viewBox', '0 0 64 64');
+      m.alternateSvg.setAttribute('width', '100%');
+      m.alternateSvg.setAttribute('height', '100%');
+      m.alternateSvg.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;';
+      m.alternatePath = document.createElementNS(NS, 'path');
+      m.alternatePath.setAttribute('fill-rule', 'evenodd');
+      m.alternateSvg.appendChild(m.alternatePath);
+      m.icon.appendChild(m.alternateSvg);
+    }
+    if (m.alternateSvg) m.alternateSvg.style.display = artwork ? 'block' : 'none';
+    if (artworkChanged && m.alternatePath) m.alternatePath.setAttribute('d', artwork);
+    if (m.iconCiv !== civType || m.iconUrl !== symbol || artworkChanged) {
       const mask = symbol ? `url("${symbol}")` : 'none';
       m.icon.style.maskImage = mask;
       m.icon.style.webkitMaskImage = mask;
       m.iconCiv = civType;
       m.iconUrl = symbol;
+      m.iconArtwork = artwork;
     }
     const iconColor = ownerColors(owner).secondaryCss;
-    if (m.iconColor !== iconColor) {
-      m.icon.style.backgroundColor = iconColor;
+    if (m.iconColor !== iconColor || artworkChanged) {
+      m.icon.style.backgroundColor = artwork ? 'transparent' : iconColor;
+      if (m.alternatePath) m.alternatePath.setAttribute('fill', iconColor);
       m.iconColor = iconColor;
     }
-    m.icon.style.opacity = showCivIcons && symbol && iconSize >= 8 ? '1' : '0';
+    m.icon.style.opacity = showCivIcons && (symbol || artwork) && iconSize >= 8 ? '1' : '0';
     m.el.style.zIndex = '2';
     m.el.style.visibility = 'visible';
     m.op = 1;
@@ -9538,7 +10637,7 @@ function drawCountryLabelLayer(frame, vis) {
       m.el.style.webkitFontSmoothing = 'antialiased';
       m.el.style.textRendering = 'geometricPrecision';
       m.el.style.color = '#fff4d2';
-      m.el.style.webkitTextStroke = CS + 'px #111';
+      m.el.style.webkitTextStroke = (size * CS * 0.045) + 'px #111';
       m.el.style.textShadow = `0 0 ${CS * 3}px #000,0 ${CS}px ${CS * 2}px #000`;
       m.el.style.backgroundColor = 'transparent';
       m.el.style.borderRadius = '0';
@@ -9569,10 +10668,32 @@ function drawCountryLabelLayer(frame, vis) {
   }
 }
 // Each country's land tiles (majors and independent powers; seen ones only when vis is given).
+function countryIconsForFrame(frame, identities, seed) {
+  if (civIconLayout && civIconLayout.frame === frame && civIconLayout.identities === identities && civIconLayout.seed === seed) return civIconLayout.choices;
+  const civilizations = new Map(), neighbors = new Map();
+  for (const [owner, id] of identities) {
+    if (ownerMeta(owner).kind !== 'major') continue;
+    civilizations.set(owner, id[5]);
+    neighbors.set(owner, new Set());
+  }
+  for (const [index, value] of frame) {
+    const owner = (value >> 3) & 63;
+    if (!civilizations.has(owner) || isWaterTile(index)) continue;
+    for (const neighbor of neighborsByIndex[index] || []) {
+      const otherValue = frame.get(neighbor);
+      if (otherValue === undefined || isWaterTile(neighbor)) continue;
+      const other = (otherValue >> 3) & 63;
+      if (other !== owner && civilizations.has(other)) neighbors.get(owner).add(other);
+    }
+  }
+  const choices = countryIconAssignments(civilizations, neighbors, seed);
+  civIconLayout = { frame, identities, seed, choices };
+  return choices;
+}
 function countryTerritories(frame, vis) {
   const territories = new Map();
   for (const [i, v] of frame) {
-    if (!basePos[i] || (vis && vis[i] === 0) || isWaterTile(i)) continue;
+    if (!basePos[i] || (vis && !(vis[i] > 0)) || isWaterTile(i)) continue;
     const owner = (v >> 3) & 63;
     if (ownerMeta(owner).kind === 'village') continue;   // majors and independent powers (city-states) get country labels
     let tiles = territories.get(owner);
@@ -9581,11 +10702,35 @@ function countryTerritories(frame, vis) {
   }
   return territories;
 }
+function countryLabelComponents(frame, tiles, owner) {
+  const remaining = new Map(tiles.map(tile => [tile.index, tile])), visited = new Set(), groups = [];
+  while (remaining.size) {
+    const queue = [remaining.keys().next().value], visible = [];
+    let capital = false;
+    visited.add(queue[0]);
+    for (let cursor = 0; cursor < queue.length; cursor++) {
+      const index = queue[cursor], tile = remaining.get(index);
+      if (tile) { visible.push(tile); remaining.delete(index); }
+      if ((frame.get(index) & 7) === 4) capital = true;
+      // Traverse hidden owned land too: fog must not invent disconnected territories.
+      for (const neighbor of neighborsByIndex[index] || []) {
+        if (visited.has(neighbor)) continue;
+        const value = frame.get(neighbor);
+        if (value === undefined || ((value >> 3) & 63) !== owner || isWaterTile(neighbor)) continue;
+        visited.add(neighbor); queue.push(neighbor);
+      }
+    }
+    groups.push({ tiles: visible, capital });
+  }
+  groups.sort((a, b) => Number(b.capital) - Number(a.capital) || b.tiles.length - a.tiles.length);
+  return groups;
+}
 // Only colliding unqualified country names need geographic qualifiers.
-function majorCountryNames(frame, territories) {
-  const identity = identityForPos();
+function majorCountryNames(frame, territories, identity = identityForPos(), settlements = settlementsForPos(), eraKey = replayEraKey(), turn = pos, details = new Map()) {
   const settlementCounts = new Map(), capitals = new Map();
-  for (const [index, settlement] of settlementsForPos()) {
+  const regionalRoots = controlledCountryRegions(frame);
+  const facts = countryNamingFacts(frame, settlements, identity);
+  for (const [index, settlement] of settlements) {
     const value = frame.get(index);
     if (value === undefined) continue;
     const owner = (value >> 3) & 63;
@@ -9599,20 +10744,24 @@ function majorCountryNames(frame, territories) {
     const id = identity.get(owner);
     if (!id) continue;
     duplicateEntries.push({ owner, identity: id, cityCount: settlementCounts.get(owner) || 0,
-      continents: territoryContinents(tiles), capital: capitals.get(owner) });
+      continents: territoryContinents(tiles), capital: capitals.get(owner), geographicName: countryRegionName(tiles) });
   }
-  const duplicateContexts = duplicateCivContexts(duplicateEntries);
+  const duplicateContexts = duplicateCivContexts(duplicateEntries, eraKey);
   const names = new Map();
   for (const owner of territories.keys()) {
     if (ownerMeta(owner).kind !== 'major') continue;
     const id = identity.get(owner), civ = id && (id[1] || id[2]);
     if (!civ) continue;
     const capital = capitals.get(owner);
+    const detail = { identity: id, cityCount: settlementCounts.get(owner) || 0, capital, eraKey, owner,
+      duplicateContext: duplicateContexts.get(owner), regionalRoots: regionalRoots.get(owner) || [], facts: facts.get(owner) || {} };
     const text = mapLabelText(rememberCountryName(owner, id, settlementCounts.get(owner) || 0,
-      duplicateContexts.get(owner), replayEraKey(), capital ? capital.name : '', capital ? capital.population : undefined));
+      duplicateContexts.get(owner), eraKey, capital ? capital.name : '', capital ? capital.population : undefined,
+      detail.regionalRoots, { ...detail.facts, trace: choice => Object.assign(detail, choice) }));
     if (text) names.set(owner, text);
+    if (details) details.set(owner, detail);
   }
-  return names;
+  return uniqueCountryNames(names, details);
 }
 // The Population Panel's names for the major civilizations ('o' + owner -> text): the country name the map gives it with the fog
 // of war off, then in parentheses the one it goes by with the fog on (as the map labels it, or its entry in `fallbacks` when
@@ -9641,36 +10790,226 @@ function splitLabelLines(text) {
   }
   return best < 0 ? [s] : [s.slice(0, best), s.slice(best + 1)];
 }
-function setPlainLines(el, lines) {
+function setPlainLines(el, lines, capital = 0) {
   el.textContent = '';
-  for (const line of lines) {
+  for (const [index, line] of lines.entries()) {
     const row = document.createElement('div');
     row.style.cssText = 'white-space:nowrap;text-align:center;';
-    row.textContent = line;
+    if (capital && index === 0) {
+      row.style.cssText += 'display:flex;align-items:center;justify-content:center;';
+      const star = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      star.setAttribute('viewBox', '0 0 20 20'); star.setAttribute('role', 'img');
+      star.setAttribute('aria-label', capital === 2 ? 'Capital city' : 'Original capital');
+      star.style.cssText = 'width:1em;height:1em;flex:0 0 1em;margin-right:0.25em;overflow:visible;';
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', 'M10 1L12.8 6.7L19 7.6L14.5 12L15.6 18.2L10 15.3L4.4 18.2L5.5 12L1 7.6L7.2 6.7Z');
+      path.setAttribute('fill', capital === 2 ? 'currentColor' : 'none');
+      path.setAttribute('stroke', 'currentColor'); path.setAttribute('stroke-width', '1.4');
+      star.appendChild(path);
+      const text = document.createElement('span'); text.textContent = line;
+      row.appendChild(star); row.appendChild(text);
+    } else row.textContent = line;
     el.appendChild(row);
   }
 }
-function setArchedLines(el, lines, width, height, size) {
+function setArchedLines(el, lines, width, height, size, lineGap = size * 1.05) {
   // Coherent cannot reliably render SVG textPath. Bound HTML runs instead of recreating an element per glyph.
   el.textContent = '';
-  for (const line of lines) {
-    const row = document.createElement('div'), characters = Array.from(line);
-    const chunkSize = Math.max(1, Math.ceil(characters.length / 8));
-    const span = Math.min(width, characters.length * size * 0.68);
-    const arch = Math.min(size * 0.35, height * 0.12, span * 0.035);
-    row.style.cssText = `display:flex;justify-content:center;align-items:center;flex-shrink:0;width:100%;height:${size * 1.15}px;white-space:pre;text-shadow:none;-webkit-text-stroke:${size * 0.045}px #111;`;
-    for (let start = 0; start < characters.length; start += chunkSize) {
-      const chunk = characters.slice(start, start + chunkSize), t = (start + chunk.length / 2) / characters.length;
-      const angle = Math.atan2(-4 * arch * (1 - 2 * t), Math.max(1, span)) * 180 / Math.PI;
+  const rows = [];
+  for (const [lineIndex, line] of lines.entries()) {
+    const row = document.createElement('div');
+    const segments = /^[\x20-\u024f\u0300-\u036f]+$/.test(line) ? [] : line.match(/\S+\s*|\s+/g) || [''];
+    if (!segments.length) for (const character of line) {
+      if (/[\u0300-\u036f]/.test(character) && segments.length) segments[segments.length - 1] += character;
+      else segments.push(character);
+    }
+    const chunkSize = Math.max(1, Math.ceil(segments.length / 8));
+    row.style.cssText = `position:relative;display:flex;justify-content:center;align-items:center;flex-shrink:0;width:${width}px;height:${size * 1.15}px;overflow:visible;white-space:pre;text-align:center;letter-spacing:normal;font-kerning:normal;font-size:${size}px;line-height:${size * 1.15}px;text-shadow:none;-webkit-text-stroke:${size * 0.045}px #111;`;
+    if (lineIndex) row.style.marginTop = lineGap + 'px';
+    const runs = [];
+    for (let start = 0; start < segments.length; start += chunkSize) {
+      const chunk = segments.slice(start, start + chunkSize).join('');
       const run = document.createElement('span');
-      run.style.cssText = `display:block;flex:0 0 auto;white-space:pre;line-height:${size * 1.15}px;transform:translateY(${-4 * arch * t * (1 - t)}px) rotate(${angle}deg);transform-origin:center center;`;
-      run.textContent = chunk.join('');
+      run.style.cssText = `display:block;flex:0 0 auto;overflow:visible;white-space:pre;font-size:${size}px;line-height:${size * 1.15}px;transform-origin:center center;`;
+      run.textContent = chunk;
       row.appendChild(run);
+      runs.push(run);
     }
     el.appendChild(row);
+    rows.push(runs);
+  }
+  // Read all natural run widths before applying transforms; layout is cached with the label's text/scale key.
+  const measured = rows.map(runs => runs.map(run => run.offsetWidth || run.textContent.length * size * 0.68));
+  for (let line = 0; line < rows.length; line++) {
+    const span = measured[line].reduce((sum, value) => sum + value, 0);
+    const arch = Math.min(size * 0.65, height * 0.5, span * 0.08);
+    let offset = 0;
+    for (let i = 0; i < rows[line].length; i++) {
+      const t = span ? (offset + measured[line][i] / 2) / span : 0.5;
+      const angle = Math.atan2(-4 * arch * (1 - 2 * t), Math.max(1, span)) * 180 / Math.PI;
+      const transform = `translateY(${(-4 * arch * t * (1 - t)).toFixed(3)}px) rotate(${angle.toFixed(3)}deg)`;
+      rows[line][i].style.cssText += `transform:${transform};`;
+      offset += measured[line][i];
+    }
   }
 }
 const regionOutlineState = { path: null, geography: null, positions: null, vis: null, key: '' };
+const regionHoverState = { svg: null, paths: [], pointer: null, geography: null, positions: null, vis: null, region: null, key: '' };
+function hideRegionHover(clearPointer = false) {
+  if (regionHoverState.svg) regionHoverState.svg.style.display = 'none';
+  if (regionHoverState.arrow) hideTileArrow(regionHoverState.arrow);
+  if (clearPointer) regionHoverState.pointer = null;
+}
+function regionHoverGeometry(geography, regionId, vis, area, regionIds = [regionId], selectedTiles = null, batch = null) {
+  const selected = new Set(regionIds), tiles = new Set(), edges = [];
+  const candidates = batch?.tiles ? batch.tiles.map(index => [index, geography.regionForTile.get(index)]) : geography.regionForTile;
+  for (const [index, id] of candidates) {
+    if (selected.has(id) || selectedTiles?.has(index) || !basePos[index] || vis && (vis[index] || 0) === 0) continue;
+    const a = mapToScreen(basePos[index].x, basePos[index].y);
+    const b = mapToScreen(basePos[index].x + hexW, basePos[index].y + hexH);
+    if (b.x < area.x - 16 || a.x > area.x + area.w + 16 || b.y < area.y - 16 || a.y > area.y + area.h + 16) continue;
+    tiles.add(index);
+    if (batch?.visible) batch.visible.push(index);
+  }
+  for (const index of tiles) for (let direction = 0; direction < 6; direction++) {
+    const neighbor = (neighborsByIndex[index] || [])[direction];
+    if (tiles.has(neighbor) && Math.abs(basePos[index].x - basePos[neighbor].x) <= hexW * 1.6) continue;
+    const vertices = EDGE_VERTS[direction];
+    edges.push({ a: hexVert(index, vertices[0]), b: hexVert(index, vertices[1]) });
+  }
+  return connectedBoundaryPaths(edges, ([x, y]) => {
+    const point = mapToScreen(x, y);
+    return [point.x, point.y];
+  }, { x0: area.x - 16, y0: area.y - 16, x1: area.x + area.w + 16, y1: area.y + area.h + 16 }).join('');
+}
+function syncRegionHover(event = regionHoverState.pointer) {
+  const state = regionHoverState;
+  const picker = typeof civSwitchPicker !== 'undefined' && civSwitchPicker && civSwitchPicker.active;
+  const fromPicker = picker && civSwitchPicker.target !== null;
+  if (picker && !fromPicker) { hideRegionHover(); return; }
+  const view = els.regionView;
+  const panelRegion = view && view.visible && view.open ? view.selected ?? view.highlight : null;
+  const fromPanel = !fromPicker && panelRegion !== null && panelRegion !== undefined;
+  if (event) state.pointer = { clientX: event.clientX, clientY: event.clientY, target: event.target };
+  if (!mapVisible || !mapRoot || mapDrag || LeaderModelManager.isLeaderShowing || gameOverlayActive() ||
+      !fromPicker && !fromPanel && (!event || !showRegionBoundaries || overControlPanels(event.clientX, event.clientY) || popPanelContains(event.clientX, event.clientY))) {
+    hideRegionHover(); return;
+  }
+  const area = measureArea(), target = event && event.target;
+  if (!fromPicker && !fromPanel && (!pointInRect(event.clientX, event.clientY, area) ||
+      target && target !== document.body && target !== document.documentElement &&
+      !(target.hasAttribute && target.hasAttribute('data-pointer-passthrough')))) {
+    hideRegionHover(); return;
+  }
+  const geography = fromPicker ? civPickerGeography : window.AnthroproceniaGeography?.getMapData(), vis = fogMode ? visForPos() : null;
+  if (!geography || fogMode && !vis) { hideRegionHover(); return; }
+  let region = panelRegion, regionIds, selectedTiles = null;
+  if (fromPicker) {
+    region = 'civ:' + civSwitchPicker.target; regionIds = [];
+    selectedTiles = civPickerTiles.get(civSwitchPicker.target);
+  } else if (fromPanel) {
+    const row = els.regionView.rows.find(entry => entry.id === region);
+    if (!row) { hideRegionHover(); return; }
+    regionIds = row.regionIds;
+    const selected = new Set(regionIds);
+    selectedTiles = new Set(row.tileIndices || geography.regions.filter(entry => selected.has(entry.id)).flatMap(entry => entry.tiles));
+    if (![...selectedTiles].some(index => basePos[index] && (!vis || (vis[index] || 0) !== 0))) { hideRegionHover(); return; }
+  } else {
+    const index = hexAt(event.clientX, event.clientY);
+    region = geography.regionForTile.get(index);
+    if (region === undefined || vis && (vis[index] || 0) === 0) { hideRegionHover(); return; }
+    regionIds = [region];
+  }
+  const key = `${peopleCameraKey()}|${pos}|${fogMode}|${colShift}|${hexW}|${hexH}|${area.x}|${area.y}|${area.w}|${area.h}|${JSON.stringify(regionIds)}`;
+  if (state.geography !== geography || state.positions !== basePos || state.vis !== vis || state.region !== region || state.key !== key) {
+    const visible = [];
+    const path = regionHoverGeometry(geography, region, vis, area, regionIds, selectedTiles, { visible });
+    state.geography = geography; state.positions = basePos; state.vis = vis; state.region = region; state.key = key;
+    const limited = path.length > 65536 || (path.match(/[MLZ]/g) || []).length > 2048;
+    const fills = [], strokes = [];
+    if (!limited) { fills.push(path); strokes.push(path); }
+    else {
+      // Fill disjoint tile batches; splitting an even-odd contour itself would fill its selected-region holes.
+      for (let start = 0; start < visible.length; start += 128) {
+        fills.push(regionHoverGeometry(geography, region, vis, area, regionIds, selectedTiles, { tiles: visible.slice(start, start + 128) }));
+      }
+      let chunk = '', cursor = '', origin = '', count = 0;
+      for (const command of path.match(/[MLZ][^MLZ]*/g) || []) {
+        const type = command[0], coordinates = command.slice(1);
+        const segment = type === 'Z' ? 'L' + origin : command;
+        if (count >= 1000 || chunk.length + segment.length > 40000) {
+          strokes.push(chunk); chunk = cursor ? 'M' + cursor : ''; count = cursor ? 1 : 0;
+        }
+        chunk += segment; count++;
+        if (type === 'M') origin = coordinates;
+        cursor = type === 'Z' ? origin : coordinates;
+      }
+      if (chunk) strokes.push(chunk);
+    }
+    if (!state.svg) {
+      const ns = 'http://www.w3.org/2000/svg', svg = document.createElementNS(ns, 'svg');
+      svg.id = 'anthroprocenia-region-hover'; svg.classList.add('anthro-map-render-layer');
+      svg.style.cssText = `position:fixed;pointer-events:none;overflow:hidden;display:none;z-index:${100018 - MAP_DEPTH};`;
+      svg._anthroBase = 100018;
+      svg.setAttribute('aria-hidden', 'true');
+      document.body.appendChild(svg); state.svg = svg;
+    }
+    const shapes = fills.map(d => ({ d, width: 0, opacity: 0.72 }));
+    for (const d of strokes) for (const [width, opacity] of [[12, 0.08], [8, 0.12], [4, 0.18]]) shapes.push({ d, width, opacity });
+    for (let i = 0; i < shapes.length; i++) {
+      const { d, width, opacity } = shapes[i];
+      let layer = state.paths[i];
+      if (!layer) {
+        layer = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        state.svg.appendChild(layer); state.paths.push(layer);
+      }
+      layer.setAttribute('fill', width ? 'none' : '#292b2e'); layer.setAttribute('fill-rule', 'evenodd');
+      layer.setAttribute('stroke', width ? '#292b2e' : 'none'); layer.setAttribute('stroke-width', String(width));
+      layer.setAttribute('opacity', String(opacity)); layer.setAttribute('stroke-linejoin', 'round');
+      layer.setAttribute('d', d); layer.style.display = '';
+    }
+    for (let i = shapes.length; i < state.paths.length; i++) { state.paths[i].setAttribute('d', ''); state.paths[i].style.display = 'none'; }
+    sizeScreenSvg(state.svg);
+    state.svg.style.clip = `rect(${area.y}px, ${area.x + area.w}px, ${area.y + area.h}px, ${area.x}px)`;
+  }
+  if (state.svg) {
+    state.svg.style.zIndex = String(100018 - (picker ? 0 : MAP_DEPTH));
+    state.svg.style.display = 'block';
+  }
+  if (fromPanel) updateRegionSelectionArrow(geography, region, vis, area, regionIds, selectedTiles);
+  else if (state.arrow) hideTileArrow(state.arrow);
+}
+function updateRegionSelectionArrow(geography, regionId, vis, area, regionIds = [regionId], selectedTiles = null) {
+  const state = regionHoverState, selected = new Set(regionIds), records = geography.regions.filter(region => selected.has(region.id));
+  const hide = () => { if (state.arrow) hideTileArrow(state.arrow); };
+  const tiles = selectedTiles || new Set(records.flatMap(record => record.tiles));
+  if (!tiles.size) { hide(); return; }
+  let target = null, distance = Infinity;
+  const cx = area.x + area.w / 2, cy = area.y + area.h / 2, period = layoutCols * hexW * viewZoom;
+  for (const index of tiles) {
+    if (!basePos[index] || vis && (vis[index] || 0) === 0) continue;
+    const point = mapToScreen(basePos[index].x + hexW / 2, basePos[index].y + hexH / 2);
+    const rx = hexW * viewZoom / 2, ry = hexH * viewZoom * viewAspectY / 2;
+    if (point.x + rx >= area.x && point.x - rx <= area.x + area.w && point.y + ry >= area.y && point.y - ry <= area.y + area.h) {
+      hide(); return;   // Any visible part of a multipart region makes the edge arrow unnecessary.
+    }
+    if (period > area.w) {
+      const wrapped = point.x + Math.round((cx - point.x) / period) * period;
+      if (wrapped < area.x || wrapped > area.x + area.w) point.x = wrapped;
+    }
+    const d = (point.x - cx) ** 2 + (point.y - cy) ** 2;
+    if (d < distance) { target = point; distance = d; }
+  }
+  if (!target) { hide(); return; }
+  const controls = arrowControlRects(), available = (x, y) => indicatorPointAvailable(x, y, area, controls);
+  const placement = selectionArrowPlacement(target, area, ps(22), available);
+  if (!placement) { hide(); return; }
+  if (!state.arrow) state.arrow = makeTileArrow('region');
+  const el = ensureTileArrow(state.arrow);
+  el.style.left = placement.x + 'px'; el.style.top = placement.y + 'px';
+  el.style.transform = `translate(-50%,-50%) rotate(${placement.angle}deg)`;
+  el.style.display = 'block';
+}
 function drawRegionBoundaries(geography, vis) {
   const state = regionOutlineState;
   if (!showRegionBoundaries || !geography) {
@@ -9687,9 +11026,9 @@ function drawRegionBoundaries(geography, vis) {
     const edges = [];
     for (const region of geography.regions) for (const edge of region.boundary || []) {
       const { index, direction } = edge, neighbor = (neighborsByIndex[index] || [])[direction];
-      if (!basePos[index] || vis && vis[index] === 0) continue;
+      if (!basePos[index] || vis && !(vis[index] > 0)) continue;
       const other = geography.regionForTile.get(neighbor);
-      if (other !== undefined && other !== region.id && neighbor < index && (!vis || vis[neighbor] !== 0)) continue;
+      if (other !== undefined && other !== region.id && neighbor < index && (!vis || vis[neighbor] > 0)) continue;
       const vertices = EDGE_VERTS[direction];
       edges.push({ a: hexVert(index, vertices[0]), b: hexVert(index, vertices[1]) });
     }
@@ -9892,7 +11231,8 @@ function drawSettlementLabelLayer(vis, frame) {
   const entries = [], usedNames = new Set();
   const settlements = settlementsForPos();
   if (showSettlements) for (const [index, settlement] of settlements) {
-    entries.push({ index, name: mapLabelText(settlement[0]) || 'Settlement', row: 0, settlement: true });
+    const capital = frame.has(index) && (frame.get(index) & 7) === 4 ? 2 : /Original Capital/i.test(settlement[2] || '') ? 1 : 0;
+    entries.push({ index, name: mapLabelText(settlement[0]) || 'Settlement', row: 0, settlement: true, capital });
   }
   // An improvement is named for the nearest settlement of its owner ("The Uruk Mill"), falling back to any settlement.
   const owningSettlementName = index => {
@@ -9932,8 +11272,8 @@ function drawSettlementLabelLayer(vis, frame) {
       }
     }
   }
-  for (const { index, name, row, dot, below, settlement } of entries) {
-    if (!basePos[index] || (vis && vis[index] === 0)) continue;
+  for (const { index, name, row, dot, below, settlement, capital = 0 } of entries) {
+    if (!basePos[index] || (vis && !(vis[index] > 0))) continue;
     if (!settlement) {
       // Constructible labels are laid out in screen pixels and counter-scaled by the map's zoom, so the text is
       // drawn at its real size (crisp at any zoom) and shrinks as the player zooms in (see refreshSiteLabels).
@@ -9951,7 +11291,7 @@ function drawSettlementLabelLayer(vis, frame) {
     const lines = name.length > 15 ? splitLabelLines(name) : [name];
     const longest = Math.max(...lines.map(l => l.length));
     const textW = longest * fontSize * 0.62 + 6;
-    const width = Math.max(hexW * 2, textW + 4);
+    const width = Math.max(hexW * 2, textW + 4 + (capital ? fontSize * 1.25 : 0));
     const lineH = fontSize + 3;
     const height = lines.length * lineH + 3;
     const renderScale = 1 / (3 * labelTier());
@@ -9975,8 +11315,8 @@ function drawSettlementLabelLayer(vis, frame) {
     slot.el.style.flexDirection = 'column';
     slot.el.style.transformOrigin = 'top left';
     slot.el.style.transform = `scale(${renderScale})`;
-    const textKey = lines.join('\n') + '|' + renderScale;
-    if (slot.text !== textKey) { setPlainLines(slot.el, lines); slot.text = textKey; }
+    const textKey = lines.join('\n') + '|' + renderScale + '|' + capital;
+    if (slot.text !== textKey) { setPlainLines(slot.el, lines, capital); slot.text = textKey; }
     if (!slot.visible) { slot.el.style.opacity = '1'; slot.visible = true; }
   }
   for (let i = n; i < settlementLabelSlots.length; i++) {
@@ -10017,7 +11357,7 @@ function fitCountryLabel(tiles, text, geometry, placed, allowOverflow = false) {
   const angles = geometry.angle === 0 ? [0] : [geometry.angle, 0];
   const make = (x, y, angle, size, lines) => {
     const longest = Math.max(1, ...lines.map(l => l.length));
-    return { x, y, angle, size, lines, width: longest * size * 0.68 + 4, height: size * (1.4 + 1.1 * (lines.length - 1)) };
+    return { x, y, angle, size, lines, width: longest * size * 0.68 + 4, height: size * (1.4 + 2.1 * (lines.length - 1)) };
   };
   const clear = box => !placed.some(other => labelBoxesOverlap({ x: box.x, y: box.y, w: box.width, h: box.height, angle: box.angle }, other));
   const contained = box => {
@@ -10119,6 +11459,8 @@ function distanceToSegment(x, y, ax, ay, bx, by) {
   return Math.sqrt(px * px + py * py);
 }
 const CIV_ENDONYMS = {
+  ANTHROBRITONS: 'Britannia', ANTHROSUEBI: 'Suebia', ANTHROXIONGNU: 'GoTurk', ANTHROCARALANS: 'Caral',
+  ANTHROWAGADU: 'Wagadu', ANTHROJAVANESE: 'Java', ANTHROSLAVIC: 'Slavia', ANTHROTAINO: 'Taino',
   AKSUM: 'Aksum', AKSUMITE: 'Aksum',
   EGYPT: 'Kemet', EGYPTIAN: 'Kemet',
   GREECE: 'Hellas', GREEK: 'Hellas',
@@ -10224,13 +11566,21 @@ function nativeCivName(identity, eraKey = replayEraKey()) {
   if (eraName) return eraName.name;
   return CIV_ENDONYMS[normalizedCivKey(civType)] || CIV_ENDONYMS[normalizedCivKey(civ)] || civ;
 }
-// Culture-specific names for a civilization under Despotism or Oligarchy, by size: one city, two or three, four or more.
+// Culture-specific names: historical dynastic/grand forms use an eight-settlement large tier; other polities use four.
 // {adj} is the civ's adjective (location-qualified when two players share a civ), {plural} its collective form,
 // {native} the civ's own name and {capital} the name of its capital. Civs not listed use DEFAULT_POLITY_TEMPLATES.
 const DEFAULT_POLITY_TEMPLATES = ['The {plural}', 'The {adj} Kingdom', 'The {adj} Empire'];
 const CIV_POLITY_TEMPLATES = {
+  ANTHROBRITONS: ['Britannia', 'The {adj} League', 'The {adj} Confederation'],
+  ANTHROSUEBI: ['Suebia', 'The {adj} Kingdom', 'The {adj} Confederation'],
+  ANTHROXIONGNU: ['GoTurks', 'The Gokturk Confederation', 'The Gokturk Empire'],
+  ANTHROCARALANS: ['Caral', 'The {adj} Assembly', 'The {adj} League'],
+  ANTHROWAGADU: ['Wagadu', 'The {adj} Kingdom', 'The {adj} Empire'],
+  ANTHROJAVANESE: ['Java', 'The {adj} Kingdom', 'The {adj} Mandala'],
+  ANTHROSLAVIC: ['Slavia', 'The {adj} League', 'The {adj} Confederation'],
+  ANTHROTAINO: ['Taino', 'The {adj} Chiefdom', 'The {adj} Confederation'],
   ROME: ['{capital}', 'The {adj} Principate', 'The {adj} Empire'],
-  HAN: ['Han', 'The Han Dynasty', 'Great Han'],
+  HAN: ['Han', ['Han', 'The Han Dynasty'], ['Great Han', 'The Han Dynasty', 'The Han Empire']],
   PERSIA: ['The {plural}', 'The {adj} Dynasty', 'The {adj} Empire'],
   EGYPT: ['{native}', 'The {adj} Kingdom', 'The {adj} Empire'],
   GREECE: ['{capital}', 'The {adj} League', 'The {adj} Empire'],
@@ -10245,15 +11595,15 @@ const CIV_POLITY_TEMPLATES = {
   GAUL: ['The Gauls', 'The {adj} Tribes', 'The {adj} Confederation'],
   ABBASID: ['The {plural}', 'The {adj} Emirate', 'The {adj} Caliphate'],
   CHOLA: ['Chola', 'The {adj} Kingdom', 'The {adj} Empire'],
-  MING: ['Da Ming', 'The Ming Dynasty', 'Great Ming'],
-  QING: ['Qing', 'The Qing Dynasty', 'The Great Qing'],
+  MING: ['Ming', ['Ming', 'The Ming Dynasty'], ['Great Ming', 'Da Ming', 'The Ming Empire']],
+  QING: ['Qing', ['Qing', 'The Qing Dynasty'], ['The Great Qing', 'Da Qing', 'The Qing Empire']],
   SONGHAI: ['{native}', 'The {adj} Kingdom', 'The {adj} Empire'],
   MONGOLIA: ['The Mongols', 'The {adj} Khanate', 'The {adj} Empire'],
   NORMAN: ['The Normans', 'The {adj} Duchy', 'The {adj} Kingdom'],
   SPAIN: ['Spain', 'The {adj} Crown', 'The {adj} Empire'],
   INCA: ['The {plural}', 'The {adj} Kingdom', 'Tawantinsuyu'],
   SHAWNEE: ['The {plural}', 'The {adj} Nation', 'The {adj} Confederacy'],
-  BUGANDA: ['Buganda', 'The Kingdom of Buganda', 'The Greater Kingdom of Buganda'],
+  BUGANDA: ['Buganda', 'The Kingdom of Buganda', 'The Kingdom of Buganda'],
   HAWAII: ['Hawaii', 'The {adj} Chiefdom', 'The Kingdom of Hawaii'],
   MAJAPAHIT: ['Majapahit', 'The {adj} Kingdom', 'The {adj} Empire'],
   TONGA: ['Tonga', 'The {adj} Chiefdom', 'The {adj} Thalassocracy'],
@@ -10273,9 +11623,9 @@ const CIV_POLITY_TEMPLATES = {
   OTTOMANS: ['The {plural}', 'The {adj} Beylik', 'The {adj} Empire'],
   QAJAR: ['The {plural}', 'The {adj} Dynasty', 'The {adj} Empire'],
   SIAM: ['Siam', 'The {adj} Kingdom', 'The {adj} Empire'],
-  JOSEON: ['Joseon', 'The {adj} Dynasty', 'Great Joseon'],
-  GORYEO: ['Goryeo', 'The {adj} Dynasty', 'Great Goryeo'],
-  SILLA: ['Silla', 'The {adj} Kingdom', 'Unified Silla'],
+  JOSEON: ['Joseon', ['The Kingdom of Joseon', 'The Joseon Dynasty'], ['Joseon', 'The Kingdom of Joseon', 'The Joseon Dynasty']],
+  GORYEO: ['Goryeo', ['The Kingdom of Goryeo', 'The Goryeo Dynasty'], ['Goryeo', 'The Kingdom of Goryeo', 'The Goryeo Dynasty']],
+  SILLA: ['Silla', ['Silla', 'The Kingdom of Silla'], ['Silla', 'The Kingdom of Silla', 'The Silla Kingdom']],
   ICELAND: ['Iceland', 'The {adj} Althing', 'The {adj} Commonwealth'],
   DAIVIET: ['Dai Viet', 'The {adj} Kingdom', 'The {adj} Empire'],
   BULGARIA: ['Bulgaria', 'The {adj} Khanate', 'The {adj} Tsardom'],
@@ -10294,7 +11644,7 @@ const CIV_PREGOV_TEMPLATES = {
   KHMER: 'The {loc}Khmer Chiefdoms',
   MAURYA: 'The {loc}Magadhan Janapadas',
   MAYA: 'The {loc}Maya City-States',
-  MISSISSIPPIAN: 'The {loc}Mississippian Chiefdoms',
+  MISSISSIPPIAN: 'The {adj} Chiefdoms',
   CARTHAGE: 'The {loc}Punic Colonies',
   ASSYRIA: 'The {loc}Assyrian City-States',
   BABYLON: 'The {loc}Babylonian City-States',
@@ -10407,6 +11757,150 @@ const CIV_COUNTRY_ROOTS = {
   NETHERLANDS: [['Nederland', 'Dutch'], ['Netherlands', 'Netherlandish']],
   PORTUGAL: [['Portugal', 'Portuguese'], ['Lusitania', 'Lusitanian']],
 };
+const EXTRA_COUNTRY_ROOTS = {
+  ROME: [['Ausonia', 'Ausonian'], ['Latinia', 'Latin']],
+  GREECE: [['Achaia', 'Achaean'], ['Aegea', 'Aegean']],
+  EGYPT: [['Ta-Mery', 'Egyptian'], ['Tawy', 'Egyptian']],
+  PERSIA: [['Eranshahr', 'Iranian'], ['Aryana', 'Aryan']],
+  HAN: [['Shenzhou', 'Chinese'], ['Zhonghua', 'Chinese']],
+  AKSUM: [['Habasha', 'Habesha'], ['Dmt', 'Aksumite']],
+  KHMER: [['Kambujanagara', 'Khmer'], ['Nokor Khmer', 'Khmer']],
+  MAURYA: [['Jambudvipa', 'Indian'], ['Aryavarta', 'Aryavartan']],
+  MAYA: [['Yucatan', 'Yucatecan'], ['Peten', 'Peten']],
+  MISSISSIPPIAN: [['Cahokia Lands', 'Cahokian'], ['Mound Country', 'Mississippian']],
+  CARTHAGE: [['Carthago', 'Punic'], ['Africa Punica', 'Punic']],
+  ASSYRIA: [['Assyria', 'Assyrian'], ['Mat Ashshur', 'Assyrian']],
+  BABYLON: [['Karduniash', 'Babylonian'], ['Sumer-Akkad', 'Babylonian']],
+  GAUL: [['Celtica', 'Celtic'], ['Gallia Celtica', 'Gallic']],
+  ABBASID: [['Abbasiyya', 'Abbasid'], ['al-Iraq', 'Iraqi']],
+  CHOLA: [['Tamilakam', 'Tamil'], ['Choladesa', 'Chola']],
+  MING: [['Zhonghua', 'Chinese'], ['Shenzhou', 'Chinese']],
+  QING: [['Manchuria', 'Manchu'], ['Zhonghua', 'Chinese']],
+  SONGHAI: [['Kawkaw', 'Songhai'], ['Dendi', 'Dendi']],
+  MONGOLIA: [['Mongolistan', 'Mongolian'], ['Mongol Oron', 'Mongol']],
+  NORMAN: [['Neustria', 'Neustrian'], ['Normannia', 'Norman']],
+  SPAIN: [['Iberia', 'Iberian'], ['Castilla', 'Castilian']],
+  INCA: [['Qullasuyu', 'Andean'], ['Intipampa', 'Inca']],
+  SHAWNEE: [['Shawano', 'Shawnee'], ['Shawanwa', 'Shawnee']],
+  BUGANDA: [['Buganda Lands', 'Ganda'], ['Ganda Country', 'Ganda']],
+  HAWAII: [['Hawaii Nei', 'Hawaiian'], ['Mokupuni', 'Hawaiian']],
+  MAJAPAHIT: [['Javadvipa', 'Javanese'], ['Yawadwipa', 'Javanese']],
+  TONGA: [['Puleanga Tonga', 'Tongan'], ['Friendly Islands', 'Tongan']],
+  AMERICA: [['Columbia', 'Columbian'], ['Columbian Lands', 'American']],
+  FRANCE: [['Gallia', 'Gallic'], ['La France', 'French']],
+  GREATBRITAIN: [['Albion', 'Albionic'], ['Prydain', 'Britannic']],
+  ENGLAND: [['Englaland', 'English'], ['Angleland', 'Anglian']],
+  PRUSSIA: [['Borussia', 'Borussian'], ['Brandenburg', 'Brandenburgian']],
+  RUSSIA: [['Ruthenia', 'Ruthenian'], ['Muscovy', 'Muscovite']],
+  JAPAN: [['Yamato', 'Yamato'], ['Wa', 'Japanese']],
+  MEXICO: [['Mexihco', 'Mexican'], ['Aztlan', 'Aztec']],
+  MUGHAL: [['Mughalistan', 'Mughal'], ['Hindustan Lands', 'Hindustani']],
+  NEPAL: [['Gorkha', 'Gorkhali'], ['Himavat', 'Himalayan']],
+  OTTOMANS: [['Osmaneli', 'Ottoman'], ['Rum', 'Rumi']],
+  QAJAR: [['Eranshahr', 'Iranian'], ['Persia', 'Persian']],
+  SIAM: [['Thailand', 'Thai'], ['Mueang Thai', 'Thai']],
+  KOREA: [['Samhan', 'Korean'], ['Haedong', 'Korean']],
+  JOSEON: [['Samhan', 'Korean'], ['Haedong', 'Korean']],
+  GORYEO: [['Haedong', 'Korean'], ['Samhan', 'Korean']],
+  SILLA: [['Gyerim', 'Sillan'], ['Saro', 'Sillan']],
+  ICELAND: [['Thule', 'Icelandic'], ['Islandia', 'Icelandic']],
+  DAIVIET: [['Van Lang', 'Viet'], ['Au Lac', 'Viet']],
+  BULGARIA: [['Balgariya', 'Bulgarian'], ['Moesia', 'Moesian']],
+  POLAND: [['Polonia', 'Polish'], ['Lechia', 'Lechitic']],
+  INDONESIA: [['Insulindia', 'Indonesian'], ['Dwipantara', 'Indonesian']],
+  BRAZIL: [['Terra Brasilis', 'Brazilian'], ['Pindorama', 'Brazilian']],
+  SWEDEN: [['Svealand', 'Swedish'], ['Svitjod', 'Swedish']],
+  NETHERLANDS: [['Batavia', 'Batavian'], ['Low Countries', 'Dutch']],
+  PORTUGAL: [['Portucale', 'Portuguese'], ['Lusitania Lands', 'Lusitanian']],
+};
+for (const [civ, roots] of Object.entries(EXTRA_COUNTRY_ROOTS)) CIV_COUNTRY_ROOTS[civ].push(...roots);
+const CAPITAL_COUNTRY_ROOTS = {
+  ROME: [['Ravenna', 'Ravennan'], ['Antium', 'Antian']],
+  GREECE: [['Corinth', 'Corinthian'], ['Syracuse', 'Syracusan']],
+  EGYPT: [['Memphis', 'Memphite'], ['Waset', 'Theban']],
+  KHMER: [['Angkor', 'Angkorian'], ['Yasodharapura', 'Angkorian']],
+  MAURYA: [['Pataliputra', 'Pataliputran'], ['Taxila', 'Taxilan']],
+  FRANCE: [['Paris', 'Parisian'], ['Orleans', 'Orleanais']],
+  JAPAN: [['Kyoto', 'Kyoto'], ['Edo', 'Edo']],
+  SIAM: [['Ayutthaya', 'Ayutthayan'], ['Sukhothai', 'Sukhothai']],
+  MONGOLIA: [['Karakorum', 'Karakorum']],
+};
+const COUNTRY_NOUNS = { oligarchy: 'League', despotism: 'Dominion', imperial: 'Empire', monarchy: 'Kingdom',
+  republic: 'Republic', theocracy: 'Theocracy', communal: 'Commune', authoritarian: 'State' };
+const COUNTRY_CONTEXT_RULES = [
+  { id: 'religion', category: 'Religion', priority: 3, description: 'Theocracy with a recorded founded or majority religion',
+    matches: context => context.family === 'theocracy' && !!context.religion,
+    templates: ['The {religion} Covenant of {native}', 'The {religion} Sanctuary of {native}'] },
+  { id: 'islands', category: 'Geography', priority: 4, description: 'At least 75% of owned tiles belong to named islands',
+    matches: context => context.islandShare >= 0.75,
+    templates: ['The {adj} Maritime {noun}', 'The {adj} Oceanic {noun}'] },
+  { id: 'mountains', category: 'Geography', priority: 5, description: 'At least 35% of owned tiles are mountains',
+    matches: context => context.mountainShare >= 0.35,
+    templates: ['The {adj} Highland {noun}', 'The {adj} Alpine {noun}'] },
+  { id: 'population', category: 'Population', priority: 6, description: 'At least four settlements and 40 total settlement citizens',
+    matches: context => context.cityCount >= 4 && context.citizens >= 40,
+    templates: ['The {adj} Metropolitan {noun}', 'The {adj} Civic {noun}'] },
+];
+function countryNamingFacts(frame, settlements, identities) {
+  const geography = window.AnthroproceniaGeography?.getMapData();
+  const islands = geography ? new Set(geography.regions.filter(region => region.island).flatMap(region => region.tiles)) : null;
+  const facts = new Map();
+  const ensure = owner => {
+    if (!facts.has(owner)) {
+      const identity = identities.get(owner);
+      facts.set(owner, { citizens: 0, religion: String(identity?.[9] || identity?.[10] || '').split('|')[0].trim(),
+        tiles: 0, islands: 0, mountains: 0, islandShare: null, mountainShare: null });
+    }
+    return facts.get(owner);
+  };
+  for (const [index, value] of frame) {
+    const entry = ensure((value >> 3) & 63); entry.tiles++;
+    if (islands?.has(index)) entry.islands++;
+    if (terrain?.[index] === 2) entry.mountains++;
+  }
+  for (const [index, settlement] of settlements) if (frame.has(index)) ensure((frame.get(index) >> 3) & 63).citizens += Number(settlement[1]) || 0;
+  for (const entry of facts.values()) if (entry.tiles) {
+    if (islands) entry.islandShare = entry.islands / entry.tiles;
+    if (terrain) entry.mountainShare = entry.mountains / entry.tiles;
+  }
+  return facts;
+}
+function uniqueCountryNames(names, details = null) {
+  const key = name => name.toLowerCase().replace(/^the\s+/, '').replace(/\s+/g, ' ').trim();
+  const reserved = new Set([...names.values()].map(key)), used = new Set(), result = new Map();
+  for (const [owner, name] of [...names].sort((a, b) => a[0] - b[0])) {
+    let text = name;
+    if (used.has(key(text))) {
+      const detail = details?.get(owner), context = detail?.duplicateContext;
+      const qualifiers = [context?.region, context?.continentName, detail?.capital?.name, detail?.regionalRoots?.[0]].filter(Boolean);
+      let candidate = qualifiers.map(qualifier => {
+        const extra = normalizeCountryName(`${name} ${qualifier}`).slice(name.length).trim();
+        return normalizeCountryName(name.replace(/^(The\s+)?/i, (match, article) => `${article || ''}${extra} `));
+      })
+        .find(value => !reserved.has(key(value)) && !used.has(key(value)));
+      if (!candidate) {
+        let suffix = owner + 1;
+        do { candidate = `${name} (${suffix++})`; } while (reserved.has(key(candidate)) || used.has(key(candidate)));
+      }
+      text = candidate;
+    }
+    used.add(key(text)); result.set(owner, text);
+  }
+  return result;
+}
+function shortCountryLabels(names, details) {
+  const result = new Map(names);
+  for (const [owner, name] of names) {
+    const base = String(details.get(owner)?.base || '').trim();
+    if (!base || /\s/.test(base)) continue;
+    const word = base.toLowerCase();
+    const ambiguous = [...names].some(([other, full]) => other !== owner &&
+      (String(details.get(other)?.base || '').toLowerCase() === word ||
+        full.toLowerCase().split(/[\s,().:;!?/]+/).includes(word)));
+    if (!ambiguous) result.set(owner, base);
+  }
+  return result;
+}
 const CIV_COUNTRY_ROOT_ALIASES = {
   ROMAN: 'ROME', GREEK: 'GREECE', EGYPTIAN: 'EGYPT', PERSIAN: 'PERSIA',
   AKSUMITE: 'AKSUM', MAYAN: 'MAYA', CARTHAGINIAN: 'CARTHAGE', ASSYRIAN: 'ASSYRIA',
@@ -10478,6 +11972,85 @@ function cityAdjective(name) {
 function fillPolityTemplate(template, values) {
   return template.replace(/\{(\w+)\}/g, (match, key) => values[key] || '').replace(/\s{2,}/g, ' ').trim();
 }
+const COUNTRY_WORD_ROOTS = (() => {
+  const roots = new Map();
+  for (const [native, adjective] of [...Object.values(CIV_COUNTRY_ROOTS), ...Object.values(CAPITAL_COUNTRY_ROOTS)].flat()) {
+    if (/^[a-z]+$/i.test(native) && native.slice(0, 3).toLowerCase() === adjective.slice(0, 3).toLowerCase()) {
+      roots.set(native.toLowerCase(), adjective.toLowerCase());
+      roots.set(adjective.toLowerCase(), adjective.toLowerCase());
+    }
+  }
+  for (const family of [
+    'roman rome roma romans',
+    'gaul gauls gallic gaulish',
+    'greek greeks greece',
+    'empire empires imperial imperium imperialist imperialists imperialism',
+    'republic republics republican republicans republicanism',
+    'federal federation federations federated federating federalist federalists federalism',
+    'confederacy confederacies confederation confederations confederate confederates confederated confederating',
+    'monarchy monarchies monarch monarchs monarchic monarchical',
+    'autocracy autocracies autocrat autocrats autocratic',
+    'oligarchy oligarchies oligarch oligarchs oligarchic oligarchical',
+    'theocracy theocracies theocrat theocrats theocratic',
+    'despot despotism despots despotic',
+    'kingdom kingdoms king kings kingly kingship',
+    'tribe tribes tribal tribally',
+    'nation nations national nationals nationalist nationalists nationalism nationality nationalities',
+    'commune communes communal communally',
+    'union unions unite unites united uniting unity unify unifies unified unifying',
+    'alliance alliances ally allies allied allying',
+    'crown crowns crowned crowning',
+    'patriciate patriciates patrician patricians',
+    'chiefdom chiefdoms chief chiefs chiefly',
+    'clan clans clannish',
+    'council councils conciliar councillor councillors councilor councilors',
+    'league leagues leagued leaguing',
+    'assembly assemblies assemble assembles assembled assembling',
+    'dynasty dynasties dynast dynasts dynastic',
+    'hegemony hegemonies hegemon hegemons hegemonic',
+    'principate principates principality principalities prince princes princely',
+    'duchy duchies duke dukes ducal',
+    'caliphate caliphates caliph caliphs caliphal',
+    'sultanate sultanates sultan sultans sultanic',
+    'khanate khanates khan khans',
+    'authority authorities authoritarian authoritarians authoritarianism authoritative',
+    'directorate directorates director directors directorial',
+    'cooperative cooperatives cooperate cooperates cooperated cooperating cooperation',
+    'covenant covenants covenantal covenanted',
+    'hierocracy hierocracies hierocrat hierocrats hierocratic',
+    'ecclesiarchy ecclesiarchies ecclesiarch ecclesiarchs ecclesiarchic ecclesiarchical',
+    'sovereign sovereigns sovereignty',
+    'royal royals royalty',
+    'great greater greatest',
+    'grand grander grandest grandeur',
+    'high higher highest',
+    'free freer freest freedom freed freeing',
+    'holy holier holiest holiness',
+    'north northern northerly northward northwards',
+    'south southern southerly southward southwards',
+    'east eastern easterly eastward eastwards',
+    'west western westerly westward westwards',
+    'charter charters chartered chartering',
+    'associate associates associated associating association associations',
+    'consolidate consolidates consolidated consolidating consolidation',
+    'concord concordant concordance',
+    'civic civil civilian civilians civilly',
+    'war wars warred warring wartime',
+  ]) {
+    const words = family.split(' ');
+    for (const word of words) roots.set(word, words[0]);
+  }
+  return roots;
+})();
+function countryWordRoot(word, roots = COUNTRY_WORD_ROOTS) {
+  const lower = word.toLowerCase().replace(/['\u2019]s?$/, '');
+  if (roots.has(lower)) return roots.get(lower);
+  if (!/^[a-z]{4,}$/.test(lower)) return lower;
+  const singular = /[^aeiou]ies$/.test(lower) ? lower.slice(0, -3) + 'y'
+    : /(?:s|x|z|ch|sh)es$/.test(lower) ? lower.slice(0, -2)
+      : /s$/.test(lower) && !/(?:ss|us|is)$/.test(lower) ? lower.slice(0, -1) : lower;
+  return roots.get(singular) || singular;
+}
 function normalizeCountryName(name) {
   let label = String(name || '').replace(/\s+/g, ' ').trim();
   label = label.replace(/\bConfederacies\b/gi, 'Confederacy');
@@ -10494,26 +12067,69 @@ function normalizeCountryName(name) {
     suffix => (suffix.match(/\b(?:Classical|Democratic|Federal|Constitutional)\s+Republic\b/i) || ['Republic'])[0]);
   label = label.replace(/\b(Empire|Chiefdom|League|Union|Nation|Federation|State|Council|Khanate|Sultanate|Caliphate|Principate)(s?)(?:\s+\1s?\b)+$/gi, '$1$2');
   label = label.replace(/\b(Dynasty|Dynasties)(?:\s+\1\b)+$/gi, '$1');
-  return label.replace(/^((?:The\s+)?(Kingdom|Republic|Empire|Confederacy|Confederation)\s+of\s+.+?)\s+\2s?$/i, '$1');
+  label = label.replace(/^((?:The\s+)?(Kingdom|Republic|Empire|Confederacy|Confederation)\s+of\s+.+?)\s+\2s?$/i, '$1');
+  let titleSeen = false, titleWord = '';
+  label = label.replace(/\b(?:(?:Classical|Democratic|Federal|Constitutional|Tribal|Imperial|Temple|Civic|National|Communal)\s+)?(?:Republics?|Councils?|Confederac(?:y|ies)|Confederations?|Empires?|Kingdoms?|Monarch(?:y|ies)|Leagues?|Unions?|Federations?|Autocrac(?:y|ies)|Oligarch(?:y|ies)|Theocrac(?:y|ies)|Chiefdoms?|Tribes?|Clans?|Peoples|Commonwealths?|States?|Nations?|Dynast(?:y|ies)|Realms?|Dominions?|Imperium|Hegemon(?:y|ies)|Principates?|Principalities|Principality|Duch(?:y|ies)|Crowns?|Crownlands|Patriciates?|Assembl(?:y|ies)|Compacts?|Alliances?|Caliphates?|Sultanates?|Khanates?|Communes?|Cooperatives?|Directorates?|Authorities|Authority|Covenants?|Hierocrac(?:y|ies)|Sanctuaries|Sanctuary|Ecclesiarch(?:y|ies))\b/gi, noun => {
+    if (titleSeen) return '';
+    titleSeen = true;
+    titleWord = noun.split(/\s+/).pop().toLowerCase();
+    return noun;
+  });
+  if (/\bEmpires?\b/i.test(label)) label = label.replace(/\bImperial\b/gi, '');
+  const words = new Set(), roots = new Map(COUNTRY_WORD_ROOTS);
+  // Gameface lacks Unicode property escapes; split on punctuation without stripping non-Latin names.
+  const wordPattern = /[^\s!-/:-@\[-`{-~\u00a0-\u00b1\u00b4\u00b6-\u00bf\u00d7\u00f7\u060c\u061b\u061f\u066a-\u066d\u2000-\u206f\u2e00-\u2e7f\u3000-\u303f]+(?:['\u2019][^\s!-/:-@\[-`{-~\u00a0-\u00b1\u00b4\u00b6-\u00bf\u00d7\u00f7\u060c\u061b\u061f\u066a-\u066d\u2000-\u206f\u2e00-\u2e7f\u3000-\u303f]+)?/g;
+  for (const word of label.match(wordPattern) || []) if (/^[a-z]{3,}$/i.test(word)) {
+    const adjective = cityAdjective(word).toLowerCase();
+    if (!roots.has(adjective)) roots.set(adjective, countryWordRoot(word));
+  }
+  const titleRoot = countryWordRoot(titleWord, roots);
+  label = label.replace(wordPattern, word => {
+    const key = countryWordRoot(word, roots);
+    // Keep the government noun rather than its earlier adjectival variant.
+    if (key === titleRoot && word.toLowerCase() !== titleWord) return '';
+    if (words.has(key)) return '';
+    words.add(key);
+    return word;
+  });
+  if (titleSeen) label = label.replace(/\s+Tribal\s*$/i, '');
+  return label.replace(/\s+/g, ' ').replace(/-\s+/g, ' ').trim().replace(/(?:\s+(?:of|the))+$/i, '').trim();
 }
-function countryName(identity, cityCount = 0, duplicateContext = null, eraKey = replayEraKey(), capitalName = '', capitalPopulation, owner = null) {
+function countryName(identity, cityCount = 0, duplicateContext = null, eraKey = replayEraKey(), capitalName = '', capitalPopulation, owner = null, regionalRoots = [], facts = {}) {
   const civ = nativeCivName(identity, eraKey);
   const civKey = normalizedCivKey(identity[5]);
   const cleanCapital = String(capitalName || '').replace(/\s*-\s*\d+\s*$/, '').trim();
-  if (cleanCapital && cityCount === 1 && Number.isFinite(capitalPopulation) && capitalPopulation <= 2) return normalizeCountryName(cleanCapital);
+  let base = civ, rule = 'government', priority = 7, category = 'Government';
+  const categories = [];
+  const finish = label => {
+    const name = normalizeCountryName(label);
+    if (facts.trace) facts.trace({ name, base, rule, priority, category, categories: [...new Set([category, ...categories])] });
+    return name;
+  };
+  if (/^(ROME|ROMAN)$/.test(civKey) && cityCount >= 5 && /^(?:Roma|Rome)$/i.test(cleanCapital)) {
+    base = 'Rome'; rule = 'roman'; priority = 0; category = 'Capital';
+    if (/republic/i.test(String(identity[7] || ''))) return finish('Roman Republic');
+    return finish('The Roman Empire');
+  }
+  if (cleanCapital && cityCount === 1 && Number.isFinite(capitalPopulation) && capitalPopulation <= 2) {
+    base = cleanCapital; rule = 'small-capital'; priority = 1; category = 'Population'; return finish(cleanCapital);
+  }
   const eraName = eraNameForCiv(civKey, eraKey);
-  let adjective = CIV_SINGULAR_POLITY_NAMES[civKey] || (eraName && eraName.adjective)
+  if (eraName) categories.push('Era');
+  let adjective = (civKey === 'ANTHROXIONGNU' ? 'Gokturk' : '') || CIV_SINGULAR_POLITY_NAMES[civKey] || (eraName && eraName.adjective)
     || String(identity[2] || civ).replace(/\s*-\s*\d+\s*$/, '').trim();
-  const capitalBased = civKey === 'ROME' || civKey === 'ROMAN' || civKey === 'GREECE' || civKey === 'GREEK';
+  const capitalBased = /^(ROME|ROMAN|GREECE|GREEK|MISSISSIPPIAN)$/.test(civKey);
   const capital = capitalBased ? cleanCapital : '';
   const defaultCapital = civKey === 'GREECE' || civKey === 'GREEK' ? 'Athens' : 'Rome';
-  if (capital && capital.toLowerCase() !== defaultCapital.toLowerCase()) adjective = cityAdjective(capital);
+  const capitalDerived = capital && (civKey === 'MISSISSIPPIAN' || capital.toLowerCase() !== defaultCapital.toLowerCase());
+  if (capitalDerived) { adjective = cityAdjective(capital); categories.push('Capital'); }
   const government = String(identity[7] || '').replace(/\s*-\s*\d+\s*$/, '').trim();
   const locationAdjective = duplicateContext
     ? duplicateContext.kind === 'continent' ? continentDemonym(duplicateContext.continentName)
       : duplicateContext.kind === 'capital' ? cityAdjective(duplicateContext.capitalName) : duplicateContext.region
     : '';
   const polityAdjective = locationAdjective ? `${locationAdjective} ${adjective}` : adjective;
+  const seed = JSON.stringify([owner, civKey, identity[1], identity[2], eraKey, cleanCapital]);
   const collective = () => {
     if (duplicateContext && (duplicateContext.kind === 'continent' || duplicateContext.kind === 'capital')) {
       const civName = CIV_SINGULAR_POLITY_NAMES[civKey] || civ;
@@ -10527,7 +12143,7 @@ function countryName(identity, cityCount = 0, duplicateContext = null, eraKey = 
   if (!government || /^(?:chiefdom|empire)$/i.test(government)) {
     const template = CIV_PREGOV_TEMPLATES[civKey] || DEFAULT_PREGOV_TEMPLATE;
     label = fillPolityTemplate(template, {
-      adj: polityAdjective, plural: pluralizeCivAdjective(adjective || civ), native: civ,
+      adj: polityAdjective, plural: pluralizeCivAdjective(adjective || civ), native: capitalDerived ? capital : civ,
       loc: locationAdjective ? locationAdjective + ' ' : '',
     });
   }
@@ -10540,11 +12156,14 @@ function countryName(identity, cityCount = 0, duplicateContext = null, eraKey = 
   }
   else if (/oligarch|despot/i.test(government)) {
     const templates = CIV_POLITY_TEMPLATES[civKey] || DEFAULT_POLITY_TEMPLATES;
-    let template = templates[cityCount > 3 ? 2 : cityCount > 1 ? 1 : 0];
+    const historical = /^(HAN|MING|QING|JOSEON|GORYEO|SILLA)$/.test(civKey);
+    const tier = cityCount >= (historical ? 8 : 4) ? 2 : cityCount > 1 ? 1 : 0;
+    const choices = templates[tier];
+    let template = Array.isArray(choices) ? choices[hashString(`${seed}|polity|${tier}`) % choices.length] : choices;
     // Only a despotism that has grown past three settlements is an empire; an oligarchy that large is a league or confederation.
     if (!despotic && /\bEmpire\b/.test(template)) template = CIV_OLIGARCH_LARGE_TEMPLATES[civKey] || DEFAULT_OLIGARCH_LARGE_TEMPLATE;
     label = template === 'The {plural}' ? collective()
-      : fillPolityTemplate(template, { adj: polityAdjective, plural: pluralizeCivAdjective(adjective || civ), native: civ, capital: capital || (capitalBased ? defaultCapital : civ) });
+      : fillPolityTemplate(template, { adj: polityAdjective, plural: pluralizeCivAdjective(adjective || civ), native: capitalDerived ? capital : civ, capital: capital || (capitalBased ? defaultCapital : civ) });
   }
   else if (/monarch/i.test(government)) label = `The ${polityAdjective} Kingdom`;
   else if (/republic/i.test(government)) label = `The ${polityAdjective} Republic`;
@@ -10565,25 +12184,40 @@ function countryName(identity, cityCount = 0, duplicateContext = null, eraKey = 
       || (/oligarch/i.test(government) && /^(GREECE|GREEK)$/.test(civKey)
         && cityCount > 3 && /^(athens|sparta)$/i.test(cleanCapital))));
   const formats = COUNTRY_NAME_FORMATS[family];
+  if (historicalForm) { rule = 'historical'; priority = 2; category = 'Culture'; }
+  if (capitalDerived) base = capital;
+  const rootKey = CIV_COUNTRY_ROOT_ALIASES[civKey] || civKey;
+  const capitalRoots = (CAPITAL_COUNTRY_ROOTS[rootKey] || []).filter(root => root[0].toLowerCase() === cleanCapital.toLowerCase());
+  const roots = [...(CIV_COUNTRY_ROOTS[rootKey] || []), ...capitalRoots, ...regionalRoots.map(name => [name, name])];
+  const root = !eraName && !capitalDerived
+    ? roots[hashString(`${seed}|root`) % (roots.length + 1)] : null;
+  if (capitalRoots.includes(root)) categories.push('Capital');
+  if (root && regionalRoots.includes(root[0])) categories.push('Geography');
+  const native = String(root ? root[0] : base).replace(/^the\s+/i, '');
+  const adj = root ? root[1] : adjective;
+  const loc = locationAdjective ? locationAdjective + ' ' : '';
+  const values = { adj: loc + adj, native: loc + native, plural: loc + pluralizeCivAdjective(adj), qual: '', noun: COUNTRY_NOUNS[family], religion: facts.religion || '' };
   if (formats && !historicalForm && !/^the\b/i.test(adjective)) {
-    const seed = JSON.stringify([owner, civKey, identity[1], identity[2], eraKey, cleanCapital]);
     const size = cityCount > 3 ? 4 : cityCount > 1 ? 2 : 1;
     const format = formats[hashString(`${seed}|format|${family}|${size}`) % (formats.length + 1)];
     if (format) {
-      const roots = CIV_COUNTRY_ROOTS[CIV_COUNTRY_ROOT_ALIASES[civKey] || civKey];
-      const root = roots && !eraName && !(capitalBased && capital && capital.toLowerCase() !== defaultCapital.toLowerCase())
-        ? roots[hashString(`${seed}|root`) % (roots.length + 1)] : null;
-      const native = String(root ? root[0] : capitalBased && capital && capital.toLowerCase() !== defaultCapital.toLowerCase() ? capital : civ)
-        .replace(/^the\s+/i, '');
-      const adj = root ? root[1] : adjective;
-      const loc = locationAdjective ? locationAdjective + ' ' : '';
-      const values = { adj: loc + adj, native: loc + native, plural: loc + pluralizeCivAdjective(adj), qual: '' };
+      base = root ? root[0] : base;
       const unqualified = fillPolityTemplate(format, values);
-      const qualifiers = COUNTRY_NAME_QUALIFIERS[family].filter(word =>
-        !word || !new RegExp(`\\b${word}\\b`, 'i').test(unqualified));
+      const qualifiers = COUNTRY_NAME_QUALIFIERS[family].filter(word => !word ||
+        (!new RegExp(`\\b${word}\\b`, 'i').test(unqualified) &&
+          (cityCount >= 8 || !/^(?:Great|Greater|Grand)$/i.test(word)) &&
+          !(word === 'Imperial' && /\bEmpire\b/i.test(unqualified))));
       const qualifier = qualifiers[hashString(`${seed}|qualifier|${family}`) % qualifiers.length];
       values.qual = qualifier ? qualifier + ' ' : '';
       label = fillPolityTemplate(format, values);
+    }
+  }
+  if (!historicalForm && values.noun) {
+    const context = { ...facts, family, cityCount };
+    const selected = COUNTRY_CONTEXT_RULES.find(candidate => candidate.matches(context));
+    if (selected) {
+      base = root ? root[0] : base; rule = selected.id; priority = selected.priority; category = selected.category;
+      label = fillPolityTemplate(selected.templates[hashString(`${seed}|${selected.id}`) % selected.templates.length], values);
     }
   }
   if (/\bEmpire\b/i.test(label) && !(despotic && cityCount > 3)) label = label.replace(/\bEmpire\b/gi, 'Kingdom');
@@ -10597,17 +12231,76 @@ function countryName(identity, cityCount = 0, duplicateContext = null, eraKey = 
       let style = 0;
       for (const char of `${civKey}|${government}|${locationAdjective}`) style = (Math.imul(style, 31) + char.charCodeAt(0)) >>> 0;
       if (style % 3 === 1) label = `The ${noun} of the ${locationAdjective} ${CIV_SINGULAR_POLITY_NAMES[civKey] || pluralizeCivAdjective(adjective || civ)}`;
-      if (style % 3 === 2) label = `The ${locationAdjective}-${adjective} ${noun}`;
     }
   }
-  return normalizeCountryName(label);
+  return finish(label);
 }
-function rememberCountryName(owner, identity, cityCount, duplicateContext, eraKey, capitalName, capitalPopulation) {
-  const size = Math.min(cityCount, 4);
+function rememberCountryName(owner, identity, cityCount, duplicateContext, eraKey, capitalName, capitalPopulation, regionalRoots = [], facts = {}) {
+  const size = cityCount >= 8 ? 8 : Math.min(cityCount, 4);
   const capitalSize = Number.isFinite(capitalPopulation) ? capitalPopulation <= 2 ? 'small' : 'grown' : null;
-  const key = 'country8:' + JSON.stringify([owner, identity[1], identity[2], identity[5], identity[7], size,
-    duplicateContext || null, eraKey, capitalName, capitalSize]);
-  return rememberName(key, countryName(identity, cityCount, duplicateContext, eraKey, capitalName, capitalPopulation, owner));
+  const key = 'country17:' + JSON.stringify([owner, identity[1], identity[2], identity[5], identity[7], size,
+    duplicateContext || null, eraKey, capitalName, capitalSize, regionalRoots, cityCount >= 5, facts.religion,
+    facts.citizens >= 40, facts.islandShare >= 0.75, facts.mountainShare >= 0.35]);
+  return rememberName(key, countryName(identity, cityCount, duplicateContext, eraKey, capitalName, capitalPopulation, owner, regionalRoots, facts));
+}
+function countryNameCatalogFor(detail, currentName) {
+  const rows = new Map(), civKey = normalizedCivKey(detail.identity[5]);
+  const rootKey = CIV_COUNTRY_ROOT_ALIASES[civKey] || civKey;
+  const capitals = [...new Set([detail.capital?.name, /GREECE|GREEK/.test(civKey) ? 'Athens' : /ROME|ROMAN/.test(civKey) ? 'Rome' : '',
+    ...(CAPITAL_COUNTRY_ROOTS[rootKey] || []).map(root => root[0])].filter(Boolean))];
+  if (!capitals.length) capitals.push('');
+  const governments = [...new Set([detail.identity[7] || '', '', 'Chiefdom', 'Oligarchy', 'Despotism', 'Monarchy',
+    'Classical Republic', 'Democracy', 'Theocracy', 'Communism', 'Autocracy'])];
+  const scenarios = [
+    { citizens: 20, religion: '', islandShare: 0, mountainShare: 0 },
+    { citizens: 20, religion: '', islandShare: 0.75, mountainShare: 0 },
+    { citizens: 20, religion: '', islandShare: 0, mountainShare: 0.35 },
+    { citizens: 40, religion: '', islandShare: 0, mountainShare: 0 },
+    { citizens: 20, religion: detail.facts.religion || '[Religion]', islandShare: 0, mountainShare: 0 },
+  ];
+  const evaluate = (identity, cities, era, capital, population, facts, current = false) => {
+    let choice;
+    const name = countryName(identity, cities, detail.duplicateContext, era, capital, population, detail.owner,
+      detail.regionalRoots, { ...facts, trace: value => { choice = value; } });
+    const resolved = current ? currentName : name, key = `${choice.priority}|${resolved}`;
+    const conditions = `Government: ${identity[7] || 'none'}; capital: ${capital || 'unnamed'}; ${cities} settlements; capital citizens: ${population ?? 'unknown'}; era: ${era || 'unspecified'}; total citizens: ${facts.citizens ?? 'unknown'}; island tiles: ${facts.islandShare == null ? 'unknown' : Math.round(facts.islandShare * 100) + '%'}; mountain tiles: ${facts.mountainShare == null ? 'unknown' : Math.round(facts.mountainShare * 100) + '%'}; religion: ${facts.religion || 'none'}.`;
+    if (!rows.has(key)) rows.set(key, { name: resolved, priority: choice.priority, categories: choice.categories, conditions: [], current: false });
+    const row = rows.get(key);
+    row.current = row.current || current;
+    row.categories = [...new Set([...row.categories, ...choice.categories])];
+    if (current && resolved !== name) {
+      if (!row.categories.includes('Duplication')) row.categories.push('Duplication');
+      row.uniqueness = 'Qualified to distinguish another civilization with the same country name.';
+    }
+    if (!row.conditions.includes(conditions) && row.conditions.length < 4) row.conditions.push(conditions);
+  };
+  evaluate(detail.identity, detail.cityCount, detail.eraKey, detail.capital?.name || '', detail.capital?.population, detail.facts, true);
+  for (const government of governments) for (const era of ['', 'ANTIQUITY', 'EXPLORATION', 'MODERN']) for (const capital of capitals) {
+    const identity = [...detail.identity]; identity[7] = government;
+    for (const cities of [1, 2, 4, 5, 8]) for (const facts of scenarios) evaluate(identity, cities, era, capital, 5, facts);
+    if (capital) evaluate(identity, 1, era, capital, 2, scenarios[0]);
+  }
+  return {
+    currentName, rows: [...rows.values()].sort((a, b) => a.priority - b.priority || a.name.localeCompare(b.name)),
+    rules: [
+      { priority: 0, description: 'Rome/Roma capital, Roman civilization, five or more settlements: Roman Republic if republican; otherwise The Roman Empire' },
+      { priority: 1, description: 'One settlement with two or fewer capital citizens: capital name alone' },
+      { priority: 2, description: 'Protected cultural, historical dynasty and classical league rules' },
+      ...COUNTRY_CONTEXT_RULES,
+      { priority: 7, description: 'Government-compatible cultural/capital/era/controlled-region roots and seeded title variants' },
+    ],
+    note: 'Examples are evaluated by the actual naming engine for your civilization, current and recognized historical capitals, all eras and government families, and representative settlement sizes and conditions. Earlier priorities win. Examples list sufficient conditions, not every combination. Equal-priority wording is selected deterministically for your player, civilization, capital and era. Custom capital or religion names can produce additional names; [Religion] is a placeholder. Citizens are native settlement citizens, not simulated population. Final country names are disambiguated when necessary.',
+  };
+}
+function countryNamesCatalog() {
+  const saved = readManifest();
+  if (!saved?.frames?.length) throw new Error('No recorded civilization is available. Start or load a game first.');
+  if (!manifest || manifest.rev !== saved.rev || frames.length !== saved.frames.length) refresh(true);
+  const turn = frames.length - 1, frame = frameFor(turn), details = new Map();
+  const names = majorCountryNames(frame, countryTerritories(frame, null), reconstructIdentity(turn), reconstructSettlements(turn), liveEraKey(), turn, details);
+  const owner = GameContext.localPlayerID, detail = details.get(owner);
+  if (!detail || !names.has(owner)) throw new Error('The local player has no recorded major civilization.');
+  return countryNameCatalogFor(detail, names.get(owner));
 }
 const CIV_SINGULAR_POLITY_NAMES = { CHOLA: 'Chola', KOREA: 'Joseon', KOREAN: 'Joseon' };
 const CONTINENT_DEMONYMS = { ANTARCTICA: 'Antarctic' };
@@ -10738,6 +12431,10 @@ function duplicateCivContexts(entries, eraKey = replayEraKey()) {
           else if (i === sorted.length - 1) region = last;
           else if (sorted.length % 2 === 1 && i === Math.floor(sorted.length / 2)) region = 'Central';
           else region = `${i / (sorted.length - 1) < 0.5 ? first : last} Central`;
+          if (/Northern|Southern/.test(region) && entry.geographicName &&
+              hashString(`${entry.owner}|${entry.geographicName}|country-region`) % 2 === 0) {
+            region = continentDemonym(entry.geographicName);
+          }
           contexts.set(entry.owner, { kind: 'region', region });
           continue;
         }
@@ -10751,12 +12448,47 @@ function duplicateCivContexts(entries, eraKey = replayEraKey()) {
 }
 function continentDemonym(continentName) {
   const key = normalizedCivKey(continentName);
+  const regions = { ITALY: 'Italian', GAUL: 'Gallic', FRANCE: 'French', GREATBRITAIN: 'British',
+    IRELAND: 'Irish', CARIBBEAN: 'Caribbean', JAPANESEARCHIPELAGO: 'Japanese', HAWAIIANISLANDS: 'Hawaiian' };
+  if (regions[key]) return regions[key];
   if (CONTINENT_DEMONYMS[key]) return CONTINENT_DEMONYMS[key];
   const words = String(continentName || '').trim().split(/\s+/);
   const last = words.pop() || '';
   const adjective = /a$/i.test(last) ? `${last.slice(0, -1)}an` : `${last}an`;
   words.push(adjective);
   return words.join(' ');
+}
+function countryRegionName(tiles) {
+  const geography = typeof window !== 'undefined' && window.AnthroproceniaGeography?.getMapData();
+  if (!geography) return '';
+  const counts = new Map();
+  for (const tile of tiles) {
+    const id = geography.regionForTile.get(tile.index);
+    if (id) counts.set(id, (counts.get(id) || 0) + 1);
+  }
+  const id = [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0];
+  return geography.regions.find(region => region.id === id)?.name || '';
+}
+function controlledCountryRegions(frame) {
+  const geography = typeof window !== 'undefined' && window.AnthroproceniaGeography?.getMapData();
+  const result = new Map();
+  if (!geography) return result;
+  const places = new Map();
+  for (const region of geography.regions) {
+    if (region.water || !region.name) continue;
+    if (!places.has(region.name)) places.set(region.name, []);
+    places.get(region.name).push(...region.tiles);
+  }
+  for (const [name, tiles] of places) {
+    const first = frame.get(tiles[0]);
+    if (first === undefined) continue;
+    const owner = (first >> 3) & 63;
+    if (!tiles.every(index => frame.has(index) && ((frame.get(index) >> 3) & 63) === owner)) continue;
+    if (!result.has(owner)) result.set(owner, []);
+    result.get(owner).push(name);
+  }
+  for (const names of result.values()) names.sort();
+  return result;
 }
 function pluralizeCivAdjective(value) {
   const adjective = String(value || '').trim();
@@ -10773,7 +12505,7 @@ function pluralizeCivAdjective(value) {
 const CIV_UI_MAIN_MENU_SELECTOR = 'fxs-main-menu, [id*="main-menu"], [class*="main-menu"], [data-screen-name*="main-menu"]';
 const CIV_UI_SAVE_LOAD_SELECTOR = 'fxs-save-load-screen, fxs-screen-save-load, fxs-save-screen, fxs-load-screen, [id*="save-load"], [class*="save-load"], [id*="save-screen"], [class*="save-screen"], [id*="load-screen"], [class*="load-screen"], [data-screen-name*="save"], [data-screen-name*="load"]';
 const CIV_UI_ATTRIBUTES = ['alt', 'aria-description', 'aria-label', 'caption', 'data-tooltip-content', 'data-tooltip-text', 'placeholder', 'title', 'value'];
-const CIV_POLITY_SUFFIX = '(?:Empire|Kingdom|Republic|Monarchy|Confederation|Commonwealth|Sultanate|Caliphate|Dynasty|Federation|Principality|Crownlands|Crown|Realm|Duchy|Dominion|League|Council|Compact|Patriciate|Assembly|Principate|Autocracy|Imperium|Hegemony|Union|Theocracy|Temple State|Temple Council|Hierocracy|Sanctuary|Ecclesiarchy|Covenant|Commune|Cooperative|State|Directorate|Authority)';
+const CIV_POLITY_SUFFIX = '(?:Empire|Kingdom|Republic|Monarchy|Confederation|Confederacy|Commonwealth|Sultanate|Caliphate|Dynasty|Federation|Principality|Crownlands|Crown|Realm|Duchy|Dominion|League|Council|Compact|Patriciate|Assembly|Principate|Autocracy|Imperium|Hegemony|Union|Theocracy|Temple State|Temple Council|Hierocracy|Sanctuary|Ecclesiarchy|Covenant|Commune|Cooperative|State|Directorate|Authority|Alliance|Chiefdom|Tribes|Tribe|Clans|Peoples)';
 let civUiObserver = null;
 function localizedCivName(value) {
   if (typeof value !== 'string' || !value) return '';
@@ -10783,6 +12515,8 @@ function localizedCivName(value) {
   return typeof name === 'string' && !/^LOC_/i.test(name) ? name.trim() : '';
 }
 function currentCivUiName(entry) {
+  const liveName = liveCountryUiNames.get(entry.type);
+  if (liveName) return liveName;
   let player = null;
   try {
     const players = typeof Players !== 'undefined' && Players.getAlive ? Players.getAlive() : [];
@@ -10876,13 +12610,19 @@ function insideParentheses(text, index) {
   }
   return depth > 0;
 }
-function translateCivUiText(text, replacements, saveLoad = false, names = new Map()) {
+function translateCivUiText(text, replacements, saveLoad = false, names = new Map(), wars = [], edits = []) {
   const matches = [];
+  const suffixPattern = `(?:\\s+(?:(?:Classical|Democratic|Federal|Constitutional|Tribal|Imperial|Civic|National|Communal)\\s+)?${CIV_POLITY_SUFFIX}\\b)*(?:\\s+Tribal\\b)?`;
+  if (!saveLoad) for (const war of wars) for (const alias of new Set([war.original, war.name])) {
+    if (!alias) continue;
+    const pattern = new RegExp(alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+    let match;
+    while ((match = pattern.exec(text)) !== null) matches.push({ start: match.index, end: pattern.lastIndex, warName: war.name });
+  }
   for (const entry of replacements) {
     if (!entry.pattern) {
       const original = entry.original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const adjectivePlural = entry.adjective ? 's?' : '';
-      const suffixPattern = entry.adjective ? `(?:\\s+(?:(?:Classical|Democratic|Federal|Constitutional)\\s+)?${CIV_POLITY_SUFFIX})?` : '';
       entry.pattern = new RegExp(`\\b(?:the\\s+)*${entry.term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}${adjectivePlural}\\b${suffixPattern}(?:\\s+Civilization\\b)*(?:\\s*\\(${original}\\))?(?:\\s+Civilization\\b)*`, 'gi');
     }
     entry.pattern.lastIndex = 0;
@@ -10891,16 +12631,171 @@ function translateCivUiText(text, replacements, saveLoad = false, names = new Ma
       if (!insideParentheses(text, match.index)) matches.push({ start: match.index, end: entry.pattern.lastIndex, entry });
     }
   }
-  matches.sort((a, b) => a.start - b.start || b.end - a.end);
+  if (!saveLoad && matches.length) {
+    // Native tooltips may clone already rewritten text into entirely new nodes.
+    // Protect whole generated names, not just the native adjective within them.
+    for (const entry of replacements) if (!names.has(entry.type)) names.set(entry.type, currentCivUiName(entry));
+    if (!replacements.outputSuffixPattern) replacements.outputSuffixPattern = new RegExp(`^${suffixPattern}(?:\\s+Civilization\\b)*`, 'i');
+    const lower = text.toLowerCase();
+    for (const name of new Set(names.values())) {
+      if (!name) continue;
+      const alias = name.toLowerCase();
+      let start = 0;
+      while ((start = lower.indexOf(alias, start)) >= 0) {
+        let end = start + name.length;
+        if ((!start || !/[a-z0-9]/i.test(text[start - 1])) && (end === text.length || !/[a-z0-9]/i.test(text[end]))) {
+          const suffix = replacements.outputSuffixPattern.exec(text.slice(end));
+          if (suffix) end += suffix[0].length;
+          matches.push({ start, end, warName: name });
+        }
+        start += name.length;
+      }
+    }
+  }
+  matches.sort((a, b) => a.start - b.start || b.end - a.end || Number(!!b.warName) - Number(!!a.warName));
   let end = 0, result = '';
   for (const match of matches) {
     if (match.start < end) continue;
+    if (match.warName) {
+      result += text.slice(end, match.start) + match.warName;
+      edits.push({ start: match.start, end: match.end, text: match.warName });
+      end = match.end;
+      continue;
+    }
     const entry = match.entry;
     if (!saveLoad && !names.has(entry.type)) names.set(entry.type, currentCivUiName(entry));
-    result += text.slice(end, match.start) + (saveLoad ? entry.original : names.get(entry.type));
+    const replacement = saveLoad ? entry.original : names.get(entry.type);
+    result += text.slice(end, match.start) + replacement;
+    edits.push({ start: match.start, end: match.end, text: replacement });
     end = match.end;
   }
   return result + text.slice(end);
+}
+function civUiTextRun(node) {
+  const inline = element => /^(?:SPAN|B|STRONG|EM|I|A|SMALL|LABEL)$/i.test(element && element.tagName || '');
+  let root = node.parentElement;
+  while (inline(root) && root.parentElement) root = root.parentElement;
+  if (!root || !root.childNodes) return [node];
+  const runs = [[]];
+  const visit = parent => {
+    for (const child of parent.childNodes) {
+      if (child.nodeType === 3) runs[runs.length - 1].push(child);
+      else if (child.nodeType === 1 && inline(child) && civUiMode(child) === civUiMode(node)) visit(child);
+      else runs.push([]);
+    }
+  };
+  visit(root);
+  return runs.find(run => run.includes(node)) || [node];
+}
+function installDiplomacySceneHandoff() {
+  const request = LeaderModelManager.requestSceneWipe, end = LeaderModelManager.endSceneWipe;
+  if (typeof request !== 'function' || typeof end !== 'function') return;
+  let pending = null;
+  LeaderModelManager.requestSceneWipe = function (source, onCovered, ...args) {
+    if (source !== 'first-meet-to-hub' || typeof onCovered !== 'function') return request.call(this, source, onCovered, ...args);
+    let completed = false;
+    const complete = function (...callbackArgs) {
+      if (completed) return;
+      completed = true;
+      if (pending === complete) pending = null;
+      return onCovered.apply(this, callbackArgs);
+    };
+    pending = complete;
+    return request.call(this, source, complete, ...args);
+  };
+  LeaderModelManager.endSceneWipe = function (...args) {
+    const result = end.apply(this, args);
+    if (pending) {
+      err('Diplomacy scene wipe ended before its hub handoff; resuming the pending native diplomacy panel.');
+      pending();
+    }
+    return result;
+  };
+}
+function installDiplomacyTransitionPump() {
+  const manager = LeaderModelManager, update = manager.onUpdate;
+  if (typeof manager.stepSceneWipe !== 'function' || typeof update !== 'function') return;
+  let active = false, blocked = false, deadline = 0, lastTimestamp = null;
+  const busy = () => manager.transitionPhase || manager.isClosing || manager.isClosingFallback ||
+    manager.cameraDollyQueued || manager.cameraDollyDelayed || manager.pendingSequenceStart;
+  const start = () => {
+    if (!busy()) { blocked = false; return; }
+    if (active || blocked) return;
+    active = true;
+    deadline = performance.now() + 10000;
+    setTimeout(tick, 100);
+  };
+  const tick = () => {
+    if (!busy()) { active = false; blocked = false; return; }
+    try { manager.onUpdate(performance.now()); }
+    catch (error) {
+      active = false; blocked = true;
+      err(`Diplomacy transition update failed: ${error}`);
+      return;
+    }
+    if (!busy()) { active = false; blocked = false; return; }
+    if (performance.now() >= deadline) {
+      active = false; blocked = true;
+      err('Diplomacy transition remained pending for 10 seconds. See native scene/resource errors in UI.log.');
+      return;
+    }
+    setTimeout(tick, 100);
+  };
+  // Native entry points can queue several self-perpetuating RAF chains in one frame.
+  manager.onUpdate = function (timestamp) {
+    if (timestamp === lastTimestamp) return;
+    lastTimestamp = timestamp;
+    const result = update.call(this, timestamp);
+    start();
+    return result;
+  };
+  for (const name of ['requestSceneWipe', 'clearLeaderModels', 'showLeaderModels', 'showLeadersFirstMeet',
+    'showLeadersDeclareWar', 'showLeadersAcceptPeace', 'showLeadersRejectPeace', 'showLeadersDefeat']) {
+    const original = manager[name];
+    if (typeof original !== 'function') continue;
+    manager[name] = function (...args) {
+      const result = original.apply(this, args);
+      start();
+      return result;
+    };
+  }
+}
+let diplomacyBannersInstalled = false;
+function installDiplomacyBannerVisibility() {
+  if (diplomacyBannersInstalled) return;
+  for (const method of [
+    'showLeaderModels', 'showLeftLeaderModel', 'showRightLeaderModel', 'showRightIndLeaderModel',
+    'showLeadersFirstMeet', 'showLeadersDeclareWar', 'showLeadersAcceptPeace',
+    'showLeadersRejectPeace', 'showLeadersDefeat',
+  ]) {
+    const original = LeaderModelManager[method];
+    if (typeof original !== 'function') { err(`diplomacy banner method unavailable: ${method}`); continue; }
+    LeaderModelManager[method] = function (...args) {
+      const result = original.apply(this, args);
+      // Preserve native animation handles and hide only their hanging cloth.
+      for (const banner of [this.leader3DBannerLeft, this.leader3DBannerRight]) {
+        if (banner) banner.setAlpha(0);
+      }
+      return result;
+    };
+  }
+  diplomacyBannersInstalled = true;
+}
+function nativeWarUiReplacements() {
+  const service = window.AnthroproceniaGeography;
+  if (!service || typeof Game === 'undefined' || !Game.Diplomacy?.getPlayerEvents) return [];
+  const wars = new Map();
+  for (const owner of new Set([GameContext.localPlayerID, DiplomacyManager.selectedPlayerID])) {
+    if (!Number.isInteger(owner) || owner < 0) continue;
+    for (const event of Game.Diplomacy.getPlayerEvents(owner)) {
+      if (event.actionType !== DiplomacyActionTypes.DIPLOMACY_ACTION_DECLARE_WAR || wars.has(event.uniqueID)) continue;
+      const native = Game.Diplomacy.getWarData(event.uniqueID, GameContext.localPlayerID);
+      if (!native?.warName) continue;
+      const name = service.warNameForPlayers(event.initialPlayer, event.targetPlayer);
+      if (name) wars.set(event.uniqueID, { original: native.warName, name });
+    }
+  }
+  return [...wars.values()];
 }
 function installCivNameUiOverrides() {
   if (civUiObserver) return;
@@ -10913,31 +12808,75 @@ function installCivNameUiOverrides() {
   }
   const replacements = civUiReplacements();
   if (!replacements.length) return;
+  const icons = new CivIconUi({
+    document, MutationObserver, scopeMode: civUiMode,
+    diplomacyMode: civUiDiplomacyMode,
+    resolveArtwork: (type, element) => civUiArtwork(type, civUiIconOwner(element),
+      liveCivUiCivilizations, liveCivUiIconChoices, liveCivUiIconSeed),
+    typeForUrl: url => {
+      for (const [type, symbol] of _civSymbolCache) if (symbol === url) return type;
+      return null;
+    },
+    reportError: err,
+  });
+  const colorPairs = new Map();
+  const colors = new CivColorUi({
+    MutationObserver, scopeMode: civUiMode, reportError: err,
+    resolveUnitColor: owner => Number.isInteger(owner) && owner >= 0
+      ? (Players.get(owner)?.isMajor ? ownerColors(owner).secondaryCss : unitColor(owner)) : null,
+    resolveOwner: element => element === document.body || element === document.documentElement
+      ? GameContext.localPlayerID : civUiIconOwner(element),
+    resolveColors: owner => {
+      if (!Number.isInteger(owner) || owner < 0 || owner >= PALETTE.length || !Players.get(owner)?.isMajor) return null;
+      if (!colorPairs.has(owner)) {
+        const pair = ownerColors(owner);
+        const rgba = rgb => ({ r: rgb[0], g: rgb[1], b: rgb[2], a: 1 });
+        const variants = UI.Color.createPlayerColorVariants({ primaryColor: rgba(pair.primary), secondaryColor: rgba(pair.secondary) });
+        colorPairs.set(owner, { ...pair, variants });
+      }
+      return colorPairs.get(owner);
+    },
+  });
+  const iconAttributes = new Set(['data-player-id', 'player-id', 'unit-id', 'data-district-id', 'data-icon-id', 'icon-url', 'civ-icon-url', 'leader', 'bg-color', 'fg-color']);
   const sourceText = new WeakMap(), lastTextWrite = new WeakMap();
   const sourceAttributes = new WeakMap(), lastAttributeWrites = new WeakMap(), observedRoots = new WeakSet();
   const scopeModes = new WeakMap(), names = new Map();
+  let wars = nativeWarUiReplacements();
   const options = {
     childList: true,
     subtree: true,
     characterData: true,
     attributes: true,
-    attributeFilter: [...CIV_UI_ATTRIBUTES, 'class', 'id', 'data-screen-name'],
+    attributeFilter: [...CIV_UI_ATTRIBUTES, 'class', 'id', 'data-screen-name', ...iconAttributes],
   };
   const rewriteText = (node, force = false) => {
     if (!node || !node.nodeValue) return;
     if (!force && lastTextWrite.get(node) === node.nodeValue) return;
     const mode = civUiMode(node);
     if (mode === 'excluded') return;
-    let source = sourceText.get(node);
-    if (lastTextWrite.get(node) !== node.nodeValue) {
-      source = node.nodeValue;
-      sourceText.set(node, source);
-    }
-    if (!source) return;
-    const rewritten = translateCivUiText(source, replacements, mode === 'save-load', names);
-    if (rewritten !== node.nodeValue) {
-      lastTextWrite.set(node, rewritten);
-      node.nodeValue = rewritten;
+    const nodes = civUiTextRun(node), sources = nodes.map(text => {
+      if (lastTextWrite.get(text) !== text.nodeValue) sourceText.set(text, text.nodeValue || '');
+      return sourceText.get(text) || '';
+    });
+    const edits = [];
+    translateCivUiText(sources.join(''), replacements, mode === 'save-load', names, wars, edits);
+    let offset = 0;
+    for (let index = 0; index < nodes.length; index++) {
+      const text = nodes[index], source = sources[index], limit = offset + source.length;
+      let cursor = 0, rewritten = '';
+      for (const edit of edits) {
+        if (edit.end <= offset || edit.start >= limit) continue;
+        const start = Math.max(0, edit.start - offset);
+        rewritten += source.slice(cursor, start);
+        if (edit.start >= offset) rewritten += edit.text;
+        cursor = Math.min(source.length, edit.end - offset);
+      }
+      rewritten += source.slice(cursor);
+      if (rewritten !== text.nodeValue) {
+        lastTextWrite.set(text, rewritten);
+        text.nodeValue = rewritten;
+      }
+      offset = limit;
     }
   };
   const rewriteAttributes = (el, force = false) => {
@@ -10958,7 +12897,7 @@ function installCivNameUiOverrides() {
       if (written[name] !== current) sources[name] = current;
       const source = sources[name];
       if (!source) continue;
-      const rewritten = translateCivUiText(source, replacements, mode === 'save-load', names);
+      const rewritten = translateCivUiText(source, replacements, mode === 'save-load', names, wars);
       if (rewritten !== current) {
         written[name] = rewritten;
         el.setAttribute(name, rewritten);
@@ -10972,11 +12911,14 @@ function installCivNameUiOverrides() {
     scan(root);
   };
   const scan = root => {
+    if (icons.owns(root)) return;
     if (root.nodeType === 3) { rewriteText(root, true); return; }
     if (root.nodeType !== 1 && root.nodeType !== 9 && root.nodeType !== 11) return;
     if (root.nodeType === 1) {
       if (isMapDom(root)) return;
       scopeModes.set(root, civUiMode(root));
+      try { colors.sync(root); } catch (e) { err(`civilization UI color scan failed: ${e}`); }
+      try { icons.sync(root); } catch (e) { err(`civilization UI icon scan failed: ${e}`); }
       try { rewriteAttributes(root, true); } catch (e) { err(`civilization UI attribute rewrite failed: ${e}`); }
       if (root.shadowRoot) observeRoot(root.shadowRoot);
     }
@@ -10984,12 +12926,20 @@ function installCivNameUiOverrides() {
   };
   civUiObserver = new MutationObserver(records => {
     names.clear();
+    wars = nativeWarUiReplacements();
     for (const record of records) {
+      if (icons.owns(record.target) || isMapDom(record.target)) continue;
       if (record.type === 'characterData') rewriteText(record.target);
       else if (record.type === 'attributes') {
         if (record.attributeName === 'class' || record.attributeName === 'id' || record.attributeName === 'data-screen-name') {
           const mode = civUiMode(record.target);
           if (scopeModes.get(record.target) !== mode) scan(record.target);
+          else {
+            try { colors.sync(record.target); } catch (e) { err(`civilization UI color scan failed: ${e}`); }
+            try { icons.sync(record.target); } catch (e) { err(`civilization UI icon scan failed: ${e}`); }
+          }
+        } else if (iconAttributes.has(record.attributeName)) {
+          scan(record.target);
         } else {
           try { rewriteAttributes(record.target); } catch (e) { err(`civilization UI attribute rewrite failed: ${e}`); }
         }
@@ -10998,21 +12948,95 @@ function installCivNameUiOverrides() {
     }
   });
   observeRoot(document.body);
-  civUiRescan = () => { names.clear(); scan(document.body); };
+  civUiRescan = () => { names.clear(); wars = nativeWarUiReplacements(); scan(document.body); };
+  scheduleCivUiRescan();
+}
+function civUiDiplomacyMode(element) {
+  let node = element;
+  while (node) {
+    if (node.matches && node.matches('panel-player-diplomacy-actions, panel-other-player-diplomacy-actions, panel-diplomacy-peace-deal, screen-diplomacy, [data-screen-name="diplomacy"], #panel-diplomacy-actions__civ-symbol')) return true;
+    const root = node.getRootNode && node.getRootNode();
+    node = node.parentElement || (root && root.host);
+  }
+  return false;
+}
+function civUiIconOwner(element) {
+  let node = element, fallback;
+  while (node) {
+    const unit = node.getAttribute && node.getAttribute('unit-id');
+    if (unit) return ComponentID.fromString(unit).owner;
+    for (const attribute of ['data-player-id', 'player-id']) {
+      const value = node.getAttribute && node.getAttribute(attribute);
+      if (value && /^\d+$/.test(value)) return Number(value);
+    }
+    const district = node.getAttribute && node.getAttribute('data-district-id');
+    if (district) {
+      const id = ComponentID.fromString(district), live = Districts.get(id);
+      return live && live.controllingPlayer >= 0 ? live.controllingPlayer : id.owner;
+    }
+    if (node.matches && node.matches('.local-player, .local-player-leader-civ, screen-end-results, panel-player-diplomacy-actions')) return GameContext.localPlayerID;
+    if (node.matches && node.matches('screen-endgame')) return GameContext.localObserverID;
+    if (node.matches && node.matches('panel-diplomacy-actions, panel-other-player-diplomacy-actions, .other-player-leader-civ')) return DiplomacyManager.selectedPlayerID;
+    if (node.matches && node.matches('#panel-diplomacy-actions__civ-symbol')) fallback = DiplomacyManager.selectedPlayerID;
+    const root = node.getRootNode && node.getRootNode();
+    node = node.parentElement || (root && root.host);
+  }
+  return fallback;
 }
 // Re-translates every civ name already on screen, so names follow government and city-count changes at turn change.
+const liveCountryUiNames = new Map();
+const liveCivUiCivilizations = new Map();
+let liveCivUiIconChoices = new Map(), liveCivUiIconSeed;
 let civUiRescan = null, civUiRescanTimer = 0;
+function refreshLiveCountryUiNames() {
+  if (building) return;
+  const saved = readManifest();
+  if (!saved?.frames?.length) {
+    liveCivUiIconSeed = undefined;
+    liveCivUiIconChoices = new Map();
+    liveCivUiCivilizations.clear();
+    return;
+  }
+  if (!manifest || manifest.rev !== saved.rev) refresh(true);
+  const turn = frames.length - 1, frame = frameFor(turn), identity = reconstructIdentity(turn);
+  const territories = new Map();
+  for (const [index, value] of frame) {
+    if (isWaterTile(index)) continue;
+    const owner = (value >> 3) & 63;
+    if (!Players.get(owner)?.isMajor) continue;
+    const plot = basePos?.[index] || { x: index % manifest.w, y: -Math.floor(index / manifest.w) };
+    if (!territories.has(owner)) territories.set(owner, []);
+    territories.get(owner).push({ index, x: plot.x, y: plot.y });
+  }
+  const names = majorCountryNames(frame, territories, identity, reconstructSettlements(turn), liveEraKey(), turn);
+  liveCountryUiNames.clear();
+  for (const [owner, name] of names) {
+    const type = identity.get(owner)?.[5];
+    if (type) liveCountryUiNames.set(normalizedCivKey(type), name);
+  }
+  const seed = countryIconSeed(), choices = countryIconsForFrame(frame, identity, seed);
+  liveCivUiIconSeed = seed;
+  liveCivUiIconChoices = choices;
+  liveCivUiCivilizations.clear();
+  for (const [owner, id] of identity) {
+    if (!choices.has(owner) || !id[5]) continue;
+    liveCivUiCivilizations.set(owner, id[5]);
+    civSymbolFor(id[5]);
+  }
+}
 function scheduleCivUiRescan() {
   if (civUiRescanTimer) return;
   civUiRescanTimer = setTimeout(() => {
     civUiRescanTimer = 0;
+    try { refreshLiveCountryUiNames(); } catch (e) { err(`civilization UI refresh failed: ${e}`); }
     try { if (civUiRescan) civUiRescan(); } catch (e) { err(`civilization UI rescan failed: ${e}`); }
-  }, 600);
+  }, 0);
 }
 try {
   if (typeof engine !== 'undefined') {
     engine.on('LocalPlayerTurnEnd', scheduleCivUiRescan);
     engine.on('LocalPlayerTurnBegin', scheduleCivUiRescan);
+    window.addEventListener('anthroprocenia-replay-updated', scheduleCivUiRescan);
   }
 } catch (e) { err(`civilization UI turn hooks failed: ${e}`); }
 function redraw() { if (curFrame) drawMap(curFrame); }
@@ -11228,6 +13252,10 @@ function refresh(preserveLayout = false) {
   const recordingChanged = fp !== lastRecordingFp;
   lastRecordingFp = fp;
   if (recordingChanged) {
+    settlementPopulationSnapshots.clear();
+    liveCountryUiNames.clear();
+    entityCountCache.pos = -2;
+    settlementDamageCache.key = '';
     reconstructionCaches.clear();
     geographyLabelCache.regions = geographyLabelCache.rivers = null;
     continentByTile.clear();
@@ -11275,6 +13303,7 @@ function rememberMiniMapOptions() {
     showTerritory, showBorders, showCountryLabels, showCivIcons, showTradeRoutes, showSettlements, showBuildingLabels, showRegionLabels, showRegionBorders,
     showGeographicLabels, showRiverNames, showNaturalFeatures, showResources, showUnits, showWonders, fogMode,
     showPreviousMovement, showRegionBoundaries, showLabelArches,
+    showIslandNames, showWaterNames, showMountainNames, showRivers, showRoads, showBuildingDots, showUnitDots, showWarNames,
   };
   showBuildingLabels = false;
   showNaturalFeatures = true;
@@ -11288,8 +13317,10 @@ function rememberMiniMapOptions() {
   showRegionBorders = false;
   showGeographicLabels = false;
   showRiverNames = false;
+  showWarNames = false;
   showResources = true;
   showUnits = true;
+  showRivers = showRoads = showBuildingDots = showUnitDots = true;
   showWonders = true;
   showPreviousMovement = false; showRegionBoundaries = false; showLabelArches = false;
 }
@@ -11297,10 +13328,15 @@ function restoreMiniMapOptions() {
   if (!miniMapSavedOptions) return;
   ({ showTerritory, showBorders, showCountryLabels, showCivIcons, showTradeRoutes, showSettlements, showBuildingLabels, showRegionLabels, showRegionBorders,
     showGeographicLabels, showRiverNames, showNaturalFeatures, showResources, showUnits, showWonders, fogMode,
-    showPreviousMovement, showRegionBoundaries, showLabelArches } = miniMapSavedOptions);
+    showPreviousMovement, showRegionBoundaries, showLabelArches,
+    showIslandNames, showWaterNames, showMountainNames, showRivers, showRoads, showBuildingDots, showUnitDots, showWarNames } = miniMapSavedOptions);
   miniMapSavedOptions = null;
 }
 function resetMapOptions() {
+  showWarNames = DEFAULT_MAP_OPTIONS.warNames;
+  showIslandNames = DEFAULT_MAP_OPTIONS.islandNames; showWaterNames = DEFAULT_MAP_OPTIONS.waterNames; showMountainNames = DEFAULT_MAP_OPTIONS.mountainNames;
+  showRivers = DEFAULT_MAP_OPTIONS.rivers; showRoads = DEFAULT_MAP_OPTIONS.roads;
+  showBuildingDots = DEFAULT_MAP_OPTIONS.buildingDots; showUnitDots = DEFAULT_MAP_OPTIONS.unitDots;
   for (const name of Object.keys(townElementVisibility)) townElementVisibility[name] = true;
   syncTownElementVisibility();
   showTownLabels = DEFAULT_MAP_OPTIONS.townLabels;
@@ -11324,6 +13360,8 @@ function resetMapOptions() {
   showFogFootprint = true;
   const values = {
     territory: showTerritory, borders: showBorders, units: showUnits, wonders: showWonders,
+    islandNames: showIslandNames, waterNames: showWaterNames, mountainNames: showMountainNames,
+    rivers: showRivers, roads: showRoads, buildingDots: showBuildingDots, unitDots: showUnitDots, warNames: showWarNames,
     countryLabels: showCountryLabels, civIcons: showCivIcons, tradeRoutes: showTradeRoutes,
     settlements: showSettlements, buildingLabels: showBuildingLabels, regionLabels: showRegionLabels, regionBorders: showRegionBorders,
     previousMovement: showPreviousMovement, regionBoundaries: showRegionBoundaries, labelArches: showLabelArches,
@@ -11426,7 +13464,6 @@ function scheduleMiniMapUpdate() {
   miniMapUpdatePending = true;
   const update = () => {
     miniMapUpdatePending = false;
-    syncMapHudButton();
     if (mapVisible || mapOpenPending) return;
     if (document.getElementById('anthroprocenia-panel-container')) {
       deactivateMiniMap();
@@ -11449,7 +13486,6 @@ function installMiniMapIntegration() {
   });
   window.addEventListener('anthroprocenia-gameplay-ready', () => {
     scheduleMiniMapUpdate();
-    syncMapHudButton();
   });
   if (!miniMapObserver && document.body) {
     miniMapObserver = new MutationObserver(scheduleMiniMapUpdate);
@@ -11480,7 +13516,7 @@ function installMiniMapIntegration() {
   });
   scheduleMiniMapUpdate();
 }
-let lastMapButtonActivation = 0;
+let lastMapShortcutActivation = 0;
 let mapHudStateCheckLogged = false;
 function mapHudGameReady() {
   try {
@@ -11497,97 +13533,17 @@ function mapHudGameReady() {
       && GameplayMap.getGridHeight() > 0;
   } catch (error) { return false; }
 }
-function syncMapHudButton() {
-  const ring = document.getElementById('anthroprocenia-map-hud-ring');
-  if (!ring) return;
-  // Same conditions as the mini-map: in game, mini-map host on screen, no map screen open.
-  const host = document.querySelector('.mini-map__image');
-  const box = host ? host.getBoundingClientRect() : null;
-  const available = mapHudGameReady() && !mapVisible && !document.getElementById('anthroprocenia-panel-container')
-    && !!box && box.width > 0 && box.height > 0;
-  ring.style.visibility = available ? 'visible' : 'hidden';
-  ring.style.opacity = available ? '1' : '0';
-  ring.style.pointerEvents = available ? 'auto' : 'none';
-}
-function openMapScreenFromHud() {
+function openMapScreenFromShortcut() {
   const now = Date.now();
-  if (now - lastMapButtonActivation < 600) return;
+  if (now - lastMapShortcutActivation < 600) return;
   if (!mapHudGameReady()) return;
-  lastMapButtonActivation = now;
+  lastMapShortcutActivation = now;
   try {
     // The map is its own full-screen layer (not a Victories tab), so the game HUD stays on top of it.
     requestShow(true);
   } catch (error) {
-    err(`could not open the Map screen from the HUD: ${error}`);
+    err(`could not open the Map screen from the shortcut: ${error}`);
   }
-}
-function installMapHudButton() {
-  const attach = () => {
-    if (!document.body || document.getElementById('anthroprocenia-map-hud-ring')) return;
-    const ring = document.createElement('fxs-ring-meter');
-    ring.id = 'anthroprocenia-map-hud-ring';
-    ring.classList.add('ring-age', 'tut-age', 'ssb__element');
-    ring.setAttribute('ring-class', 'ssb__texture-ring');
-    ring.style.cssText = `position:fixed;display:block;overflow:visible;visibility:hidden;opacity:0;left:50%;bottom:${ps(26)}px;width:${ps(56)}px;height:${ps(56)}px;transform:translateX(-50%);z-index:2147483000;pointer-events:none;`;
-    const button = document.createElement('fxs-activatable');
-    button.id = 'anthroprocenia-map-hud-button';
-    button.classList.add('ssb__button', 'ageextended', 'tut-age', 'anthroprocenia-map-hud-button');
-    button.style.cssText = `position:relative;display:flex;width:${ps(56)}px;height:${ps(56)}px;border-radius:50%;pointer-events:auto;cursor:pointer;`;
-    button.setAttribute('role', 'button');
-    button.setAttribute('tabindex', '0');
-    button.setAttribute('aria-label', 'Open Map');
-    button.setAttribute('data-tooltip-content', 'LOC_ANTHROPROCENIA_MAP');
-    button.setAttribute('data-audio-group-ref', 'audio-panel-sub-system-dock');
-    button.setAttribute('data-audio-press-ref', 'data-audio-press-large');
-    button.setAttribute('data-audio-activate-ref', 'none');
-    for (const suffix of ['', '--hover', '--active', '--disabled']) {
-      const bg = document.createElement('div');
-      bg.classList.add(`ssb__button-iconbg${suffix}`);
-      bg.classList.add('ageextended');
-      button.appendChild(bg);
-    }
-    const icon = document.createElement('div');
-    icon.classList.add('ssb__button-icon', 'ageextended');
-    icon.style.backgroundImage = 'none';
-    const mapShape = document.createElement('div');
-    mapShape.className = 'anthroprocenia-map-symbol';
-    for (let i = 0; i < 3; i++) {
-      const panel = document.createElement('span');
-      panel.style.cssText = `display:block;flex:1;height:100%;border:1px solid #e6d9b8;background:${i === 1 ? '#8ca968' : '#cbb779'};`;
-      mapShape.appendChild(panel);
-    }
-    icon.appendChild(mapShape);
-    button.appendChild(icon);
-    const label = document.createElement('div');
-    label.textContent = L('LOC_ANTHROPROCENIA_MAP_VIEW');
-    label.style.cssText = `position:absolute;left:50%;top:${ps(58)}px;transform:translateX(-50%);white-space:nowrap;color:#e8dfc7;font:600 ${ps(11)}px sans-serif;text-shadow:0 1px 2px #000;pointer-events:none;`;
-    button.appendChild(label);
-    const activate = (event) => {
-      if (event.type === 'click') event.preventDefault();
-      openMapScreenFromHud();
-    };
-    button.addEventListener('action-activate', activate);
-    button.addEventListener('click', activate);
-    button.addEventListener('mouseup', activate);
-    button.addEventListener('pointerup', activate);
-    ring.addEventListener('click', activate);
-    ring.appendChild(button);
-    document.body.appendChild(ring);
-    syncMapHudButton();
-    let style = document.getElementById('anthroprocenia-map-hud-style');
-    if (!style) { style = document.createElement('style'); style.id = 'anthroprocenia-map-hud-style'; document.head.appendChild(style); }
-    style.textContent = '#anthroprocenia-map-hud-ring[style*="visibility: visible"],#anthroprocenia-map-hud-ring[style*="visibility:visible"]{pointer-events:auto!important}#anthroprocenia-map-hud-button{pointer-events:auto!important}body.anthroprocenia-victories-open #anthroprocenia-map-hud-ring{display:none!important}#anthroprocenia-map-hud-ring{flex:0 0 auto}#anthroprocenia-map-hud-button .ssb__button-icon{background-image:none!important}#anthroprocenia-map-hud-button .anthroprocenia-map-symbol{position:absolute;left:50%;top:50%;display:flex;width:22px;height:18px;transform:translate(-50%,-50%) skewY(-8deg);filter:drop-shadow(0 1px 1px #111)}';
-  };
-  if (!document.body) {
-    document.addEventListener('DOMContentLoaded', installMapHudButton, { once: true });
-    return;
-  }
-  attach();
-  if (!mapHudObserver) {
-    mapHudObserver = new MutationObserver(attach);
-    mapHudObserver.observe(document.body, { childList: true, subtree: true });
-  }
-  if (!mapHudVisibilityTimer) mapHudVisibilityTimer = setInterval(syncMapHudButton, 500);
 }
 function goToIndex(i) {
   if (!frames.length || !cellByIndex) return;
@@ -11707,6 +13663,8 @@ function mapCameraAction(event) {
 }
 let dispatchedCameraInput = null;
 function onRawMapInput(name, status, x, y) {
+  if (typeof civSwitchPicker !== 'undefined' && civSwitchPicker &&
+      civSwitchPicker.input(name, status === InputActionStatuses.FINISH, x ?? Cursor.position.x, y ?? Cursor.position.y)) return;
   const previous = dispatchedCameraInput;
   dispatchedCameraInput = null;
   if (previous && previous.name === name && previous.status === status &&
@@ -11714,13 +13672,13 @@ function onRawMapInput(name, status, x, y) {
   if (name === 'shell-action-3' && typeof InputActionStatuses !== 'undefined' && status === InputActionStatuses.FINISH) {
     if (gamepadControlsActive) return;
     if (!mapVisible) {
-      if (FocusManager.get().isWorldFocused() && !gameOverlayActive() && !settlementExpansionActive()) openMapScreenFromHud();
+      if (FocusManager.get().isWorldFocused() && !gameOverlayActive() && !settlementExpansionActive()) openMapScreenFromShortcut();
     } else if (!settlementExpansionActive() && !LeaderModelManager.isLeaderShowing && !gameOverlayActive()) {
       openGamepadControls();
     }
     return;
   }
-  if (!mapVisible || settlementExpansionActive() || LeaderModelManager.isLeaderShowing) return;
+  if (!mapVisible || LeaderModelManager.isLeaderShowing) return;
   if (name === 'anthroprocenia-zoom-in' || name === 'anthroprocenia-zoom-out') {
     if (typeof InputActionStatuses !== 'undefined' && status !== InputActionStatuses.FINISH) return;
     if (isEditableMapTarget(document.activeElement)) return;
@@ -11749,6 +13707,10 @@ function onRawMapInput(name, status, x, y) {
   mapCameraAction({ detail: { name, status, x, y } });
 }
 function mapGamepadAction(event) {
+  if (typeof civSwitchPicker !== 'undefined' && civSwitchPicker && event.detail &&
+      civSwitchPicker.input(event.detail.name, event.detail.status === InputActionStatuses.FINISH, Cursor.position.x, Cursor.position.y)) {
+    event.preventDefault(); event.stopImmediatePropagation(); return;
+  }
   if (!mapVisible || !event.detail) return;
   if (event.detail.name === 'mousebutton-left' && typeof unitIconPress !== 'undefined') {
     if (event.detail.status === InputActionStatuses.START) {
@@ -11765,11 +13727,18 @@ function mapGamepadAction(event) {
   }
   if (LeaderModelManager.isLeaderShowing) return;
   // Placement itself opens a city overlay; translate its map clicks before the generic overlay guard.
-  if (settlementExpansionActive() || mapPlotSelectionActive()) { prepareExpansionSelection(event); return; }
+  if (settlementExpansionActive() || mapPlotSelectionActive()) {
+    if (mapCameraAction(event)) {
+      dispatchedCameraInput = { ...event.detail, time: Date.now() };
+      event.preventDefault(); event.stopImmediatePropagation();
+    } else prepareExpansionSelection(event);
+    return;
+  }
   if (gameOverlayActive()) return;
   if (event.detail.name === 'mousebutton-left' && (els.walkerPause || els.walkerSpeed) && !gameOverlayActive()) {
     const control = walkerControlAt(Cursor.position);
     if (control) {
+      if (event.detail.status === InputActionStatuses.START) control.walkerPress?.();
       if (event.detail.status === InputActionStatuses.FINISH) control.walkerActivate(event);
       event.preventDefault(); event.stopImmediatePropagation(); return;
     }
@@ -12019,7 +13988,7 @@ function onTrackHover(e) {
   lastHoverGi = gi;
   const f = frames[gi];
   const date = f && typeof f[3] === 'string' ? f[3] : '';
-  els.label.textContent = f ? `Turn ${f[1]}${date ? ` · ${date}` : ''} (${gi + 1}/${frames.length})` : '';
+  els.label.textContent = f ? `${calendarDateLabel(date, f[1])} (${gi + 1}/${frames.length})` : '';
   const r = els.track.getBoundingClientRect();
   els.label.style.left = (r.left + (frames.length > 1 ? gi / (frames.length - 1) : 0) * r.width) + 'px';
   els.label.style.top = (r.top - ps(6)) + 'px';
@@ -12357,6 +14326,13 @@ function naturalWonderName(i) {
   } catch (e) { return ''; }
 }
 function wonderNameForHex(i) { return manMadeWonderName(i) || naturalWonderName(i); }
+function regionNameForHex(index) {
+  const service = window.AnthroproceniaGeography, geography = service && service.getMapData();
+  if (!geography) return '';
+  const id = geography.regionForTile.get(index);
+  const region = geography.regions.find(entry => entry.id === id);
+  return region ? mapLabelText(region.name) : '';
+}
 // Resource name at a plot — from the RECORDED per-age snapshot (same source as the dot), so it always matches
 // what's drawn. Reading the live map instead diverged: harvested or age-changed resources kept a dot but the
 // live query returned NO_RESOURCE, leaving a resource marker with an empty tooltip. '' when none / old recording.
@@ -12379,6 +14355,7 @@ function tooltipForHex(i) {
   const lines = [];
   const settle = settlementLineForHex(i); if (settle) lines.push(settle);
   const wonder = wonderNameForHex(i); if (wonder) lines.push(wonder);
+  const region = regionNameForHex(i); if (region) lines.push('Region: ' + region);
   const v = curFrame.get(i);
   if (v !== undefined) {
     const owner = (v >> 3) & 63, meta = ownerMeta(owner);
@@ -12432,14 +14409,22 @@ function showMapPlotTip(index, event) {
   const coord = GameplayMap.getLocationFromIndex(index);
   const visibility = GameplayMap.getRevealedState(GameContext.localObserverID, coord.x, coord.y);
   if (visibility === 0) { hideTip(); return true; }
-  const tip = ensureTip(true), key = `${index}|${manifest && manifest.rev}|${Game.turn}`;
+  const region = regionNameForHex(index);
+  const tip = ensureTip(true), key = `${index}|${manifest && manifest.rev}|${Game.turn}|${region}`;
   if (mapPlotTip.key !== key) {
     clearMapPlotTip(); tip.textContent = '';
     const cityID = GameplayMap.getOwningCityFromXY(coord.x, coord.y);
     try {
+      const content = document.createElement('div');
+      tip.appendChild(content);
       mapPlotTip.dispose = render(() => createComponent(PlotTooltipContent, {
         plotCoord: coord, owningCity: cityID ? Cities.get(cityID) : null,
-      }), tip);
+      }), content);
+      if (region) {
+        const line = document.createElement('div');
+        line.textContent = 'Region: ' + region;
+        tip.appendChild(line);
+      }
       mapPlotTip.key = key;
     } catch (error) {
       clearMapPlotTip(); tip.style.display = 'none';
@@ -12602,14 +14587,212 @@ function populationForItem(item) {
   // then divided by 5 to give the individual icon's share; weighted by where it is (cities hold far more people than the
   // improvements around them) and spread a little per icon.
   const origin = originSettlement(item);
-  let scale = (origin ? origin.population / 50 : 1) / 5 * populationWeight(populationClassFor(item)) * populationVariation(seed);
-  if (item.kind === 'unit') scale *= unitPopulationFactor(item.health, item.bonus);   // wounds cost people; strength bonuses add them
+  let damage = 1;
+  if (item.kind === 'unit') damage *= unitPopulationFactor(item.health, item.bonus);
   else {
-    if (item.kind === 'building' && isPillagedItem(item)) scale *= PILLAGED_FACTOR;
-    if (origin && origin.index != null) scale *= settlementDamageFor(origin.index);
+    if (item.kind === 'building' && isPillagedItem(item)) damage *= PILLAGED_FACTOR;
+    if (origin && origin.index != null) damage *= settlementDamageFor(origin.index);
   }
-  // Commands may have cost the icon's Home Location people, or brought newcomers to it.
-  return Math.max(1, iconPopulation(estimatedWorldPopulation(currentMapYear()), entityCountForPos(), seed, scale) + cmdPopulationDelta(item));
+  return Math.max(1, homePopulation(estimatedWorldPopulation(currentMapYear()), entityCountForPos(), seed,
+    origin ? origin.population : null, populationWeight(populationClassFor(item)), damage) + cmdPopulationDelta(item));
+}
+const settlementPopulationSnapshots = new Map();
+function recordedPopulationSnapshot(turn) {
+  const key = `${manifest?.rev}|${turn}|population7`;
+  if (settlementPopulationSnapshots.has(key)) return settlementPopulationSnapshots.get(key);
+  const settlements = reconstructSettlements(turn), buildings = reconstructBuildings(turn), wonders = reconstructWonders(turn);
+  const damaged = reconstructDamaged(turn), frame = frameFor(turn), identities = reconstructIdentity(turn), units = readUnitsTurn(turn);
+  const width = manifest.w, locations = new Map(), totals = new Map(), homes = [];
+  const point = index => basePos?.[index] || { x: (index % width) + (Math.floor(index / width) & 1) * 0.5, y: -Math.floor(index / width) * 0.866 };
+  const nearest = (index, owner) => {
+    if (owner < 0) return null;
+    const p = point(index), circumference = basePos ? mapPxW : width;
+    let best = null, distance = Infinity;
+    for (const [center, settlement] of settlements) {
+      const value = frame.get(center);
+      if (value === undefined || ((value >> 3) & 63) !== owner) continue;
+      const q = point(center), raw = Math.abs(p.x - q.x), dx = Math.min(raw, circumference - raw);
+      const d = dx * dx + (p.y - q.y) ** 2;
+      if (d < distance) { distance = d; best = { index: center, population: settlement[1] }; }
+    }
+    return best;
+  };
+  const origin = (index, owner) => {
+    const key = `${index}|${owner}`;
+    if (!locations.has(key)) locations.set(key, nearest(index, owner));
+    return locations.get(key);
+  };
+  let entities = units.length * populationWeight('unit') + wonders.size * populationWeight('wonder');
+  for (const settlement of settlements.values()) entities += Math.max(0, Math.floor(settlement[1])) * populationWeight('specialist');
+  for (const [index, list] of buildings) {
+    const owner = frame.has(index) ? (frame.get(index) >> 3) & 63 : -1, city = origin(index, owner);
+    const bad = damaged.get(index) || [], seen = new Map();
+    if (city) {
+      if (!totals.has(city.index)) totals.set(city.index, { damaged: 0, total: 0 });
+      const tally = totals.get(city.index); tally.damaged += bad.length; tally.total += list.length;
+    }
+    for (const typeIndex of list) {
+      const type = manifest.buildingTypes?.[typeIndex], kind = type?.[2] === 1 ? 'improvement' : settlements.has(index) ? 'center' : 'urban';
+      entities += populationWeight(kind);
+      const n = seen.get(typeIndex) || 0; seen.set(typeIndex, n + 1);
+      for (let dot = 0; dot < DOTS_PER_ITEM; dot++) homes.push({ index, owner, city, seed: `${index}|b|${typeIndex}|${dot}`,
+        item: { kind: 'building', index, typeIndex, n, dot }, icon: `b${typeIndex}.${n}.${dot}`, group: `b${typeIndex}`,
+        weight: populationWeight(kind), damage: bad.includes(typeIndex) ? PILLAGED_FACTOR : 1 });
+    }
+  }
+  for (const [index, wonder] of wonders) {
+    const owner = wonder[0], city = origin(index, owner);
+    homes.push({ index, owner, city, seed: `${index}|w|${wonder[1]}`, icon: `w${wonder[1]}`, group: `w${wonder[1]}`,
+      item: { kind: 'wonder', index, typeIndex: wonder[1] }, weight: populationWeight('wonder'), damage: 1 });
+  }
+  for (const [index, settlement] of settlements) {
+    if (!(settlement[1] > 0)) continue;
+    const owner = frame.has(index) ? (frame.get(index) >> 3) & 63 : -1;
+    homes.push({ index, owner, city: origin(index, owner), seed: `${index}|s`, icon: 'sp', group: 'sp',
+      item: { kind: 'specialist', index }, weight: populationWeight('specialist'), damage: 1 });
+  }
+  units.forEach(([index, owner, type, health, , bonus], row) => {
+    homes.push({ index, owner, city: origin(index, owner), row,
+      seed: `u|${type}|u${unitLineageId(row, turn)}`, weight: populationWeight('unit'),
+      item: { kind: 'unit', index, owner, type, health, bonus: bonus || 0, row, turn },
+      damage: unitPopulationFactor(health, bonus || 0) });
+  });
+  const result = { settlements: new Map(), tiles: new Map(), units: new Map() }, record = readPlayersRec(turn);
+  const ageInfo = [...(manifest.ages || [])].reverse().find(row => row[0] <= turn);
+  const era = ageInfo ? ageEraKey(ageInfo[1], ageInfo[2]) : ageEraKey(frames[turn]?.[0]);
+  const year = parseGameYear(frames[turn]?.[3]) ?? (era === 'MODERN' ? 1900 : era === 'EXPLORATION' ? 1200 : -1500);
+  const age = townEra(era, frames[turn]?.[1] || 1).age;
+  for (const home of homes) {
+    const tally = home.city && totals.get(home.city.index);
+    const damage = home.damage * (home.item.kind !== 'unit' && tally ? settlementDamageFactor(tally.damaged, tally.total) : 1);
+    const population = Math.max(1, homePopulation(estimatedWorldPopulation(year), Math.max(1, entities), home.seed,
+      home.city ? home.city.population : null, home.weight, damage) + cmdPopulationDelta(home.item, turn));
+    result.tiles.set(home.index, (result.tiles.get(home.index) || 0) + population);
+    if (home.item.kind === 'unit') { result.units.set(home.row, population); continue; }
+    if (!home.city) continue;
+    const settlement = settlements.get(home.city.index);
+    const continent = continentTypeForTile(home.index), nodeId = iconNodeId(home.owner < 0 ? 'none' : `o${home.owner}`, continent == null ? 'sea' : String(continent), home.index, home.group, home.icon);
+    const identity = identities.get(home.owner), society = record?.soc?.find(row => row[0] === home.owner);
+    const plan = homePlan({ category: popIconTraits(home.item).category, age, turn, yields: settlement[3],
+      religion: identity?.[9] || identity?.[10]?.split('|')[0] || '',
+      discoveries: society?.[1]?.map(id => PEOPLE_PROGRESSION_NODES[id]).filter(Boolean) }, personBaseId(nodeId), population);
+    if (!result.settlements.has(home.city.index)) result.settlements.set(home.city.index, { population: 0, occupations: Array(7).fill(0) });
+    const entry = result.settlements.get(home.city.index); entry.population += population;
+    for (const group of plan.groups) {
+      const yieldIndex = occupationYieldIndex(group.title);
+      if (yieldIndex >= 0) entry.occupations[yieldIndex] += group.count;
+    }
+  }
+  settlementPopulationSnapshots.set(key, result);
+  if (settlementPopulationSnapshots.size > 4) settlementPopulationSnapshots.delete(settlementPopulationSnapshots.keys().next().value);
+  return result;
+}
+function settlementPopulationSnapshot(turn) {
+  return recordedPopulationSnapshot(turn).settlements;
+}
+function nativePopulationRecord() {
+  const saved = readManifest();
+  if (!saved?.frames?.length) throw new Error('No population recording is available');
+  if (!manifest || manifest.rev !== saved.rev || frames.length !== saved.frames.length) refresh(true);
+  const turn = frames.length - 1;
+  return { turn, snapshot: recordedPopulationSnapshot(turn) };
+}
+let nativePopulationCaptureKey = '';
+function nativeUnitPopulationRow(id, unit, turn) {
+  const key = unit.owner + ':' + (id.id !== undefined ? id.id : JSON.stringify(id)), rows = readUnitsTurn(turn);
+  const row = rows.findIndex(value => value[1] === unit.owner && value[7] === key);
+  if (row < 0 || rows[row][0] !== GameplayMap.getIndexFromLocation(unit.location) ||
+      manifest.unitTypes?.[rows[row][2]]?.[0] !== unit.type) return null;
+  return row;
+}
+function syncNativePopulationDisplays() {
+  const production = document.querySelector('panel-production-chooser'), actions = document.querySelector('unit-actions');
+  const labels = [];
+  const labelAt = (root, anchor, className, prefix) => {
+    if (!root || !anchor?.parentNode) return null;
+    let label = root.querySelector('.' + className);
+    if (!label) {
+      label = document.createElement('div'); label.classList.add(className);
+      label.style.cssText = 'display:block;flex-shrink:0;text-align:center;color:#e5d2ac;font-size:14px;line-height:20px;white-space:normal;pointer-events:none;';
+      anchor.parentNode.insertBefore(label, anchor.nextSibling);
+    }
+    labels.push({ label, prefix });
+    return label;
+  };
+  const productionLabel = labelAt(production, production?.component?.cityNameElement ||
+    production?.querySelector('[tab-for="panel-production-chooser"]'), 'anthroprocenia-settlement-population', 'Population');
+  const unitLabel = labelAt(actions, actions?.querySelector('.unit-actions__unit-identifier-container'),
+    'anthroprocenia-unit-manpower', 'Manpower');
+  if (!labels.length) return;
+  const write = (label, text) => { if (label && label.textContent !== text) label.textContent = text; };
+  try {
+    const cityId = productionLabel ? production.component?.cityID || UI.Player.getHeadSelectedCity() : null;
+    const unitId = unitLabel ? actions.component?.unitId || UI.Player.getHeadSelectedUnit() : null;
+    const city = cityId && Cities.get(cityId), unit = unitId && Units.get(unitId);
+    if (unit) syncCivilizationUnitPortrait(actions, unit, GameInfo.Units, WorldUI);
+    if (!city) write(productionLabel, '');
+    if (!unit) write(unitLabel, '');
+    if (!city && !unit) return;
+    const { turn, snapshot } = nativePopulationRecord();
+    if (productionLabel) {
+      if (!city) write(productionLabel, '');
+      else {
+        const tiles = new Set([GameplayMap.getIndexFromLocation(city.location), ...city.getPurchasedPlots()]);
+        let population = 0;
+        for (const tile of tiles) population += snapshot.tiles.get(tile) || 0;
+        write(productionLabel, `Population: ${formatThousands(population)}`);
+      }
+    }
+    if (unitLabel) {
+      if (!unit) write(unitLabel, '');
+      else {
+        const row = nativeUnitPopulationRow(unitId, unit, turn), population = row === null ? null : snapshot.units.get(row);
+        write(unitLabel, population == null ? 'Manpower: updating...' : `Manpower: ${formatThousands(population)}`);
+        if (population == null) {
+          const key = `${manifest.rev}|${turn}|${unit.owner}|${unitId.id}|${unit.location.x}|${unit.location.y}`;
+          if (key !== nativePopulationCaptureKey) { nativePopulationCaptureKey = key; window.AnthroproceniaRequestCapture?.(); }
+        } else nativePopulationCaptureKey = '';
+      }
+    }
+  } catch (error) {
+    for (const { label, prefix } of labels) write(label, `${prefix}: unavailable`);
+    err(`native population displays failed: ${error}`);
+  }
+}
+let cityDetailsTimer = 0;
+function syncCityDetailsPopulation() {
+  const root = document.querySelector('panel-city-details'), count = root?.querySelector('.current-citizens-count');
+  if (!count) return;
+  const id = UI.Player.getHeadSelectedCity(), city = id && Cities.get(id);
+  if (!city) return;
+  const saved = readManifest();
+  if (!saved?.frames?.length) { err('city details simulation has no recording'); return; }
+  if (!manifest || manifest.rev !== saved.rev) refresh(true);
+  const index = GameplayMap.getIndexFromLocation(city.location), entry = settlementPopulationSnapshot(frames.length - 1).get(index);
+  if (!entry) { err(`city details population is unavailable for plot ${index}`); return; }
+  const text = `${city.population} (${formatThousands(entry.population)})`;
+  if (count.textContent !== text) count.textContent = text;
+}
+function scheduleCityDetailsPopulation() {
+  if (cityDetailsTimer) return;
+  cityDetailsTimer = setTimeout(() => {
+    cityDetailsTimer = 0;
+    try { syncCityDetailsPopulation(); } catch (e) { err(`city details population failed: ${e}`); }
+    syncNativePopulationDisplays();
+  }, 0);
+}
+window.addEventListener('update-city-details', scheduleCityDetailsPopulation);
+window.addEventListener('anthroprocenia-replay-updated', scheduleCityDetailsPopulation);
+function installNativePopulationDisplays() {
+  if (!document.body) { document.addEventListener('DOMContentLoaded', installNativePopulationDisplays, { once: true }); return; }
+  const selector = 'unit-actions, panel-production-chooser';
+  const observer = new MutationObserver(records => {
+    if (records.some(record => record.target.closest?.(selector) ||
+      [...record.addedNodes].some(node => node.matches?.(selector) || node.querySelector?.(selector)))) scheduleCityDetailsPopulation();
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+  for (const name of ['UnitSelectionChanged', 'CitySelectionChanged']) engine.on(name, scheduleCityDetailsPopulation);
+  scheduleCityDetailsPopulation();
 }
 function isPillagedItem(item) {
   const list = damagedForPos().get(item.index);
@@ -12811,7 +14994,7 @@ function renderPathPreview() {
   p.svg.style.display = 'block';
   const radius = Math.max(8, Math.min(15, tilePx * 0.16)), byPlot = new Map(points.map(q => [q.i, q]));
   p.badges.textContent = '';
-  for (const label of pathTurnLabels(p.plots, p.turns, tilePx >= 70)) {
+  for (const label of pathTurnLabels(p.plots, p.turns)) {
     const at = byPlot.get(label.i);
     if (!at) continue;
     const badge = document.createElement('div');
@@ -12892,6 +15075,7 @@ function popOwnerContext(owner) {
     }
     ctx = {
       civKey: normalizedCivKey(civType),
+      government: identity ? String(identity[7] || '') : '',
       religion: identity ? String(identity[9] || '').trim() || String(identity[10] || '').split('|')[0].trim() : '',
       discoveries: society && Array.isArray(society[1]) ? society[1].map(id => PEOPLE_PROGRESSION_NODES[id]).filter(Boolean) : null,
       celebration: society ? society[2] === true : false, crisis: society ? society[3] === true : false, war, alliance,
@@ -12911,17 +15095,11 @@ function cmdPersonActions(hit) {
   const profile = personProfileFor(hit);
   return familyActions(cmdFamilyOf(hit), cmdIsLeader(hit), popActivityContext(hit.group.owner, hit.group.entry.item.index, profile));
 }
-function popCivInfo(owner, stats) {
+function popCivInfo(owner, names) {
   if (owner < 0) return { id: 'none', name: 'Unclaimed Lands' };
   const kind = ownerMeta(owner).kind;
   if (kind === 'major') {
-    const identity = identityForPos().get(owner), s = stats.get(owner);
-    let name = '';
-    if (identity) {
-      try { name = countryName(identity, s ? s.count : 0, null, replayEraKey(), s ? s.capital : '', s && s.capitalPopulation >= 0 ? s.capitalPopulation : undefined, owner); }
-      catch (e) { name = ''; }
-    }
-    return { id: 'o' + owner, name: name || civAdjective(owner) };
+    return { id: 'o' + owner, name: names.get(owner) || civAdjective(owner) };
   }
   return { id: 'o' + owner, name: kind === 'village' ? 'Independent Peoples' : cityStateName(owner) };
 }
@@ -13125,11 +15303,14 @@ function popChangeFor(node) {
 }
 // How a Home Location's people divide into occupations (worked out once per home and era; see homePlan).
 function popHomePlan(nodeId, owner, traits, population) {
-  const era = popEraNow(), key = `${nodeId}|${era.age}|${population}|${pos}`;
+  const tile = Number(nodeId.match(/\|t:(\d+)/)?.[1]);
+  const settlement = !traits.unit && Number.isInteger(tile) ? nearestSettlement(tile, owner) : null;
+  const yields = settlement ? settlementsForPos().get(settlement.index)?.[3] : null;
+  const era = popEraNow(), key = `${nodeId}|${era.age}|${population}|${pos}|${yields?.join(',') || ''}`;
   let plan = popState.plans.get(key);
   if (!plan) {
     const ctx = popOwnerContext(owner);
-    plan = homePlan({ religion: ctx.religion, discoveries: ctx.discoveries, age: era.age, category: traits.category, form: '', unit: traits.unit, turn: pos }, personBaseId(nodeId), population);
+    plan = homePlan({ religion: ctx.religion, discoveries: ctx.discoveries, age: era.age, category: traits.category, form: '', unit: traits.unit, turn: pos, yields }, personBaseId(nodeId), population);
     if (popState.plans.size > 400) popState.plans.clear();
     popState.plans.set(key, plan);
   }
@@ -13149,13 +15330,13 @@ function popLeaderHome(iconId) {
   const type = manifest && Array.isArray(manifest.buildingTypes) ? manifest.buildingTypes[+m[1]] : null;
   return /PALACE/.test(String(constructibleTypeKey(type) || '').toUpperCase()) ? 'palace' : '';
 }
-function popLeaderRole(traits, index, profile, civKey) {
+function popLeaderRole(traits, index, profile, civKey, government = '') {
   if (!traits || traits.iconId === undefined || index > 4) return '';
   const home = popLeaderHome(traits.iconId);
   if (!home) return '';
-  return leaderRole({ home, unit: traits.unit, civKey, index, gender: profile.gender, ageCategory: profile.ageCategory });
+  return leaderRole({ home, unit: traits.unit, civKey, government, index, gender: profile.gender, ageCategory: profile.ageCategory });
 }
-function popLeaderHousehold(nodeId, index, owner, traits, population, tile, profile, civKey) {
+function popLeaderHousehold(nodeId, index, owner, traits, population, tile, profile, civKey, government = '') {
   if (profile.role) return true;
   if (!popLeaderHome(traits.iconId) || index >= FAMILY_COHORT_SIZE || tile < 0 || !profile.life) return false;
   const node = { id: nodeId, total: population, tile, icon: { owner, unit: traits.unit } };
@@ -13163,7 +15344,7 @@ function popLeaderHousehold(nodeId, index, owner, traits, population, tile, prof
   const year = lifeTimelineNow().years[pos] || 0;
   return rows.some(member => member.deathTurn === undefined && member.index <= 4 && popLeaderRole(traits, member.index, {
     gender: 'male', ageCategory: ageCategory(traits.unit ? 16 + (year - member.born) * 0.7 : year - member.born),
-  }, civKey));
+  }, civKey, government));
 }
 // Person `index` of a Home Location of `population` people: the same person the panel lists as that row. The person is a
 // record of ids (first name, last name, two traits) made from the row's key and the generation living in that slot (see
@@ -13189,8 +15370,8 @@ function popProfile(nodeId, index, owner, traits, population, tile = -1) {
     profile.ageCategory = ageCategory(years);
     if (profile.ageCategory === 'Child' && !traits.unit) profile.occupation = profile.years < 5 ? 'Infant' : `${profile.occupation}'s child`;
   }
-  profile.role = popLeaderRole(traits, index, profile, ctx.civKey);
-  profile.leaderHousehold = popLeaderHousehold(nodeId, index, owner, traits, population, tile, profile, ctx.civKey);
+  profile.role = popLeaderRole(traits, index, profile, ctx.civKey, ctx.government);
+  profile.leaderHousehold = popLeaderHousehold(nodeId, index, owner, traits, population, tile, profile, ctx.civKey, ctx.government);
   if (traits.iconId !== undefined) cmdNoteLeader(key, profile.role);
   if (popState.profiles.size > 3000) popState.profiles.clear();
   popState.profiles.set(key, profile);
@@ -13316,18 +15497,9 @@ function collectPopulationEntries() {
   const entries = [];
   if (!frames.length || !basePos || !manifest || !curFrame) return entries;
   const frame = curFrame, vis = fogMode ? visForPos() : null;
-  const stats = new Map();
-  for (const [index, settlement] of settlementsForPos()) {
-    const value = frame.get(index);
-    if (value === undefined) continue;
-    const owner = (value >> 3) & 63, population = Number(settlement[1]) || 0;
-    let st = stats.get(owner);
-    if (!st) { st = { count: 0, capital: '', capitalPopulation: -1 }; stats.set(owner, st); }
-    st.count++;
-    if (population > st.capitalPopulation) { st.capitalPopulation = population; st.capital = mapLabelText(settlement[0]); }
-  }
+  const names = majorCountryNames(frame, countryTerritories(frame, null));
   const civs = new Map(), places = new Map();
-  const civFor = owner => { let c = civs.get(owner); if (!c) { c = popCivInfo(owner, stats); civs.set(owner, c); } return c; };
+  const civFor = owner => { let c = civs.get(owner); if (!c) { c = popCivInfo(owner, names); civs.set(owner, c); } return c; };
   const placeFor = index => { let p = places.get(index); if (!p) { p = popPlaceInfo(index); places.set(index, p); } return p; };
   const tileOwner = popTileOwner;
   const add = (owner, index, icon) => {
@@ -13336,7 +15508,7 @@ function collectPopulationEntries() {
   };
   if (Array.isArray(manifest.buildingTypes)) {
     for (const [index, list] of buildingsForPos()) {
-      if (!basePos[index] || (vis && vis[index] === 0)) continue;
+      if (!basePos[index] || (vis && !(vis[index] > 0))) continue;
       const owner = tileOwner(index), seen = new Map();
       for (const typeIndex of list) {
         const type = manifest.buildingTypes[typeIndex];
@@ -13360,20 +15532,20 @@ function collectPopulationEntries() {
     });
   }
   for (const [index, wonder] of wondersForPos()) {
-    if (!basePos[index] || (vis && vis[index] === 0)) continue;
+    if (!basePos[index] || (vis && !(vis[index] > 0))) continue;
     const owner = wonder[0], typeIndex = wonder[1], base = wonderNameByIdx(typeIndex) || 'Wonder';
     const civKey = popOwnerContext(owner).civKey, item = { kind: 'wonder', index, typeIndex };
     const names = siteNamesForTile(civKey, index, [{ typeKey: `WONDER_${typeIndex}`, base, resource: '', count: 1 }]);
     add(owner, index, { id: popIconId(item), kind: 'wonder', name: (names[0] && names[0][0]) || base, population: populationForItem(item), category: 'wonder', unit: null, group: popIconGroup(item) });
   }
   for (const [index, settlement] of settlementsForPos()) {
-    if (!basePos[index] || (vis && vis[index] === 0) || !(Number(settlement[1]) > 0)) continue;
+    if (!basePos[index] || (vis && !(vis[index] > 0)) || !(Number(settlement[1]) > 0)) continue;
     const item = { kind: 'specialist', index }, name = mapLabelText(settlement[0]) || 'Settlement';
     add(tileOwner(index), index, { id: popIconId(item), kind: 'specialist', name: `The ${name} Specialists`, population: populationForItem(item), category: 'specialist', unit: null, group: popIconGroup(item) });
   }
   return entries;
 }
-function popModelKey() { return `${pos}|${frames.length}|${fogMode ? 1 : 0}`; }
+function popModelKey() { return `${pos}|${frames.length}|${manifest?.rev || 0}|${fogMode ? 1 : 0}`; }
 function popRecomputeRows() {
   if (popState.homeFilter && popState.homeFilter.entry) {
     popState.rows = popBuildingRows();
@@ -13491,7 +15663,7 @@ function popSortOptions() { return { sort: popState.sortMode, plan: popNodePlan,
 function popFrameSignature() {
   const units = readUnitsTurn(pos);
   const strength = units.reduce((sum, unit) => sum + unit[3] + (unit[5] || 0) * 7, 0);
-  return `v7.${NAME_LISTS_VERSION}|${manifest ? manifest.rev : 0}|${frames[pos] ? frames[pos][3] : ''}|${entityCountForPos()}|${settlementsForPos().size}|${buildingsForPos().size}|${damagedForPos().size}|${units.length}|${strength}|${wondersForPos().size}|${fogMode ? 1 : 0}`;
+  return `v8.${NAME_LISTS_VERSION}|${manifest ? manifest.rev : 0}|${frames[pos] ? frames[pos][3] : ''}|${entityCountForPos()}|${settlementsForPos().size}|${buildingsForPos().size}|${damagedForPos().size}|${units.length}|${strength}|${wondersForPos().size}|${fogMode ? 1 : 0}`;
 }
 // The turn's people come from the saved record when there is one that still matches; otherwise they are worked out and saved.
 function popLoadEntries(recordKey, signature) {
@@ -13537,6 +15709,14 @@ function popBuildModel(key) {
   try {
     const entries = frames.length && basePos && manifest && curFrame ? popLoadEntries(`pop${pos}${fogMode ? 'f' : 'a'}`, popFrameSignature()) : [];
     popNameCountries(entries);
+    const geography = typeof window !== 'undefined' ? window.AnthroproceniaGeography?.getMapData() : null;
+    if (geography) {
+      const regions = new Map(geography.regions.map(region => [region.id, region]));
+      for (const entry of entries) {
+        const region = regions.get(geography.regionForTile.get(entry.tile.index));
+        if (region) entry.region = { id: region.id, name: region.name, type: region.island ? 'island' : region.water ? 'water' : 'region' };
+      }
+    }
     popState.tree = buildPopulationTree(entries);
     popState.nodeIndex = null; popState.searchRows = null;
     popState.total = popState.tree.reduce((sum, civ) => sum + civ.total, 0);
@@ -13880,7 +16060,7 @@ function popOffscreenAction(node, index, profile) {
 }
 function popRefreshActions(now) {
   if (popState.actionsAt && now - popState.actionsAt < 750) return;
-  if (!popState.peoplePaused) popState.activityTime = (popState.activityTime || 0) + Math.min(1500, Math.max(0, now - (popState.actionsAt || now))) * (popState.walkerSpeed || 1) / 5;
+  if (!popState.peoplePaused) popState.activityTime = (popState.activityTime || 0) + Math.min(1500, Math.max(0, now - (popState.actionsAt || now))) * (popState.walkerSpeed || 1);
   popState.actionsAt = now;
   const roots = [popState.open && els.popRows, leadState.open && els.leadRows, familyState.open && els.familyContent].filter(Boolean);
   if (!roots.length) return;
@@ -14112,7 +16292,7 @@ function popTogglePinKey(pin) {
 // Widens the "show more" pages so a node's row is listed.
 function popRevealNode(nodeId) {
   let list = popState.tree, parentId = 'root';
-  for (const id of [...ancestorIds(nodeId), nodeId]) {
+  for (const id of [...ancestorIds(nodeId, popState.tree), nodeId]) {
     const at = list.findIndex(candidate => candidate.id === id);
     if (at < 0) return;
     const needed = Math.ceil((at + 1) / PAGE_SIZE) * PAGE_SIZE;
@@ -14174,7 +16354,7 @@ function onPopPress(event) {
     // A search result or pinned person: the list goes back to the tree, opened at them.
     popClearSearch();
     if (row.type === 'node') {
-      for (const id of ancestorIds(row.node.id)) popState.expanded.add(id);
+      for (const id of ancestorIds(row.node.id, popState.tree)) popState.expanded.add(id);
       popState.expanded.add(row.node.id);
       popRevealNode(row.node.id);
       if (isSelectableNode(row.node)) popSelect(row.node);
@@ -14283,6 +16463,10 @@ function popSyncPauseButton() {
 }
 const townCompassState = { enabled: false, el: null, path: null, shape: '', limited: false };
 let skipAheadView = null;
+installSkipAheadDiplomacy({
+  manager: DiplomacyManager, getController: () => skipAheadView?.controller, getState: skipAheadSnapshot,
+  reportError: message => { err(message); showLoading(message); },
+});
 function skipAheadSnapshot() {
   const config = Configuration.getGame(), player = Players.get(GameContext.localPlayerID);
   const age = GameInfo.Ages.lookup(Game.age);
@@ -14321,7 +16505,7 @@ function syncTownCompass() {
   button.setAttribute('aria-pressed', String(state.enabled));
   const action = state.enabled ? 'Turn off nearby townscape arrows' : 'Turn on nearby townscape arrows';
   button.setAttribute('aria-label', action);
-  button.setAttribute('title', `${action}: current tile and six adjacent tiles`);
+  button.setAttribute('title', `${action}: within three-quarters of the shorter screen dimension`);
   if (button.compassSlash) button.compassSlash.style.display = state.enabled ? 'block' : 'none';
   if (!visible || !state.enabled) {
     if (state.el) { state.el.style.display = 'none'; state.path.setAttribute('d', ''); state.shape = ''; }
@@ -14351,12 +16535,14 @@ function syncTownCompass() {
   const nearby = new Set(tile >= 0 ? [tile, ...(neighborsByIndex[tile] || [])] : []);
   const controls = arrowControlRects(), available = (x, y) => indicatorPointAvailable(x, y, area, controls);
   const vis = fogMode ? visForPos() : null, period = layoutCols * hexW;
+  const centerX = area.x + area.w / 2, centerY = area.y + area.h / 2, reach = Math.min(area.w, area.h) * 0.75;
   const shapes = [], points = [[-14, -6], [1, -6], [1, -11], [14, 0], [1, 11], [1, 6], [-14, 6]];
   let chars = 0, count = 0, limited = false;
   for (const point of iconPoints) {
-    if (point.item.kind === 'resource' || !nearby.has(point.item.index) || (vis && vis[point.item.index] === 0)) continue;
+    if (point.item.kind === 'resource' || !nearby.has(point.item.index) || (vis && !(vis[point.item.index] > 0))) continue;
     const target = mapToScreen(point.x, point.y);
     if (period > 0) target.x += Math.round((area.x + area.w / 2 - target.x) / (period * viewZoom)) * period * viewZoom;
+    if (Math.hypot(target.x - centerX, target.y - centerY) > reach) continue;
     let placement;
     if (target.x > area.x && target.x < area.x + area.w && target.y > area.y && target.y < area.y + area.h) {
       if (!available(target.x, target.y)) continue;
@@ -14382,28 +16568,38 @@ function buildWalkerControls() {
     const button = document.createElement('div');
     button.setAttribute('role', 'button'); button.setAttribute('tabindex', '0'); button.classList.add(MAP_CHROME_CLASS);
     button.style.cssText = `position:fixed;z-index:100046;display:none;align-items:center;justify-content:center;box-sizing:border-box;width:${ps(36)}px;height:${ps(36)}px;line-height:${ps(36)}px;border:${ps(1)}px solid #6a88bb;border-radius:50%;background:rgba(16,22,34,0.92);color:#cfe3ff;font:600 ${ps(12)}px sans-serif;text-align:center;cursor:pointer;padding:0;pointer-events:auto;user-select:none;`;
-    let stamp = -Infinity, released = false;
+    let stamp = -Infinity, released = false, nativeReleased = false, domReleased = false;
+    const press = () => { released = false; nativeReleased = false; domReleased = false; };
     const activate = event => {
       if (event.button || (event.type === 'keydown' && (event.repeat || !['Enter', ' '].includes(event.key)))) return;
       event.preventDefault(); event.stopPropagation();
+      if (event.type === 'keydown') press();
       if (event.type === 'click' && released) { released = false; return; }
-      if (event.type === 'mouseup') released = true;
+      if (event.type === 'mouseup') {
+        released = true;
+        if (nativeReleased) { nativeReleased = false; return; }
+        domReleased = true;
+      } else if (event.detail?.name === 'mousebutton-left') {
+        released = true;
+        if (domReleased) { domReleased = false; return; }
+        nativeReleased = true;
+      }
       const now = Date.now();
       if (now - stamp < 300) return;
       stamp = now; action();
     };
     button.walkerActivate = activate;
+    button.walkerPress = press;
     for (const type of ['mouseup', 'click', 'keydown']) button.addEventListener(type, activate);
-    button.addEventListener('mousedown', () => { released = false; });
-    button.addEventListener('mousedown', event => { if (!event.button) { released = false; event.preventDefault(); event.stopPropagation(); } });
+    button.addEventListener('mousedown', event => { if (!event.button) { press(); event.preventDefault(); event.stopPropagation(); } });
     document.body.appendChild(button); return button;
   };
   els.historyButton = make(toggleMapHistory);
   els.historyButton.id = 'anthroprocenia-history-button';
   els.historyButton.classList.add('anthro-history-ui');
   els.historyButton.setAttribute('aria-controls', 'anthroprocenia-playback-panel');
-  els.historyButton.setAttribute('title', 'Open or close map history controls');
-  els.historyButton.setAttribute('aria-label', 'Open or close map history controls');
+  els.historyButton.setAttribute('title', 'Open the World Chronicle Panel');
+  els.historyButton.setAttribute('aria-label', 'Open the World Chronicle Panel');
   els.historyButton.innerHTML = uiGlyph('history', historyControlsExpanded);
   els.walkerPause = make(() => { popState.peoplePaused = !popState.peoplePaused; popSyncPauseButton(); });
   els.walkerSpeed = make(() => { popState.walkerSpeed = (popState.walkerSpeed || 1) % 5 + 1; syncWalkerSpeed(); });
@@ -14424,8 +16620,8 @@ function buildWalkerControls() {
   worldIcon.appendChild(worldPath); els.skipAheadButton.appendChild(worldIcon);
   els.townCompass = make(() => { townCompassState.enabled = !townCompassState.enabled; syncTownCompass(); });
   els.townCompass.id = 'anthroprocenia-town-compass';
-  els.townCompass.setAttribute('aria-label', 'Toggle arrows to townscapes in this tile and adjacent tiles');
-  els.townCompass.setAttribute('title', 'Nearby townscapes: current tile and six adjacent tiles');
+  els.townCompass.setAttribute('aria-label', 'Toggle short-range townscape arrows');
+  els.townCompass.setAttribute('title', 'Nearby townscapes: short screen-distance range');
   const compassIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   compassIcon.setAttribute('viewBox', '0 0 24 24'); compassIcon.setAttribute('width', String(ps(22))); compassIcon.setAttribute('height', String(ps(22)));
   compassIcon.setAttribute('aria-hidden', 'true'); compassIcon.style.pointerEvents = 'none';
@@ -14490,26 +16686,19 @@ function syncWalkerSpeed() {
     'M11 2 H3 V8 H9 L11 10 V12 L9 14 H3',
   ];
   label.firstChild.setAttribute('d', digits[speed - 1] + ' M16 6 L22 13 M22 6 L16 13');
-  els.walkerSpeed.setAttribute('title', `Walker speed ${speed}x; click for ${speed % 5 + 1}x (5x is the original pace)`);
+  els.walkerSpeed.setAttribute('title', `Walker speed ${speed}x; click for ${speed % 5 + 1}x (1x: 3 mph walking, 6 mph cavalry)`);
   els.walkerSpeed.setAttribute('aria-label', `Walker speed ${speed}x`);
 }
-// Three people side by side, drawn inline so the button needs no image asset.
 function popPeopleIcon() {
   const ns = 'http://www.w3.org/2000/svg', svg = document.createElementNS(ns, 'svg');
-  svg.setAttribute('viewBox', '0 0 30 20');
-  svg.setAttribute('width', String(ps(27))); svg.setAttribute('height', String(ps(18)));
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('width', String(ps(24))); svg.setAttribute('height', String(ps(24)));
+  svg.setAttribute('aria-hidden', 'true');
   svg.style.cssText = 'flex:0 0 auto;pointer-events:none;';
-  const person = (cx, cy, r, fill) => {
-    const head = document.createElementNS(ns, 'circle');
-    head.setAttribute('cx', String(cx)); head.setAttribute('cy', String(cy)); head.setAttribute('r', String(r));
-    const body = document.createElementNS(ns, 'path');
-    const w = r * 1.9, top = cy + r * 1.35, bottom = 20;
-    body.setAttribute('d', `M${cx - w} ${bottom} L${cx - w} ${top + r} Q${cx - w} ${top} ${cx - w + r} ${top} L${cx + w - r} ${top} Q${cx + w} ${top} ${cx + w} ${top + r} L${cx + w} ${bottom} Z`);
-    for (const el of [head, body]) { el.setAttribute('fill', fill); el.setAttribute('stroke', 'rgba(16,22,34,0.92)'); el.setAttribute('stroke-width', '1'); svg.appendChild(el); }
-  };
-  person(7, 6, 3, '#8fb0e0');
-  person(23, 6, 3, '#8fb0e0');
-  person(15, 5, 3.6, '#ffffff');
+  const head = document.createElementNS(ns, 'circle'), shoulders = document.createElementNS(ns, 'path');
+  head.setAttribute('cx', '12'); head.setAttribute('cy', '7'); head.setAttribute('r', '4');
+  shoulders.setAttribute('d', 'M4 21V19A8 7 0 0 1 20 19V21Z');
+  for (const part of [head, shoulders]) { part.setAttribute('fill', '#eef3fb'); svg.appendChild(part); }
   return svg;
 }
 function clearPopulationSelection() {
@@ -14546,7 +16735,7 @@ function popButtonObstacles() {
     const r = el.getBoundingClientRect();
     if (r && r.width > 0 && r.height > 0) rects.push(r);
   };
-  for (const el of [els.exitBtn, els.panel, els.playbackPanel, els.viewRow]) add(el);
+  for (const el of [els.panel, els.playbackPanel, els.viewRow]) add(el);
   if (!fullscreenActive()) {
     try { const tabs = document.getElementsByClassName('anthroprocenia-victories-tab-list'); for (let i = 0; i < tabs.length; i++) add(tabs[i]); } catch (e) {}
   }
@@ -14571,12 +16760,11 @@ function positionPopulationUi() {
   if (!btn || !panel) return;
   const stack = (els.panel ? els.panel.offsetHeight : 0) + (els.playbackPanel ? els.playbackPanel.offsetHeight : 0);
   // Reserve the entire Population, Leaders, pause and speed toolbar.
-  const extraWidth = [els.historyButton, els.walkerPause, els.walkerSpeed, els.civTimelineButton, els.skipAheadButton].filter(Boolean).length * ps(44);
+  const extraWidth = [els.regionBtn, els.historyButton, els.walkerPause, els.walkerSpeed, els.civTimelineButton, els.skipAheadButton].filter(Boolean).length * ps(44);
   const pairWidth = (btn.offsetWidth || ps(36)) + (els.leadBtn ? ps(8) + (els.leadBtn.offsetWidth || ps(36)) : 0) + extraWidth;
   btn.style.top = popButtonTop(measureArea(), pairWidth, btn.offsetHeight || ps(36), popButtonObstacles()) + 'px';
   const area = measureArea(), width = Math.round(Math.min(ps(1200), (window.innerWidth || 1920) * 0.68, (window.innerWidth || 1920) - ps(24)));
-  const exit = els.exitBtn && els.exitBtn.style.display !== 'none' ? els.exitBtn.getBoundingClientRect() : null;
-  const top = Math.round(exit && exit.height ? exit.bottom + ps(30) : area.y + ps(150));
+  const top = Math.round(area.y + ps(150));
   const popLeft = Math.round((window.innerWidth || 1920) - ps(12) - width);
   positionLeadersUi(top, popLeft, width);
   if (!popState.open) return;
@@ -14809,9 +16997,19 @@ function civTimelinePlaceName(plot) {
   return region ? region.name : '';
 }
 function civTimelineExtras(turn) {
+  let names;
   return { suzerains: readSuzerainTurn(turn),
+    occupationCounts: (plot, at) => at >= 0 ? settlementPopulationSnapshot(at).get(plot)?.occupations : null,
     placeName: civTimelinePlaceName,
-    civilizationName: identity => normalizeCountryName(identity[1] || identity[2]),
+    civilizationName: (identity, owner) => {
+      if (!names) {
+        const frame = frameFor(turn);
+        const age = [...(manifest.ages || [])].reverse().find(row => row[0] <= turn);
+        names = majorCountryNames(frame, countryTerritories(frame, null), reconstructIdentity(turn),
+          reconstructSettlements(turn), age ? ageEraKey(age[1], age[2]) : ageEraKey(frames[turn]?.[0]), turn);
+      }
+      return names.get(owner) || normalizeCountryName(identity[1] || identity[2]);
+    },
     buildingName: id => manifest && manifest.buildingTypes && manifest.buildingTypes[id] ? manifest.buildingTypes[id][1] : `constructible ${id}`,
     wonderName: id => manifest && manifest.wonderTypes && manifest.wonderTypes[id] ? manifest.wonderTypes[id][1] : `wonder ${id}` };
 }
@@ -14821,52 +17019,67 @@ function syncCivNotices() {
   state.lastTick = now;
   const live = mapVisible && !playing && pos === frames.length - 1;
   if (!live) {
-    state.feed.reset(); state.key = '';
-    for (const slot of state.slots) { slot.event = null; slot.el.style.display = 'none'; }
+    if (state.feed.turn >= 0) state.feed.reset();
+    state.key = ''; state.timeline.model = null; state.timeline.next = 0;
+    for (const slot of state.slots) {
+      slot.event = null;
+      if (slot.el.style.display !== 'none') slot.el.style.display = 'none';
+    }
     return;
   }
-  if (gameOverlayActive()) { for (const slot of state.slots) slot.el.style.display = 'none'; return; }
+  if (gameOverlayActive()) {
+    for (const slot of state.slots) if (slot.el.style.display !== 'none') slot.el.style.display = 'none';
+    return;
+  }
   const key = `${manifest && manifest.rev}|${frames.length}|${pos}|${cmdLocalPlayer()}`;
   if (state.key !== key) {
     let first = pos;
     while (first > 0 && frames[first][2] !== 1) first--;
-    state.feed.accept(civTimelineEvents(state.timeline, first), pos); state.key = key;
+    state.feed.accept(civTimelineEvents(state.timeline, first), pos);
+    state.timeline.model.events.length = 0;
+    state.key = key;
   }
-  let top = Math.max(ps(64), (window.innerHeight || 1080) * 0.18);
   for (let index = 0; index < 4; index++) {
     let slot = state.slots[index];
-    if (!slot) {
-      const el = document.createElement('div');
-      el.classList.add(MAP_CHROME_CLASS); el.setAttribute('role', 'status');
-      el.style.cssText = `position:fixed;left:50%;transform:translateX(-50%);z-index:100055;width:80%;max-width:${ps(1000)}px;pointer-events:none;text-align:center;font:bold ${ps(21)}px sans-serif;color:#ffe4a0;text-shadow:0 2px 4px #000;white-space:normal;display:none;`;
-      document.body.appendChild(el); slot = { el, event: null, age: 0 }; state.slots.push(slot);
+    if (slot?.event) slot.age += elapsed;
+    if (slot && slot.age >= 4200) slot.event = null;
+    if (!slot?.event) {
+      const event = state.feed.take();
+      if (!event) {
+        if (slot && slot.el.style.display !== 'none') slot.el.style.display = 'none';
+        continue;
+      }
+      if (!slot) {
+        const el = document.createElement('div');
+        el.classList.add(MAP_CHROME_CLASS); el.setAttribute('role', 'status');
+        el.style.cssText = `position:fixed;left:50%;transform:translateX(-50%);z-index:100055;width:80%;max-width:${ps(1000)}px;pointer-events:none;text-align:center;font:bold ${ps(21)}px sans-serif;color:#ffe4a0;text-shadow:0 2px 4px #000;white-space:normal;display:none;`;
+        document.body.appendChild(el); slot = { el, event: null, age: 0, height: 0 }; state.slots.push(slot);
+      }
+      slot.event = event; slot.age = 0; slot.height = 0;
+      slot.el.textContent = event.text; slot.el.setAttribute('title', event.details || event.text);
     }
-    if (slot.event) slot.age += elapsed;
-    if (slot.age >= 4200) slot.event = null;
-    if (!slot.event) {
-      slot.event = state.feed.take(); slot.age = 0;
-      if (slot.event) { slot.el.textContent = slot.event.text; slot.el.setAttribute('title', slot.event.details || slot.event.text); }
-    }
-    slot.el.style.display = slot.event ? 'block' : 'none';
+    if (slot.el.style.display !== 'block') slot.el.style.display = 'block';
+  }
+  const layoutKey = `${window.innerWidth}|${window.innerHeight}|${ps(21)}`;
+  for (const slot of state.slots) if (slot.event && (!slot.height || state.layoutKey !== layoutKey)) {
+    slot.height = slot.el.offsetHeight || ps(54);
+  }
+  state.layoutKey = layoutKey;
+  let top = Math.max(ps(64), (window.innerHeight || 1080) * 0.18);
+  for (const slot of state.slots) {
     if (!slot.event) continue;
-    slot.el.style.top = (top - ps(10) * slot.age / 4200) + 'px';
-    top += Math.max(ps(36), slot.el.offsetHeight || ps(54)) + ps(10);
-    slot.el.style.opacity = String(Math.min(1, (4200 - slot.age) / 1600));
+    const y = (top - ps(10) * slot.age / 4200) + 'px';
+    const opacity = String(Math.min(1, (4200 - slot.age) / 1600));
+    if (slot.el.style.top !== y) slot.el.style.top = y;
+    if (slot.el.style.opacity !== opacity) slot.el.style.opacity = opacity;
+    top += Math.max(ps(36), slot.height) + ps(10);
   }
 }
 function civTimelineWarName(pair, territory) {
   const service = window.AnthroproceniaGeography;
   const geography = service && service.getMapData();
   if (!geography) return 'A war';
-  let region = null;
-  for (const [plot, owner] of territory) {
-    if (!pair.includes(owner)) continue;
-    if (!(neighborsByIndex[plot] || []).some(neighbor => territory.get(neighbor) === pair[1 - pair.indexOf(owner)])) continue;
-    const id = geography.regionForTile.get(plot);
-    region = geography.regions.find(entry => entry.id === id);
-    if (region) break;
-  }
-  return region ? service.rememberWarName(`war:${pair.join(':')}:${region.id}`, region.name) : 'A war';
+  return service.warNameForPlayers(pair[0], pair[1], territory, geography) || 'A war';
 }
 function civTimelineEvents(state = civTimelineState, first = 0, owner = cmdLocalPlayer(), target = pos) {
   if (!state.model || state.model.owner !== owner || state.next > target) {
@@ -14893,16 +17106,28 @@ function datedTimelineRowsHtml(events, start, count, expanded, horizontal) {
   if (!groups.length) return '<div>No events recorded yet.</div>';
   return `<div role="list" aria-label="Dated events" style="display:flex;flex-direction:${horizontal ? 'row' : 'column'};align-items:stretch;">` + groups.map(group => {
     const open = expanded.has(group.key);
-    return `<div role="listitem" style="${horizontal ? `flex:0 0 ${ps(220)}px;width:${ps(220)}px;` : ''}box-sizing:border-box;border:1px solid #9d8760;padding:${ps(6)}px;">`
-      + `<button type="button" data-history-group="${escape(group.key)}" aria-expanded="${open}" style="width:100%;text-align:left;white-space:normal;color:#e5d2ac;background:#172031;border:0;padding:${ps(6)}px;cursor:pointer;">${open ? '-' : '+'} ${escape(group.date || 'Recorded events')} (${group.events.length})</button>`
+    return `<div role="listitem" data-history-date="${escape(group.key)}" style="${horizontal ? `flex:0 0 ${ps(220)}px;width:${ps(220)}px;` : ''}box-sizing:border-box;border:1px solid #9d8760;padding:${ps(6)}px;">`
+      + `<button type="button" data-history-group="${escape(group.key)}" aria-expanded="${open}" style="width:100%;text-align:left;white-space:normal;color:#e5d2ac;background:#172031;border:0;padding:${ps(6)}px;cursor:pointer;">${open ? '-' : '+'} ${escape(timelineDateLabel(group))} (${group.events.length})</button>`
       + `<div style="display:${open ? 'block' : 'none'};">` + group.events.map(event => {
-        const detail = `${event.text}\n${Number.isInteger(event.turn) ? `Recorded turn ${event.turn + 1}. ` : ''}${event.details || ''}`;
+        const detail = `${event.text}\n${event.details || ''}`;
         const plots = (event.plots || []).filter(Number.isInteger).join(',');
         return `<div tabindex="0" role="button" ${Number.isInteger(event.turn) ? `data-history-turn="${event.turn}"` : ''} data-history-plots="${plots}" data-tooltip-content="${escape(detail)}" title="${escape(detail)}" style="padding:${ps(8)}px;border-top:2px solid #6a88bb;white-space:normal;overflow-wrap:break-word;cursor:pointer;">`
           + `<strong style="display:block;color:#d4deeb;">${escape(event.text)}</strong>`
           + `<div style="display:block;white-space:pre-wrap;color:#b8aa91;margin-top:${ps(6)}px;line-height:1.4;">${escape(event.details || event.text)}</div></div>`;
       }).join('') + '</div></div>';
   }).join('') + '</div>';
+}
+function expandTimelineEvent(event, state, refresh) {
+  const target = event && event.target.closest('[data-history-date]');
+  const key = target && target.getAttribute('data-history-date');
+  if (!key) { state.hoveredDate = null; return; }
+  if (state.hoveredDate === key) return;
+  state.hoveredDate = key;
+  if (!state.expanded) state.expanded = new Set();
+  if (state.expanded.has(key)) return;
+  state.expanded.add(key);
+  state.renderKey = ''; state.html = '';
+  refresh();
 }
 function activateTimelineEvent(event, state, refresh) {
   if (event.button || event.type === 'keydown' && (event.repeat || !['Enter', ' '].includes(event.key))) return;
@@ -14926,7 +17151,7 @@ function highlightChronicleEvent(event) {
   const plots = target ? target.getAttribute('data-history-plots').split(',').filter(Boolean).map(Number) : [];
   const vis = fogMode ? visForPos() : null, paths = [];
   if (mapVisible) for (const index of plots.slice(0, 1170)) {
-    if (!Number.isInteger(index) || !basePos[index] || vis && vis[index] === 0) continue;
+    if (!Number.isInteger(index) || !basePos[index] || vis && !(vis[index] > 0)) continue;
     let path = '';
     for (let k = 0; k < 6; k++) {
       const vertex = hexVert(index, k), point = mapToScreen(vertex[0], vertex[1]);
@@ -15113,8 +17338,10 @@ function buildWorldTimelineUi() {
     tooltip.textContent = target.getAttribute('data-tooltip-content'); tooltip.style.display = 'block';
     target.setAttribute('aria-describedby', tooltip.id);
   };
-  rows.addEventListener('mousemove', showTooltip); rows.addEventListener('focusin', showTooltip);
-  for (const type of ['mouseleave', 'focusout']) rows.addEventListener(type, () => { tooltip.style.display = 'none'; highlightChronicleEvent(null); });
+  rows.addEventListener('mousemove', showTooltip);
+  rows.addEventListener('mouseover', event => expandTimelineEvent(event, worldTimelineState, syncWorldTimeline));
+  rows.addEventListener('focusin', event => { showTooltip(event); expandTimelineEvent(event, worldTimelineState, syncWorldTimeline); });
+  for (const type of ['mouseleave', 'focusout']) rows.addEventListener(type, () => { tooltip.style.display = 'none'; highlightChronicleEvent(null); expandTimelineEvent(null, worldTimelineState); });
   const seek = event => activateTimelineEvent(event, worldTimelineState, syncWorldTimeline);
   rows.addEventListener('mousedown', () => { worldTimelineState.releaseClick = false; });
   for (const type of ['mouseup', 'click', 'keydown']) rows.addEventListener(type, seek);
@@ -15148,8 +17375,11 @@ function buildCivTimelineUi() {
   paging.appendChild(page); panel.append(header, rows, paging);
   rows.addEventListener('mousedown', () => { civTimelineState.releaseClick = false; });
   for (const type of ['mouseup', 'click', 'keydown']) rows.addEventListener(type, event => activateTimelineEvent(event, civTimelineState, () => syncCivTimeline(true)));
-  for (const type of ['mousemove', 'focusin']) rows.addEventListener(type, highlightChronicleEvent);
-  for (const type of ['mouseleave', 'focusout']) rows.addEventListener(type, () => highlightChronicleEvent(null));
+  rows.addEventListener('mousemove', highlightChronicleEvent);
+  for (const type of ['mouseover', 'focusin']) rows.addEventListener(type, event => {
+    highlightChronicleEvent(event); expandTimelineEvent(event, civTimelineState, () => syncCivTimeline(true));
+  });
+  for (const type of ['mouseleave', 'focusout']) rows.addEventListener(type, () => { highlightChronicleEvent(null); expandTimelineEvent(null, civTimelineState); });
   for (const type of ['mousedown', 'wheel', 'mousewheel']) panel.addEventListener(type, event => event.stopPropagation());
   document.body.appendChild(panel);
   els.civTimelinePanel = panel; els.civTimelineRows = rows; els.civTimelinePage = page;
@@ -15235,7 +17465,12 @@ function popFamilyData(node, index) {
     const life = popLife(node.id, i, node.tile, node.icon.owner);
     if (life) lives.push({ index: i, state: life.state });
   }
-  const years = lifeTimelineNow().years, data = simulateFamilies(lives, years[pos] || 0, years, !!node.icon.unit);
+  const ctx = popOwnerContext(node.icon.owner);
+  const genderOf = (index, gen) => {
+    const seed = lifeSeed(stablePersonKey(personKey(node.id, index)), gen);
+    return personGender(ctx.civKey, personRecord({ civKey: ctx.civKey, religion: ctx.religion, seed }));
+  };
+  const years = lifeTimelineNow().years, data = simulateFamilies(lives, years[pos] || 0, years, !!node.icon.unit, genderOf);
   if (familyCache.size >= 256) familyCache.clear();
   familyCache.set(key, data);
   return data;
@@ -15462,6 +17697,9 @@ function buildFamilyUi() {
   eventRows.addEventListener('mousedown', () => { familyState.releaseClick = false; });
   for (const type of ['mouseup', 'click', 'keydown']) eventRows.addEventListener(type, event =>
     activateTimelineEvent(event, familyState, () => { familyState.key = ''; syncFamilyPanel(true); }));
+  for (const type of ['mouseover', 'focusin']) eventRows.addEventListener(type, event =>
+    expandTimelineEvent(event, familyState, () => { familyState.key = ''; syncFamilyPanel(true); }));
+  for (const type of ['mouseleave', 'focusout']) eventRows.addEventListener(type, () => expandTimelineEvent(null, familyState));
   eventsBody.addEventListener('wheel', event => event.stopPropagation());
   eventsBody.addEventListener('mousewheel', event => event.stopPropagation());
   panel.append(header, body, eventsBody, hint); document.body.appendChild(panel);
@@ -15511,7 +17749,7 @@ function syncFamilyPanel(show) {
         const selected = member.index === familyState.index && member.gen === familyState.gen, dead = member.deathTurn !== undefined;
         const age = Math.max(0, Math.floor((dead ? member.deathYear : lifeTimelineNow().years[life.turn]) - member.born));
         const shownAge = node.icon.unit ? Math.floor(16 + age * 0.7) : age;
-        const status = dead ? `Died on recorded turn ${member.deathTurn + 1}, aged ${shownAge}: ${member.cause}` : `Living, age ${shownAge}`;
+        const status = dead ? `Died on ${familyEventDateLabel(member.deathYear, lifeTimelineNow().years, frames)}, aged ${shownAge}: ${member.cause}` : `Living, age ${shownAge}`;
         const spouse = member.spouse && data.members.get(member.spouse);
         const married = spouse ? ` | Marriage: ${popFamilyMemberName(node, spouse)}` : '';
         const workplace = dead ? '' : ` | Workplace: ${popWorkplace(node, member.index).label}`;
@@ -15552,7 +17790,10 @@ function leadHomeName(home, owner) {
   const identity = identityForPos().get(owner), government = String(identity && identity[7] || '');
   if (!government || /chiefdom/i.test(government)) return "Chief's Council";
   if (/republic/i.test(government)) return 'Lead Senators';
-  if (/oligarch|despot/i.test(government)) return 'Noble Family Heads';
+  if (/democra/i.test(government)) return 'Cabinet';
+  if (/communis|socialis/i.test(government)) return 'Central Committee';
+  if (/fascis|autocra|dictator|despot|authoritarian|totalitarian/i.test(government)) return 'Council of Ministers';
+  if (/oligarch/i.test(government)) return 'Noble Family Heads';
   if (/theocra/i.test(government)) return 'High Clergy';
   return 'Royal Court';
 }
@@ -15709,9 +17950,9 @@ function leadCrownIcon() {
   svg.style.cssText = 'flex:0 0 auto;pointer-events:none;';
   const crown = document.createElementNS(ns, 'path');
   crown.setAttribute('d', 'M2 15 L3 4 L8.5 9 L12 2 L15.5 9 L21 4 L22 15 Z');
-  crown.setAttribute('fill', '#ffd76a'); crown.setAttribute('stroke', 'rgba(16,22,34,0.92)'); crown.setAttribute('stroke-width', '1.2'); crown.setAttribute('stroke-linejoin', 'round');
+  crown.setAttribute('fill', '#eef3fb'); crown.setAttribute('stroke', 'rgba(16,22,34,0.92)'); crown.setAttribute('stroke-width', '1.2'); crown.setAttribute('stroke-linejoin', 'round');
   const band = document.createElementNS(ns, 'rect');
-  band.setAttribute('x', '2'); band.setAttribute('y', '13'); band.setAttribute('width', '20'); band.setAttribute('height', '3.5'); band.setAttribute('fill', '#e0a93a');
+  band.setAttribute('x', '2'); band.setAttribute('y', '13'); band.setAttribute('width', '20'); band.setAttribute('height', '3.5'); band.setAttribute('fill', '#eef3fb');
   svg.append(crown, band);
   return svg;
 }
@@ -15720,7 +17961,7 @@ function buildLeadersUi() {
   const btn = document.createElement('div');
   btn.id = 'anthroprocenia-leaders-button';
   btn.setAttribute('title', 'Show or hide the Leaders Panel');
-  btn.style.cssText = `position:fixed;left:0;top:${ps(8)}px;z-index:100046;display:none;align-items:center;justify-content:center;padding:${ps(4)}px ${ps(14)}px ${ps(4)}px ${ps(10)}px;background:rgba(16,22,34,0.92);border:${ps(1)}px solid #b8963e;border-radius:${ps(6)}px;color:#fff;font:600 ${ps(14)}px sans-serif;cursor:pointer;pointer-events:auto;user-select:none;white-space:nowrap;box-shadow:0 ${ps(1)}px ${ps(5)}px rgba(0,0,0,0.5);`;
+  btn.style.cssText = `position:fixed;left:0;top:${ps(8)}px;z-index:100046;display:none;align-items:center;justify-content:center;padding:${ps(4)}px ${ps(14)}px ${ps(4)}px ${ps(10)}px;background:rgba(16,22,34,0.92);border:${ps(1)}px solid #6a88bb;border-radius:${ps(6)}px;color:#fff;font:600 ${ps(14)}px sans-serif;cursor:pointer;pointer-events:auto;user-select:none;white-space:nowrap;box-shadow:0 ${ps(1)}px ${ps(5)}px rgba(0,0,0,0.5);`;
   btn.style.width = btn.style.height = ps(36) + 'px';
   btn.style.padding = '0'; btn.style.borderRadius = '50%'; btn.style.boxSizing = 'border-box';
   btn.setAttribute('role', 'button'); btn.setAttribute('aria-label', 'Toggle Leaders Panel');
@@ -16042,6 +18283,30 @@ function syncCommandPanel() {
 function commandPanelContains(x, y) {
   return !!els.cmdPanel && els.cmdPanel.style.display !== 'none' && pointInRect(x, y, els.cmdPanel.getBoundingClientRect());
 }
+function syncRegionsUi() {
+  if (!els.popBtn || !document.body) return;
+  if (!els.regionView) {
+    els.regionView = new RegionsPanel({ document, scale: ps, className: MAP_CHROME_CLASS, onHighlight: () => syncRegionHover() });
+    els.regionBtn = els.regionView.button; els.regionPanel = els.regionView.panel;
+  }
+  const view = els.regionView;
+  const show = mapVisible && !!els.panel && !historyControlsExpanded && !LeaderModelManager.isLeaderShowing && !gameOverlayActive();
+  view.sync(show, els.popBtn, measureArea());
+  if (!show || !view.open) return;
+  popRefreshModel(false);
+  const geography = window.AnthroproceniaGeography?.getMapData();
+  const key = `${popModelKey()}|${popState.builtKey}|${popState.errorLogged}`;
+  if (view.key !== key || view.geography !== geography || view.tree !== popState.tree) {
+    const names = curFrame ? majorCountryNames(curFrame, countryTerritories(curFrame, null)) : new Map();
+    const ownerName = owner => ownerMeta(owner).kind === 'major' ? names.get(owner) || playerName(owner)
+      : ownerMeta(owner).kind === 'citystate' ? cityStateName(owner) : '';
+    const vis = fogMode ? visForPos() || [] : null;
+    const rows = geography && curFrame ? regionRows(geography, curFrame, settlementsForPos(), popState.tree, vis, ownerName) : [];
+    view.update(rows, popState.errorLogged ? 'Unavailable' : popState.builtKey !== popModelKey() ? 'Updating...' : '');
+    view.key = key; view.geography = geography; view.tree = popState.tree;
+  }
+  if (view.highlight !== null) syncRegionHover();
+}
 function syncPopulationUi() {
   if (!els.popBtn) {
     if (!mapVisible || !els.panel) return;
@@ -16077,6 +18342,7 @@ function syncPopulationUi() {
 }
 // Back to the opening state: panel hidden, every level collapsed, nothing selected.
 function resetPopulationUi() {
+  if (els.regionView) { els.regionView.reset(); els.regionView.sync(false); }
   clearPopulationSelection();
   popState.homeFilter = null; townLabelSpecKey = '';
   workplaceState.index = null; workplaceState.tiles.clear(); workplaceState.plans.clear(); workplaceState.entries.clear(); workplaceState.doors.clear(); workplaceState.world = null;
@@ -16240,7 +18506,7 @@ function followArrowAbove(arrow) {
   placeArrowAbove(arrow, center.x, center.y, halfHeight, area);
 }
 function arrowControlRects() {
-  return [els.panel, els.playbackPanel, els.viewRow, els.exitBtn, els.popPanel, els.popBtn, els.leadPanel, els.leadBtn, els.walkerPause, els.walkerSpeed, els.civTimelineButton, els.skipAheadButton, els.skipAheadPanel, els.skipAheadPause, els.townCompass, els.civTimelinePanel]
+  return [els.panel, els.playbackPanel, els.viewRow, els.popPanel, els.popBtn, els.regionPanel, els.regionBtn, els.leadPanel, els.leadBtn, els.walkerPause, els.walkerSpeed, els.civTimelineButton, els.skipAheadButton, els.skipAheadPanel, els.skipAheadPause, els.townCompass, els.civTimelinePanel]
     .filter(el => el && el.style.display !== 'none')
     .map(el => el.getBoundingClientRect());
 }
@@ -16248,7 +18514,7 @@ function arrowControlRects() {
 // placeIcons) or a walking person's dot.
 function spotHalfHeight(spot) {
   if (!spot.s) return ps(6);
-  return Math.max(16, spot.s * viewZoom) * (townscapeActive() ? 0.1 : 1) / 2;
+  return Math.max(16, spot.s * viewZoom * (townscapeReady() ? 0.1 : 1)) / 2;
 }
 // Points `arrow` at tile `idx` (-1 hides it), or at the map point `spot` ({ x, y } in map pixels) when one is given.
 function updateTileArrow(arrow, idx, spot) {
@@ -16417,6 +18683,7 @@ let townHoverKeep = false, lastHoverPoint = null, popHoverNext = null;
 function onMapHover(e) {
   townHoverKeep = false; popHoverNext = null;
   lastHoverPoint = { x: e.clientX, y: e.clientY };
+  try { syncRegionHover(e); } catch (error) { hideRegionHover(); err(`region hover dimming failed: ${error}`); }
   try { onMapHoverInner(e); }
   finally { if (!townHoverKeep) { try { setTownHighlight(null); } catch (error) {} } try { popSetMapHover(popHoverNext); } catch (error) {} }
 }
@@ -16537,10 +18804,10 @@ function onMapHoverInner(e) {
   const tip = ensureTip(); tip.style.display = 'block';
   positionTip(tip, e);
 }
-function clearHover() { hideHoverOutline(); try { setTownHighlight(null); } catch (e) {} try { updateAttackArrow(-1); } catch (e) {} try { popSetMapHover(null); } catch (e) {} lastHoverIdx = -2; lastTipText = ''; try { if (els.tip) els.tip.style.display = 'none'; } catch (e) {} }
+function clearHover() { hideRegionHover(true); hideHoverOutline(); try { setTownHighlight(null); } catch (e) {} try { updateAttackArrow(-1); } catch (e) {} try { popSetMapHover(null); } catch (e) {} lastHoverIdx = -2; lastTipText = ''; try { if (els.tip) els.tip.style.display = 'none'; } catch (e) {} }
 function onMapDragStart(e) {
   if (!mapVisible || LeaderModelManager.isLeaderShowing || (e.button !== 0 && e.button !== 1) || !pointInRect(e.clientX, e.clientY, measureArea())) return;
-  if (mapPlotSelectionActive()) return;
+  if (mapPlotSelectionActive() && e.button !== 1) return;
   if (cmdInputActive()) { e.preventDefault(); return; }
   if (overControlPanels(e.clientX, e.clientY)) return;
   const dragTarget = e.target;
@@ -16588,7 +18855,7 @@ function onMapDragStart(e) {
 }
 function onMapDragMove(e) {
   if (!mapDrag || !mapVisible) return;
-  if (LeaderModelManager.isLeaderShowing || settlementExpansionActive()) { mapDrag = null; cmdHideBox(); return; }
+  if (LeaderModelManager.isLeaderShowing || settlementExpansionActive() && !mapDrag.middle) { mapDrag = null; cmdHideBox(); return; }
   const dx = e.clientX - mapDrag.x, dy = e.clientY - mapDrag.y;
   if (Math.hypot(e.clientX - mapDrag.startX, e.clientY - mapDrag.startY) > 4) mapDrag.moved = true;
   mapDrag.x = e.clientX;
@@ -16659,7 +18926,8 @@ try {
   window.addEventListener('mousemove', onSeekMove);
   window.addEventListener('mouseup', onSeekEnd);
   window.addEventListener('mousemove', onMapHover);
-  document.addEventListener('mouseleave', () => { lastHoverPoint = null; try { setTownHighlight(null); } catch (error) {} });
+  document.addEventListener('mouseleave', () => { hideRegionHover(true); lastHoverPoint = null; try { setTownHighlight(null); } catch (error) {} });
+  window.addEventListener('blur', () => hideRegionHover(true));
   window.addEventListener('mousedown', onCmdPanelTargetDown, true);
   window.addEventListener('keydown', onCmdPanelKey, true);
   window.addEventListener('mousedown', onCmdRightDown, true);
@@ -16778,7 +19046,13 @@ function mkToggle(labelText, initialOn, onChange) {
   // img-checkbox background. Pin a fixed ps() width/height (inline beats the class) so the box tracks
   // resolution like the slider/turn text and stays a consistent size on every screen.
   if (UNIFY_PS_CHROME) { cb.style.width = cb.style.height = ps(24) + 'px'; cb.style.flex = '0 0 auto'; }
-  cb.addEventListener('component-value-changed', (e) => { try { onChange(!!(e.detail && e.detail.value)); } catch (e2) { err(`toggle ${labelText}: ${e2}`); } });
+  cb.addEventListener('component-value-changed', (e) => {
+    try {
+      const value = e.detail && e.detail.value;
+      if (value !== true && value !== false && value !== 'true' && value !== 'false') throw new Error('Invalid checkbox value');
+      onChange(value === true || value === 'true');
+    } catch (e2) { err(`toggle ${labelText}: ${e2}`); }
+  });
   // Label text: when unifying, drop the rem `text-base` (Interface Scale) and size in ps() like the turn
   // label; else keep the native rem sizing. (The checkbox BOX itself is still native/rem — that's item 5.)
   const lbl = document.createElement('div');
@@ -16808,7 +19082,7 @@ function updateControls() {
     const frame = frames[pos];
     const date = frame && typeof frame[3] === 'string' ? frame[3] : '';
     const turn = frame ? frame[1] : '';
-    els.dateTitle.textContent = date ? `Turn ${turn} · ${date}` : (frame ? `Turn ${turn}` : '');
+    els.dateTitle.textContent = frame ? calendarDateLabel(date, turn) : '';
   }
   syncWorldTimeline();
 }
@@ -16839,6 +19113,9 @@ function mapScaleMetrics(tilePixels, targetPixels) {
   const unit = feet ? (value === 1 ? 'foot' : 'feet') : (value === 1 ? 'mile' : 'miles');
   return { miles, pixels: miles * tilePixels / 100, label: `${Number(value.toPrecision(3))} ${unit}` };
 }
+function mapScaleForView() {
+  return mapScaleMetrics(hexW * viewZoom, Math.min(ps(180), measureArea().w * 0.3));
+}
 function mapScalePosition(area, width, height, obstacles, gap) {
   const left = area.x + gap, right = area.x + area.w - width - gap;
   const top = area.y + gap, bottom = area.y + area.h - height - gap;
@@ -16867,7 +19144,7 @@ function buildMapScaleControls(scale) {
   reset.setAttribute('title', 'Reset map scale to its original position');
   reset.setAttribute('aria-label', 'Reset map scale position');
   reset.innerHTML = uiGlyph('close');
-  reset.style.cssText = `position:absolute;left:${ps(40)}px;top:${ps(3)}px;display:none;width:${ps(20)}px;height:${ps(20)}px;min-height:0;padding:${ps(2)}px;border-radius:50%;pointer-events:auto;cursor:pointer;background:rgba(180,35,35,0.65)!important;border:1px solid rgba(255,130,130,0.7)!important;border-image-source:none!important;color:#fff!important;`;
+  reset.style.cssText = `position:absolute;left:${ps(40)}px;top:${ps(3)}px;display:none;pointer-events:auto;cursor:pointer;`;
   scale.appendChild(handle); scale.appendChild(reset);
   scale.moveHandle = handle; scale.resetButton = reset;
   const stop = () => { scale.scaleDrag = null; handle.style.cursor = 'grab'; };
@@ -16931,8 +19208,8 @@ function syncMapScale() {
     scale.graphic.style.marginTop = ps(28) + 'px';
     scale.appendChild(scale.graphic);
   }
-  const area = measureArea(), target = Math.min(ps(180), area.w * 0.3);
-  const metrics = mapScaleMetrics(hexW * viewZoom, target), width = Math.max(ps(110), metrics.pixels + ps(20)), height = ps(86);
+  const area = measureArea(), metrics = mapScaleForView();
+  const width = Math.max(ps(110), metrics.pixels + ps(20)), height = ps(86);
   const scale = els.mapScale, key = `${metrics.label}|${metrics.pixels}|${ps(1)}`;
   if (scale.scaleKey !== key) {
     const x = ps(2), y = ps(20), length = metrics.pixels, tooth = ps(7);
@@ -16945,7 +19222,7 @@ function syncMapScale() {
     scale.scaleKey = key;
   }
   scale.style.width = width + 'px'; scale.style.height = height + 'px';
-  const controls = [els.panel, els.playbackPanel, els.viewRow, els.exitBtn, els.popPanel, els.popBtn, els.leadPanel, els.leadBtn,
+  const controls = [els.panel, els.playbackPanel, els.viewRow, els.popPanel, els.popBtn, els.regionPanel, els.regionBtn, els.leadPanel, els.leadBtn,
     els.walkerPause, els.walkerSpeed, els.civTimelineButton, els.skipAheadButton, els.skipAheadPanel, els.skipAheadPause, els.townCompass, els.civTimelinePanel, els.familyPanel, els.cmdPanel, els.clumpPanel];
   for (const element of document.querySelectorAll('.mini-map, .action-panel, .unit-panel, .city-panel, .anthroprocenia-victories-tab-list')) controls.push(element);
   const rects = controls.filter(el => el && el.style.display !== 'none').filter(el => {
@@ -16999,6 +19276,7 @@ function updatePanelControls() {
   if (!els.visibilityButton) return;
   els.controlRow.style.display = visibilityControlsExpanded ? 'flex' : 'none';
   els.playbackPanel.style.display = mapVisible && historyControlsExpanded ? 'flex' : 'none';
+  els.playbackPanel.style.visibility = mapVisible && historyControlsExpanded ? 'visible' : '';
   setPanelIconState(els.visibilityButton, visibilityControlsExpanded ? 'Hide visibility controls' : 'Show visibility controls', visibilityControlsExpanded);
   document.body.classList.toggle('anthro-history-focused', historyControlsExpanded);
   const button = els.historyButton;
@@ -17014,7 +19292,7 @@ function updatePanelControls() {
       button.innerHTML = uiGlyph('history', historyControlsExpanded);
       button.__historyExpanded = historyControlsExpanded;
     }
-    const label = historyControlsExpanded ? 'Close World Chronicle' : 'Open World Chronicle';
+    const label = historyControlsExpanded ? 'Close the World Chronicle Panel' : 'Open the World Chronicle Panel';
     button.setAttribute('title', label); button.setAttribute('aria-label', label);
   }
   if (!historyControlsExpanded) onTrackLeave();
@@ -17051,7 +19329,7 @@ function visibilityToggleGrid(columns) {
   return scroll;
 }
 function buildPanel() {
-  installModUi(document, MAP_CHROME_CLASS, text => /^LOC_/.test(text) ? Locale.compose(text) : text);
+  installModUi(document, MAP_CHROME_CLASS, text => /^LOC_/.test(text) ? Locale.compose(text) : text, ps(32));
   const p = document.createElement('div'); p.id = 'anthroprocenia-panel';
   p.style.cssText = `position:fixed;left:50%;top:auto;bottom:${ps(8)}px;transform:translateX(-50%);box-sizing:border-box;z-index:100045;display:none;flex-direction:column;${UNIFY_PS_CHROME ? 'align-items:center;' : ''}gap:${ps(6)}px;padding:${ps(10)}px ${ps(12)}px;background:rgba(8,12,20,0.82);border:1px solid rgba(180,200,230,0.35);border-radius:${ps(8)}px;color:#fff;pointer-events:auto;`;
   els.dateTitle = document.createElement('div');
@@ -17061,32 +19339,32 @@ function buildPanel() {
   controlRow.style.cssText = `display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;gap:${ps(4)}px;`;
   const terr = mkToggle('Territory', showTerritory, (on) => { showTerritory = on; if (!territoryTownSetting) territoryTownAuto = false; redraw(); });
   const bord = mkToggle('Borders', showBorders, (on) => { showBorders = on; redraw(); });
-  const unit = mkToggle('Units', showUnits, (on) => { showUnits = on; redraw(); });
+  const unit = mkToggle('Units', showUnits, (on) => { showUnits = on; placeIcons(); redraw(); });
   const wond = mkToggle('Wonders', showWonders, (on) => { showWonders = on; redraw(); });
   const countries = mkToggle('Civilization labels', showCountryLabels, (on) => { showCountryLabels = on; redraw(); });
   const civIcons = mkToggle('Civilization icons', showCivIcons, (on) => { showCivIcons = on; redraw(); });
   const tradeRoutes = mkToggle('Trade routes', showTradeRoutes, on => { showTradeRoutes = on; redraw(); });
   const settlements = mkToggle('Settlements', showSettlements, (on) => { showSettlements = on; redraw(); });
   const buildingLabels = mkToggle('Building and improvement labels', showBuildingLabels, (on) => { showBuildingLabels = on; redraw(); });
-  const fog = mkToggle('Fog of War', fogMode, (on) => {
-    if (suppressFog || fogLocked) return;
-    fogMode = on;
-    markBgDirty();
-    nextPaint(() => {
-      try { redraw();  }
-      catch (error) { err(`fog toggle redraw failed: ${error}`); }
-    });
-  });
+  const fog = mkToggle('Fog of War', fogMode, setFogVisibility);
   els.fogToggleCb = fog.querySelector('fxs-checkbox');
   els.fogToggleWrap = fog;
   const rsrc = mkToggle('Resources', showResources, (on) => { showResources = on; redraw(); });
-  const regionLabels = mkToggle('Region names', showRegionLabels, on => { showRegionLabels = on; redraw(); });
-  const geographicLabels = mkToggle('Island, water and mountain names', showGeographicLabels, on => { showGeographicLabels = on; redraw(); });
+  const regionLabels = mkToggle('Subcontinent and region names', showRegionLabels, on => { showRegionLabels = on; redraw(); });
+  const islandNames = mkToggle('Island names', showIslandNames, on => { showIslandNames = on; redraw(); });
+  const waterNames = mkToggle('Body of Water names', showWaterNames, on => { showWaterNames = on; redraw(); });
+  const mountainNames = mkToggle('Mountain names', showMountainNames, on => { showMountainNames = on; redraw(); });
+  const rivers = mkToggle('Rivers', showRivers, on => { showRivers = on; redraw(); });
+  const roads = mkToggle('Roads', showRoads, on => { showRoads = on; syncTownElementVisibility(); redraw(); });
+  const buildingDots = mkToggle('Building dots/squares', showBuildingDots, on => { showBuildingDots = on; placeIcons(); redraw(); });
+  const unitDots = mkToggle('Unit dots/triangles', showUnitDots, on => { showUnitDots = on; placeIcons(); redraw(); });
   const regionBorders = mkToggle('Continent boundaries', showRegionBorders, on => { showRegionBorders = on; redraw(); });
   const regionBoundaries = mkToggle('Region Boundaries', showRegionBoundaries, on => { showRegionBoundaries = on; redraw(); });
   const previousMovement = mkToggle('Unit previous movement arrows', showPreviousMovement, on => { showPreviousMovement = on; redraw(); });
-  const labelArches = mkToggle('Country/region text arching', showLabelArches, on => { showLabelArches = on; redraw(); });
+  const labelArches = mkToggle('Country/geographic text arching', showLabelArches, on => { showLabelArches = on; redraw(); });
   const riverNames = mkToggle('River names', showRiverNames, on => { showRiverNames = on; redraw(); });
+  const warNames = mkToggle('War names', showWarNames, on => { showWarNames = on; redraw(); });
+  warNames.setAttribute('title', 'Show war names and red shared territorial borders between civilizations at war.');
   const townLabels = mkToggle('Townscape labels', showTownLabels, on => { showTownLabels = on; redraw(); });
   const naturalFeatures = mkToggle('Natural features', showNaturalFeatures, on => { showNaturalFeatures = on; if (!on) hideNaturalMarkers(); redraw(); });
   const fogFootprint = mkToggle('Revealed terrain', showFogFootprint, on => { showFogFootprint = on; redraw(); });
@@ -17109,12 +19387,15 @@ function buildPanel() {
     settlements: settlements.querySelector('fxs-checkbox'),
     buildingLabels: buildingLabels.querySelector('fxs-checkbox'),
     regionLabels: regionLabels.querySelector('fxs-checkbox'),
-    geographicLabels: geographicLabels.querySelector('fxs-checkbox'),
+    islandNames: islandNames.querySelector('fxs-checkbox'), waterNames: waterNames.querySelector('fxs-checkbox'), mountainNames: mountainNames.querySelector('fxs-checkbox'),
+    rivers: rivers.querySelector('fxs-checkbox'), roads: roads.querySelector('fxs-checkbox'),
+    buildingDots: buildingDots.querySelector('fxs-checkbox'), unitDots: unitDots.querySelector('fxs-checkbox'),
     regionBorders: regionBorders.querySelector('fxs-checkbox'),
     regionBoundaries: regionBoundaries.querySelector('fxs-checkbox'),
     previousMovement: previousMovement.querySelector('fxs-checkbox'),
     labelArches: labelArches.querySelector('fxs-checkbox'),
     riverNames: riverNames.querySelector('fxs-checkbox'),
+    warNames: warNames.querySelector('fxs-checkbox'),
     townLabels: townLabels.querySelector('fxs-checkbox'),
     naturalFeatures: naturalFeatures.querySelector('fxs-checkbox'),
     resources: rsrc.querySelector('fxs-checkbox'),
@@ -17122,7 +19403,7 @@ function buildPanel() {
     fogFootprint: fogFootprint.querySelector('fxs-checkbox'),
     ...Object.fromEntries(TOWN_ELEMENT_OPTIONS.map(([name], i) => [name, townToggles[i].querySelector('fxs-checkbox')])),
   };
-  const toggleCols = [[terr, bord, regionBorders, regionBoundaries, fog, fogFootprint], [countries, civIcons, settlements, naturalFeatures, labelArches], [unit, previousMovement, wond, rsrc, tradeRoutes], [regionLabels, geographicLabels, riverNames, buildingLabels, townLabels], townToggles.slice(0, 5), townToggles.slice(5)];
+  const toggleCols = [[terr, bord, regionBorders, regionBoundaries, fog, fogFootprint], [countries, civIcons, settlements, naturalFeatures, labelArches, buildingDots], [unit, unitDots, previousMovement, wond, rsrc, tradeRoutes], [regionLabels, islandNames, waterNames, mountainNames, riverNames, warNames], [rivers, roads, buildingLabels, townLabels], townToggles.slice(0, 5), townToggles.slice(5)];
   els.visibilityGrid = visibilityToggleGrid(toggleCols);
   controlRow.append(els.visibilityGrid);
   const centerGroup = document.createElement('div'); centerGroup.style.cssText = `display:flex;align-items:center;justify-content:center;flex-wrap:wrap;padding:0 ${ps(10)}px;`;
@@ -17217,31 +19498,13 @@ function buildPanel() {
   panelButtons.append(els.visibilityButton);
   p.append(panelButtons, controlRow); document.body.appendChild(p); els.panel = p; document.body.appendChild(pb); document.body.appendChild(viewRow);
   buildWalkerControls(); updatePanelControls();
-  const exitBtn = document.createElement('div'); els.exitBtn = exitBtn;
-  exitBtn.innerHTML = '<svg viewBox="0 0 20 20" style="width:60%;height:60%;pointer-events:none"><path d="M3 3L17 17M17 3L3 17" stroke="#fff" stroke-width="3.2" stroke-linecap="round" fill="none"/></svg>';
-  exitBtn.setAttribute('title', 'Exit Map View');
-  exitBtn.style.cssText = `position:fixed;right:auto;top:0;left:0;z-index:100048;display:none;align-items:center;justify-content:center;background:#c0262d;color:#fff;font-family:sans-serif;font-weight:bold;font-size:${ps(26)}px;line-height:1;padding:0;box-sizing:border-box;overflow:visible;border:2px solid #ffb3b3;border-radius:${ps(6)}px;cursor:pointer;pointer-events:auto;user-select:none;`;
-  let exitStamp = 0;
-  const exitMap = () => {
-    const now = Date.now();
-    if (now - exitStamp < 400) return;
-    exitStamp = now;
-    setTimeout(() => { if (mapVisible) { try { closePanel(true); } catch (e) {} } }, 0);
-  };
-  exitBtn.addEventListener('mouseup', exitMap);
-  exitBtn.addEventListener('click', exitMap);
-  const exitLabel = document.createElement('div');
-  exitLabel.textContent = L('LOC_ANTHROPROCENIA_EXIT_MAP_VIEW');
-  exitLabel.style.cssText = `position:absolute;left:50%;top:100%;margin-top:${ps(3)}px;transform:translateX(-50%);white-space:nowrap;color:#fff;font:600 ${ps(12)}px sans-serif;line-height:1.2;text-shadow:0 1px 2px #000,0 0 4px #000;pointer-events:none;`;
-  exitBtn.appendChild(exitLabel);
-  document.body.appendChild(exitBtn);
   // Turn pill: shown only while hovering the scrubber (onTrackHover), floating just above the track at the
   // cursor; stays over the bottom control-panel background.
   els.label = document.createElement('div'); els.label.id = 'anthroprocenia-turnlabel'; els.label.className = 'font-title';
   els.label.classList.add('anthro-history-ui');
-  els.label.style.cssText = `position:fixed;z-index:100025;display:none;transform:translate(-50%,-100%);white-space:nowrap;pointer-events:none;background:rgba(16,22,34,0.85);border:${ps(1)}px solid #6a88bb;border-radius:${ps(6)}px;padding:${ps(2)}px ${ps(12)}px;font-size:${ps(13)}px;color:#fff;box-shadow:0 ${ps(1)}px ${ps(5)}px rgba(0,0,0,0.5);`;
+  els.label.style.cssText = `position:fixed;z-index:100042;display:none;transform:translate(-50%,-100%);white-space:nowrap;pointer-events:none;background:rgba(16,22,34,0.85);border:${ps(1)}px solid #6a88bb;border-radius:${ps(6)}px;padding:${ps(2)}px ${ps(12)}px;font-size:${ps(13)}px;color:#fff;box-shadow:0 ${ps(1)}px ${ps(5)}px rgba(0,0,0,0.5);`;
   document.body.appendChild(els.label);
-  for (const chrome of [els.panel, els.playbackPanel, els.viewRow, els.exitBtn, els.label]) if (chrome) chrome.classList.add(MAP_CHROME_CLASS);
+  for (const chrome of [els.panel, els.playbackPanel, els.viewRow, els.label]) if (chrome) chrome.classList.add(MAP_CHROME_CLASS);
   buildAgeBar();
   pinPlayButtonWidth();   // lock the play button to the wider "Pause" width so it doesn't resize when toggled
 }
@@ -17270,7 +19533,7 @@ function buildAgeBar() {
   }
 }
 // Set while the Victories Anthroprocenia tab is selected; the tab itself handles closing.
-// Fog defaults off, except in an active multiplayer game where it is LOCKED on (checkbox disabled
+// Fog defaults on; in an active multiplayer game it is also LOCKED on (checkbox disabled
 // + native tooltip) so the replay can't scout other players — including on the mid-game Victories→Anthroprocenia tab
 // (the Victories tab is available there, so we gate on isLocalGameOver(), not tab selection).
 // Once the game is genuinely over the lock lifts. Sets the flags + syncs the toggle (suppressed so it
@@ -17323,6 +19586,7 @@ function reveal(frameAlreadyDrawn) {
   mapOpenPending = false;
   applyOpenPosition();
   alignMapToGameCamera();
+  if (civSwitchPicker && civSwitchPicker.active) prepareCivPickerMap();
   applyMapView();
   let renderFailed = false;
   if (!frameAlreadyDrawn) {
@@ -17352,7 +19616,7 @@ function showLoading(message) {
   if (!els.loading) { els.loading = document.createElement('div'); document.body.appendChild(els.loading); }
   const a = measureArea();
   els.loading.style.cssText = `position:fixed;left:${a.x + a.w / 2}px;top:${a.y + a.h / 2}px;transform:translate(-50%,-50%);z-index:100060;font-family:monospace;font-size:${ps(22)}px;color:#cdddff;background:rgba(16,22,34,0.9);padding:${ps(12)}px ${ps(24)}px;border-radius:${ps(8)}px;pointer-events:none;display:block;`;
-  els.loading.textContent = message || 'Loading map…';
+  els.loading.textContent = message || 'Loading...';
 }
 function hideLoading() {
   if (els.loading) els.loading.style.display = 'none';
@@ -17426,7 +19690,6 @@ function closePanel(showMiniMapOnClose = false) {
   viewAspectY = 1;
   stopHeldView();
   if (colShift !== 0) { try { applyColumnShift(0); } catch (e) {} }
-  if (els.exitBtn) els.exitBtn.style.display = 'none';
   syncFullscreenState();
   pos = Math.max(0, frames.length - 1);
   lastOpenTurn = -1;
@@ -17446,6 +19709,7 @@ function prebuild() {
 // The Victories tab binds the map to its tab selection.
 try {
   window.AnthroproceniaReplay = {
+    countryNames: countryNamesCatalog,
     isVisible() { return mapVisible; },
     prebuild() { try { prebuild(); } catch (e) { err(`prebuild: ${e}`); } },
     show() { requestShow(true); },
@@ -17455,9 +19719,144 @@ try {
 
 try { installCivNameUiOverrides(); }
 catch (e) { err(`civilization UI names failed: ${e}`); }
+try { installDiplomacyBannerVisibility(); }
+catch (e) { err(`diplomacy banner integration failed: ${e}`); }
+try { installDiplomacySceneHandoff(); }
+catch (e) { err(`diplomacy scene handoff integration failed: ${e}`); }
+try { installDiplomacyTransitionPump(); }
+catch (e) { err(`diplomacy transition integration failed: ${e}`); }
+try { installNativePopulationDisplays(); }
+catch (e) { err(`native population integration failed: ${e}`); }
 try { installMiniMapIntegration(); }
 catch (e) { err(`mini-map integration failed: ${e}`); }
-try { installMapHudButton(); }
-catch (e) { err(`map HUD button integration failed: ${e}`); }
 
 log('playback UI module loaded — binding lifecycle events');
+
+function civSwitchSession() {
+  const config = Configuration.getGame();
+  return {
+    multiplayer: config.isAnyMultiplayer, hotseat: config.isHotseat, autoplay: Autoplay.isActive,
+    local: GameContext.localPlayerID, observer: GameContext.localObserverID, turn: Game.turn,
+    humans: config.humanPlayerIDs, alive: Players.getAlive().filter(player => player.isMajor).map(player => player.id),
+  };
+}
+function civPickerMapOptions(value) {
+  const current = {
+    showTerritory, showBorders, showCountryLabels, showCivIcons, showTradeRoutes, showSettlements, showBuildingLabels,
+    showRegionLabels, showRegionBorders, showGeographicLabels, showRiverNames, showNaturalFeatures, showResources, showUnits,
+    showWonders, fogMode, showFogFootprint, showPreviousMovement, showRegionBoundaries, showLabelArches, showTownLabels,
+    showIslandNames, showWaterNames, showMountainNames, showRivers, showRoads, showBuildingDots, showUnitDots, showWarNames,
+  };
+  if (!value) return current;
+  ({ showTerritory, showBorders, showCountryLabels, showCivIcons, showTradeRoutes, showSettlements, showBuildingLabels,
+    showRegionLabels, showRegionBorders, showGeographicLabels, showRiverNames, showNaturalFeatures, showResources, showUnits,
+    showWonders, fogMode, showFogFootprint, showPreviousMovement, showRegionBoundaries, showLabelArches, showTownLabels,
+    showIslandNames, showWaterNames, showMountainNames, showRivers, showRoads, showBuildingDots, showUnitDots, showWarNames } = value);
+  markBgDirty();
+}
+function prepareCivPickerMap() {
+  stopCameraFollow(); pause(); closeGamepadControls(); clearHover();
+  viewZoom = 1; mapPanX = 0; mapPanY = 0; viewAspectY = 1;
+  if (!civPickerGeography || civPickerGeography.positions !== basePos) {
+    const regionForTile = new Map(), tiles = new Map();
+    for (let index = 0; index < basePos.length; index++) {
+      if (!basePos[index]) continue;
+      regionForTile.set(index, null);
+      const owner = GameplayMap.getOwner(colOfIndex[index], rowOfIndex[index]);
+      if (!tiles.has(owner)) tiles.set(owner, new Set());
+      tiles.get(owner).add(index);
+    }
+    civPickerGeography = { regionForTile, positions: basePos }; civPickerTiles = tiles;
+  }
+}
+function leaveCivPickerMap() {
+  const saved = civPickerSnapshot;
+  civPickerSnapshot = null;
+  hideRegionHover(true); civPickerGeography = null; civPickerTiles = null;
+  if (!saved) return;
+  if (!saved.visible) closePanel();
+  civPickerMapOptions(saved.options);
+  Object.assign(townElementVisibility, saved.town);
+  historyControlsExpanded = saved.history;
+  territoryTownAuto = saved.territoryAuto;
+  viewZoom = saved.zoom; mapPanX = saved.x; mapPanY = saved.y; viewAspectY = saved.aspect;
+  syncTownElementVisibility(); updatePanelControls();
+  suppressFog = true;
+  try {
+    for (const [name, checkbox] of Object.entries(els.mapToggleCheckboxes || {})) {
+      const key = name === 'fog' ? 'fogMode' : 'show' + name[0].toUpperCase() + name.slice(1);
+      const value = saved.options[key] ?? saved.town[name];
+      if (value !== undefined) checkbox.setAttribute('selected', value ? 'true' : 'false');
+    }
+  } finally { suppressFog = false; }
+  if (mapVisible) { applyMapView(); redraw(); startCameraFollow(); }
+  invalidateGameOverlayCache();
+  if (typeof window.AnthroproceniaRequestCapture === 'function') window.AnthroproceniaRequestCapture();
+}
+function installCivSwitchPicker() {
+  civSwitchPicker = new CivSwitchPicker({
+    document, scale: ps, getApi: () => Autoplay, getSession: civSwitchSession,
+    resume: () => InterfaceMode.switchToDefault(),
+    returnToPause: () => InterfaceMode.switchTo('INTERFACEMODE_PAUSE_MENU'),
+    label: id => Locale.compose(Players.get(id).civilizationFullName),
+    reportError: message => {
+      err(`civilization switching: ${message}`);
+      if (!civSwitchPicker.active) DialogBoxManager.createDialog_Confirm({ title: 'Civilization switching', body: message });
+    },
+    map: {
+      enter() {
+        deactivateMiniMap();
+        if (!els.panel) buildPanel();
+        civPickerSnapshot = { options: civPickerMapOptions(), town: { ...townElementVisibility }, visible: mapVisible,
+          history: historyControlsExpanded, territoryAuto: territoryTownAuto, zoom: viewZoom, x: mapPanX, y: mapPanY, aspect: viewAspectY,
+          alive: new Set(civSwitchSession().alive), local: GameContext.localPlayerID };
+        const options = Object.fromEntries(Object.keys(civPickerSnapshot.options).map(key => [key, false]));
+        options.showTerritory = options.showCountryLabels = options.showCivIcons = true;
+        historyControlsExpanded = false; syncHistoryFocus(false);
+        territoryTownAuto = false;
+        for (const name of Object.keys(townElementVisibility)) townElementVisibility[name] = false;
+        lastOpenTurn = -1;
+        requestShow(true);
+        civPickerMapOptions(options); syncTownElementVisibility();
+        suppressFog = true;
+        try {
+          for (const [name, checkbox] of Object.entries(els.mapToggleCheckboxes)) {
+            checkbox.setAttribute('selected', ['territory', 'countryLabels', 'civIcons'].includes(name) ? 'true' : 'false');
+          }
+        } finally { suppressFog = false; }
+        if (mapVisible && !mapOpenPending) { prepareCivPickerMap(); applyMapView(); redraw(); }
+      },
+      leave: leaveCivPickerMap,
+      targetAt(x, y) {
+        if (!civPickerSnapshot || !mapVisible || mapOpenPending || !pointInRect(x, y, measureArea())) return null;
+        const index = hexAt(x, y);
+        if (index < 0 || !basePos[index]) return null;
+        const owner = GameplayMap.getOwner(colOfIndex[index], rowOfIndex[index]);
+        return owner !== civPickerSnapshot.local && civPickerSnapshot.alive.has(owner) ? owner : null;
+      },
+      highlight: () => syncRegionHover(),
+    },
+  });
+  const addButton = () => {
+    if (civSwitchPicker.active) civSwitchPicker.syncUi();
+    const container = document.getElementById('pause-menu-button-container') ||
+      document.querySelector('[data-name="pause-menu-button-container"]');
+    if (container) syncCivSwitchPauseMenu(container, document, key => Locale.compose(key), () => civSwitchPicker.begin());
+  };
+  const style = document.createElement('style'); style.id = 'anthroprocenia-civ-picker-style';
+  style.textContent = '.anthroprocenia-civ-picker-hidden,.anthroprocenia-civ-picker-hidden *{visibility:hidden!important;pointer-events:none!important;}' + CIV_SWITCH_PAUSE_STYLES;
+  (document.head || document.body).appendChild(style);
+  if (typeof MutationObserver !== 'undefined') new MutationObserver(addButton).observe(document.body, { childList: true, subtree: true });
+  window.addEventListener('keydown', event => {
+    if (civSwitchPicker.active && event.key === 'Escape') {
+      event.preventDefault(); event.stopImmediatePropagation(); civSwitchPicker.cancel();
+    }
+  }, true);
+  for (const name of ['LoadComplete', 'GameAgeEnded']) engine.on(name, () => civSwitchPicker.cancel());
+  addButton();
+}
+const installCivPickerWhenReady = () => {
+  try { installCivSwitchPicker(); } catch (error) { err(`civilization switch picker setup failed: ${error}`); }
+};
+if (document.body) installCivPickerWhenReady();
+else document.addEventListener('DOMContentLoaded', installCivPickerWhenReady, { once: true });

@@ -1,26 +1,28 @@
-import { REALISTIC_AGES, realisticDate } from './anthroprocenia-calendar.js';
+import { REALISTIC_AGES, calendarDateLabel, realisticDate, realisticSpeedMultiplier, realisticAgeTurns } from './anthroprocenia-calendar.js';
 import { uiGlyph } from './anthroprocenia-ui.js';
 
 function whole(value, name) {
   if (!/^\d+$/.test(String(value).trim()) || !Number.isSafeInteger(Number(value))) throw new Error(`${name} must be a whole number.`);
   return Number(value);
 }
-export function skipDuration(mode, age, turns, years, parts) {
+export function skipDuration(mode, age, turns, years, parts, factor = realisticSpeedMultiplier()) {
   let count;
   if (mode === 'turns') count = whole(turns, 'Turns');
   else if (mode === 'calendar') {
     if (!REALISTIC_AGES[age]) throw new Error('Calendar duration is unavailable for this Age; use turns.');
+    if (!Number.isInteger(factor) || factor < 1 || factor > 6) throw new Error('Invalid Realistic speed multiplier.');
     const perYear = Math.round(1 / REALISTIC_AGES[age].yearsPerTurn);
     const part = whole(parts, 'Seasons/months');
     if (part >= perYear) throw new Error(`Extra seasons/months must be between 0 and ${perYear - 1}.`);
-    count = whole(years, 'Years') * perYear + part;
+    count = Math.ceil((whole(years, 'Years') * perYear + part) / factor);
   } else throw new Error('Choose turns or calendar time.');
   if (!Number.isSafeInteger(count) || count < 1 || count > 2147483647) throw new Error('Choose between 1 and 2,147,483,647 turns.');
   return count;
 }
-export function skipTargetTurn(age, input, part = 0) {
+export function skipTargetTurn(age, input, part = 0, factor = realisticSpeedMultiplier()) {
   const config = REALISTIC_AGES[age];
   if (!config) throw new Error('Target dates are unavailable for this Age.');
+  if (!Number.isInteger(factor) || factor < 1 || factor > 6) throw new Error('Invalid Realistic speed multiplier.');
   const match = /^(-?\d+)\s*(BCE|BC|CE|AD)?$/i.exec(String(input).trim());
   if (!match) throw new Error('Enter a whole year, such as 3000 BCE or 1800 CE.');
   let year = Number(match[1]);
@@ -31,8 +33,48 @@ export function skipTargetTurn(age, input, part = 0) {
   if (!Number.isInteger(part) || part < 0 || part >= parts) throw new Error('Choose a valid season or month.');
   const turn = age === 'AGE_ANTIQUITY' ? 4000 + year + (year < 0 ? 1 : 0)
     : (year - (age === 'AGE_EXPLORATION' ? 400 : 1750)) * parts + part + 1;
-  if (turn < 1 || turn > config.turns) throw new Error(`Choose a date in this Age: ${realisticDate(age, 1)} to ${realisticDate(age, config.turns)}.`);
-  return turn;
+  if (turn < 1 || turn > config.turns) {
+    const lastTurn = Math.ceil(config.turns / factor);
+    throw new Error(`Choose a date in this Age: ${calendarDateLabel(realisticDate(age, 1, factor), 1)} to ${calendarDateLabel(realisticDate(age, lastTurn, factor), lastTurn)}.`);
+  }
+  const accelerated = Math.ceil((turn - 1) / factor) + 1;
+  if (accelerated > Math.ceil(config.turns / factor)) throw new Error('That date is beyond the last turn at this speed.');
+  return accelerated;
+}
+
+export function installSkipAheadDiplomacy({ manager, getController, getState, reportError,
+  wait = () => new Promise(resolve => setTimeout(resolve, 25)) }) {
+  const original = manager.raiseDiplomacyHub;
+  let pending = null;
+  manager.raiseDiplomacyHub = function (...args) {
+    const controller = getController();
+    if (!pending && !controller?.active) return original.apply(this, args);
+    if (pending) { pending.args = args; return; }
+    const request = pending = { args, receiver: this };
+    const restore = async () => {
+      try {
+        const start = controller.start;
+        controller.stop('Stopped Skip Ahead to open diplomacy.');
+        for (let attempt = 0; attempt < 80; attempt++) {
+          if (controller.state.phase === 'error') throw new Error(controller.state.message);
+          const current = getState();
+          if (current.age !== start.age || current.multiplayer !== false) throw new Error('The game session changed while returning control.');
+          if (!controller.api.isActive && current.player === start.player && current.observer === start.observer) {
+            pending = null;
+            original.apply(request.receiver, request.args);
+            return;
+          }
+          await wait();
+        }
+        throw new Error('Native player control was not restored. Return to your civilization before opening diplomacy.');
+      } catch (error) {
+        reportError(`Unable to open diplomacy: ${error.message || error}`);
+      } finally {
+        if (pending === request) pending = null;
+      }
+    };
+    return restore();
+  };
 }
 
 export class SkipAheadController {
@@ -249,8 +291,9 @@ export function createSkipAheadPanel({ document, scale, getBounds, getState, eng
     } };
   };
   const yearSlider = slider('anthro-skip-target-year', 'Target year', year => {
-    const state = getState(), parts = partsPerYear(state.age), part = (targetTurn - 1) % parts;
-    targetTurn = Math.min(REALISTIC_AGES[state.age].turns, Math.max(state.turn + 1, year * parts + part + 1)); preview(true);
+    const state = getState(), parts = partsPerYear(state.age), factor = realisticSpeedMultiplier();
+    const part = ((targetTurn - 1) * factor) % parts;
+    targetTurn = Math.min(realisticAgeTurns(state.age), Math.max(state.turn + 1, Math.ceil((year * parts + part) / factor) + 1)); preview(true);
   });
   const inputRow = text(''), inputLabel = document.createElement('label'), yearInput = document.createElement('input');
   yearInput.id = 'anthro-skip-custom-year'; yearInput.type = 'text';
@@ -259,8 +302,9 @@ export function createSkipAheadPanel({ document, scale, getBounds, getState, eng
   yearInput.style.cssText = `width:${scale(160)}px;padding:${scale(7)}px;color:#fff;background:#101622;border:1px solid #9d8760;pointer-events:auto;user-select:text;`;
   inputRow.appendChild(inputLabel); inputRow.appendChild(yearInput);
   const partSlider = slider('anthro-skip-target-part', 'Season / month', part => {
-    const parts = partsPerYear(getState().age);
-    targetTurn = Math.floor((targetTurn - 1) / parts) * parts + part + 1; preview(true);
+    const age = getState().age, parts = partsPerYear(age), factor = realisticSpeedMultiplier();
+    const index = Math.floor((targetTurn - 1) * factor / parts) * parts + part;
+    targetTurn = Math.min(realisticAgeTurns(age), Math.ceil(index / factor) + 1); preview(true);
   });
   const estimate = text(''), progress = text('');
   progress.setAttribute('role', 'status'); progress.setAttribute('aria-live', 'polite');
@@ -276,25 +320,27 @@ export function createSkipAheadPanel({ document, scale, getBounds, getState, eng
   }
   function preview(updateInput = false, validate = true) {
     try {
-      const state = getState(), parts = partsPerYear(state.age), config = REALISTIC_AGES[state.age];
-      const year = Math.floor((targetTurn - 1) / parts), part = (targetTurn - 1) % parts;
+      const state = getState(), parts = partsPerYear(state.age), config = REALISTIC_AGES[state.age], factor = realisticSpeedMultiplier();
+      const index = (targetTurn - 1) * factor, currentIndex = Math.max(0, state.turn - 1) * factor;
+      const year = Math.floor(index / parts), part = index % parts;
       const date = realisticDate(state.age, targetTurn), yearText = date.replace(/^[A-Za-z]+\s+/, '');
-      yearSlider.set(Math.min(Math.floor(Math.max(0, state.turn - 1) / parts), config.turns / parts - 1), config.turns / parts - 1, year, yearText, controller.active);
+      yearSlider.set(Math.min(Math.floor(currentIndex / parts), config.turns / parts - 1), config.turns / parts - 1, year, calendarDateLabel(yearText, targetTurn), controller.active);
       partSlider.row.style.display = parts > 1 ? 'block' : 'none';
-      partSlider.set(year === Math.floor(Math.max(0, state.turn - 1) / parts) ? Math.max(0, state.turn - 1) % parts : 0, parts - 1, part, date.split(' ')[0], controller.active, parts === 4 ? 'Season' : 'Month');
+      partSlider.set(year === Math.floor(currentIndex / parts) ? currentIndex % parts : 0, parts - 1, part, date.split(' ')[0], controller.active, parts === 4 ? 'Season' : 'Month');
       if (updateInput) yearInput.value = yearText;
       yearInput.disabled = controller.active;
       const turns = validate ? duration(state) : Math.max(0, targetTurn - state.turn);
-      estimate.textContent = `Target: ${date}. ${turns} real turns.`;
+      estimate.textContent = `Target: ${calendarDateLabel(date, targetTurn)}. ${turns} real turns.`;
       submit.setAttribute('aria-disabled', String(controller.active || !state.realistic || targetAge !== state.age || targetTurn <= state.turn));
       errors.textContent = ''; lastError = '';
     } catch (error) { estimate.textContent = ''; submit.setAttribute('aria-disabled', 'true'); showError(error); }
   }
   yearInput.addEventListener('input', () => {
     try {
-      const state = getState(), parts = partsPerYear(state.age), part = (targetTurn - 1) % parts;
+      const state = getState(), parts = partsPerYear(state.age), factor = realisticSpeedMultiplier();
+      const part = ((targetTurn - 1) * factor) % parts;
       targetTurn = skipTargetTurn(state.age, yearInput.value, part);
-      if (targetTurn <= state.turn && Math.floor((targetTurn - 1) / parts) === Math.floor(state.turn / parts)) targetTurn = state.turn + 1;
+      if (targetTurn <= state.turn && Math.floor((targetTurn - 1) * factor / parts) === Math.floor(state.turn * factor / parts)) targetTurn = state.turn + 1;
       preview();
     } catch (error) { estimate.textContent = ''; submit.setAttribute('aria-disabled', 'true'); showError(error); }
   });
@@ -327,7 +373,7 @@ export function createSkipAheadPanel({ document, scale, getBounds, getState, eng
     if (state.phase === 'error') { minimized = false; open = true; }
     if (targetAge !== getState().age) {
       const current = getState(), config = REALISTIC_AGES[current.age];
-      targetAge = current.age; targetTurn = config ? Math.min(config.turns, current.turn + 50) : 0;
+      targetAge = current.age; targetTurn = config ? Math.min(realisticAgeTurns(current.age), current.turn + 50) : 0;
     }
     preview(true, false);
     sync();
@@ -349,7 +395,7 @@ export function createSkipAheadPanel({ document, scale, getBounds, getState, eng
     minimize.innerHTML = uiGlyph(minimized ? 'maximize' : 'minimize');
     minimize.setAttribute('aria-label', `${minimized ? 'Restore' : 'Minimize'} Skip Ahead`);
     minimize.setAttribute('aria-expanded', String(!minimized));
-    cancel.style.display = controller.active ? 'inline-block' : 'none';
+    cancel.style.display = controller.active ? 'block' : 'none';
     cancel.setAttribute('aria-disabled', String(!controller.active));
     title.textContent = minimized && controller.active ? `Autoplay: ${realisticDate(targetAge, targetTurn)} (${controller.state.elapsed}/${controller.state.requested})`
       : minimized && controller.state.phase === 'complete' ? 'Autoplay complete'
@@ -363,7 +409,7 @@ export function createSkipAheadPanel({ document, scale, getBounds, getState, eng
     open = !open;
     if (open && !controller.active) {
       const state = getState(), config = REALISTIC_AGES[state.age];
-      targetAge = state.age; targetTurn = config ? Math.min(config.turns, state.turn + 50) : 0;
+      targetAge = state.age; targetTurn = config ? Math.min(realisticAgeTurns(state.age), state.turn + 50) : 0;
       minimized = false; preview(true);
     }
     sync();

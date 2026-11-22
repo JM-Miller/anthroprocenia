@@ -55,7 +55,7 @@
  */
 
 import { PEOPLE_PROGRESSION_NODES } from '../map/anthroprocenia-people.js';
-import { currentRealisticDate, REALISTIC_AGES } from '../map/anthroprocenia-calendar.js';
+import { currentRealisticDate, REALISTIC_AGES, realisticSpeedMultiplier } from '../map/anthroprocenia-calendar.js';
 import { captureMapDetails } from '../map/anthroprocenia-map-details.js';
 
 const TAG = '[ANTHROPROCENIA]';
@@ -210,6 +210,31 @@ try {
 } catch (e) { err(`label name store unavailable: ${e}`); }
 
 // --- map reading -------------------------------------------------------------
+// Share native collections only within one synchronous capture, never across turns.
+function createCaptureReads() {
+  const constructibles = new Map(), cities = new Map(), definitions = new Map();
+  return {
+    constructibles(pid, player) {
+      if (!constructibles.has(pid)) {
+        const component = player && player.Constructibles;
+        constructibles.set(pid, component && component.getConstructibles ? component.getConstructibles() : null);
+      }
+      return constructibles.get(pid);
+    },
+    cities(pid, player) {
+      if (!cities.has(pid)) {
+        const component = player && player.Cities;
+        cities.set(pid, component && component.getCities ? component.getCities() : null);
+      }
+      return cities.get(pid);
+    },
+    definition(type) {
+      if (!definitions.has(type)) definitions.set(type, GameInfo.Constructibles.lookup(type));
+      return definitions.get(type);
+    },
+  };
+}
+
 /** Tile class for an owned plot: 2 city-center, 1 urban, else 0. */
 function tileClass(loc, district) {
   try {
@@ -227,7 +252,7 @@ function tileClass(loc, district) {
  * CITY_CENTER districts; independent powers' settlements are IMPROVEMENT_VILLAGE/
  * ENCAMPMENT constructibles, so detect those per-player (culture-borders pattern).
  */
-function markCenters(cls) {
+function markCenters(cls, reads = createCaptureReads()) {
   try {
     // Iterate ALL player ids (not Players.getAlive()): a player who has RETIRED/been defeated but whose
     // settlements still stand on the map is dropped from getAlive(), yet remains a major with cities — so
@@ -238,16 +263,16 @@ function markCenters(cls) {
       const player = Players.get(pid);
       if (!player) continue;
       if (player.isIndependent) {
-        const cons = player.Constructibles?.getConstructibles?.();
+        const cons = reads.constructibles(pid, player);
         if (cons) for (const con of cons) {
-          const def = GameInfo.Constructibles.lookup(con.type);
+          const def = reads.definition(con.type);
           if (def && (def.ConstructibleType === 'IMPROVEMENT_VILLAGE' || def.ConstructibleType === 'IMPROVEMENT_ENCAMPMENT')) {
             const i = GameplayMap.getIndexFromLocation(con.location);
             if (i >= 0 && i < cls.length) cls[i] = 2;
           }
         }
       } else if (player.isMajor) {
-        const cities = player.Cities?.getCities?.();
+        const cities = reads.cities(pid, player);
         if (cities) for (const city of cities) {
           const i = GameplayMap.getIndexFromLocation(city.location);
           if (i >= 0 && i < cls.length) cls[i] = city.isTown ? 3 : (city.isCapital ? 4 : 2);
@@ -273,7 +298,7 @@ function districtOccupier(loc, district) {
 }
 
 /** Read owner + cls for the whole map. */
-function readTiles() {
+function readTiles(reads = createCaptureReads()) {
   const n = mapW * mapH;
   const owner = new Int16Array(n);
   const cls = new Int8Array(n);
@@ -287,7 +312,7 @@ function readTiles() {
     if (o === PlayerIds.NO_PLAYER || o < 0) { owner[i] = -1; cls[i] = 0; }
     else { owner[i] = o; cls[i] = tileClass(loc, district); }
   }
-  markCenters(cls);
+  markCenters(cls, reads);
   return { owner, cls };
 }
 
@@ -375,16 +400,16 @@ function wonderTypeIndex(hash, def) {
   return idx;
 }
 /** Man-made wonders (ConstructibleClass WONDER) for all majors → Map(plotIndex -> [ownerId, wonderTypeIndex]). */
-function readWonders() {
+function readWonders(reads = createCaptureReads()) {
   const m = new Map();
   try {
     for (let pid = 0; pid <= MAX_PLAYER_ID; pid++) {
       const p = Players.get(pid);
       if (!p || !p.isMajor) continue;
-      const cons = p.Constructibles && p.Constructibles.getConstructibles ? p.Constructibles.getConstructibles() : null;
+      const cons = reads.constructibles(pid, p);
       if (!cons) continue;
       for (const con of cons) {
-        const def = GameInfo.Constructibles.lookup(con.type);
+        const def = reads.definition(con.type);
         if (def && def.ConstructibleClass === 'WONDER') {
           const idx = GameplayMap.getIndexFromLocation(con.location);
           if (idx >= 0) m.set(idx, [pid, wonderTypeIndex(con.type, def)]);
@@ -395,8 +420,8 @@ function readWonders() {
   return m;
 }
 // Delta-code wonders against prevWonders → [[plot, owner, typeIdx], …]; a lone [plot] = removed.
-function wondersDelta(snapshot) {
-  const cur = readWonders(), out = [];
+function wondersDelta(snapshot, reads) {
+  const cur = readWonders(reads), out = [];
   const eq = (a, b) => a && b && a[0] === b[0] && a[1] === b[1];
   if (snapshot) { for (const [plot, e] of cur) out.push([plot, e[0], e[1]]); }
   else {
@@ -459,13 +484,13 @@ function cityDefenseHealth(city) {
 }
 
 /** Active player settlements this turn → Map(centerPlotIndex -> [name, population, typeLabel, [yields]]). */
-function readSettlements() {
+function readSettlements(reads = createCaptureReads()) {
   const m = new Map();
   try {
     for (let pid = 0; pid <= MAX_PLAYER_ID; pid++) {
       const p = Players.get(pid);
       if (!p) continue;
-      const cities = p.Cities && p.Cities.getCities ? p.Cities.getCities() : null;
+      const cities = reads.cities(pid, p);
       for (const city of cities || []) {
         const idx = GameplayMap.getIndexFromLocation(city.location);
         if (idx < 0) continue;
@@ -477,9 +502,9 @@ function readSettlements() {
         if (!name || /^LOC_/.test(name)) name = 'Settlement';
         m.set(idx, [name, city.population | 0, settlementType(city), cityYields(city), cityDefenseHealth(city)]);
       }
-      if (p.isIndependent && p.Constructibles && p.Constructibles.getConstructibles) {
-        for (const con of p.Constructibles.getConstructibles() || []) {
-          const def = GameInfo.Constructibles.lookup(con.type);
+      if (p.isIndependent) {
+        for (const con of reads.constructibles(pid, p) || []) {
+          const def = reads.definition(con.type);
           if (!def || (def.ConstructibleType !== 'IMPROVEMENT_VILLAGE' && def.ConstructibleType !== 'IMPROVEMENT_ENCAMPMENT')) continue;
           const idx = GameplayMap.getIndexFromLocation(con.location);
           if (idx < 0 || m.has(idx)) continue;
@@ -495,8 +520,8 @@ function readSettlements() {
 // Delta-code settlements against prevSettlements → [[center, name, pop, type, [yields]], …]; a lone
 // [center] entry means the settlement was removed (razed/absorbed). Same snapshot+diff machinery as
 // buildings; folded onto the turn record so reconstruction reuses the shared turn-record walk.
-function settlementsDelta(snapshot) {
-  const cur = readSettlements(), out = [];
+function settlementsDelta(snapshot, reads) {
+  const cur = readSettlements(reads), out = [];
   const eq = (a, b) => a && b && a[0] === b[0] && a[1] === b[1] && a[2] === b[2]
     && a[3].length === b[3].length && a[3].every((v, k) => v === b[3][k])
     && JSON.stringify(a[4] || null) === JSON.stringify(b[4] || null);
@@ -751,15 +776,15 @@ function buildingTypeIndex(hash, def) {
   return idx;
 }
 /** Constructibles this turn (buildings + improvements + fortifications; wonders excluded) → Map(plot -> sorted [typeIdx]). */
-function readBuildings() {
+function readBuildings(reads = createCaptureReads()) {
   const m = new Map(), damaged = new Map();
   try {
     for (let pid = 0; pid <= MAX_PLAYER_ID; pid++) {
       const p = Players.get(pid);
-      const cons = p && p.Constructibles && p.Constructibles.getConstructibles ? p.Constructibles.getConstructibles() : null;
+      const cons = reads.constructibles(pid, p);
       if (!cons) continue;
       for (const con of cons) {
-        const def = GameInfo.Constructibles.lookup(con.type);
+        const def = reads.definition(con.type);
         if (!def || (def.ConstructibleClass !== 'BUILDING' && def.ConstructibleClass !== 'IMPROVEMENT')) continue;   // skip wonders
         const idx = GameplayMap.getIndexFromLocation(con.location);
         if (idx < 0) continue;
@@ -777,8 +802,8 @@ function readBuildings() {
 }
 let lastReadDamaged = new Map();   // pillaged constructibles found by the most recent readBuildings(): plot -> sorted [typeIdx]
 // Delta-code buildings against prevBuildings → [[plot, [typeIdx…]], …] (empty array = all constructibles gone).
-function buildingsDelta(snapshot) {
-  const cur = readBuildings(), out = [];
+function buildingsDelta(snapshot, reads) {
+  const cur = readBuildings(reads), out = [];
   if (snapshot) { for (const [plot, arr] of cur) out.push([plot, arr]); }
   else {
     const same = (a, b) => a && b && a.length === b.length && a.every((v, k) => v === b[k]);
@@ -847,10 +872,18 @@ function readRoutes() {
   } catch (e) { err(`readRoutes: ${e}`); }
   return out;
 }
-function readUnits() {
-  const out = [], health = [], from = [], bonus = [], activity = [];
+function readUnits(turn = Game.turn) {
+  const out = [], health = [], from = [], bonus = [], activity = [], identities = [], battles = [];
   const seen = new Set();
   try {
+    const savedBattles = new Set(), frame = frameIndex(Game.age, turn);
+    if (frame >= 0) {
+      const raw = getCatalog().getObject(OBJ_UNITS).read('u' + frame);
+      if (raw) {
+        const saved = JSON.parse(raw);
+        for (const index of saved.b || []) if (typeof saved.i?.[index] === 'string') savedBattles.add(saved.i[index]);
+      }
+    }
     for (let pid = 0; pid <= MAX_PLAYER_ID; pid++) {
       const p = Players.get(pid);
       const ids = p && p.Units && p.Units.getUnitIds ? p.Units.getUnitIds() : null;
@@ -864,9 +897,12 @@ function readUnits() {
           if (pct > 0) bonus.push(out.length, pct);
           const state = unitFormationState(u, id, pid);
           if (state) activity.push(out.length, state);
+          const key = pid + ':' + (id.id !== undefined ? id.id : JSON.stringify(id));
+          const combat = unitCombatTurns.get(key);
+          if ((combat?.age === Game.age && combat.turn === turn) || savedBattles.has(key)) battles.push(out.length);
           out.push(packUnit(idx, pid, unitTypeIndex(u)));
           health.push(unitHealthPercent(u));
-          const key = pid + ':' + (id.id !== undefined ? id.id : JSON.stringify(id));
+          identities.push(key);
           seen.add(key);
           const prev = lastUnitPlot.get(key);
           from.push(prev !== undefined && prev !== idx ? prev : -1);
@@ -876,13 +912,27 @@ function readUnits() {
     }
     for (const k of [...lastUnitPlot.keys()]) if (!seen.has(k)) lastUnitPlot.delete(k);
     for (const k of unitFormationOperations.keys()) if (!seen.has(k)) unitFormationOperations.delete(k);
+    for (const k of unitCombatTurns.keys()) if (!seen.has(k)) unitCombatTurns.delete(k);
   } catch (e) { err(`readUnits: ${e}`); }
-  const result = { u: out, h: health, f: from, r: readRoutes() };
+  const result = { u: out, h: health, f: from, r: readRoutes(), i: identities, b: battles };
   if (bonus.length) result.s = bonus;   // [row, strength bonus %, …] for the units whose strength is above their type's base
   if (activity.length) result.a = activity;   // [row, state, ...]: alert, asleep, fortified, holding, healing, idle
   return result;
 }
 const unitFormationOperations = new Map();
+const unitCombatTurns = new Map();
+function recordUnitBattle(data) {
+  try {
+    if (!data || (!data.attacker && !data.defender)) throw new Error('Combat event has no participants');
+    for (const id of [data.attacker, data.defender]) {
+      if (!id) continue;
+      const unit = Units.get(id);
+      if (unit) unitCombatTurns.set(unit.owner + ':' + (id.id !== undefined ? id.id : JSON.stringify(id)),
+        { age: Game.age, turn: Game.turn });
+    }
+    scheduleMidTurnRecord();
+  } catch (e) { err(`record unit battle failed: ${e}`); }
+}
 function unitFormationState(unit, id, owner) {
   if (typeof UnitActivityTypes === 'undefined') return 0;
   const activity = unit.activityType;
@@ -1119,6 +1169,7 @@ try { window.AnthroproceniaClearData = clearData; } catch (e) {}
 // frame is a snapshot, so playback can reconstruct each age independently.
 function record(turn, forceSnap) {
   const captureStarted = Date.now();
+  const reads = createCaptureReads();
   const ageId = Game.age;
   let turnDate = '';
   try { turnDate = typeof Game.getTurnDate === 'function' ? Game.getTurnDate() : ''; } catch (e) { err(`getTurnDate: ${e}`); }
@@ -1127,7 +1178,7 @@ function record(turn, forceSnap) {
   if (typeof turnDate !== 'string') turnDate = '';
   let gi = frameIndex(ageId, turn);
   const newAge = !recordedAges.has(ageId);
-  const { owner, cls } = readTiles();
+  const { owner, cls } = readTiles(reads);
   const tilesMs = Date.now() - captureStarted;
   // gi: reuse the existing frame for (ageId, turn), else append a new one at the end.
   if (gi < 0) gi = manifest.frames.length;
@@ -1164,14 +1215,14 @@ function record(turn, forceSnap) {
     }
   }
 
-  const bld = buildingsDelta(snapshot);   // constructibles, delta-coded onto the same frame record
+  const bld = buildingsDelta(snapshot, reads);   // constructibles, delta-coded onto the same frame record
   const dmg = damagedDelta(snapshot);     // which of them are pillaged
-  const set = settlementsDelta(snapshot); // settlements (name/pop/type/yields), delta-coded onto the same frame record
+  const set = settlementsDelta(snapshot, reads); // settlements (name/pop/type/yields), delta-coded onto the same frame record
   const vis = visibilityDelta(snapshot, readVisibility());   // local-observer visibility (packed), delta-coded onto the frame record
-  const won = wondersDelta(snapshot);     // man-made wonders (delta + type index), folded onto the frame record
+  const won = wondersDelta(snapshot, reads);     // man-made wonders (delta + type index), folded onto the frame record
   getCatalog().getObject(OBJ_TURNS).write('t' + gi, JSON.stringify({ t: turn, s: snapshot ? 1 : 0, terr, bld, dmg, set, vis, won }));
 
-  const unitData = readUnits();
+  const unitData = readUnits(turn);
   const unitsJson = JSON.stringify({ t: turn, ...unitData });
   getCatalog().getObject(OBJ_UNITS).write('u' + gi, unitsJson);
   const suze = readSuzerain();
@@ -1192,7 +1243,7 @@ function record(turn, forceSnap) {
   getCatalog().getObject(OBJ_PLAYERS).write('p' + gi, JSON.stringify({ t: turn, s: snapshot ? 1 : 0, vp, idd, met, rel, soc }));
 
   manifest.frames[gi] = [ageId, turn, snapshot ? 1 : 0, turnDate];
-  if (realistic) manifest.frames[gi].push(REALISTIC_AGES[GameInfo.Ages.lookup(ageId).AgeType].yearsPerTurn);
+  if (realistic) manifest.frames[gi].push(REALISTIC_AGES[GameInfo.Ages.lookup(ageId).AgeType].yearsPerTurn * realisticSpeedMultiplier());
   // age-start markers: [startGi, ageId, ageName] — appended whenever the age id changes
   const lastAge = manifest.ages.length ? manifest.ages[manifest.ages.length - 1] : null;
   if (!lastAge || lastAge[1] !== ageId) manifest.ages.push([gi, ageId, currentAgeName()]);
@@ -1323,8 +1374,8 @@ function onPlayerDefeat(data) {
 try { window.AnthroproceniaRecordFinal = () => { try { if (started) onGameOrAgeEnd('endgame-screen'); } catch (e) {} }; } catch (e) {}
 
 log('recorder module loaded — binding lifecycle events');
-engine.on('GameStarted', () => { unitFormationOperations.clear(); try { window.AnthroproceniaNames.reset(); } catch (e) {} scheduleInit('GameStarted'); });
-engine.on('LoadComplete', () => { unitFormationOperations.clear(); try { window.AnthroproceniaNames.reset(); } catch (e) {} scheduleInit('LoadComplete'); });
+engine.on('GameStarted', () => { unitFormationOperations.clear(); unitCombatTurns.clear(); try { window.AnthroproceniaNames.reset(); } catch (e) {} scheduleInit('GameStarted'); });
+engine.on('LoadComplete', () => { unitFormationOperations.clear(); unitCombatTurns.clear(); try { window.AnthroproceniaNames.reset(); } catch (e) {} scheduleInit('LoadComplete'); });
 engine.on('StartSaveRequest', flushNames);
 engine.on('LocalPlayerTurnBegin', onTurnBegin);
 engine.on('TurnBegin', () => { if (typeof Autoplay !== 'undefined' && Autoplay.isActive) onTurnBegin(); });
@@ -1332,6 +1383,7 @@ engine.on('AutoplayEnded', onTurnBegin);
 engine.on('UnitMoved', scheduleMidTurnRecord);                     // capture when a unit moves
 engine.on('UnitMoveComplete', scheduleMidTurnRecord);
 engine.on('UnitDamageChanged', scheduleMidTurnRecord);
+engine.on('Combat', recordUnitBattle);
 engine.on('DistrictDamageChanged', scheduleMidTurnRecord);
 engine.on('UnitActivityChanged', recordUnitFormationActivity);
 engine.on('PlotOwnershipChanged', scheduleMidTurnRecord);          // capture when a city expands or borders change

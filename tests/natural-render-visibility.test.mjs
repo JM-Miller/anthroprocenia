@@ -38,7 +38,7 @@ function world(count = 40) {
     hexW: 12, hexH: 14, window: { innerWidth: 1000, innerHeight: 800 },
     naturalRender: { viewKey: '', budgetReported: false, loggedTier: '' },
     naturalMarkerGroup: null, naturalMarkerPaths: new Map(), terrainMarkerPaths: new Map(), isletMarkerPaths: new Map(),
-    showNaturalFeatures: true, showResources: true, showSettlements: true, showUnits: true,
+    showNaturalFeatures: true, showResources: true, showSettlements: true, showUnits: true, showBuildingDots: true, showUnitDots: true,
     markerRendered: false, markerRenderedVis: null,
     fogMarkersStale: false, columnShiftMarkersStale: false, naturalDetailActive: () => true,
     naturalDecorActive: () => true, hideNaturalMarkers() {}, labelTier: () => 3, detailD: 3,
@@ -73,6 +73,67 @@ function world(count = 40) {
 const pathData = ctx => [...ctx.naturalMarkerPaths.values()]
   .flatMap(paths => [paths.outer.attrs.d || '', paths.inner.attrs.d || ''])
   .concat([...ctx.isletMarkerPaths.values()].flatMap(paths => paths.map(path => path.el.attrs.d || ''))).join('');
+
+test('unit and building dot toggles hide every retained batch independently, preserve resource/town anchors and restore cached geometry', () => {
+  const { ctx, frame, markers } = world(0);
+  const add = (cols, item, extra = false) => markers.push({ index: 0, radius: 1, shape: 'building', kind: 'unit', cols, item, extra });
+  add('#100000|#200000', { kind: 'unit', owner: 0 });
+  add('#100000|#200000', { kind: 'unit', owner: 0 }, true);
+  add('#001000|#002000', { kind: 'building' });
+  add('#001000|#002000', { kind: 'building' }, true);
+  add('#000010|#000020', { kind: 'resource' });
+  add('#101010|#202020', undefined, true);
+  ctx.iconModeActive = () => true;
+  const shown = color => {
+    const paths = ctx.terrainMarkerPaths.get(color);
+    return !!paths && paths.outer.style.display !== 'none' && paths.inner.style.display !== 'none';
+  };
+  ctx.drawUnitLayer(frame, null);
+  assert.ok(shown('#100000|#200000') && shown('#001000|#002000') && shown('#101010|#202020'));
+  const unitBatch = ctx.terrainMarkerPaths.get('#100000|#200000');
+  ctx.showUnitDots = false; ctx.drawUnitLayer(frame, null);
+  assert.equal(shown('#100000|#200000'), false, 'all unit company markers disappear, not just the first marker');
+  assert.equal(shown('#101010|#202020'), false, 'item-less population/unit markers follow Unit dots, not Building dots');
+  assert.equal(shown('#001000|#002000'), true);
+  ctx.showBuildingDots = false; ctx.drawUnitLayer(frame, null);
+  assert.equal(shown('#001000|#002000'), false);
+  assert.equal(shown('#000010|#000020'), true, 'resources have their own setting');
+  assert.equal(ctx.iconPoints.length, 5, 'dot filtering never deletes townscape source anchors');
+  ctx.showUnitDots = true; ctx.drawUnitLayer(frame, null);
+  assert.equal(shown('#100000|#200000'), true); assert.equal(shown('#101010|#202020'), true);
+  assert.equal(shown('#001000|#002000'), false);
+  assert.equal(ctx.terrainMarkerPaths.get('#100000|#200000'), unitBatch, 'restoring reuses retained batches');
+  ctx.showBuildingDots = true; ctx.drawUnitLayer(frame, null);
+  assert.equal(shown('#001000|#002000'), true);
+  ctx.townscapeActive = () => true; ctx.showBuildingDots = ctx.showUnitDots = false; ctx.drawUnitLayer(frame, null);
+  assert.equal(ctx.iconPoints.length, 5, 'town-view units/buildings keep their anchors with map dots off');
+  assert.ok([...ctx.terrainMarkerPaths.values()].filter(paths => paths !== ctx.terrainMarkerPaths.get('#000010|#000020'))
+    .every(paths => paths.outer.style.display === 'none' && paths.inner.style.display === 'none'));
+});
+
+test('military company locations are triangles with unchanged counts, owner colors and selectable identities; civilian/naval/air shapes remain distinct', () => {
+  const { ctx } = world(0);
+  Object.assign(ctx, {
+    frames: [{}], showResources: false, MAP_MARKER_SCALE: 1, MOUNTAIN_MARKERS_PER_TILE: 10,
+    manifest: { unitTypes: [['UNIT_WARRIOR', '', 0], ['UNIT_GALLEY', '', 1], ['UNIT_SETTLER', '', 2], ['UNIT_FIGHTER', '', 3]] },
+    readMapFeatureMarkers: () => new Map(),
+    readUnitsTurn: () => [[0, 0, 0, 100], [1, 1, 1, 80], [2, 0, 2, 50], [3, 0, 3, 100]],
+    playerBorderColor: owner => `border${owner}`, unitColor: owner => `owner${owner}`,
+  });
+  vm.runInContext(slice('unitMapFor'), ctx);
+  const markers = ctx.unitMapFor(2, null, null);
+  assert.equal(markers.length, 33);
+  const military = markers.filter(marker => marker.item.row === 0);
+  assert.equal(military.length, 10); assert.ok(military.every(marker => marker.shape === 'triangle' && marker.cols === 'border0|owner0'));
+  assert.equal(military.filter(marker => !marker.extra).length, 1);
+  assert.deepEqual(Array.from(military[0].item ? [military[0].item.owner, military[0].item.type, military[0].item.row, military[0].item.health] : []), [0, 0, 0, 100]);
+  assert.deepEqual(Array.from(new Set(markers.map(marker => marker.shape))), ['triangle', 'hull', 'block', 'air']);
+  const paths = ctx.shapePaths('triangle', 100, 100, 5, 1);
+  for (const data of [paths.outer, paths.inner]) {
+    assert.equal((data.match(/L/g) || []).length, 2); assert.ok(data.endsWith('Z'));
+  }
+  assert.notEqual(paths.outer, paths.inner, 'owner fill and contrasting outline both remain visible');
+});
 
 test('townscape zoom hides coarse natural glyphs immediately and does not submit replacement tree or mountain paths', () => {
   const { ctx, frame } = world();
@@ -202,6 +263,25 @@ test('a fog restriction or checkbox change rebuilds an in-progress item layout',
   assert.equal(ctx.scatterJob, null);
   assert.equal(ctx.unitFlagPoints.length, 0);
 });
+test('stricter fog hides whole marker roots before a recent-pan early return and restores only rebuilt geometry', () => {
+  const { ctx, frame, advance } = world();
+  const visible = [2, 2, 2, 2], restricted = [1, 2, 2, 2];
+  ctx.dimCols = cols => cols;
+  ctx.iconDom.el = element();
+  assert.equal(ctx.drawUnitLayer(frame, visible), true);
+  ctx.terrainMarkerDom.el.appendChild({ style: { visibility: 'visible' } });
+  ctx.lastMapInputTs = 1000;
+  ctx.viewZoom = 9.9;
+  assert.equal(ctx.drawUnitLayer(frame, restricted), false);
+  assert.equal(ctx.fogMarkersStale, true);
+  assert.equal(ctx.terrainMarkerDom.el.style.display, 'none', 'explicitly visible descendants cannot override display:none');
+  assert.equal(ctx.iconDom.el.style.display, 'none');
+  advance(300);
+  assert.equal(ctx.drawUnitLayer(frame, restricted), true);
+  assert.equal(ctx.fogMarkersStale, false);
+  assert.equal(ctx.terrainMarkerDom.el.style.display, '');
+  assert.equal(ctx.markerRenderedVis, restricted);
+});
 
 test('townscale layout generates only viewport and adjacent-tile item markers on a dense world', t => {
   const { ctx, frame } = world();
@@ -225,6 +305,8 @@ test('townscale layout generates only viewport and adjacent-tile item markers on
   const vis = Array(count).fill(2); vis[32 * 128 + 50] = 0;
   ctx.drawUnitLayer(frame, vis);
   assert.ok(ctx.iconPoints.every(point => point.item.index !== 32 * 128 + 50));
+  ctx.drawUnitLayer(frame, [2]);
+  assert.equal(ctx.iconPoints.length, 0, 'missing visibility cannot expose static buildings or live units');
   t.diagnostic(`${count * 20} world item markers reduced to 180 local item markers before placement`);
 });
 

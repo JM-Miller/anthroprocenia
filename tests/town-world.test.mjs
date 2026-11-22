@@ -45,7 +45,7 @@ function world(waterTiles = [5]) {
     walkerClumps: new crowds.WalkerClumps(), walkerRunnerDestination: () => undefined,
     walkerActivityDestination: () => undefined, walkerActivityArrival: () => {}, personProfileFor: () => ({}),
   });
-  vm.runInContext(['townHousingFor', 'tileAtMapPoint', 'isWaterAt', 'segmentTouchesWater', 'walkEdgeAllowed', 'walkGraphFor', 'townWalkCrossings', 'buildTownWorld', 'walkerTravelCompanion', 'walkerGroupStreets', 'createWalkers', 'newWalker', 'syncPinnedWalkers', 'syncPeople', 'worldPartOf'].map(slice).join('\n'), context);
+  vm.runInContext(['walkerBaseSpeed', 'mapScaleMetrics', 'townHousingFor', 'tileAtMapPoint', 'isWaterAt', 'segmentTouchesWater', 'walkEdgeAllowed', 'walkGraphFor', 'townWalkCrossings', 'buildTownWorld', 'walkerTravelCompanion', 'walkerGroupStreets', 'createWalkers', 'newWalker', 'syncPinnedWalkers', 'syncPeople', 'worldPartOf'].map(slice).join('\n'), context);
   return context;
 }
 const centre = (context, tile) => ({ x: context.basePos[tile].x + hexW / 2, y: context.basePos[tile].y + hexH / 2 });
@@ -194,6 +194,25 @@ test('people reuse the completed walking network and reject a stale prepared sce
   assert.equal(ctx.townWorld, prepared, 'a stale replacement cannot overwrite the running network');
 });
 
+test('same-scene refresh updates combat eligibility and recalibrates retained walkers after subtype or scale changes', () => {
+  const ctx = world([]), c = centre(ctx, 8), entries = [entry('a', 8, c.x, c.y)];
+  let battleReady = false, unitSub = 'infantry';
+  ctx.walkerFormationTraits = () => ({ battleReady, unitSub, unitState: '' });
+  ctx.syncPeople(entries);
+  const group = ctx.townWalkers.get('a'), person = group.people[0], speed = person.baseSpeed;
+  const oldWorld = ctx.townWorld;
+  ctx.buildTownWorld = () => assert.fail('same-scene changes must not rebuild paths');
+  battleReady = true; ctx.syncPeople(entries);
+  assert.equal(group.battleReady, true);
+  unitSub = 'cavalry'; ctx.syncPeople(entries);
+  assert.equal(person.baseSpeed, speed * 2);
+  ctx.hexW *= 2; battleReady = false; ctx.syncPeople(entries);
+  assert.equal(group.battleReady, false);
+  assert.equal(person.baseSpeed, speed * 4);
+  assert.equal(ctx.townWorld, oldWorld);
+  assert.equal(group.people[0], person);
+});
+
 test('townscapes separated by water are not joined, even on the same tile', () => {
   const context = world([8]), c = centre(context, 8);
   context.terrain[8] = 5;
@@ -286,6 +305,7 @@ test('people walk from one townscape into the next and never step onto water', (
   const a = entry('a', 8, c.x - 30, c.y, 6), b = entry('b', 8, c.x + 10, c.y, 6);
   call(context, 'syncPeople', [a, b]);
   const graph = context.townWorld.graph, groupA = context.townWalkers.get('a');
+  for (const person of groupA.people) person.speed = person.baseSpeed = 0.25;
   let state = 11;
   const rand = () => (state = (state * 1103515245 + 12345) % 2147483648) / 2147483648;
   const partB = new Set(context.townWorld.parts.get('b').destinations);

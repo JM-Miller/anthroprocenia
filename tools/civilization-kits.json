@@ -1,0 +1,236 @@
+{
+  "BRITONS": {
+    "ability": [["plot", "CULTURE", 1, "vegetated"], ["production", "LAND", 15]],
+    "buildings": [
+      [["growth", 15], ["plot", "FOOD", 1, "farm"]],
+      [["plot", "CULTURE", 1, "vegetated"], ["worker", "HAPPINESS", 1]]
+    ],
+    "quarter": [["production", "LAND", 25], ["connected", "CULTURE", 1]],
+    "military": [["combat", 5, "attack"], ["move", 1]],
+    "scout": [["sight", 1], ["ignore", "FOREST"]],
+    "improvement": ["Hillfort", "HILLFORT", "PRODUCTION", 2, ["plot", "CULTURE", 1, "vegetated"]],
+    "civics": [
+      ["Tribal Households", [], [["growth", 10]]],
+      ["Bardic Memory", [1], [["worker", "CULTURE", 1]]],
+      ["Chariot Retinues", [1], [["production", "LAND", 15]]],
+      ["Sacred Landscapes", [2], [["plot", "CULTURE", 1, "vegetated"]]],
+      ["Hillfort Networks", [3], [["connected", "PRODUCTION", 1]]],
+      ["Island Confederacies", [4, 5], [["settlements", 1], ["connected", "HAPPINESS", 1]]]
+    ],
+    "traditions": [
+      ["Bardic Memory", 2, [["worker", "CULTURE", 1], ["yield", "HAPPINESS", 2]]],
+      ["Hospitality", 3, [["connected", "FOOD", 1]]],
+      ["Chariot Retinues", 4, [["production", "LAND", 20]]],
+      ["Sacred Groves", 5, [["plot", "CULTURE", 1, "vegetated"]]]
+    ],
+    "history": "Roundhouse farming communities, elite chariot display, oral learning and enclosed hillfort landscapes. Druids and their institutions are known largely through outside writers; no reconstructed sacred building is claimed as an attested plan.",
+    "sources": ["https://artsandculture.google.com/story/0032/_AWRz1O9u3piJg"]
+  },
+  "SUEBI": {
+    "ability": [["plot", "PRODUCTION", 1, "vegetated"], ["growth", 10]],
+    "buildings": [
+      [["connected", "HAPPINESS", 1], ["production", "LAND", 15]],
+      [["production", "LAND", 20], ["resource", 1]]
+    ],
+    "quarter": [["production", "LAND", 20], ["worker", "PRODUCTION", 1]],
+    "military": [["combat", 5, "defend"], ["ignore", "FOREST"]],
+    "scout": [["sight", 1], ["ignore", "FOREST"], ["ignore", "TAIGA"]],
+    "improvement": ["Woodland Homestead", "POTKOP", "FOOD", 2, ["growth", 10]],
+    "civics": [
+      ["Dispersed Homesteads", [], [["plot", "FOOD", 1, "farm"]]],
+      ["Kindred Assemblies", [1], [["connected", "HAPPINESS", 1]]],
+      ["Warband Bonds", [1], [["production", "LAND", 15]]],
+      ["Woodland Husbandry", [2], [["plot", "PRODUCTION", 1, "vegetated"]]],
+      ["Frontier Confederacies", [3], [["settlements", 1]]],
+      ["Suebian League", [4, 5], [["connected", "PRODUCTION", 1], ["resource", 1]]]
+    ],
+    "traditions": [
+      ["Guest Right", 2, [["growth", 15], ["yield", "HAPPINESS", 2]]],
+      ["Assembly of Freemen", 3, [["connected", "CULTURE", 1]]],
+      ["Retinue Service", 4, [["production", "LAND", 20]]],
+      ["Woodland Stewardship", 5, [["plot", "FOOD", 1, "vegetated"]]]
+    ],
+    "history": "Elbe-region Suebian groups are represented through mixed farming, dispersed timber settlements, assemblies and personal warband ties. Roman descriptions are outsider testimony, not a uniform Suebian constitution.",
+    "sources": ["https://www.britannica.com/topic/Suebi"]
+  },
+  "XIONGNU": {
+    "ability": [["plot", "FOOD", 1, "pasture"], ["production", "LAND", 15], ["trade", 1]],
+    "buildings": [
+      [["plot", "PRODUCTION", 1, "pasture"], ["growth", 15]],
+      [["connected", "GOLD", 1], ["resource", 2]]
+    ],
+    "quarter": [["production", "LAND", 25], ["connected", "GOLD", 2]],
+    "military": [["combat", 4, "attack"], ["heal", 10]],
+    "scout": [["sight", 2], ["ignore", "SAGEBRUSH_STEPPE"]],
+    "improvement": ["Seasonal Pasture Camp", "POTKOP", "FOOD", 2, ["plot", "PRODUCTION", 1, "pasture"]],
+    "civics": [
+      ["Seasonal Pastures", [], [["plot", "FOOD", 1, "pasture"]]],
+      ["Composite Bows", [1], [["production", "LAND", 20]]],
+      ["Eastern and Western Wings", [1], [["resource", 1]]],
+      ["Mounted Retinues", [2], [["connected", "PRODUCTION", 1]]],
+      ["Silk Road Embassies", [3], [["trade", 1], ["connected", "GOLD", 1]]],
+      ["Turkic Khaganate", [4, 5], [["settlements", 1], ["production", "LAND", 15]]]
+    ],
+    "traditions": [
+      ["Herd Stewardship", 2, [["plot", "FOOD", 1, "pasture"]]],
+      ["Confederate Tribute", 3, [["connected", "GOLD", 2]]],
+      ["Mounted Retinues", 4, [["production", "LAND", 20]]],
+      ["Frontier Markets", 5, [["resource", 1], ["yield", "GOLD", 3]]]
+    ],
+    "history": "The Turkic khaganates emerged under the Ashina ruling clan in the sixth century, joining mobile pastoral communities with Central Asian trade and diplomacy. Bumin and Istemi established an extensive realm whose eastern and western wings developed distinct political histories. The restored eastern khaganate left the Orkhon memorial inscriptions associated with Bilge Qaghan, Kul Tigin, and Tonyukuk in the eighth century. Turkic Mounted Retinue and Steppe Envoy are descriptive gameplay labels, not attested formal unit titles. Otuken is a sacred political landscape, while several settlement labels name memorial sites rather than cities. Clan names in generated personal names are a limited abstraction, not a modern surname system.",
+    "sources": ["https://whc.unesco.org/en/list/1081/", "https://en.wikipedia.org/wiki/First_Turkic_Khaganate"]
+  },
+  "CARALANS": {
+    "culture": "MISSISSIPPIAN",
+    "ability": [["plot", "FOOD", 1, "fishing"], ["plot", "PRODUCTION", 1, "farm"]],
+    "buildings": [
+      [["wonder", 20], ["worker", "CULTURE", 1]],
+      [["connected", "GOLD", 1], ["resource", 2]]
+    ],
+    "quarter": [["wonder", 30], ["worker", "SCIENCE", 2]],
+    "military": [["combat", 6, "defend"], ["heal", 5]],
+    "scout": [["sight", 2], ["ignore", "SAGEBRUSH_STEPPE"]],
+    "improvement": ["Cotton Garden", "POTKOP", "PRODUCTION", 2, ["connected", "FOOD", 1]],
+    "civics": [
+      ["Cotton and Anchovies", [], [["plot", "FOOD", 1, "fishing"]]],
+      ["Irrigation Canals", [1], [["plot", "PRODUCTION", 1, "farm"]]],
+      ["Communal Labor", [1], [["wonder", 15]]],
+      ["Valley Exchange", [2], [["connected", "GOLD", 1], ["resource", 1]]],
+      ["Sunken Courts", [3], [["worker", "CULTURE", 1]]],
+      ["Monumental Cooperation", [4, 5], [["wonder", 20], ["connected", "SCIENCE", 1]]]
+    ],
+    "traditions": [
+      ["Cotton Cordage", 2, [["plot", "PRODUCTION", 1, "farm"]]],
+      ["Ceremonial Gatherings", 3, [["worker", "HAPPINESS", 1], ["yield", "CULTURE", 2]]],
+      ["Coastal Reciprocity", 4, [["connected", "GOLD", 1], ["resource", 1]]],
+      ["Shared Construction", 5, [["wonder", 20]]]
+    ],
+    "history": "Caral-Supe's platform mounds, sunken circular courts, irrigated farming and coast-valley exchange are archaeological themes. Defensive slingers remain an explicitly fictional gameplay provision, not evidence for a documented Caralan army.",
+    "sources": ["https://whc.unesco.org/en/list/1269/"]
+  },
+  "WAGADU": {
+    "ability": [["trade", 1], ["connected", "GOLD", 2]],
+    "buildings": [
+      [["resource", 2], ["connected", "GOLD", 1]],
+      [["worker", "CULTURE", 1], ["yield", "HAPPINESS", 3]]
+    ],
+    "quarter": [["resource", 2], ["connected", "GOLD", 2]],
+    "military": [["combat", 6, "defend"], ["heal", 10]],
+    "scout": [["sight", 2], ["ignore", "OASIS"]],
+    "improvement": ["Caravan Rest", "POTKOP", "GOLD", 3, ["resource", 1]],
+    "civics": [
+      ["Sahelian Settlements", [], [["plot", "FOOD", 1, "farm"]]],
+      ["Caravan Hospitality", [1], [["resource", 1]]],
+      ["Soninke Lineages", [1], [["worker", "CULTURE", 1]]],
+      ["Gold and Salt", [2], [["trade", 1], ["connected", "GOLD", 1]]],
+      ["Royal Audience", [3], [["connected", "HAPPINESS", 1]]],
+      ["Wagadu Exchange Network", [4, 5], [["connected", "GOLD", 2], ["resource", 1]]]
+    ],
+    "traditions": [
+      ["Caravan Hospitality", 2, [["resource", 1], ["yield", "HAPPINESS", 2]]],
+      ["Gold Weights", 3, [["connected", "GOLD", 1]]],
+      ["Oral Genealogies", 4, [["worker", "CULTURE", 1]]],
+      ["Market Tolls", 5, [["resource", 1], ["yield", "GOLD", 3]]]
+    ],
+    "history": "Soninke settlement, caravan hospitality, gold-and-salt exchange and royal audiences inform the kit. The precise beginnings and capital identification remain uncertain; this is not modern Ghana or a Mansa Musa/Mali kit.",
+    "sources": ["https://human.libretexts.org/Bookshelves/History/World_History/Early_World_Civilizations_(Lumen)/11%3A_African_Civilizations/11.13%3A_The_Ghana_Empire"]
+  },
+  "JAVANESE": {
+    "ability": [["plot", "FOOD", 1, "river"], ["production", "SEA", 20]],
+    "buildings": [
+      [["growth", 20], ["plot", "FOOD", 1, "farm"]],
+      [["connected", "CULTURE", 1], ["resource", 1]]
+    ],
+    "quarter": [["production", "SEA", 30], ["connected", "GOLD", 2]],
+    "military": [["combat", 5, "coast"], ["move", 1]],
+    "scout": [["sight", 1], ["ignore", "RAINFOREST"]],
+    "improvement": ["Irrigation Reservoir", "BARAY", "FOOD", 3, ["growth", 15]],
+    "civics": [
+      ["Wet-Rice Communities", [], [["plot", "FOOD", 1, "farm"]]],
+      ["Water Channels", [1], [["growth", 15]]],
+      ["Coastal Navigation", [1], [["production", "SEA", 20]]],
+      ["Wanua Assemblies", [2], [["connected", "HAPPINESS", 1]]],
+      ["Interisland Exchange", [3], [["trade", 1], ["resource", 1]]],
+      ["Rice and Sea Lanes", [4, 5], [["connected", "GOLD", 2], ["worker", "SCIENCE", 1]]]
+    ],
+    "traditions": [
+      ["Rice Cooperation", 2, [["growth", 15]]],
+      ["Village Deliberation", 3, [["connected", "HAPPINESS", 1]]],
+      ["Maritime Markets", 4, [["resource", 1], ["yield", "GOLD", 3]]],
+      ["Shipwright Communities", 5, [["production", "SEA", 25]]]
+    ],
+    "history": "Early Javanese rice-growing communities, waterworks, wanua villages and interisland exchange are emphasized, without importing Majapahit titles or claiming a modern Balinese subak institution. Perahu is a generic vessel term, not a precise ancient warship reconstruction.",
+    "sources": ["https://journals.openedition.org/gc/3504", "https://books.google.com/books?id=b4x6EAAAQBAJ"]
+  },
+  "SLAVIC": {
+    "culture": "ROME",
+    "ability": [["plot", "FOOD", 1, "river"], ["growth", 10]],
+    "buildings": [
+      [["plot", "FOOD", 1, "farm"], ["growth", 15]],
+      [["connected", "HAPPINESS", 1], ["worker", "CULTURE", 1]]
+    ],
+    "quarter": [["connected", "FOOD", 1], ["production", "LAND", 20]],
+    "military": [["combat", 5, "defend"], ["ignore", "FOREST"], ["heal", 5]],
+    "scout": [["sight", 1], ["ignore", "FOREST"], ["ignore", "TAIGA"]],
+    "improvement": ["Riverside Homestead", "POTKOP", "FOOD", 2, ["connected", "PRODUCTION", 1]],
+    "civics": [
+      ["Riverine Settlements", [], [["plot", "FOOD", 1, "river"]]],
+      ["Mixed Husbandry", [1], [["plot", "PRODUCTION", 1, "farm"]]],
+      ["Kinship Assemblies", [1], [["connected", "HAPPINESS", 1]]],
+      ["River Exchange", [2], [["connected", "FOOD", 1]]],
+      ["Timber Refuges", [3], [["production", "LAND", 20]]],
+      ["Settlement Confederacies", [4, 5], [["settlements", 1], ["connected", "CULTURE", 1]]]
+    ],
+    "traditions": [
+      ["Shared Harvest", 2, [["plot", "FOOD", 1, "farm"]]],
+      ["Communal Deliberation", 3, [["connected", "CULTURE", 1]]],
+      ["Timber Fortifications", 4, [["production", "LAND", 20]]],
+      ["River Neighbors", 5, [["connected", "HAPPINESS", 1], ["resource", 1]]]
+    ],
+    "history": "Riverine farming, small timber and sunken-floored dwellings, dugout transport and local community ties are archaeological themes. No single early Slavic state, universal veche institution, or secure ethnic attribution for Biskupin is asserted.",
+    "sources": ["https://pressto.amu.edu.pl/index.php/sla/article/view/50926"]
+  },
+  "TAINO": {
+    "ability": [["plot", "FOOD", 1, "river"], ["plot", "PRODUCTION", 1, "farm"]],
+    "buildings": [
+      [["growth", 20], ["plot", "FOOD", 1, "farm"]],
+      [["worker", "CULTURE", 2], ["resource", 1]]
+    ],
+    "quarter": [["connected", "PRODUCTION", 1], ["plot", "GOLD", 1, "river"]],
+    "military": [["combat", 6, "defend"], ["heal", 10]],
+    "scout": [["sight", 2], ["ignore", "RAINFOREST"]],
+    "improvement": ["Flood-Recession Plot", "POTKOP", "FOOD", 3, ["plot", "CULTURE", 1, "river"]],
+    "civics": [
+      ["Floodplain Foodways", [], [["plot", "FOOD", 1, "river"]]],
+      ["Maize and Manioc", [1], [["growth", 15]]],
+      ["Ceramic Sequences", [1], [["worker", "CULTURE", 1]]],
+      ["Seasonal Knowledge", [2], [["plot", "PRODUCTION", 1, "farm"]]],
+      ["Riverine Exchange", [3], [["trade", 1], ["resource", 1]]],
+      ["Connected Riverbanks", [4, 5], [["connected", "FOOD", 1], ["connected", "PRODUCTION", 1]]]
+    ],
+    "traditions": [
+      ["Seasonal Knowledge", 2, [["plot", "FOOD", 1, "river"], ["growth", 10]]],
+      ["Potters Knowledge", 3, [["worker", "CULTURE", 2]]],
+      ["Riverine Reciprocity", 4, [["resource", 1], ["connected", "GOLD", 1]]],
+      ["Diverse Harvests", 5, [["plot", "PRODUCTION", 1, "farm"], ["yield", "FOOD", 2]]]
+    ],
+    "history": "Orinoco-basin archaeology documents changing communities, ceramic traditions, and foodways rather than one ancient state. Excavations around Parmana informed influential arguments about the relative importance of maize and manioc, population growth, and the opportunities of river floodplains. Lower Orinoco sites such as Saladero and Barrancas preserve ceramic sequences whose chronology and interpretation continue to be reassessed. Residue research cautions against assigning a single crop to a vessel type without direct evidence. Fishing, cultivated foods, and regional exchange supported settlements with different relationships to seasonal water and surrounding landscapes. Ceramic similarities may illuminate contacts but do not by themselves establish a uniform language, migrating people, or political federation. This kit represents that plurality through archaeological site labels and practical English names, not invented extinct-language terminology. It no longer attributes Caribbean Taíno institutions to mainland societies, and it does not claim that every listed site was contemporary or occupied by one identifiable ethnic group.",
+    "elementHistory": {
+      "building1": "Cultivated foods required processing and storage between harvests, alongside fishing and other subsistence work. Floodplain Granary is a functional English abstraction rather than an excavated standard public building. An authentic local institutional name is unavailable for the diverse archaeological communities represented here.",
+      "building2": "Modeled and incised ceramics are prominent evidence for changing lower Orinoco traditions. Vessel shapes and residues illuminate making and use without automatically identifying an ethnic group. Modeled-Ceramic Atelier uses descriptive English because no securely attested contemporary workshop name survives for these archaeological sequences.",
+      "quarter": "Archaeological settlement traces along the river reveal occupation, food preparation, pottery, and changing population patterns. Riverbank Settlement deliberately avoids a reconstructed royal or religious title. Its plain English name does not assert a standardized indigenous administrative district or an empire governing all Orinoco communities.",
+      "improvement": "Seasonally exposed ground offered opportunities for cultivation, though techniques varied across the basin. Flood-Recession Plot represents practical adaptation, not proof that every site used identical fields. No contemporary local term is securely documented, and this label does not equate floodplain farming with Caribbean conucos.",
+      "military": "Communities could require protection, but archaeology does not supply a named uniform Orinoco army for this broad span. Riverbank Defender is an explicit gameplay abstraction, not a translated historical rank. Native warrior models avoid claiming new equipment or a securely reconstructed regional military system.",
+      "scout": "Travel along riverbanks and through adjoining vegetation required knowledge of seasonal conditions and access to neighboring settlements. Orinoco Wayfinder uses clear English because no common attested office can be assigned to these diverse societies. It represents local expertise rather than one centralized reconnaissance institution."
+    },
+    "civicHistory": [
+      "Floodplain environments offered changing combinations of cultivated and wild resources. Their use depended on local conditions rather than one universal tropical subsistence system.",
+      "Research at Parmana made maize and manioc central to debates about population and food production. Those models are historical interpretations, not a final account of every basin community.",
+      "Saladero and Barrancas give names to important ceramic sequences. Pottery styles are analytical categories and cannot automatically be translated into languages or ethnic identities.",
+      "Seasonal knowledge shaped access to water, fish, and cultivation opportunities. Archaeological preservation makes some parts of these practical traditions more visible than others.",
+      "River routes linked communities and circulated objects and ideas. Shared ceramic features do not prove a single political federation or a simple migration story.",
+      "Settlement and subsistence changed across the basin over long periods. Modern site labels are retained where original names and political affiliations cannot be recovered."
+    ],
+    "sources": ["https://siris-libraries.si.edu/ipac20/ipac.jsp?uri=full=3100001~!136132!0", "https://api.pageplace.de/preview/DT0400.9781483276557_A23883313/preview-9781483276557_A23883313.pdf"]
+  }
+}

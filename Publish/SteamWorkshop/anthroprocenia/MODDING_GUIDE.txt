@@ -1,0 +1,1240 @@
+ANTHROPROCENIA: STEP-BY-STEP MODDING AND CONTENT GUIDE
+==================================================
+
+This guide describes the formats and workflow used by this repository.
+It is a contributor guide, not a description of the game's undocumented APIs.
+Use the existing implementation and tests as the authority when an API changes.
+
+HOW TO USE THIS GUIDE
+---------------------
+Read sections 1-3 before making your first change. Then use the feature section
+and its worked example. All filesystem paths and commands assume Windows.
+Run commands from the repository root unless a step explicitly says otherwise.
+Forward slashes inside ESM imports and manifest Items are game/module syntax,
+not PowerShell filesystem paths.
+
+Navigation:
+  1-3   Source copies, feature ownership, and the normal workflow
+  4-6   JavaScript registration, country artwork, geography, and country names
+  7-10  Recording, map layers, townscapes, population, and Chronicle events
+  11-15 SQL/XML/maps, tests, installation, releases, and diagnosis
+  16    First-edit walkthrough and finding the correct implementation
+  17    Worked JavaScript helper and Node test
+  18    Worked localized caption and setup-default change
+  19    Worked civilization artwork and Earth-water entry
+  20    Recording reference and optional-field compatibility
+  21    Layer, population, calendar, and missing-text change recipes
+  22    Backup commands, verification, and safe rollback
+  23    Symptom-to-file troubleshooting and in-game acceptance checks
+  24    Shipping the guide and handing off a finished change
+
+Examples marked "illustrative" teach a format. They do not represent changes
+already installed in the mod, and should not be pasted into unrelated systems.
+Choose your actual identifiers and behavior before using them.
+
+1. FIND THE CORRECT COPY
+------------------------
+1) Open the repository in VS Code.
+2) Edit the source inside the anthroprocenia directory, not an installed mod
+   and not Publish\SteamWorkshop\anthroprocenia.
+3) README.md, this guide, tests, and the PowerShell scripts live at the
+   repository root. They are not all game-loaded files.
+4) The game-loaded root contains anthroprocenia.modinfo, config, data,
+   text, maps, and ui.
+5) Run "git --no-pager status --short" before editing. Preserve existing work.
+6) Close Civilization VII before replacing its installed files.
+
+2. KNOW WHICH FILE OWNS THE FEATURE
+-----------------------------------
+Source paths below are relative to the anthroprocenia directory.
+
+anthroprocenia.modinfo
+    Mod identity, dependencies, age criteria, database actions, UI entry points,
+    and imported helper files. Keep the mod ID anthroprocenia_map_history.
+
+config\*.sql and config\AnthroproceniaInput.xml
+    Setup options, map-size definitions, speed defaults, and input actions.
+    Configuration loaded in the shell is different from in-game data.
+
+data\*.sql
+    Age calendars and other gameplay database changes.
+
+text\en_us\AnthroproceniaText.xml
+    Localized text. Reuse the existing LOC_ keys and XML structure.
+
+maps\*.js
+    Map generators and shared oversized-map dimensions.
+
+ui\history\anthroprocenia-recorder.js
+    Game-event capture, recording dictionaries, compact data, and save storage.
+
+ui\history\anthroprocenia-calendar-hud.js
+    Native calendar display.
+
+ui\map\anthroprocenia-calendar.js
+    Shared realistic-calendar definitions, x2-x6 multipliers, turn budgets and
+    annual/seasonal/monthly dates. Recorder life-years and Skip Ahead use the
+    same selected multiplier.
+
+data\realistic-speeds.sql and data\realistic-x*.sql
+    Gameplay speed definitions load at 990, the selected multiplier at 995,
+    and the age calendar/research/celebration scaling at 1000. All Realistic
+    speeds use Marathon non-research costs and native duration overrides;
+    research compensates for the 3x native multiplier before integer rounding.
+    SetupDefaults.sql sets Giant Earth (when supplied), Long ages, no countdown,
+    score victory off and YnAMP real-only natural wonders without locking them.
+
+ui\geography\anthroprocenia-geography.js
+    Connected geographic divisions, Earth projections, landmark matching,
+    water names, and shared border-region war naming.
+
+ui\geography\anthroprocenia-names-db.js
+    Geographic name database.
+
+ui\map\anthroprocenia-playback.js
+    Main Map View, playback reconstruction, layers, country naming, native UI
+    integration, camera behavior, marker layout, and townscape lifecycle.
+    No main-game map-open button or map-view exit X. Preserve automatic map
+    opening/hiding, minimap scheduling, Victories integration and native shortcut.
+    The pause-menu civilization picker snapshots/restores visibility options,
+    fits the live map, and reuses the region shadow geometry for civ territory.
+ui\map\anthroprocenia-civ-switch.js
+    Permanent single-player takeover uses Autoplay.setAsLocalPlayer(playerID),
+    not an autoplay start/stop sequence. The native function's reported length
+    is zero, but it accepts the target ID. Verified on Civ VII 1.5.1: local and
+    observer IDs plus human ownership survive save/reload and permit commanding
+    the new civ's units. These updates can arrive across multiple UI ticks;
+    await confirmed ownership and suppress duplicate clicks while waiting.
+    Do not explicitly advance turns; native turn processing may resume afterward.
+    Revalidate surviving major targets and reject multiplayer/hotseat/autoplay.
+    Check native postconditions; never silently accept an observer-only change.
+    Search for the relevant function before adding another implementation.
+
+ui\map\anthroprocenia-ui.js
+    Shared UI glyphs, formatting helpers, and UI installation.
+
+ui\map\anthroprocenia-civ-icons.js
+    Four alternative country emblems per supported civilization.
+
+ui\map\anthroprocenia-population-panel.js
+    Population hierarchy, selection, searching, sorting, and stable IDs.
+
+ui\map\anthroprocenia-people.js and anthroprocenia-demography.js
+    Occupations, names, home plans, family simulation, and life history.
+
+ui\map\anthroprocenia-units.js
+    Unit population, civilian population scaling, and related naming helpers.
+
+ui\map\anthroprocenia-crowds.js
+    Individual/crowd display and formation geometry.
+
+ui\map\anthroprocenia-townscape.js
+    Town layouts, buildings, geometry, collisions, roads, and walking helpers.
+
+ui\map\anthroprocenia-townlinks.js
+    Inter-town links, road connections, bridges, and waterfront geometry.
+
+ui\map\anthroprocenia-linenames.js and anthroprocenia-sites.js
+    Local road/building/feature names and site categories.
+
+ui\map\anthroprocenia-timeline.js
+    Chronicle events and live timeline grouping.
+
+ui\map\anthroprocenia-persist.js
+    Compact cached-view formats, bounded record retention, and write queues.
+
+ui\map\anthroprocenia-commands.js
+    Population actions, yields, command menus, and their simulation helpers.
+
+ui\map\anthroprocenia-placement.js and anthroprocenia-unit-highlights.js
+    Placement/input integration and movement/highlight geometry.
+
+3. THE GENERAL CHANGE WORKFLOW
+-------------------------------
+1) Identify the visible behavior or data change you want.
+2) Search for its label, event, function, or data key in the source and tests.
+3) Read the producer, the consumer, and the closest existing test.
+4) Decide which layer owns the change. A capture problem belongs in the
+   recorder; changing display alone does not repair a missing recorded field.
+5) Make the smallest coherent source change. Follow nearby naming, two-space
+   JavaScript indentation, ESM imports/exports, and helper patterns.
+6) Update all directly affected consumers, cache signatures, and formats.
+7) Add focused tests for the new behavior and important edge cases.
+8) Update README.md and this guide if their instructions changed.
+9) Run targeted tests first, then broader tests for coupled changes.
+10) Back up, install the coherent source set, restart, and test in the game.
+11) Do not describe a browser/mock test as proof of a native Gameface repair.
+
+4. ADD A JAVASCRIPT HELPER OR ENTRY POINT
+-----------------------------------------
+1) Put a new helper beside the related files, using the existing filename
+   pattern: anthroprocenia-feature-name.js.
+2) Export only the functions/data its consumers need.
+3) Import helpers using a relative ESM path, for example:
+
+   import { countryIconChoice } from './anthroprocenia-civ-icons.js';
+
+4) Keep Node-only APIs out of game-loaded JavaScript. Native imports such as
+   /core/ui/... are provided by Civilization VII, not npm.
+5) Register the helper under the appropriate ImportFiles action in
+   anthroprocenia.modinfo:
+
+   <Item>ui/map/anthroprocenia-civ-icons.js</Item>
+
+6) Use UIScripts only for an actual game-loaded entry point. Do not register
+   every imported helper as a separate executable script.
+7) Add helper tests using tests\load.mjs. It loads relative mod modules for
+   Node tests. Native engine dependencies need focused mocks or an existing
+   extracted-function fixture.
+8) Confirm every manifest Item exists before installing.
+
+5. ADD OR CHANGE A COUNTRY ICON
+--------------------------------
+1) Open ui\map\anthroprocenia-civ-icons.js.
+2) Add original artwork to MOTIFS as:
+
+   motifKey: ['Readable motif name', 'M...Z'],
+
+3) Draw within a 64 by 64 coordinate system. Use closed, finite SVG paths.
+   The renderer uses evenodd fill, so inner contours can create transparent
+   holes. The rect and disc helpers are available for repeated geometry.
+4) Keep detail readable at small sizes and paths below the test budgets.
+   Do not embed external images, fonts, scripts, or copied commercial artwork.
+5) Add four distinct motif keys to the civilization's CIV_MOTIFS entry:
+
+   ROME: ['scutum', 'crestHelmet', 'colosseum', 'spqr'],
+
+   Do not reuse another civilization's silhouette. Use civ-specific objects
+   and genuinely different artwork, not only a new name or a decorative frame.
+
+6) Use the actual engine civilization identifier without CIVILIZATION_ in
+   this table. For example CIVILIZATION_ROME maps to ROME.
+7) Do not choose artwork using government, country name, capital, settlement
+   count, or current turn. The saved seed and civilization choose the baseline;
+   countryIconAssignments uses owner IDs and the full same-culture border
+   graph to keep adjacent countries different. It prefers four alternatives
+   and uses the original emblem as a fifth choice only when necessary.
+8) The seed is saved under the view-data civicons key and restored on load.
+   Preserve this behavior when adding content. Camera/fog changes must not
+   reroll choices; changed borders can require deterministic reassignment.
+   Unsolvable five-emblem graphs and exhausted search budgets are explicit errors.
+9) Unknown modded civilizations keep the engine emblem until their own
+   four-motif entry is added.
+   anthroprocenia-civ-icon-ui.js reuses the same artwork in native game UI.
+   Preserve player-ID/shadow-host and contested-district resolution.
+   Civilization-only displays use the lowest-numbered matching player.
+   Use the latest recorded turn, never the historical playback position.
+   Preserve native tint, input and layout; restore original artwork in
+   main-menu/save-load scopes and reused non-civilization icon slots.
+   Observe glyph styles and explicit civilization-variable sources only:
+   observing all map styles would process thousands of walker mutations.
+10) Run:
+
+   node --test .\tests\civ-icons.test.mjs .\tests\map-stability.test.mjs
+
+11) Inspect all four icons visually, then test the Civilization icons checkbox,
+    native/alternative transitions, fog, replay, save/load, and owner colors.
+12) SPQR is the Roman inscription; do not substitute SQRS.
+
+6. ADD GEOGRAPHIC OR COUNTRY NAMES
+-----------------------------------
+1) Use the geography module for regions, islands, rivers, seas, lakes, and
+   oceans. Use the shared country-name functions for country naming.
+2) Add landmarks to the correct Earth projection's existing atlas structure.
+   Do not copy coordinates between stock Earth and differently sized maps.
+3) Preserve width/height validation, supported crop transforms, proximity
+   limits, wrap behavior, and procedural fallback for unsupported projections.
+4) Test locations at actual source coordinates and near classification edges.
+5) When adding a geographic division, preserve existing tile/home/person IDs.
+6) Update population hierarchy consumers if a new tree level is introduced.
+7) Country labels must use one government noun and no repeated words.
+   normalizeCountryName compares known word families, plurals and possessives,
+   including configured related root/adjective pairs and generated capital
+   adjectives. Preserve the government noun over a redundant adjective.
+   Do not blindly strip adjective suffixes from unrelated proper names.
+   Unique-country qualifiers must pass the same cleanup without replacing
+   existing base words. Increment the country cache namespace when this changes.
+   Never combine Imperial with Empire. Grand dynastic forms and optional
+   Great/Grand qualifiers require eight settlements; preserve proper-name roots.
+   Keep historical alternatives conventional, not inferred unification events.
+   Country-name cache keys must distinguish the eight-settlement transition.
+8) The Roma/Rome capital override requires a Roman civilization and at least
+   five settlements: Roman Republic for republics, otherwise The Roman Empire.
+   There is no Roman Kingdom override. Smaller Roman states use normal rules.
+   Mississippian names always derive their base from the current named capital,
+   including Cahokia, while preserving government-compatible titles.
+   Do not bypass the shared normalizer.
+9) Native civilization text and fog-off map names must use the same naming
+   pipeline. Do not create a separate native-UI naming rule.
+10) War names should use the shared border-region helper.
+    showWarNames controls labels and red shared territorial fronts together,
+    independently of ordinary borders, territory fills and geographic names.
+    Fronts use relationshipForPos code 4, require land at both endpoints,
+    suppress edges with either endpoint unrevealed, and skip map seams.
+    meanderingWarPath builds deterministic smooth curves near the shared edges.
+    Both red and wider orange-red SVG gradients share exactly that geometry;
+    translucent nested strokes soften their edges without blur filters.
+    Round-capped short dashes make aligned dots on every stroke, using the
+    same screen-sized period on both gradients. Bright gradient colors and
+    opacity are independent of cached curve geometry.
+    Cache geometry by frame, relationships, terrain, visibility and map layout;
+    update screen-sized stroke widths separately on zoom.
+    War-label layout keys include the recorded turn even on unchanged territory.
+    Minimap transitions suppress the overlay and restore its previous setting.
+11) Useful tests include country-names, earth-names, shared-territory,
+    population-panel, and native-camera-isolation.
+    countryNameCatalogFor evaluates the actual naming engine over documented
+    scenarios. Keep its priority metadata synchronized with countryName.
+    countryNamesCatalog uses the latest recorded local player without moving
+    replay. The Victories Country Names view supports condition exclusions,
+    search and 40-name pages. Custom names make the complete name space unbounded.
+    Naming facts (religion, citizen counts, owned island/mountain shares)
+    must come from the requested recorded turn and affect country cache keys.
+    War/peace must not affect names, cache keys, catalog conditions or filters.
+    Full names are disambiguated before applying map-only one-word base labels.
+12) Arabia, Greece, Eastern/Western Central Africa and Eastern/Western North
+    Africa are required Giant Earth regions, alongside Central North Africa. Test source
+    coordinates with and without atlas metadata.
+    Eastern/Western North America, Eastern/Western Arctic America, Eastern/Western
+    Siberia and Eastern/Western North Asia are also required; retain precise island names such as Greenland.
+    No region may have a blank name: use a containing real-world area when an
+    exact island/lake name is unavailable. Ordinary mainland regions must be
+    connected; island chains and naturally grouped mountain features may span gaps.
+    Retire broad Northern Europe, Central Africa and North America atlas names
+    in favor of their surrounding subdivisions. Siberia follows each source
+    longitude's southernmost northern-Asian tundra tile to the Arctic coast;
+    North Asia lies below it. Divide both at source x=68 near the Yenisei.
+    Do not retain plain Siberia or North Asia names. Use source row 80 only when tundra data is absent.
+    Merge West Asia into Middle East and South Europe into Central North Africa;
+    distribute residual Mediterranean land into adjacent European/North African
+    regions without renaming the Mediterranean Sea.
+    Arctic America similarly follows northern tundra/snow from source row 70
+    upward. Split its east/west divisions at source x=142 (ordinary North
+    America remains x=144); measure balance on the actual map with named
+    Greenland islands excluded, retaining natural island groups. Ordinary
+    North America ends at source row 56, except Baja at x<=134 retains row 58
+    and Florida at x=148..154 retains y>=53. Central America ends at Panama:
+    source y<40 and Colombian land at x>=153,y<43 must not remain Central America.
+    All Alaska, including the Aleutians and southeast panhandle, belongs to
+    Western Arctic America even below the tundra frontier; do not absorb Chukotka.
+    Divide Australian mainland at x=95; never coalesce the entire
+    mainland into one island name. Tasmania belongs to Eastern Australia.
+    The Malayan Peninsula includes the narrow Thai coastal tail through Hua
+    Hin, Prachuap Khiri Khan and Surat Thani; keep Pattaya, Bangkok and the
+    Indochinese mainland in Southeast Asia and preserve Sumatra/Java.
+    The Regions panel groups all exact matching names, deduplicating tiles.
+
+Map View colors:
+1) The PALETTE table and ownerColors function in playback assign distinct
+   colors to default major-player slots 0 through 62, not civilization types.
+2) Duplicate civilizations still get different country colors.
+3) Preserve the primary-fill/secondary-border contract and independent-power
+   styling. Do not mutate recorded colors or native game color APIs.
+   CivColorUi consumes ownerColors for native leader/civilization identity
+   variables and leader-icon backgrounds. Rebuild native contrast variants from
+   that pair, restore excluded/minor UI slots, and ignore self-generated mutations.
+   Gameface lacks CSSStyleDeclaration.getPropertyPriority; read serialized
+   declarations when that method is unavailable and test the reduced API.
+   The actual diplomacy owners are panel-player-diplomacy-actions (local)
+   and panel-other-player-diplomacy-actions (selected player). A shared civ
+   symbol ID must not override its local-panel ancestor. Manage the direct
+   fxs-background-image-tint property only on subsystem-frame__diplo-tint
+   surfaces, preserving priorities, native rewrites, and restoration.
+4) Run tests\map-colors.test.mjs when changing this palette. It checks all
+   63 rendered primary and secondary colors, measured CIE76 separation,
+   stability across turns, and unchanged native data.
+5) Do not repeat a palette entry or simply extend a short repeating cycle.
+   Color alone cannot guarantee recognition for every type of color blindness;
+   preserve the country names and distinct icons as additional cues.
+
+7. ADD A RECORDED FIELD OR EVENT
+--------------------------------
+1) Identify the native event and API that expose the information.
+2) Add capture to ui\history\anthroprocenia-recorder.js using existing hooks
+   and coalescing. Do not add an unbounded per-frame world scan.
+3) Follow the existing tuple/dictionary format. Inspect the writer and reader
+   rather than assuming a tuple index.
+4) For an optional field, support recordings where the field is absent.
+   Example: settlement defense health is an optional [current, maximum] pair.
+5) Update packing/unpacking, full frames, deltas, reconstruction, and every
+   directly dependent consumer together.
+6) Keep recorder and playback DATA_VERSION and codec meanings consistent.
+   A breaking encoding change requires a deliberate migration/version policy.
+7) Keep stable IDs and configuration namespaces compatible with old saves.
+8) Invalidate caches that depend on the new field or capture revision.
+9) Report API failures using the existing error mechanism. Do not invent
+   healthy defenses, empty successful records, or invisible fallback data.
+10) Test full capture, changed-field deltas, old recordings, bad/missing APIs,
+    event coalescing, and immediate refresh when appropriate.
+
+8. ADD A MAP LAYER OR VISIBILITY CONTROL
+----------------------------------------
+1) Find the nearest existing layer and its DEFAULT_MAP_OPTIONS entry.
+2) Follow its retained DOM/SVG layer, reusable slots/paths, and z-order.
+3) Add the checkbox to the existing toggle builder, option read/write state,
+   and reset/default behavior.
+4) Apply visibility immediately to existing geometry. Empty SVG d attributes
+   alone may not hide retained Gameface drawing; explicitly hide paths too.
+5) Preserve fog restrictions, native input forwarding, and popup layering.
+6) Cull offscreen work before marker placement or geometry generation.
+7) Keep element pools and vector command/character submissions bounded.
+8) Reuse a compatible unfinished layout job instead of restarting on each
+   redraw. Invalidate it for changed frames, fog, layout, or relevant toggles.
+9) Avoid heavy rebuilds during camera input. Follow existing settle timers.
+10) Check map opening/closing, minimap, pan, zoom, wrapped columns, fog
+    transitions, checkbox changes, and settlement growth input.
+11) Useful tests include map-ui-visibility, natural-render-visibility,
+    town-render-lifecycle, renderer-budget, and view-fixes.
+
+9. ADD TOWNSCAPE, BUILDING, ROAD, OR WALKER CONTENT
+-------------------------------------------------
+1) Start from an existing generated layout or geometry helper.
+2) Preserve the layout's coordinate convention and transform to world space
+   at the same boundary used by existing callers.
+3) Building polygons must be finite and valid. Retain sourceIndex, form,
+   group, bounds, parts, detail, and residence mapping where applicable.
+4) Keep deterministic generation and stable source/home identities.
+5) Respect native obstacles, water, bridge decks, accepted footprints,
+   subdivision budgets, and safe entrance paths.
+6) Do not draw an approach or walking shortcut through an obstruction just
+   to make a disconnected home appear reachable. Report the obstruction.
+7) Keep exact simulated residents separate from visible geometry budgets.
+8) If a cached layout changes meaning, update its relevant library,
+   placement, or frame signature. Do not bump unrelated formats.
+9) Preserve road/roof retention through zoom and pan, and AI interturn
+   suspension. Wait for marker anchors before the first townscene commit.
+   Publish accepted roof fills incrementally after dry-ground, waterfront,
+   and collision checks, without waiting for minor/entrance road routing.
+   Throttle changing previews to 100 milliseconds; a changed viewport may
+   refresh immediately. Clear obsolete static roads and hit targets before
+   replacing a committed scene with a preview. Keep pending true until the
+   complete scene is ready; outlines, labels, hits, and walkers wait for their
+   corresponding preparation. Preview roofs use no SVG stroke so the native
+   default stroke cannot overwhelm tiny world-coordinate geometry.
+10) Avoid retrying unchanged blocked road connections or rebuilding the
+    whole walking world on every animation frame. Preserve resumable dry-road,
+    bridge-search, footprint, entrance, and walking-network
+    routing: at most 64 steps per batch, yielding after eight milliseconds
+    between targets and waiting at least 16 milliseconds between callbacks.
+    Town-link planning must use indexed scene/neighbor road and river lists,
+    not whole-world iteration. Include road endpoint river context and curved
+    road-spine bounds so performance fixes do not omit bridge crossings.
+    Keep all valid approaches instead of dropping roofs to
+    meet a time budget; failed iterators must be discarded and reported.
+    Accepted roof footprints must use DecorationIndex's bounded storage/query
+    safeguards rather than enumerate every grid cell in arbitrarily large
+    bounding boxes. Do not spread roof-sized arrays into function arguments.
+    buildWalkGraph, walkGraphFor, and buildTownWorld support incremental
+    generators while retaining their default synchronous return values.
+    Display prepared town geometry before walking-network construction finishes.
+    Build the network under townRender.walkJob using the committed scene's key.
+    Pass it to syncPeople only when complete; do not rebuild it there.
+    Pause old-world walkers during that job and cancel it on map closure or
+    scene replacement, without hiding the prepared roads and roofs.
+    Preserve graph-cache identity, all safe edges/costs, and the running network
+    when a pending build is canceled or fails.
+    Decoration indexing and town/tile candidate placement also support optional
+    incremental generators. Yield for rejected candidates too: an accepted-shape
+    cap does not bound work when obstacles reject the entire candidate list.
+    advanceTownDecorations drives townRender.decoJob independently of static
+    geometry and walking-network jobs. Apply the same 64-step/eight-millisecond
+    limits and 16-millisecond continuation delay; cancel obsolete jobs on camera
+    or scene changes, map closure, and view-data reset. Never publish partial
+    placements or let a decoration failure hide committed roads and roofs.
+    Reuse contained physical placements on camera/detail changes.
+    Use walkerCrowdsActive's exact attainable split for complete decoration art.
+    Above that split, reserve enough path budget for whole silhouettes rather
+    than replacing every object with a dash. Sample all visible decoration
+    categories, including sparse furniture and lamps. Detailed glyphs use
+    screen-space SVG and a three-pixel readability floor, not enlarged physical
+    collision footprints. Keep their camera signature current; stale projected
+    artwork must not remain at the old screen position during pan/zoom.
+    Dated timeline cards use expandTimelineEvent for hover/focus expansion,
+    shared by world, civilization, and family views. Keep manual collapse
+    effective until the pointer leaves, and never seek a turn on hover.
+    Geographic name arches apply to non-river features as well as land regions.
+    setArchedLines uses at most eight whole-word inline-block runs per line.
+    Let native text layout determine horizontal spacing; do not assign widths
+    from character counts, split joined scripts, or use unsupported SVG textPath.
+    Batch natural run-width reads before transform writes and retain text/scale
+    layout caching. Reserve interline clearance and fitted height for stronger
+    arches; verify transformed bounds, including the font-relative outline.
+    Keep the local paint font at least 16 pixels and scale it down into map
+    space, preserving fractional bounds instead of rounding tiny boxes to zero.
+    Bound the displayed geographic font to 10/11-24 UI-scaled pixels, compensate
+    the map's vertical aspect compression, and reserve the resulting map-space
+    bounds for collision checks. Preserve independent visibility/arching
+    toggles, hidden-tile filtering, and river-following text.
+    In Map View, syncGeographyLabelViewport keeps geographic text roots in
+    viewport pixels without whole-map transforms or inverse CSS clips.
+    Retain map anchors and reproject them immediately on camera changes, keeping
+    the previous screen font size until the settled layout refresh. Restore
+    map-space child coordinates before the minimap transform is applied.
+    Earth atlas land entries must be split by geographic location; do not merge
+    them to the procedural region target or let island counts prevent mainland
+    regional names from being generated.
+    Match geographic text to the native-tested country/settlement style:
+    sans-serif weight 700, explicit visibility:visible, and transparent
+    background. Validate text in the actual game; browser font fallback and
+    inherited visibility are not sufficient evidence that Coherent paints it.
+    Giant Earth v81 landmarks use 180x94 source coordinates, not stock Earth
+    coordinates or percentages of a cropped map. Keep required landmark labels
+    even when overview collisions cannot be resolved, while preserving fog and
+    independent category toggles. Do not modify real Earth names for uniqueness
+    or restore procedural names from saved-name storage. Omit unmatched features.
+    Mountains connect through at most one intervening hex per graph edge.
+    Coastal island chains may contain only 1-3-tile land components and cannot
+    share their coastal network with larger land or lakes. Such chains and the
+    bottom-row Antarctica union are intentional disconnected-region exceptions;
+    never add water gaps to their land tile lists.
+    Native UI custom art must use the map owner's assignment, not a stale civ
+    source. Scale its child SVG to 75% only in actual diplomacy panels; do not
+    scale native glyphs, leader ribbons, or the host layout.
+    Country UI replacement consumes repeated compound government suffixes without
+    normalizing the leader's own title. Optional controlled-region roots require
+    every land tile in every identically named piece to have that owner in the
+    complete frame, including tiles hidden by the current map visibility.
+    Town previews begin at one-eighth of the viewport per tile in both axes.
+    Full-detail sampling permits up to 1,024 silhouettes but must account for
+    actual commands and serialized characters within the existing 8,192/262,144
+    limits. Keep the 6,144-placement cap and resumable preparation unchanged.
+    Region-hover dimming is enabled only with Region Boundaries in full Map View.
+    Keep the hovered region and hidden fog tiles clear. Cache within a region,
+    invalidate on camera/layout/visibility changes, and clear on controls, leave,
+    blur, or map closure. Use one viewport-sized SVG with four retained paths:
+    72% dark-grey fill and three lighter feather strokes, not blur filters or canvas.
+    Project and clip closed contours before serializing; all four copies together
+    must stay within 8,192 commands and 262,144 characters. Report and omit an
+    oversized contour; never truncate it and accidentally fill a hidden region.
+    In v82, major country labels repeat for each disconnected owned land group.
+    Traverse the full frame through hidden land, using wrapped hex adjacency;
+    filter the resulting label tiles by fog rather than splitting at hidden
+    bridges. Prefer a visible capital-containing group for the single emblem,
+    otherwise the largest visible group. Extra groups use the same fitting,
+    containment, arches, typography, and Civilization labels toggle as the main label.
+    Reuse the country name; never generate a separate polity for an exclave.
+    Tile region names appear in both native live and recorded replay tooltips.
+    Check fog before querying geography. Mount native reactive content into its
+    own child container so it cannot overwrite the plain-text region row.
+    The RegionsPanel and regionRows helpers live in anthroprocenia-regions-panel.js.
+    Group panel rows by exact geographic name, aggregate their known statistics,
+    and retain every source region ID for grouped dimming and offscreen arrows.
+    Region/Island/Water/Mountains/River/Continent toggles compose with text search, reset pagination,
+    and preserve clicked selection. Clear stale row hover when filtered away;
+    reset all types when resetting the map. Use shared ornate icon buttons.
+    Use expandable continent headings with children ordered by population
+    descending, then name. Keep structural headings when the Continent filter
+    is off. Assign cross-continent areas by their largest known tile share
+    (continent-name tie break), never hidden tiles. Put areas without a known
+    continent in Water and other areas. Search opens matching sections while
+    allowing manual collapse; reset expansion state with the map.
+    Giant Earth reserves India, Southeast Asia, and Iberia mainland polygons
+    before broad atlas fallback. Island naming skips mainland polygons so nearby
+    island windows cannot swallow the Malay Peninsula. Jamaica's required island
+    window covers its source land at (152,46)-(153,46); retain other island names.
+    Keep the circular button immediately left of Population. Reuse 40 row slots,
+    and aggregate simulated populations from Population Panel tile totals, not
+    gameplay citizen counts. Check fog before aggregating cities or ownership.
+    Preserve feature/continent IDs and known tile indices for selections that
+    have no region ID. Continents use the map's localized continent metadata.
+    Panel hover overrides its persistent selection, which overrides map hover;
+    panel-driven dimming is independent of the Region Boundaries checkbox.
+    Offscreen panel targets reuse the shared blinking selection-arrow style and
+    UI-clear edge placement. Test all known region tiles for viewport overlap,
+    not just its center; a partly visible archipelago needs no edge arrow.
+    All new UI must match the mod's ornate, icon-rich style. Register new panels
+    with installModUi's shared theme, use anthro-panel-heading for headings,
+    and reuse uiGlyph for action and information icons. Preserve clear labels,
+    keyboard access, circle-button insets, and pooled DOM/SVG nodes. Do not add
+    flat text-only controls that bypass the existing theme.
+11) River endpoint topology and tapered channel geometry live in
+    ui\map\anthroprocenia-river-deltas.js. Count each world edge once, including
+    across map wrap; do not add mouths at internal joints, city-dot clipping,
+    fog boundaries, or viewport edges. Playback displays delta polygons only
+    at townscape scale and reserves their segments in local water indexes.
+    Preserve water/fog colors, viewport culling, and the 8,192-command and
+    262,144-character delta submission limits. Test with river-deltas.test.mjs.
+11) Test collision boundaries, generated nonempty roofs, routing, persistence,
+    dense scenes, maximum zoom, and actual command/character thresholds.
+
+10. ADD POPULATION, OCCUPATION, YIELD, OR TIMELINE CONTENT
+----------------------------------------------------------
+1) Use the shared population/home calculations in units and people modules.
+   Do not independently rescale city details, town roofs, and Population.
+   recordedPopulationSnapshot also supplies exact tile and unit totals.
+   Native production totals sum deduplicated city.getPurchasedPlots() plus
+   the center tile; do not substitute the nearest-settlement home aggregate.
+   Native panels use the latest recorded frame, never the replay position.
+2) Keep the sevenfold civilian baseline consistent across consumers.
+3) Follow existing occupation records and occupationYieldIndex mappings.
+4) Preserve total population when redistributing civilian occupations.
+   Military home plans have their own behavior; do not alter them accidentally.
+5) Timeline yield changes report workers gained/lost, not raw yield points.
+   Use recorded settlement occupation snapshots for the relevant turns.
+   Append the actual signed yield delta in parentheses, such as (+1 Science);
+   do not imply that simulated occupation changes caused that yield change.
+6) Keep geographic hierarchy changes compatible with search, ancestor
+   traversal, pins, selection, and existing tile/home/person IDs.
+7) Update persisted signatures when cached population behavior changes.
+8) Test exact totals, positive/negative yields, old recordings, replay turn
+   selection, city-detail formatting, and stable identities.
+
+11. ADD SQL, XML TEXT, SETUP OPTIONS, OR MAP GENERATORS
+-------------------------------------------------------
+1) Put setup database changes in config and gameplay changes in data.
+2) Copy the structure of the nearest SQL/XML file; reuse identifiers and
+   localization conventions. Avoid duplicate rows and unintended overrides.
+3) Register the file in the correct shell/game ActionGroup and age criterion.
+4) Add LOC_ text to text\en_us\AnthroproceniaText.xml and register text actions
+   if introducing another localized file.
+5) For a generator, use the existing maps folder, module imports, and shared
+   oversized-dimension helpers. Keep native and custom dimensions consistent.
+6) Test parsing, database/setup invariants, map bounds, and the relevant
+   generator behavior with existing tests.
+7) Check in-game Database.log and Modding.log after restarting.
+
+12. TEST AND CHECK THE CHANGE
+------------------------------
+Run commands from the repository root in PowerShell.
+
+1) Run the smallest related tests, for example:
+
+   node --test .\tests\civ-icons.test.mjs .\tests\map-stability.test.mjs
+
+2) For coupled changes, run the existing full suite:
+
+   node --test .\tests
+
+3) Check whitespace errors:
+
+   git diff --check
+
+4) The modules are ESM without a repository package.json. If using a syntax
+   check, use module parsing, for example:
+
+   Get-Content -LiteralPath '.\anthroprocenia\ui\map\anthroprocenia-civ-icons.js' -Raw |
+       node --input-type=module --check
+
+5) Verify that every manifest Item exists. The installation and publishing
+   scripts perform this check too.
+6) Tests use node:test, assert, tests\load.mjs, and existing VM fixtures.
+   When adding a dependency to an extracted function, update its fixture.
+7) Add tests for behavior, not just matching implementation text.
+   A rendering test should assert nonempty geometry or visible icon state.
+8) Browser SVG checks are useful, but do not reproduce native Gameface,
+   renderer resources, or all Civilization VII APIs.
+
+13. BACK UP AND INSTALL FOR A LOCAL GAME TEST
+---------------------------------------------
+1) Close Civilization VII.
+2) The usual local destination is:
+
+   %LOCALAPPDATA%\Firaxis Games\Sid Meier's Civilization VII\Mods\anthroprocenia
+
+3) Make a dated ZIP backup of that entire directory before replacing it.
+   Keep backups outside Mods so old manifests are not discovered as mods.
+   A suitable location is:
+
+   %LOCALAPPDATA%\Firaxis Games\Sid Meier's Civilization VII\ModBackups
+
+4) Open the backup and verify it contains the old manifest and all files.
+   Keep it until the updated game has been tested.
+5) To install directly from the tested source:
+
+   .\install-publish.ps1 -Source .\anthroprocenia
+
+6) IMPORTANT: the install script's default Source is the Publish copy.
+   Use the explicit Source above when Publish has not been rebuilt.
+7) The script verifies referenced files, source/destination separation,
+   installed SHA256 hashes, and exactly one active local mod identity.
+   It preserves extra files and disables duplicate local manifests rather
+   than deleting their content.
+8) When installing source directly, copy root README.md and MODDING_GUIDE.txt
+   to the installed directory if you want the documentation there. The source
+   installer copies its Source directory; it does not collect root documents.
+9) Never install playback alone after changing its imported helpers.
+   Install the coherent mod source directory.
+10) Restart the game fully, enable Anthroprocenia in Add-Ons, and load a save.
+11) Check the intended behavior and save/load persistence. Review logs for
+    new errors; passing source tests alone is not native runtime validation.
+12) To restore, close the game, preserve the failed install for diagnosis,
+    then restore the backed-up mod directory. Check for duplicate manifests.
+
+14. PREPARE A RELEASE WITHOUT ACCIDENTAL PUBLICATION
+----------------------------------------------------
+1) Finish testing the source and document the actual changes.
+2) Update the mod version/changelog only as part of an intended release.
+3) Preserve unrelated work already present in Publish.
+4) Run prepare-publish.ps1, normally through Prepare Publish.bat.
+5) This script runs tests, checks manifest references, mirrors source into
+   Publish\SteamWorkshop\anthroprocenia, copies README/LICENSE/this guide, rebuilds the
+   CivFanatics ZIP, and writes Publish\BUILD_INFO.txt.
+6) WARNING: preparing a release replaces the generated Workshop tree and
+   removes old ZIPs from Publish\CivFanatics. Back up anything you must retain.
+7) Do not use -Force to ship known failing tests. -SkipTests is only appropriate
+   when the same source was just validated and no subsequent changes occurred.
+8) Inspect the resulting package and optionally install that release copy.
+9) Preparing/installing a package does not upload to Steam or CivFanatics.
+   Publish externally only when explicitly intended and authorized.
+
+15. DIAGNOSE A CRASH, HANG, OR MISSING VISUAL
+---------------------------------------------
+1) Record the time, save, map, zoom, toggles, and action immediately preceding
+   the failure. Determine which installed copy actually loaded.
+2) Compare installed and source hashes; an old installed build can invalidate
+   conclusions drawn from tests of new source.
+3) Look under:
+
+   %LOCALAPPDATA%\Firaxis Games\Sid Meier's Civilization VII\Logs
+
+4) Check UI.log, Renderer.log, Modding.log, and Database.log as appropriate.
+5) Check Windows Event Viewer > Windows Logs > Application for the matching
+   process and time. An AppHangTransient report is a hang, not proof of a
+   particular renderer assertion or JavaScript failure.
+6) Find the nearest matching code path and reproduce the issue in a focused
+   test or benchmark. Measure real work/output, not a proxy.
+7) Inspect marker-job progress, viewport culling, pending town scenes, native
+   API failures, visibility state, and geometry budgets when visuals disappear.
+8) Do not remove safety bounds, swallow exceptions, disable fog, or invent
+   successful empty output as a workaround.
+9) Verify the repair in tests, install it, restart, and repeat the actual
+   in-game action. Clearly distinguish verified fixes from remaining uncertainty.
+
+For a confirmed V8 heap-exhaustion dump, distinguish the heap ceiling from a
+proven leaking cache. With the user's approval, back up AppOptions.txt beside
+the Logs directory, verify the backup hash, and set one active
+Script_UI_MaxHeapSize 512 line. Leave gameplay/minimum settings unchanged.
+Fully close the game before editing preferences and restart afterward; an
+already-running process cannot pick up the new heap limit. This is a local,
+supported maximum rather than a reservation or a distributed mod setting.
+Restore the backed-up preference with the game closed to undo it. Keep native
+reproduction checks and long-session uncertainty explicit after raising it.
+
+16. YOUR FIRST EDIT: A COMPLETE SMALL WALKTHROUGH
+-------------------------------------------------
+Example goal: change an existing Map View caption without changing gameplay.
+
+1) Start with a clean understanding of the worktree, not necessarily a clean
+   worktree. Do not discard unrelated edits:
+
+   git --no-pager status --short
+
+2) Find the caption or localization key. VS Code's workspace search works.
+   If ripgrep is available, a typical search is:
+
+   rg -n "LOC_ANTHROPROCENIA_MAP_VIEW" .\anthroprocenia .\tests
+
+   To discover all relevant files with PowerShell instead:
+
+   Get-ChildItem -LiteralPath '.\anthroprocenia' -Recurse -File |
+       Select-String -SimpleMatch 'LOC_ANTHROPROCENIA_MAP_VIEW'
+
+3) Inspect both the XML row and the code using the key. A caption stored in
+   XML should be edited there, not overridden in a second JavaScript branch.
+4) Change only the Text content of the existing row. Preserve its Tag.
+   Changing a Tag requires updating every consumer of that identifier.
+5) Parse the edited XML:
+
+   [xml]$text = Get-Content -LiteralPath `
+       '.\anthroprocenia\text\en_us\AnthroproceniaText.xml' -Raw
+
+   A parser error means the edit is not ready to install.
+6) Check your patch for whitespace errors:
+
+   git diff --check
+
+7) Review only your intended changes before installation. Include newly
+   created files in your review; git diff does not show untracked file contents.
+8) Back up the installed mod using section 22, then install using section 13.
+9) Fully restart Civilization VII. Open Map View and check that the caption
+   changes, stays readable, and still invokes the same action.
+10) Record the result. "XML parsed" and "caption checked in-game" are different
+    claims; report only the checks you actually performed.
+
+For a behavior change, follow the same workflow but add a focused regression
+test before installation. Search existing helpers before writing a new one.
+
+17. WORKED EXAMPLE: A SMALL HELPER AND ITS TEST
+-----------------------------------------------
+This is an illustrative addition, not a request to replace existing label
+formatters. It demonstrates the repository's module and test wiring.
+
+1) Create ui\map\anthroprocenia-example-label.js under the source root:
+
+   export function shortenExampleLabel(text, limit = 24) {
+     if (typeof text !== 'string' || !Number.isInteger(limit) || limit < 4) {
+       throw new Error('Invalid example label or limit');
+     }
+     return text.length <= limit ? text : text.slice(0, limit - 3) + '...';
+   }
+
+   This example is for ASCII text. Do not use character slicing as a general
+   solution for translated text containing combining marks or emoji.
+
+2) Register it inside the existing in-game ImportFiles action:
+
+   <Item>ui/map/anthroprocenia-example-label.js</Item>
+
+3) Import it from an actual consumer in the same directory:
+
+   import { shortenExampleLabel } from './anthroprocenia-example-label.js';
+
+   Registration alone does not call the helper. The consumer must use it in
+   the intended rendering path. Avoid a new UIScripts entry for a pure helper.
+
+4) Create tests\example-label.test.mjs at the repository root:
+
+   import { test } from 'node:test';
+   import assert from 'node:assert/strict';
+   import { loadModule } from './load.mjs';
+
+   const { shortenExampleLabel } =
+     await loadModule('anthroprocenia-example-label.js');
+
+   test('long labels fit the limit without changing short labels', () => {
+     assert.equal(shortenExampleLabel('Roma', 12), 'Roma');
+     assert.equal(shortenExampleLabel('Northern Gallic Kingdom', 12),
+       'Northern ...');
+     assert.throws(() => shortenExampleLabel('Roma', 3), /Invalid/);
+   });
+
+5) Run only the new test first:
+
+   node --test .\tests\example-label.test.mjs
+
+6) Check the helper's ESM syntax:
+
+   Get-Content -LiteralPath `
+       '.\anthroprocenia\ui\map\anthroprocenia-example-label.js' -Raw |
+       node --input-type=module --check
+
+7) Test the consuming UI behavior as well. A pure helper test cannot prove
+   that a retained label was refreshed, positioned, or made visible.
+
+Loader limitations:
+  - tests\load.mjs resolves modules from ui\map.
+  - Its dependency scanner expects the existing single-quoted relative
+    "from './module.js'" form. It is not a full JavaScript bundler.
+  - Native /core/ui imports and entry points need existing VM/native mocks.
+  - Do not add circular module dependencies; the test loader recursively
+    resolves relative imports and does not provide general cycle handling.
+  - Gameface rejects Unicode-property regex escapes such as \p{L} and \p{N}.
+    Use compatible character/separator classes while preserving non-Latin
+    text. Passing Node's syntax check does not prove native regex support.
+  - Native API failures should be tested separately from helper inputs.
+    Do not make a mock silently return successful empty data to hide a failure.
+
+18. WORKED EXAMPLES: LOCALIZATION AND SETUP SQL
+-----------------------------------------------
+A. Add a new localized caption
+
+1) Add a unique Row inside EnglishText in the existing text XML:
+
+   <Row Tag="LOC_ANTHROPROCENIA_EXAMPLE_TITLE">
+     <Text>Regions &amp; Rivers</Text>
+   </Row>
+
+2) Escape XML text correctly: & becomes &amp; and < becomes &lt;.
+   Do not put unescaped markup in Text or duplicate an existing Tag.
+3) For an existing fxs-button, use its normal caption mechanism:
+
+   button.setAttribute('data-l10n-id',
+     'LOC_ANTHROPROCENIA_EXAMPLE_TITLE');
+
+   Here "button" means the element created by the existing UI builder; this
+   snippet does not create or attach that element.
+4) For plain DOM text, follow the nearby Locale.compose/textContent pattern.
+   Do not insert dynamic names into innerHTML without the existing escaping.
+5) The current text file is registered for shell and game scope. Adding a
+   row does not require adding the file to the manifest again.
+6) Parse the XML, then check the actual caption in-game. Gameface and the
+   localization system can behave differently from a normal browser.
+
+B. Change the default number of countries
+
+1) Open config\SetupDefaults.sql. The existing MapSizes statement sets the
+   default to 63 major-player slots, not 63 different civilization types.
+2) For an intentional 48-player default, edit that statement rather than
+   appending a second override elsewhere:
+
+   UPDATE MapSizes SET DefaultPlayers = 48, MaxPlayers = MAX(MaxPlayers, 48);
+
+3) MAX preserves a map's larger supported maximum; this example changes the
+   default, not every game's already selected player count.
+4) Run the setup-defaults tests. Existing tests intentionally enforce the
+   current 63-player requirement. Change those expectations only when the
+   product requirement itself has changed, not to conceal an accidental edit.
+5) Check new-game setup in the shell after a full restart. Do not assume
+   editing a setup default changes an existing save.
+6) Do not raise the player count beyond the supported range without checking
+   the engine, recorder sweep, packed unit ownership, palette, and consumers.
+   The current unit-owner encoding uses six bits; an overflowing ID would
+   collide with another owner rather than automatically creating a new slot.
+
+19. WORKED EXAMPLES: CIV ARTWORK AND EARTH WATER NAMES
+-------------------------------------------------------
+A. Replace one alternative icon without changing selection
+
+1) Find the civilization in CIV_MOTIFS. Use the engine's civilization type,
+   not its leader name or currently generated country name.
+2) Find the motif's MOTIFS entry and change its readable name/path together.
+   Keep its position in the civilization's four-choice array if the change
+   is an artwork replacement rather than a deliberate selection migration.
+3) This is the format of an illustrative original shield path:
+
+   exampleShield: ['Example shield',
+     'M12,8H52V36L32,58L12,36ZM20,16V32L32,46L44,32V16Z'],
+
+   The outer contour is solid and the inner contour cuts a transparent hole
+   with evenodd fill. This teaching shape is not a civ-specific finished icon.
+4) Give a newly supported civilization exactly four distinct motif keys.
+   Do not rename an existing culture's artwork and call it unique.
+5) Run civ-icons and map-stability tests. Those tests check the module output
+   and retained country-icon rendering; keep both kinds of coverage.
+6) Render the atlas at normal and small map sizes. Different path strings
+   can still make identical pictures, especially with overlapping contours.
+   Compare rasterized silhouettes as well as the source strings.
+7) Inspect transparent holes, thin strokes, bounds, and contrast against the
+   assigned secondary color. Do not rely only on a large white preview.
+8) Check seed persistence, neighbor differentiation, and native-emblem fallback.
+   Test a four-country clique and five-country clique of the same culture,
+   plus unchanged choices through fog, panning, and reloading. Reordering choices or
+   changing the selection algorithm can change existing games' chosen icons.
+
+B. Add or correct an Earth water anchor
+
+1) Find EARTH_WATER_ANCHORS in the geography module and read the lookup's
+   coordinate-column selection before editing.
+2) An actual existing entry has this structure:
+
+   ["river", "Nile", [31, 42], [58, 34], [57, 31]],
+
+   The three coordinate pairs refer respectively to GiantEarth,
+   GreatestEarthMap, and stock Earth. They are source tile coordinates,
+   not longitude/latitude and not percentages of a cropped live map.
+3) Replace an incorrect entry in place, or add a verified new entry with the
+   same shape and an existing supported kind. Do not duplicate the Nile row.
+4) Record how each coordinate was verified on its source map. A visually
+   similar map or a different map size is not sufficient evidence.
+5) Preserve the source-to-live transform for regional crops and wrapped
+   columns. Do not add a guessed anchor for an unsupported projection.
+6) Test the intended feature, a neighboring feature, the distance cutoff,
+   the relevant crop/wrap boundary, and unsupported-map fallback.
+7) If a saved generated name hides the change, inspect the name-cache
+   namespace and existing migration helpers. Do not delete the entire
+   recording or change stable region/home/person IDs just to refresh a name.
+8) Check both the map-label checkbox and the Population hierarchy. A correct
+   geography record does not prove either UI is displaying its name.
+
+20. RECORDING REFERENCE AND OPTIONAL-FIELD COMPATIBILITY
+---------------------------------------------------------
+The recorder header documents the base format. Its current writer and the
+matching playback reader are the authority for optional additions.
+
+Important distinctions:
+  gi          Global recording frame index, continuing across ages.
+  inAgeTurn   Turn number within an age; it can reset at an age transition.
+  plotIndex   Engine tile identity, not an SVG pixel or a population-tree ID.
+  typeIdx     Index into a recorded type dictionary, not an engine type hash.
+  snapshot    Self-contained baseline; later deltas are applied forward.
+
+Common structures:
+  manifest.frames[gi]
+      [ageId, inAgeTurn, snapshotFlag, turnDate, optionalYearsPerTurn]
+      Calendar metadata is appended only for a realistic-calendar recording.
+  manifest.ages
+      [[startGi, ageId, ageName], ...]
+  manifest.unitTypes
+      [[hash, recordedName, category], ...]
+      Categories: 0 land military, 1 naval, 2 civilian/other land, 3 air.
+  turn.set
+      [[centerPlot, name, population, typeLabel, yields, ...], ...]
+      A row containing only centerPlot removes the previous settlement.
+      Read the writer for appended defense and other optional fields.
+  turn.bld
+      [[plot, [buildingTypeIdx, ...]], ...]
+      An empty type list removes the previous plot's constructibles.
+  turn.won
+      [[plot, owner, wonderTypeIdx], ...]
+      A row containing only plot removes the previous wonder.
+  units.u
+      Full packed unit list for that frame, not a movement delta.
+      Parallel optional metadata must remain aligned with its unit rows.
+  units.i
+      Optional parallel native identity keys ("owner:id"), decoded at unit
+      row index 7. Missing in older recordings. Native manpower requests a
+      fresh capture when identities are absent; never guess from tile/type.
+      Replay lineage and population seeds remain backward compatible.
+  units.b
+      Optional array of unit row indices that participated in actual Combat
+      events on this frame's in-age turn. Decoded as true at unit row index 8.
+      Both surviving attackers and defenders qualify. Absence means no proven
+      combat, not a guess from health or adjacent enemies. Same-turn captures
+      and reloads preserve saved participation through native identity keys;
+      other turns/ages never inherit it. Turn-begin capture passes the prior
+      completed turn explicitly to readUnits.
+
+Military route formations and formation-shaped crowd layouts require this
+combat flag. Keep the occupational military flag separate so soldier colors
+and roles remain correct even when walking loosely. Refresh traits on unchanged
+walking networks as recordings change. walkerBaseSpeed uses mapScaleMetrics
+to convert 4.4 feet/second (3 mph) into map units; cavalry doubles that value.
+Autonomous and commanded movement share that pace. Animation and offscreen
+activity clocks apply the visible 1-5x multiplier directly to real seconds.
+Ocean/coastal-water/lake road endpoints and both connecting branches are
+excluded from drawing and roadLines collision data; river crossings remain.
+
+Do not assume a missing field means zero. Zero health, an absent health API,
+and a removed entity have different meanings and different display behavior.
+
+Optional-field recipe:
+1) Decide the field's meaning, units, validity range, and missing-data policy.
+   For example, unavailable defense health must not become full health.
+2) Capture it with the existing recorder error reporting and event coalescing.
+3) Add it without changing the meaning of preceding tuple positions.
+4) Include it in snapshot and changed-field comparison logic. Otherwise a
+   same-turn edit may not be recorded or may leave a stale replay cache.
+5) Teach reconstruction to read both new rows and older rows lacking it.
+6) Update every relevant display/model consumer, not only the visible bar.
+7) Change a persisted signature only when its cached meaning changed.
+   A mod release number and DATA_VERSION are not interchangeable.
+8) Test absent field, valid zero, normal value, changed value, removal,
+   same-turn re-recording, snapshot reconstruction, and reload.
+
+Never edit stored packed integers by searching/replacing a decimal substring.
+For example, territory owner -1 means unowned and is intentionally encoded.
+Changing it as though it were visible missing text corrupts ownership.
+
+21. RECIPES FOR LAYERS, POPULATION, CALENDARS, AND TEXT
+-------------------------------------------------------
+A. Make a new map layer obey its checkbox
+1) Trace an existing layer from DEFAULT_MAP_OPTIONS through checkbox setup,
+   option persistence, rendering, and resetViewData.
+2) Add the new state in each of those locations with one consistent key.
+3) On disable, explicitly hide retained elements. On enable, either reveal
+   still-valid geometry or schedule the required refresh.
+4) Include the state in a pending-job compatibility key if it affects layout.
+   Do not reset unrelated unfinished work for a purely cosmetic toggle.
+5) Test off-on-off after geometry exists, not just a checkbox's initial value.
+6) Repeat while panning, at icon scale, at townscape scale, with fog enabled,
+   and after closing/reopening Map View.
+
+B. Add an occupation or change yield-responsive workforce behavior
+1) Find the occupation definition and occupationYieldIndex mapping.
+2) Define the actual yield association; do not infer it from display wording.
+3) Follow the shared home/occupation records and stable identity mechanism.
+4) Preserve total civilian population when redistributing occupations.
+5) Compare recorded snapshots at the relevant turns for Chronicle worker
+   gains/losses. Do not substitute raw yield points for worker counts.
+6) Test increases, decreases, zero yield, no previous snapshot, and replay.
+7) Check city details, Population totals, and townscape residents agree.
+   The visual crowd budget is not the number of simulated people.
+
+C. Modify the calendar
+1) Start with anthroprocenia-calendar.js and the three age calendar SQL files.
+2) Keep recorder dates, the native calendar HUD, and playback consumers
+   consistent; do not implement three independent date calculations.
+3) The current realistic calendar uses:
+   - Antiquity: 4,400 annual turns, from 4000 BCE through 400 CE.
+   - Exploration: 5,400 seasonal turns, Spring 400 CE to Winter 1749 CE.
+   - Modern: 2,400 monthly turns, January 1750 CE to December 1949 CE.
+4) Antiquity skips year zero. Turn 4000 is 1 BCE; turn 4001 is 1 CE.
+5) Years-per-turn metadata also affects simulated lifetimes. Update dependent
+   life-history tests when deliberately changing the calendar's meaning.
+6) Test native/non-realistic games too. Their recorded dates must not be
+   silently reinterpreted using a newly selected realistic calendar.
+7) Format displayed dates with calendarDateLabel: "4000 BCE (Turn 1)".
+   Use the frame's in-age turn, not its global recording index. Preserve raw
+   dates for parsing, storage, date-entry fields and same-date history groups.
+   Family displays use familyEventDateLabel; pre-record dates say "before
+   Turn ...". Grouped headings show a turn range where dates repeat.
+
+D. Diagnose visible missing names or "-1" dates
+1) Trace the exact text back to its recorded value or Locale.compose result.
+   Distinguish an unavailable label from a valid negative quantity.
+2) Choose the contextual fallback where the meaning is known: Settlement,
+   Unit, Region, or an explicitly unknown date, rather than a global DOM edit.
+3) A truthy string "-1" defeats a simple "value || fallback" expression.
+   A date parser that discards the minus sign can also mistake it for 1 CE.
+4) For a missing date, use recorded calendar metadata or defensible same-age
+   date evidence. Label an estimate; do not invent a confident founding year.
+5) When evidence is insufficient, show the known recorded turn or an explicit
+   unknown-date description. Do not rewrite the saved history to hide it.
+6) Preserve valid BCE dates, negative yield changes, owner -1, tabindex="-1",
+   and removal sentinels. They are not the same as a missing display label.
+7) Test complete narratives such as a founding event, not only the parser.
+   Also test an older recording and a valid 1 BCE date.
+
+22. BACKUP COMMANDS, VERIFICATION, AND SAFE ROLLBACK
+----------------------------------------------------
+These commands are for a local installed mod, not for publishing. Close the
+game first. Substitute a different installed path only after inspecting it.
+Run each stage separately and stop if a command reports an error.
+
+A. Create a complete dated ZIP
+
+   $ErrorActionPreference = 'Stop'
+   $gameRoot = Join-Path $env:LOCALAPPDATA `
+       "Firaxis Games\Sid Meier's Civilization VII"
+   $installed = Join-Path $gameRoot 'Mods\anthroprocenia'
+   $backupRoot = Join-Path $gameRoot 'ModBackups'
+   if (-not (Test-Path -LiteralPath $installed -PathType Container)) {
+       throw "Installed mod not found: $installed"
+   }
+   New-Item -ItemType Directory -Force -Path $backupRoot | Out-Null
+   $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+   $backup = Join-Path $backupRoot "Anthroprocenia-before-edit-$stamp.zip"
+   Add-Type -AssemblyName System.IO.Compression.FileSystem
+   [System.IO.Compression.ZipFile]::CreateFromDirectory(
+       $installed, $backup,
+       [System.IO.Compression.CompressionLevel]::Optimal, $true)
+   Get-Item -LiteralPath $backup
+
+The final $true includes the top-level anthroprocenia directory in the ZIP.
+An existing ZIP path causes an error instead of silently replacing a backup.
+Do not rely on Compress-Archive for a complete hidden-file backup.
+
+B. Verify before installing
+1) Open the ZIP and confirm the top-level folder, manifest, and source files.
+2) Compare file entries, not total ZIP entries; directory entries are not files.
+3) For a stronger check, extract into a new empty verification folder under
+   ModBackups, never into the active Mods folder:
+
+   $verify = Join-Path $backupRoot "verify-$stamp"
+   if (Test-Path -LiteralPath $verify) { throw 'Verification path exists' }
+   [System.IO.Compression.ZipFile]::ExtractToDirectory($backup, $verify)
+   $restored = Join-Path $verify 'anthroprocenia'
+   $originalFiles = @(Get-ChildItem -LiteralPath $installed -Recurse -File -Force)
+   $restoredFiles = @(Get-ChildItem -LiteralPath $restored -Recurse -File -Force)
+   if ($originalFiles.Count -ne $restoredFiles.Count) {
+       throw 'Backup file count does not match'
+   }
+   foreach ($file in $originalFiles) {
+       $relative = $file.FullName.Substring($installed.Length + 1)
+       $copy = Join-Path $restored $relative
+       if ((Get-FileHash -LiteralPath $file.FullName -Algorithm SHA256).Hash -ne
+           (Get-FileHash -LiteralPath $copy -Algorithm SHA256).Hash) {
+           throw "Backup mismatch: $relative"
+       }
+   }
+   Write-Output "Verified $($originalFiles.Count) backed-up files."
+
+4) Keep the ZIP. Inspect the exact verification-folder path before removing
+   that temporary extracted copy. Never recursively remove ModBackups or Mods.
+5) If verification fails, do not install. Check for a concurrently modified
+   source, incomplete ZIP, extraction problem, or incorrect directory nesting.
+
+C. Restore without mixing old and new files
+1) Close Civilization VII and identify the exact ZIP you verified.
+2) Preserve the current failed installation outside Mods:
+
+   $failed = Join-Path $backupRoot `
+       ("Anthroprocenia-failed-" + (Get-Date -Format 'yyyyMMdd-HHmmss'))
+   if (Test-Path -LiteralPath $failed) { throw 'Recovery path exists' }
+   Move-Item -LiteralPath $installed -Destination $failed
+
+3) Extract the ZIP, which was created with its top-level folder:
+
+   $modsRoot = Join-Path $gameRoot 'Mods'
+   [System.IO.Compression.ZipFile]::ExtractToDirectory($backup, $modsRoot)
+
+4) Verify the restored manifest and important hashes. Check other local
+   Anthroprocenia copies for duplicate active manifests before restarting.
+5) Keep the preserved failed installation for diagnosis until recovery works.
+   Moving the whole old directory avoids leaving newer helper files mixed
+   into the restored version. Do not delete unrelated mods.
+
+Run rollback in the same PowerShell session as the path setup, or re-enter
+the variables using the specific backup filename. A new shell does not retain
+$backup, $installed, or $gameRoot from the earlier commands.
+
+23. TROUBLESHOOTING AND IN-GAME ACCEPTANCE MATRIX
+--------------------------------------------------
+Symptom                         First places to inspect
+-------                         -----------------------
+Change never appears            Source/destination hashes; loaded manifest;
+                                explicit installer Source; full game restart.
+LOC_ key instead of a caption    XML Tag; UpdateText scope; spelling; native
+                                component's data-l10n-id mechanism.
+Helper fails to load             ImportFiles Item; filename/case; relative
+                                import; ESM syntax; native-only dependencies.
+Country name repeats words      Shared country normalizer and native UI
+                                refresh; do not add a second naming pipeline.
+Wrong Earth water/region name   Selected map; source-map dimensions; crop
+                                context; anchor column; saved name migration.
+Checkbox works only initially   Retained path visibility; persisted option;
+                                reset/default state; render invalidation.
+Zoomed-in icon circles missing  Post-scale minimum size; anchor publication;
+                                compatible marker-job progress; viewport cull.
+Townscapes absent at townscale  Existing activation threshold; pending marker
+                                job; first nonempty roof/road scene; visibility.
+Movement arrows stay visible   Existing retained highlight paths and their
+                                explicit display state when unchecked.
+Moved units stay at old spots  Capture/event coalescing; same-turn revision;
+                                reconstruction and dependent layout caches.
+Population totals disagree     Shared sevenfold baseline; home plans;
+                                occupation redistribution; persisted signatures.
+Old save fails after an edit   Optional tuple guards; version compatibility;
+                                dictionary indexes; cache migration.
+Hang during zoom               UI/Renderer logs at the matching time; repeated
+                                layout work; native event evidence; budgets.
+
+Acceptance checks for a map/UI change:
+[ ] Open and close Map View repeatedly without retained stale elements.
+[ ] Toggle the affected layer off, on, then off after it has drawn geometry.
+[ ] Pan across a wrapped edge and zoom in/out through the relevant thresholds.
+[ ] Check fog-on and fog-off views without exposing hidden native information.
+[ ] Move a unit and check its marker and movement overlay update immediately.
+[ ] Open settlement growth and verify intended camera/input behavior remains.
+[ ] Advance a turn and check country names and current data refresh together.
+[ ] Scrub backward/forward in replay, then return to the live turn.
+[ ] Save, restart, and reload; check stable IDs, icon choice, options, and names.
+[ ] Repeat on an existing recording as well as a newly created recording.
+[ ] Inspect logs for new errors and record any native behavior not yet verified.
+
+For a rendering repair, verify actual nonempty paths/roofs/roads and visible
+anchors. A test that only checks a boolean or a completed job is insufficient.
+For a performance repair, measure work, output size, and repeated-job behavior
+at the dense/zoomed-in case that originally failed. Do not remove safety caps.
+
+24. INCLUDE THE GUIDE AND HAND OFF THE FINISHED CHANGE
+-------------------------------------------------------
+1) Keep this file at the repository root, next to README.md. It is plain text
+   and can be opened without an editor extension or the game.
+2) The release-preparation script copies it beside the packaged README.
+   Do not register it as a UIScripts entry or an imported executable module.
+3) Direct source installation does not automatically copy root documentation.
+   After a successful coherent installation, optionally run:
+
+   $destination = Join-Path $env:LOCALAPPDATA `
+       "Firaxis Games\Sid Meier's Civilization VII\Mods\anthroprocenia"
+   Copy-Item -LiteralPath '.\README.md', '.\MODDING_GUIDE.txt' `
+       -Destination $destination -Force
+
+   Copy matching documentation only; do not advertise source features that
+   have not been installed in the game-loaded directory.
+4) Preparing a release is not a harmless documentation preview: it mirrors
+   the Workshop tree and replaces CivFanatics ZIP output. Preserve unrelated
+   Publish work and obtain the intended release decision before running it.
+5) A useful handoff states:
+   - What behavior/content changed and which source modules own it.
+   - Which targeted checks ran and their actual results.
+   - Whether the source, a prepared release, or the local installed copy changed.
+   - Where the verified backup is and how to restore it.
+   - Whether native in-game behavior was tested and what remains uncertain.
+6) Do not use "fixed the crash" when only JavaScript/mock tests passed. Describe
+   the verified defect and ask for the matching native reproduction check.
+
+QUICK CHECKLIST
+---------------
+[ ] Correct source copy edited; existing work preserved.
+[ ] Shared helpers and naming/localization patterns reused.
+[ ] Manifest, data producers/consumers, and cache signatures consistent.
+[ ] Old saves and stable identities supported.
+[ ] Fog, toggles, input, pan/zoom, and AI-turn behavior preserved.
+[ ] Geometry/work bounded; errors explicit.
+[ ] Focused tests pass; broader suite run when needed.
+[ ] Documentation updated.
+[ ] Installed mod backed up outside Mods.
+[ ] Coherent tested source installed and hashes checked.
+[ ] Game fully restarted; native behavior and save/load retested.

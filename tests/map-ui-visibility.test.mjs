@@ -19,16 +19,20 @@ function slice(name) {
   return source.slice(start, end + 1);
 }
 function context(names, state) {
+  state = { routeVis: null, ...state };
+  if (names.includes('placeIcons')) names = [...names, 'syncIconGlyph', 'visibleTownscapeIconKeys', 'townscapeIconKey'];
+  if (names.includes('syncMapScale')) names = [...names, 'mapScaleForView'];
   if (names.includes('worldTimelineRowsHtml')) names = [...names, 'datedTimelineRowsHtml'];
   if (names.includes('buildWorldTimelineUi')) names = [...names, 'activateTimelineEvent', 'expandTimelineEvent'];
-  const ctx = vm.createContext({ ...ui, ...timeline, highlightChronicleEvent() {}, playing: false, syncHistoryFocus() {}, lastMapInputTs: 0, syncWorldScrollbar() {}, syncWorldTimelineHighlights() {}, cmdConsumeInput() {}, historyControlsExpanded: false, townElementVisibility: { walkerDots: true, walkerHats: true }, ...state });
+  const ctx = vm.createContext({ ...ui, ...timeline, showUnitDots: true, showBuildingDots: true, townscapeActive: () => false, GameContext: { localPlayerID: 0 }, document: { createElement: element }, highlightChronicleEvent() {}, playing: false, syncHistoryFocus() {}, lastMapInputTs: 0, syncWorldScrollbar() {}, syncWorldTimelineHighlights() {}, cmdConsumeInput() {}, historyControlsExpanded: false, townElementVisibility: { walkerDots: true, walkerHats: true }, ...state });
   vm.runInContext(names.map(slice).join('\n'), ctx);
   return ctx;
 }
 function element() {
   const classes = new Set();
   return { style: {}, attrs: {}, children: [], events: {},
-    classList: { add: name => classes.add(name), toggle: (name, on) => on ? classes.add(name) : classes.delete(name), contains: name => classes.has(name) },
+    getBoundingClientRect: () => ({ width: 360, height: 30 }),
+    classList: { add: (...names) => names.forEach(name => classes.add(name)), toggle: (name, on) => on ? classes.add(name) : classes.delete(name), contains: name => classes.has(name) },
     setAttribute(k, v) { this.attrs[k] = v; },
     getAttribute(k) { return this.attrs[k] === undefined ? null : this.attrs[k]; },
     removeAttribute(k) { delete this.attrs[k]; },
@@ -45,19 +49,50 @@ function element() {
   };
 }
 const event = (type, extra = {}) => ({ type, button: 0, preventDefault() {}, stopPropagation() {}, ...extra });
+test('ornate loading status reports real jobs without intercepting input and disappears when idle or behind menus', () => {
+  const ctx = context(['syncMapLoadingStatus'], {
+    document: { createElement: element, body: element() }, els: {}, mapVisible: true, mapOpenPending: false,
+    gameOverlayActive: () => false, LeaderModelManager: { isLeaderShowing: false }, building: false,
+    scatterJob: null, scatterContinueTimer: 0, townRender: { accessJob: { phase: 'building footprints' }, decoJob: {}, walkJob: {} },
+    geographyRefreshTimer: 0, unitHighlightState: { job: { key: 'destinations|unit' } }, ps: n => n,
+    measureArea: () => ({ x: 0, y: 0, w: 1000, h: 800 }), arrowControlRects: () => [
+      { left: 200, right: 800, top: 700, bottom: 800 }, { left: 400, right: 600, top: 650, bottom: 690 }],
+  });
+  ctx.syncMapLoadingStatus();
+  const slot = ctx.els.mapLoadingStatus;
+  assert.match(slot.text.textContent, /building footprints.*Decorations.*Walking network.*Unit destinations/);
+  assert.match(slot.el.style.cssText, /pointer-events:none/);
+  assert.equal(slot.text.style.pointerEvents, 'none');
+  assert.equal(slot.el.attrs.role, 'status'); assert.equal(slot.el.attrs['aria-live'], 'polite');
+  assert.equal(slot.el.classList.contains('anthro-history-ui'), true);
+  assert.equal(slot.el.style.left, '500px');
+  assert.equal(slot.el.style.top, '608px', 'bottom-centered text clears stacked overlapping controls');
+  ctx.syncMapLoadingStatus();
+  assert.equal(ctx.document.body.children.length, 1, 'status reuses its retained DOM');
+  ctx.gameOverlayActive = () => true; ctx.syncMapLoadingStatus();
+  assert.equal(slot.el.style.display, 'none', 'loading does not overlay diplomacy');
+  ctx.gameOverlayActive = () => false; ctx.townRender = {}; ctx.unitHighlightState.job = null;
+  ctx.syncMapLoadingStatus(); assert.equal(slot.el.style.display, 'none');
+  ctx.unitHighlightState.job = { key: 'geometry|unit' }; ctx.syncMapLoadingStatus();
+  assert.match(slot.text.textContent, /Unit lens geometry/);
+  ctx.mapVisible = false; ctx.syncMapLoadingStatus(); assert.equal(slot.el.style.display, 'none');
+});
 
-test('townscale icon circles retain a sixteen-pixel minimum and remain selectable', () => {
+test('rendered townscapes hide their circles while unrendered anchors stay selectable and restore when roofs hide', () => {
   const slots = [], hits = [];
-  const ctx = context(['placeIcons', 'mapToScreen'], {
+  const ctx = context(['placeIcons', 'mapToScreen', 'townscapeReady'], {
     iconDom: { el: element() }, iconPoints: [{ x: 500, y: 500, s: 0.001, item: { kind: 'building' } }],
     iconHits: hits, flagHits: [], unitFlagPoints: [], iconSlots: slots, MAX_ICON_SLOTS: 500,
     columnShiftMarkersStale: false, fogMarkersStale: false,
     mapPxW: 1000, mapPxH: 1000, mapX: 0, mapY: 0, mapPanX: 0, mapPanY: 0,
     viewZoom: 204, viewAspectY: 1, window: { innerWidth: 1000, innerHeight: 1000 },
     iconModeActive: () => true, flagsActive: () => false, townscapeActive: () => true,
+    townRender: { geometryRetained: true, layoutKey: 'layout' }, townLayer: { style: { display: 'block' } }, townZoomKey: () => 'layout',
+    townHits: [], townElementVisibility: { townRoofs: true },
     itemIconCss: () => 'url("building.png")', syncUnitIconHealth() {},
     iconSlot(index) { return slots[index] || (slots[index] = { el: element(), shown: false }); },
   });
+
   ctx.placeIcons();
   assert.equal(ctx.iconDom.el.style.display, 'block');
   assert.equal(slots[0].el.style.display, 'block');
@@ -65,6 +100,119 @@ test('townscale icon circles retain a sixteen-pixel minimum and remain selectabl
   assert.equal(slots[0].el.style.backgroundImage, 'url("building.png")');
   assert.equal(hits.length, 1);
   assert.equal(hits[0].r * ctx.viewZoom * 2, 16);
+  const point = ctx.iconPoints[0];
+  ctx.townHits = [{ entry: { item: { ...point.item }, center: { x: point.x, y: point.y }, final: [{}] } }];
+  ctx.placeIcons();
+  assert.equal(slots[0].el.style.display, 'none', 'rebuilt marker objects match the rendered town by stable identity');
+  assert.equal(hits.length, 0);
+  ctx.townRender.accessJob = { roofEntries: [ctx.townHits[0].entry] };
+  ctx.townHits = []; ctx.placeIcons();
+  assert.equal(hits.length, 0, 'partial roofs also replace their circle');
+  ctx.townRender.accessJob.roofEntries[0].final = []; ctx.placeIcons();
+  assert.equal(hits.length, 1, 'towns without accepted roofs retain a fallback circle');
+  ctx.townRender.accessJob.roofEntries[0].final = [{}];
+  ctx.townElementVisibility.townRoofs = false; ctx.placeIcons();
+  assert.equal(hits.length, 1, 'disabling roofs restores the fallback interaction');
+  ctx.townElementVisibility.townRoofs = true;
+  ctx.townRender.accessJob = null;
+  ctx.iconPoints[0].s = 1;
+  ctx.townRender.geometryRetained = false; ctx.placeIcons();
+  assert.equal(slots[0].el.style.width, '204px', 'zoom eligibility alone cannot shrink a pending townscape');
+  ctx.townRender.geometryRetained = true; ctx.placeIcons();
+  assert.equal(slots[0].el.style.width, '20.400000000000002px');
+  ctx.townLayer.style.display = 'none'; ctx.placeIcons();
+  assert.equal(slots[0].el.style.width, '204px', 'hidden old geometry cannot shrink replacement icons');
+});
+
+test('Units hides and restores both icon-mode circles and zoomed-out flags without hiding other icons', () => {
+  const slots = [];
+  const unit = { kind: 'unit', owner: 0 }, building = { kind: 'building' };
+  const ctx = context(['placeIcons', 'flagsActive'], {
+    iconDom: { el: element() }, iconPoints: [unit, building].map(item => ({ x: 100, y: 100, s: 20, item })),
+    unitFlagPoints: [{ x: 100, y: 100, s: 20, item: unit }],
+    iconHits: [], flagHits: [], iconSlots: slots, MAX_ICON_SLOTS: 500,
+    columnShiftMarkersStale: false, fogMarkersStale: false, showUnits: true, mapVisible: true,
+    mapPxW: 200, mapPxH: 200, mapX: 0, mapY: 0, mapPanX: 0, mapPanY: 0,
+    hexW: 30, viewZoom: 1, viewAspectY: 1, window: { innerWidth: 200, innerHeight: 200 },
+    iconModeActive: () => true, townscapeReady: () => false,
+    mapToScreen: (x, y) => ({ x, y }), playerBorderColor: () => '#fff', unitColor: () => '#123456',
+    itemIconCss: item => item.kind, syncUnitIconHealth() {},
+    iconSlot(index) { return slots[index] || (slots[index] = { el: element(), shown: false }); },
+  });
+  ctx.placeIcons();
+  assert.equal(ctx.iconHits.length, 2);
+  ctx.showUnits = false; ctx.placeIcons();
+  assert.deepEqual(Array.from(ctx.iconHits, hit => hit.item.kind), ['building']);
+  assert.equal(slots[1].el.style.display, 'none');
+  ctx.showUnits = true; ctx.placeIcons();
+  assert.equal(ctx.iconHits.length, 2);
+  ctx.showUnitDots = false; ctx.placeIcons();
+  assert.deepEqual(Array.from(ctx.iconHits, hit => hit.item.kind), ['building']);
+  ctx.showBuildingDots = false; ctx.placeIcons();
+  assert.equal(ctx.iconHits.length, 0, 'both dot settings hide map circles and their hit targets');
+  ctx.showUnitDots = true; ctx.placeIcons();
+  assert.deepEqual(Array.from(ctx.iconHits, hit => hit.item.kind), ['unit'], 'building and unit settings remain independent');
+  ctx.showUnitDots = false; ctx.townscapeActive = () => true; ctx.placeIcons();
+  assert.equal(ctx.iconHits.length, 2, 'map dot settings do not remove town-view icon anchors');
+  ctx.townscapeActive = () => false; ctx.showBuildingDots = ctx.showUnitDots = true;
+  ctx.iconModeActive = () => false; ctx.placeIcons();
+  assert.equal(ctx.flagHits.length, 1);
+  ctx.showUnitDots = false; ctx.placeIcons();
+  assert.equal(ctx.flagHits.length, 0);
+  assert.ok(slots.every(slot => slot.el.style.display === 'none'), 'turning off unit dots hides retained map flags');
+  ctx.showUnitDots = true; ctx.placeIcons();
+  assert.equal(ctx.flagHits.length, 1);
+  ctx.showUnits = false; ctx.placeIcons();
+  assert.equal(ctx.flagHits.length, 0);
+  assert.ok(slots.every(slot => slot.el.style.display === 'none'));
+  ctx.showUnits = true; ctx.placeIcons();
+  assert.equal(ctx.flagHits.length, 1);
+  ctx.fogMarkersStale = true; ctx.placeIcons();
+  assert.equal(ctx.flagHits.length, 0, 'hidden stale markers are not interactive');
+});
+
+test('all unit glyphs use native owner tints in both icon modes without changing health or hit tests', () => {
+  const slots = [], point = { x: 100, y: 100, s: 20, fog: false, item: { kind: 'unit', owner: 1, health: 75 } };
+  let color = '#234567';
+  const ctx = context(['placeIcons', 'flagsActive', 'iconSlot', 'syncUnitIconHealth'], {
+    iconDom: { el: element() }, iconPoints: [point], unitFlagPoints: [point],
+    iconHits: [], flagHits: [], iconSlots: slots, MAX_ICON_SLOTS: 500,
+    document: { createElement: element, createElementNS: element },
+    columnShiftMarkersStale: false, fogMarkersStale: false, showUnits: true, mapVisible: true,
+    mapPxW: 200, mapPxH: 200, mapX: 0, mapY: 0, mapPanX: 0, mapPanY: 0,
+    hexW: 30, viewZoom: 1, viewAspectY: 1, window: { innerWidth: 200, innerHeight: 200 },
+    iconModeActive: () => true, townscapeReady: () => false,
+    mapToScreen: (x, y) => ({ x, y }), playerBorderColor: () => '#fedcba', unitColor: () => color,
+    RESOURCE_COLOR: {}, dimCss: value => `dim(${value})`, itemIconCss: () => 'url("unit.png")', err: assert.fail,
+  });
+  for (const icons of [true, false]) {
+    ctx.iconModeActive = () => icons;
+    point.item = { kind: 'unit', owner: 1, health: 75 }; point.fog = false;
+    ctx.placeIcons();
+    const slot = slots[0], health = slot.healthSvg;
+    assert.equal(slot.el.style.backgroundImage, 'url("unit.png")');
+    assert.equal(slot.el.style.fxsBackgroundImageTint, color);
+    assert.equal(health.style.display, '');
+    assert.equal((icons ? ctx.iconHits : ctx.flagHits).length, 1);
+    const radius = (icons ? ctx.iconHits : ctx.flagHits)[0].r;
+    color = color === '#234567' ? '#6789ab' : '#234567';
+    ctx.placeIcons();
+    assert.equal(slot.el.style.fxsBackgroundImageTint, color, 'cached slots update even if border and geometry are unchanged');
+    point.fog = true; point.item.health = 20; ctx.placeIcons();
+    assert.equal(slot.el.style.opacity, '0.45');
+    assert.match(slot.el.style.border, /dim\(#fedcba\)/);
+    assert.equal(slot.healthCircle.attrs.stroke, '#df5757');
+    assert.equal((icons ? ctx.iconHits : ctx.flagHits)[0].r, radius);
+    point.item.owner = 0; ctx.placeIcons();
+    assert.equal(slot.el.style.backgroundImage, 'url("unit.png")');
+    assert.equal(slot.el.style.fxsBackgroundImageTint, color, 'local ownership is also tinted');
+    assert.equal(slot.healthSvg, health, 'reused ownership does not recreate the health ring');
+    if (icons) {
+      point.item = { kind: 'resource', code: 'bonus' }; ctx.placeIcons();
+      assert.equal(slot.el.style.backgroundImage, 'url("unit.png")');
+      assert.equal(slot.el.style.fxsBackgroundImageTint, ''); assert.equal(health.style.display, 'none');
+    }
+  }
 });
 
 test('all three panels start expanded and minimize/restore with window icons without discarding contents', () => {
@@ -171,7 +319,7 @@ test('scale is retained, toothed, zoom-aware, clear of UI and hidden when a game
   ctx.LeaderModelManager.isLeaderShowing = false; ctx.mapVisible = false; ctx.syncMapScale(); assert.equal(scale.style.display, 'none');
 });
 
-test('scale drag handle moves the retained scale, clamps to the viewport, and exposes a smaller red reset only after moving', () => {
+test('scale drag handle moves the retained scale, clamps to the viewport, and exposes its X reset only after moving', () => {
   const body = element(), events = {}, area = { x: 0, y: 0, w: 1200, h: 800 };
   let overlay = false;
   const ctx = context(['mapScaleMetrics', 'mapScalePosition', 'buildMapScaleControls', 'syncMapScale'], {
@@ -184,7 +332,6 @@ test('scale drag handle moves the retained scale, clamps to the viewport, and ex
   const scale = ctx.els.mapScale, handle = scale.moveHandle, reset = scale.resetButton;
   const original = { left: scale.style.left, top: scale.style.top };
   assert.equal(reset.style.display, 'none');
-  assert.match(reset.style.cssText, /border-radius:50%/); assert.match(reset.style.cssText, /rgba\(180,35,35,0.65\)/);
   assert.match(handle.innerHTML, /<svg/); assert.match(reset.innerHTML, /<svg/);
   handle.events.mousedown(event('mousedown', { clientX: 25, clientY: 715 }));
   events.mouseup(event('mouseup')); assert.equal(reset.style.display, 'none', 'clicking alone does not move the scale');
@@ -251,7 +398,7 @@ test('history focus is closed with its clock circle, restores UI without overwri
     overlay = false; ctx.syncHistoryFocus(); ctx.toggleMapHistory();
     assert.equal(hud.classList.contains('anthro-history-hidden'), false); assert.equal(notice.classList.contains('anthro-history-hidden'), false);
     assert.equal(hud.style.visibility, 'visible', 'native inline styles remain intact');
-    assert.ok(!clock.innerHTML.includes('M3 3L17 17')); assert.equal(clock.attrs['aria-label'], 'Open World Chronicle');
+    assert.ok(!clock.innerHTML.includes('M3 3L17 17')); assert.equal(clock.attrs['aria-label'], 'Open the World Chronicle Panel');
   });
 
   test('navigation hides townscape labels immediately and restores cached labels only after the pan settles', () => {
@@ -594,7 +741,7 @@ test('movement checkbox explicitly hides retained arrow geometry and fortificati
     'fort', 'defense', 'defenseUnder'].map(key => [key, element()]));
   const ctx = context(['drawRouteLayer', 'syncRouteStatus'], {
     routePaths: paths, routeDom: { el: element() }, syncRouteWidths() {}, basePos: [{ x: 0, y: 0 }, { x: 20, y: 0 }],
-    neighborsByIndex: [[], []], ensureRoutePaths() {}, readRoutesTurn: () => new Map(), routeKey: '', roadLines: new Map(),
+    terrain: [5, 5], neighborsByIndex: [[], []], ensureRoutePaths() {}, readRoutesTurn: () => new Map(), routeKey: '', roadLines: new Map(),
     hexW: 10, hexH: 10, mapPxW: 200, mapPxH: 100, colShift: 0, pos: 0, viewZoom: 1,
     frames: [[0, 1]], frameFor: () => new Map([[0, 0], [1, 0]]), riverEdges: new Set(),
     showUnits: true, showPreviousMovement: true, showNaturalFeatures: false, showSettlements: true, mapVisible: true,
@@ -612,6 +759,17 @@ test('movement checkbox explicitly hides retained arrow geometry and fortificati
   for (const name of ['fort', 'defense', 'defenseUnder']) assert.equal(paths[name].style.display, 'none');
   ctx.showPreviousMovement = true; ctx.showUnits = true; ctx.drawRouteLayer(null);
   assert.equal(paths.move.style.display, ''); assert.ok(paths.move.attrs.d);
+  ctx.showSettlements = true;
+  for (const hp of [[100, 100], [110, 100], [100, 0], [NaN, 100]]) {
+    ctx.settlementsForPos = () => new Map([[0, ['Roma', 5, 'City', [], hp]]]);
+    ctx.syncRouteStatus(null);
+    assert.equal(paths.defense.attrs.d, '');
+    assert.equal(paths.defenseUnder.style.display, 'none');
+  }
+  ctx.settlementsForPos = () => new Map([[0, ['Roma', 5, 'City', [], [0, 100]]]]);
+  ctx.syncRouteStatus(null);
+  assert.match(paths.defense.attrs.d, /h0$/);
+  assert.equal(paths.defenseUnder.style.display, '');
 });
 
 test('display crowds include walkers in route cooldowns and new outdoor arrivals while retaining exemptions', () => {
@@ -709,6 +867,7 @@ test('camera changes replace rendered individuals and crowds synchronously, incl
   assert.equal(ticks, baseline + 18, 'crowd updates run at 20Hz');
   let elapsed = 0, advances = 0;
   const simulationStart = now;
+  ctx.popState.walkerSpeed = 1;
   ctx.popState.peoplePaused = false;
   ctx.stepWalker = (person, graph, dt) => { if (person === people[0]) { elapsed += dt; advances++; } };
   for (let frame = 1; frame <= 120; frame++) {

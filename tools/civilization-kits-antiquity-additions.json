@@ -1,0 +1,217 @@
+{
+  "IBERIA": {
+    "ability": [["plot", "GOLD", 1, "farm"], ["trade", 1]],
+    "buildings": [
+      [["growth", 15], ["resource", 2]],
+      [["worker", "CULTURE", 2], ["yield", "HAPPINESS", 3]]
+    ],
+    "quarter": [["connected", "GOLD", 2], ["worker", "PRODUCTION", 1]],
+    "military": [["combat", 5, "attack"], ["ignore", "FOREST"]],
+    "scout": [["sight", 2], ["ignore", "FOREST"]],
+    "improvement": ["Fortified Hill Settlement", "HILLFORT", "PRODUCTION", 3, ["connected", "GOLD", 1]],
+    "civics": [
+      ["Fortified Towns", [], [["plot", "FOOD", 1, "farm"]]],
+      ["Communal Stores", [1], [["growth", 15]]],
+      ["Coastal Contacts", [1], [["resource", 2]]],
+      ["Iberian Scripts", [2], [["worker", "CULTURE", 1], ["worker", "SCIENCE", 1]]],
+      ["Metal and Grain Exchange", [3], [["trade", 1], ["connected", "GOLD", 1]]],
+      ["Regional Town Networks", [4, 5], [["settlements", 1], ["connected", "PRODUCTION", 1]]]
+    ],
+    "traditions": [
+      ["Communal Stores", 2, [["growth", 15], ["yield", "FOOD", 2]]],
+      ["Silver Exchange", 3, [["resource", 1], ["yield", "GOLD", 3]]],
+      ["Votive Offerings", 4, [["worker", "CULTURE", 2]]],
+      ["Town Markets", 5, [["connected", "GOLD", 2]]]
+    ],
+    "history": "Eastern and southern Iberian communities developed fortified towns, specialized crafts, and regional political hierarchies during the first millennium BCE. At Ullastret, substantial defenses and imported objects reveal connections with Greek Emporion as well as an agricultural hinterland. Other centers traded metals, grain, and manufactured goods through networks that also involved Phoenician and Punic settlements. Iberian writing systems recorded languages that are not all fully understood; deciphering signs does not guarantee understanding their texts. Stone sculpture, bronze votive figures, and sanctuaries illuminate religious practice without yielding a complete indigenous theology. Greek and Roman accounts often flatten this diversity into broad ethnic categories. This civilization therefore represents connected Iberian-speaking societies rather than a peninsula-wide kingdom. Archaeological place names and literary names coexist in its settlement list, while the relationship between particular sites, ancient names, and political territories sometimes remains debated.",
+    "elementHistory": {
+      "building1": "Storage pits, jars, and household facilities reveal the importance of securing agricultural surpluses in Iberian towns. The Oppidum Storehouse groups these varied arrangements into a usable building; it does not assert that every settlement possessed a centralized public granary with an identical plan. Unattested Iberian institutional terminology elsewhere likewise remains descriptive English.",
+      "building2": "Iberian sanctuaries received offerings including small bronze human and animal figures, weapons, and other objects. Their settings and architectural forms varied considerably. The Votive Sanctuary evokes these practices without borrowing the identity of a particular Greek deity or reconstructing a universal Iberian temple.",
+      "quarter": "At major fortified settlements, elevated or prominently situated precincts could concentrate elite residences and ritual buildings. Acropolis Ward is an analytical gameplay label for that concentration, not an attested Iberian administrative term or a claim that every town copied a Greek constitution.",
+      "improvement": "Hilltop settlements used stone walls and commanding terrain to organize access, defend inhabitants, and display collective power. Ullastret offers a particularly striking example. Fortified Hill Settlement represents an inhabited agricultural center, not merely an isolated military fort or an exclusively Celtic institution.",
+      "military": "Caetrati is a Latin descriptive designation associated with warriors carrying a small caetra shield. Iberian fighting practices varied, and mercenary service connected peninsula communities with Mediterranean armies. The name describes equipment rather than an indigenous standing regiment with standardized ranks and recruitment.",
+      "scout": "Movement between inland towns, cultivated valleys, and coastal markets required local geographical knowledge. Oppidum Guide is a descriptive invention for that practical role, not a recovered office. It acknowledges intermediaries without assigning a single language or political allegiance to all peninsular travelers."
+    },
+    "civicHistory": [
+      "Fortified settlements gathered households and workshops while overlooking productive hinterlands. Their walls could express status as well as provide protection.",
+      "Stored crops supported households through seasonal uncertainty and supplied exchanges beyond the immediate settlement. Ownership and management differed between sites.",
+      "Greek and Phoenician contacts brought imported vessels and new commercial relationships. Indigenous communities selected and transformed outside practices rather than simply receiving civilization.",
+      "Several writing systems were used in the peninsula. Iberian texts remain only partly understood despite substantial progress in reading their signs.",
+      "Metals and agricultural produce linked inland communities to Mediterranean circuits. Commerce and warfare both helped move people across these networks.",
+      "Regional centers exercised unequal influence over neighboring settlements. The evidence supports varied local hierarchies, not one Iberian federation."
+    ],
+    "sources": ["https://patrimoni.gencat.cat/en/collection/iberian-city-ullastret"]
+  },
+  "THRACE": {
+    "ability": [["worker", "CULTURE", 1], ["production", "LAND", 20]],
+    "buildings": [
+      [["connected", "HAPPINESS", 1], ["worker", "CULTURE", 2]],
+      [["resource", 2], ["worker", "PRODUCTION", 1]]
+    ],
+    "quarter": [["connected", "CULTURE", 2], ["production", "LAND", 20]],
+    "military": [["combat", 4, "attack"], ["move", 1]],
+    "scout": [["sight", 1], ["ignore", "FOREST"], ["heal", 5]],
+    "improvement": ["Aristocratic Burial Mound", "MEGALITH", "CULTURE", 3, ["yield", "HAPPINESS", 2]],
+    "civics": [
+      ["Valley Courts", [], [["connected", "HAPPINESS", 1]]],
+      ["Banquet Diplomacy", [1], [["worker", "CULTURE", 1]]],
+      ["Metalworking Households", [1], [["worker", "PRODUCTION", 1]]],
+      ["Gift and Tribute", [2], [["resource", 2], ["connected", "GOLD", 1]]],
+      ["Mobile Retinues", [3], [["production", "LAND", 20]]],
+      ["Odrysian Alliances", [4, 5], [["settlements", 1], ["connected", "CULTURE", 2]]]
+    ],
+    "traditions": [
+      ["Royal Hospitality", 2, [["connected", "HAPPINESS", 2]]],
+      ["Precious Metalwork", 3, [["worker", "PRODUCTION", 2]]],
+      ["Retinue Bonds", 4, [["production", "LAND", 20], ["yield", "CULTURE", 2]]],
+      ["Valley Exchange", 5, [["resource", 2], ["connected", "GOLD", 1]]]
+    ],
+    "history": "Thrace encompassed many communities between the northern Aegean and the lower Danube, not a single enduring kingdom. Odrysian rulers assembled especially influential coalitions from the fifth century BCE onward, negotiating with Greek cities, Macedonian kings, and neighboring dynasts. Seuthes III established Seuthopolis in the late fourth century BCE, providing a rare excavated view of a Thracian royal city. Nearby tombs, including Kazanlak, reveal architectural sophistication, painted ceremonial scenes, and conspicuous aristocratic commemoration. Metal vessels and ornaments suggest the importance of feasting, gift exchange, and skilled production. Greek literary testimony gives useful but external accounts of tribute and royal conduct. The significance of particular tomb rituals and the identification of individual occupants remain debated. This kit emphasizes courts, crafts, and alliances without turning all Thracian communities into subjects of one king or treating coastal Greek settlements as indigenous foundations.",
+    "elementHistory": {
+      "building1": "Royal feasting helped display hierarchy and cultivate relationships between rulers and followers. Painted banqueting scenes in Thracian tombs preserve an idealized ceremonial world. Royal Banquet Hall interprets that evidence cautiously; a funerary image is not a measured architectural plan of an everyday palace. Unattested indigenous element titles likewise remain descriptive English.",
+      "building2": "Thracian elite objects include elaborately worked vessels and ornaments in precious metals. Production involved skilled artisans and exchanges across cultural boundaries. Metalworkers Court represents concentrated craftsmanship without assuming that every celebrated treasure was manufactured locally or that workshops shared one institutional organization.",
+      "quarter": "Seuthopolis combined a planned urban setting with a royal residence and religious space. Its archaeology offers unusually concrete evidence for Hellenistic Thracian kingship. Odrysian Residence draws on this conjunction while avoiding the claim that earlier dispersed royal courts had identical monumental layouts.",
+      "improvement": "Mounded tombs around Seuthopolis memorialized elite individuals through stone chambers, painted interiors, and costly offerings. Construction and reuse varied over time. Aristocratic Burial Mound represents this mortuary landscape, not a generic pyramid or a certainty about the precise rites conducted in every chamber.",
+      "military": "Greek authors associated Thracian peltasts with light shields, javelins, and flexible skirmishing. Such soldiers also served outside their homelands. Peltast denotes a fighting role whose equipment changed, not a permanent national corps or a claim that Thracian armies lacked cavalry and heavier troops.",
+      "scout": "Thracian geography linked mountain passes, cultivated valleys, and Aegean ports. Couriers and intermediaries needed knowledge of local rulers as well as routes. Mountain Envoy is a descriptive gameplay role, acknowledging that surviving sources do not preserve a standardized Thracian scouting service."
+    },
+    "civicHistory": [
+      "River valleys supported agriculture and competing elite centers. Royal authority depended on relationships that could change with succession and military fortune.",
+      "Feasts and gifts made political obligations visible. Literary descriptions of royal hospitality must be read alongside archaeological evidence and outsider expectations.",
+      "Precious vessels and ornaments attest to highly skilled work. Their circulation complicates attempts to assign each object to one ethnic artistic tradition.",
+      "Odrysian rulers drew on tribute and negotiated relationships with coastal cities. Their reach was substantial but neither uniform nor permanent.",
+      "Light infantry and cavalry served local rulers and foreign employers. Military mobility connected Thracian households to wider Mediterranean conflicts.",
+      "Seuthopolis illustrates a particular Hellenistic expression of kingship. It should not be projected backward as the capital of all Thrace."
+    ],
+    "sources": ["https://whc.unesco.org/en/tentativelists/6085/"]
+  },
+  "SCYTHIA": {
+    "ability": [["plot", "PRODUCTION", 1, "pasture"], ["settlements", 1]],
+    "buildings": [
+      [["growth", 20], ["plot", "FOOD", 1, "pasture"]],
+      [["worker", "GOLD", 2], ["resource", 1]]
+    ],
+    "quarter": [["production", "LAND", 30], ["plot", "CULTURE", 1, "pasture"]],
+    "military": [["move", 1], ["heal", 10], ["combat", 3, "attack"]],
+    "scout": [["sight", 2], ["ignore", "SAGEBRUSH_STEPPE"]],
+    "improvement": ["Kurgan", "MEGALITH", "CULTURE", 3, ["plot", "GOLD", 1, "pasture"]],
+    "civics": [
+      ["Seasonal Grazing", [], [["plot", "FOOD", 1, "pasture"]]],
+      ["Remount Herds", [1], [["production", "LAND", 20]]],
+      ["Animal-Style Crafts", [1], [["worker", "CULTURE", 1]]],
+      ["River Farmers", [2], [["plot", "GOLD", 1, "farm"]]],
+      ["Black Sea Exchange", [3], [["trade", 1], ["resource", 1]]],
+      ["Royal Steppe Networks", [4, 5], [["settlements", 1], ["connected", "PRODUCTION", 1]]]
+    ],
+    "traditions": [
+      ["Remount Herds", 2, [["plot", "PRODUCTION", 1, "pasture"]]],
+      ["Animal-Style Ornament", 3, [["worker", "CULTURE", 2]]],
+      ["Pastoral Wealth", 4, [["plot", "GOLD", 1, "pasture"]]],
+      ["River and Steppe", 5, [["plot", "FOOD", 1, "river"], ["resource", 1]]]
+    ],
+    "history": "Scythian is a Greek umbrella term most securely associated here with Iranian-speaking communities of the Pontic steppe and adjoining regions. From the early first millennium BCE, mounted pastoralists developed far-reaching relationships with settled farmers, metalworkers, and Black Sea Greek colonies. Rich burial mounds preserve horse equipment, weapons, and animal-style ornament, but their exceptional contents do not describe every household. Herodotus distinguished different kinds of Scythian communities; his narrative is valuable without being an unfiltered indigenous account. Fortified forest-steppe sites and later Crimean towns complicate the familiar picture of an exclusively nomadic people. Their political and ethnic identifications are sometimes disputed, and the settlement labels deliberately span different periods. The kit combines herding, craftsmanship, and mobility without asserting that all steppe cultures belonged to one empire, or that famous eastern frozen tombs represent precisely the same society as Pontic Scythia.",
+    "elementHistory": {
+      "building1": "Mobile households used wagons, tents, and portable equipment while managing animals across seasonal landscapes. Archaeological visibility is uneven because much of this material was perishable. Pastoral Encampment represents a practical concentration of households, not a fixed monumental building or a universal camp arrangement. Unattested Scythian institutional names elsewhere likewise remain descriptive English.",
+      "building2": "Animal-style ornament combined stylized predators, ungulates, and fantastic creatures on clothing, weapons, and horse gear. Objects moved between patrons and workshops over great distances. Animal-Style Workshop evokes that skilled production without assigning every gold object found in a Scythian burial to a nomadic maker.",
+      "quarter": "Elite burial evidence and outside accounts suggest powerful households able to mobilize followers, animals, and wealth. Royal Encampment models that concentration of authority. It is not the reconstructed capital of a documented centralized bureaucracy or proof of a single Scythian court shared across Eurasia.",
+      "improvement": "Kurgan is a widely used archaeological term for a burial mound, not an exclusively Scythian institution. In Scythian contexts, elaborate examples could include timber chambers and sacrificed horses. Their prominence marks elite commemoration, while interpretations of particular funerary rituals remain open to revision.",
+      "military": "Mounted archery was central to the military reputation of Scythian groups. Composite bows, arrows, and horse equipment provide material evidence alongside Greek descriptions. Scythian Rider is descriptive: the native mounted melee chassis approximates mobility but does not authentically reproduce horse-archer weapons or tactics.",
+      "scout": "Herding and travel across steppe landscapes required knowledge of water, grazing, and river crossings. Steppe Wayfinder turns that practical knowledge into a scouting role. It does not presume a uniform professional reconnaissance service or portray every pastoral household as perpetually engaged in war."
+    },
+    "civicHistory": [
+      "Seasonal movements linked animals to changing supplies of grass and water. Mobility could coexist with lasting relationships to particular places and burial grounds.",
+      "Maintaining horses supported transport, herding, and warfare. The resources available to elite mounted followers differed from those of ordinary households.",
+      "Animal-style objects expressed status and circulated across broad networks. Shared visual motifs do not prove a single ethnicity or political allegiance.",
+      "Some communities cultivated river valleys and exported agricultural produce. Their relationships with mobile pastoralists were more varied than a simple nomad-farmer opposition.",
+      "Greek coastal settlements exchanged manufactured goods and imported vessels with inland communities. Trade, diplomacy, and conflict repeatedly overlapped.",
+      "Powerful households assembled followers and wealth without erasing regional diversity. Later Crimean settlements belong to a changing historical landscape rather than an unchanged nomadic age."
+    ],
+    "sources": ["https://www.worldhistory.org/Scythians/", "https://www.world-archaeology.com/features/the-scythians-discovering-the-nomad-warriors-of-siberia/"]
+  },
+  "NORDIC": {
+    "ability": [["plot", "PRODUCTION", 1, "fishing"], ["resource", 2]],
+    "buildings": [
+      [["growth", 15], ["plot", "FOOD", 1, "pasture"]],
+      [["worker", "PRODUCTION", 2], ["connected", "GOLD", 1]]
+    ],
+    "quarter": [["connected", "PRODUCTION", 2], ["plot", "CULTURE", 1, "fishing"]],
+    "military": [["combat", 6, "defend"], ["heal", 5]],
+    "scout": [["sight", 2], ["ignore", "FOREST"]],
+    "improvement": ["Burial Barrow", "MEGALITH", "CULTURE", 3, ["plot", "FOOD", 1, "pasture"]],
+    "civics": [
+      ["Household Fields", [], [["plot", "FOOD", 1, "farm"]]],
+      ["Aisled Houses", [1], [["growth", 15]]],
+      ["Imported Bronze", [1], [["resource", 2]]],
+      ["Sun and Ship", [2], [["plot", "CULTURE", 1, "fishing"]]],
+      ["Specialist Casting", [3], [["worker", "PRODUCTION", 1]]],
+      ["Coastal Chiefdoms", [4, 5], [["trade", 1], ["connected", "GOLD", 2]]]
+    ],
+    "traditions": [
+      ["Shared Roof", 2, [["growth", 10], ["yield", "HAPPINESS", 3]]],
+      ["Metal Routes", 3, [["resource", 2], ["connected", "GOLD", 1]]],
+      ["Sun and Ship", 4, [["plot", "CULTURE", 1, "fishing"]]],
+      ["Casting Knowledge", 5, [["worker", "PRODUCTION", 2]]]
+    ],
+    "history": "Scandinavian Bronze and Iron Age communities supported farming households while participating in exchanges far beyond the north. In Denmark the Bronze Age conventionally runs from about 1700 to 500 BCE. Copper and tin had to arrive through wider European networks, making bronze objects evidence of both craftsmanship and sustained connections. Burial mounds, preserved woolen clothing, metal offerings, and rock carvings reveal varied forms of wealth and ritual. Ships, horses, and solar imagery recur, although their exact narratives cannot be recovered with certainty. Later Iron Age settlements show changing household arrangements, larger farms, and increasingly prominent centers such as Gudme and Uppakra. This long span is a deliberate archaeological composite, not a continuous Nordic kingdom. Site labels use modern names, and proposed religious interpretations remain reconstructed. Viking raiding, medieval Norse literary mythology, and later royal titles are not projected backward as established Bronze Age institutions.",
+    "elementHistory": {
+      "building1": "Longhouses sheltered farming households and, in some periods and regions, accommodated livestock beneath the same roof. Excavated postholes reveal structural plans more readily than daily arrangements. Aisled Longhouse represents a changing architectural tradition, not a house type that remained identical across all prehistoric Scandinavia. Other English element labels likewise avoid conjectural prehistoric vocabulary.",
+      "building2": "Bronze casting required imported metals, technical knowledge, molds, and controlled heating. Finished objects and production debris document local skill within international supply networks. Bronze Casting Workshop highlights this combination without suggesting that Scandinavian communities possessed abundant local sources of every ingredient used in bronze.",
+      "quarter": "Differences in house size, grave wealth, and access to imported goods indicate social hierarchies at many northern sites. Chieftain Farmstead is a cautious interpretation of elite households. The label does not recover an attested title or establish that every prominent farm exercised territorial government.",
+      "improvement": "Bronze Age barrows could contain oak-coffin burials with clothing, weapons, and ornaments, as remarkable Danish finds demonstrate. Their construction altered cultivated landscapes and preserved elite memory. Burial Barrow represents this material tradition without assuming that all inhabitants received comparable treatment or held identical beliefs.",
+      "military": "Spears and other weapons occur in northern graves and deposits, while later Iron Age evidence reveals organized armed followings. Northern Spear Retinue deliberately spans changing military arrangements. It is not a Viking berserker unit, and its social organization cannot be reconstructed uniformly from weapons alone.",
+      "scout": "Coastal travel linked islands, sounds, and river mouths long before the Viking Age. Carved ships and surviving prehistoric boats testify to maritime importance while leaving many practical details uncertain. Coastal Pilot names the local navigational knowledge required, not a documented professional office shared throughout Scandinavia."
+    },
+    "civicHistory": [
+      "Cereal cultivation and animal husbandry sustained households. Prestigious metalwork depended on this agricultural base rather than replacing it with an exclusively maritime economy.",
+      "Large timber buildings organized work, shelter, and household relations. Their internal uses changed across the Bronze and Iron Ages.",
+      "Northern bronze depended on exchanges with other European regions. Access to metals could reinforce relationships and distinctions between households.",
+      "Solar, equine, and ship imagery appears on objects and rock surfaces. Specific myths inferred from these combinations remain interpretations, not securely transmitted texts.",
+      "Casting transformed imported materials into locally meaningful objects. Technical skill and social display together gave metalwork its significance.",
+      "Some later centers accumulated craft activity and imported wealth. Their emergence does not establish a single Scandinavian state before the Viking Age."
+    ],
+    "sources": ["https://en.natmus.dk/historical-knowledge/denmark/prehistoric-period-until-1050-ad/the-bronze-age/"]
+  },
+  "PICTISH": {
+    "ability": [["plot", "CULTURE", 1, "vegetated"], ["worker", "PRODUCTION", 1]],
+    "buildings": [
+      [["production", "LAND", 20], ["yield", "HAPPINESS", 3]],
+      [["worker", "CULTURE", 2], ["worker", "SCIENCE", 1]]
+    ],
+    "quarter": [["connected", "HAPPINESS", 2], ["connected", "CULTURE", 1]],
+    "military": [["combat", 6, "defend"], ["ignore", "FOREST"], ["heal", 5]],
+    "scout": [["sight", 1], ["ignore", "FOREST"], ["heal", 10]],
+    "improvement": ["Promontory Stronghold", "HILLFORT", "PRODUCTION", 3, ["plot", "CULTURE", 1, "fishing"]],
+    "civics": [
+      ["Fort Communities", [], [["production", "LAND", 15]]],
+      ["Household Retinues", [1], [["connected", "PRODUCTION", 1]]],
+      ["Symbol Carving", [1], [["worker", "CULTURE", 1]]],
+      ["Firth Connections", [2], [["plot", "GOLD", 1, "fishing"], ["resource", 1]]],
+      ["Royal Craft Centers", [3], [["worker", "PRODUCTION", 1], ["worker", "CULTURE", 1]]],
+      ["Northern Kingship", [4, 5], [["settlements", 1], ["connected", "HAPPINESS", 2]]]
+    ],
+    "traditions": [
+      ["Household Retinues", 2, [["production", "LAND", 25]]],
+      ["Carved Memory", 3, [["worker", "CULTURE", 2]]],
+      ["Northern Connections", 4, [["resource", 1], ["plot", "GOLD", 1, "fishing"]]],
+      ["Fort Communities", 5, [["connected", "PRODUCTION", 1], ["yield", "HAPPINESS", 3]]]
+    ],
+    "history": "Pictish communities occupied much of northern and eastern Scotland during late antiquity and the early Middle Ages. Their kingdoms changed considerably, and the outside name Picts should not conceal local differences. Excavations at Rhynie, Burghead, and Dunnicaer have revealed fortified settlements, elite craft activity, and contacts reaching beyond Britain. Imported glass and Mediterranean containers show participation in wider networks rather than an isolated northern society. Carved symbol stones form an especially distinctive body of evidence, but the precise meanings and social uses of their signs remain debated. Christian institutions and sculpture later became important within this changing landscape. The kit places these societies in Antiquity for gameplay while acknowledging their largely early medieval chronology. Modern archaeological names identify sites whose original names are often unknown; royal status at particular centers is an interpretation built from converging evidence rather than a surviving Pictish administrative record.",
+    "elementHistory": {
+      "building1": "Excavated timber buildings within northern fortified sites reveal domestic and political activity behind substantial defenses. Fort Hall represents a place for an elite household and its visitors. Its exact ceremonial functions are reconstructed rather than supplied by an extensive surviving body of Pictish written descriptions. English element labels avoid unattested Pictish terminology throughout.",
+      "building2": "Pictish stone carving required practiced design and working skills, visible in recurring symbols and later Christian sculpture. Carvers Workshop represents those makers rather than a known guild. The survival of finished stones does not usually reveal the precise locations or organization of their workshops.",
+      "quarter": "Rhynie combines enclosure evidence, exceptional metalworking, imported objects, and a suggestive place name. Together these support an interpretation as an important royal center. Royal Enclosure evokes that case without claiming that every Pictish stronghold had the same layout or degree of political authority.",
+      "improvement": "Dunnicaer occupied a dramatic coastal position and preserved evidence of ramparts, structures, and early activity associated with Pictish symbols. Promontory Stronghold draws on such defended sites. It is not a reconstruction of the later medieval castle at neighboring Dunnottar or a universal Pictish settlement form.",
+      "military": "Weapons, defended settlements, and external narratives show that warfare mattered in northern Britain, but details of Pictish military organization remain limited. Pictish Spearband is an explicitly descriptive formation. It avoids turning uncertain body decoration or imagined naked fighting into a universal national military practice.",
+      "scout": "Travel through northern hills and around firths depended on knowledge of routes, crossings, and neighboring communities. Northern Hill Guide represents this practical expertise. No surviving Pictish source documents a uniform scout office, and coastal connections were as important as movement through upland terrain."
+    },
+    "civicHistory": [
+      "Fortified centers could shelter craft workers and households as well as armed followers. New excavations have enlarged estimates of the scale of some settlements.",
+      "Elite authority depended partly on households and armed relationships. Reconstructing exact ranks or inherited obligations from archaeology alone remains difficult.",
+      "Repeated symbols suggest shared conventions, but their full meanings remain uncertain. They should not be presented as a confidently translated alphabet.",
+      "Imports connect northern centers with continental Europe and the Mediterranean world. Such objects illuminate selective elite contacts rather than universal access to luxury.",
+      "Metalworking at Rhynie reveals skilled production in a politically significant setting. Craftsmanship helped constitute prestige rather than merely decorating an otherwise separate royal economy.",
+      "Pictish kingship developed over centuries alongside religious and political change. Later unification narratives do not supply a simple map of earlier kingdoms."
+    ],
+    "sources": ["https://www.abdn.ac.uk/stories/shedding-new-light-on-the-picts/index.html", "https://www.abdn.ac.uk/news/25331/"]
+  }
+}

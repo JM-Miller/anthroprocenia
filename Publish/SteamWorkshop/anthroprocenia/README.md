@@ -4,10 +4,18 @@ Anthroprocenia records Civilization VII games and provides an interactive
 historical map with a replay timeline, geographic labels, and configurable
 map layers.
 
+For step-by-step source edits, worked JavaScript/XML/SQL/content examples,
+recording formats, testing, verified backups, rollback, and troubleshooting,
+see [MODDING_GUIDE.txt](MODDING_GUIDE.txt).
+
 ## Installation
 
-Subscribe on [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3759409080)
-or download the mod from [CivMods](https://civmods.com/install?modCfId=32874).
+Prepared release files are in `Publish/SteamWorkshop/anthroprocenia/` and
+`Publish/CivFanatics/`; see `Publish/PUBLISHING.md` in the source repository.
+Public Anthroprocenia listing targets must be
+confirmed before uploading; the previously recorded Workshop link currently
+opens an item titled REWIND: Replay Map History.
+
 For manual installation, copy the contents of `anthroprocenia/` into an
 `anthroprocenia` directory in the game's `Mods` directory, not the enclosing
 repository. The installed directory should contain `anthroprocenia.modinfo`
@@ -15,18 +23,944 @@ alongside the `config`, `data`, `ui`, and `text` directories. Remove or disable 
 Anthroprocenia installations so that only one manifest with the mod ID remains.
 Fully restart the game and enable the mod in **Add-Ons**.
 
+Version 107 fixes loading-screen icon feedback and scopes custom unit abilities
+to their native unit classes to prevent new-game initialization stalls.
+Fully restart Civ VII after installing; no civilization features need disabling.
+
+Version 109 uses Child for ages under 13, Youth for ages 13-15, Adult for
+ages 16-59, and Elder from 60. Youths cannot hold adult leadership offices;
+the hereditary heir remains an exception. Modeled marriages require a male
+and female partner, using their actual named profiles across generations,
+and still require both partners to be at least 18. Family reconstruction
+caches ancestry and limits partner/parent searches to eligible candidates
+while retaining historical marriages and preventing marriages between relatives.
+
+## Townscape rendering and loading status (versions 118-119)
+
+Townscapes replace their circle icons when accepted roofs become visible,
+including partial roof commits. Unrendered towns retain selectable fallback
+icons; hiding the roofs restores their circles. Resource icons remain available.
+
+Collision-checked decoration previews appear with the first roofs. Denser
+placement and detailed silhouette budgets increase by 50%, with era-specific
+amphorae, fishing racks, torches, lanterns, trade furniture, hand pumps,
+mailboxes and bicycles. Native path command/character limits remain unchanged,
+and dense placement and geometry preparation continue in bounded batches.
+
+Visible townscape layers now arrive in this order: pools/lakes, roofs and
+decorations, minor/entry roads, walking networks and walkers, then remaining
+layers and town labels. Collision-safe road preparation can run invisibly
+before building placement; disabled decorations/walkers do not block later
+stages. Scene replacement and map closure cancel stale work.
+
+The pointer-transparent loading indicator names active rendering jobs
+without blocking gameplay. It has a transparent, borderless background and
+sits at bottom-center, shifting upward to avoid measured map controls.
+The townscape compass also limits targets to three quarters of the shorter
+viewport dimension from the camera center, after map wrapping.
+Selected-unit destination scans and lens geometry
+also run in deferred, cancellable batches instead of scanning the whole map
+during the first lens update. Fully restart Civ VII after installing.
+
+## Map View fog protection (versions 116-117)
+
+**Fog of War defaults on** as of version 117. Single-player games can still
+disable it using the checkbox; active multiplayer games keep it locked on.
+
+Turning **Fog of War** on immediately masks hidden tiles and invalidates pending
+marker/townscape work, before the deferred redraw. A cached topmost fog layer
+also covers retained SVG geometry and label overhangs extending into hidden
+tiles. Unchanged visibility/layout reuses this layer without extra canvas paints.
+
+Missing visibility entries remain hidden, and map-size changes invalidate
+visibility reconstruction caches. Revealed static information remains available;
+live units require current line of sight. Routes refresh when visibility changes,
+and movement arrows cannot extend into unknown tiles. Whole marker roots stay
+hidden until stricter-fog rebuilds finish, including during recent camera input.
+Fully restart Civ VII after installing.
+
+## Immediate peace negotiations (version 111)
+
+Peace negotiations no longer require a minimum number of turns at war.
+Either side can propose peace on the turn war begins; the other leader must
+still accept the negotiated agreement. The normal post-peace restriction on
+declaring another war is unchanged.
+
+Major-civilization vassalage is not implemented in this release. Negotiated
+submission, enforced war restrictions and major-civilization troop levies
+still need verified native gameplay support. City-state effects and their
+text have not been relabeled as vassal effects without working replacements.
+
+## Starter content and land raiders (version 110)
+
+All civilizations gain these Antiquity buildings without technology, civic,
+resource or civilization unlocks. Each costs 35 base Production and uses normal
+urban building placement and purchase rules.
+
+| Building | Base yields |
+| --- | --- |
+| Pastural Enclosure | +1 Food, +1 Production |
+| Fire Pit | +1 Food, +1 Happiness |
+| Toolmaker's Hut | +2 Production |
+| Barter Post | +2 Gold |
+| Story Circle | +1 Culture, +1 Happiness |
+
+Three unrestricted Antiquity units supplement, rather than replace, native units:
+**Latched Reed Oarboat** (25 Production, 15 Combat/10 Ranged/5 Bombard,
+2 Movement), **Clubman** (20 Production, 12 Combat), and **Stone Thrower**
+(20 Production, 3 Combat/10 Ranged/3 Bombard, range 1). They are deliberately
+cheaper and weaker than the Galley, Warrior and Slinger respectively.
+The oarboat still needs a legal naval deployment location.
+
+Every civilization also gains a **gold-purchase-only land unit** in each Age:
+
+| Unit | Age | Technology | Combat | Movement |
+| --- | --- | --- | --- | --- |
+| Raider | Antiquity | Bronze Working | 22 | 3 |
+| Highwaymen | Exploration | Heraldry | 35 | 3 |
+| Partisan | Modern | Industrialization | 50 | 3 |
+
+Their **Pirate** ability applies the native Privateer engine effect and foreign
+territory permission on land: they can enter neutral territory and pillage
+without declaring war. They cannot be produced, and gold prices use native
+purchase/game-speed scaling. The existing naval Privateer is unchanged.
+These additions reuse the mod's white icons and compatible native 3D models;
+they do not introduce new 3D artwork. Start a new game to use the added rules.
+
+On Giant Earth, Italia also includes all land-connected South Europe tiles;
+water-separated islands retain their own names. Diplomacy's hanging cloth
+banners are hidden, while leaders, lighting and diplomacy controls remain.
+
+## Expanded civilizations (versions 106-119)
+
+The expansion contains **47 civilizations** across all three Ages:
+
+- **Antiquity (13):** Britons, Suebi, GoTurks, Caralans, Wagadu, Javanese,
+  Slavic, Orinoco, Iberia, Thrace, Scythia, Nordic, and Pictish.
+- **Exploration (17):** Lakhota, Navajo, Zimbabwe, Byzantium, Ayutthaya, Aztec, Mohawk, Franks,
+  Seljuk Turks, Rus, Lombards, Timurids, Venice, Almohads, Khwarazmians,
+  Papal States, and Taino.
+- **Modern (17):** Ashanti, Wafdist Egypt, Serbia, Indonesia, Portugal,
+  Hungary, Tahiti, Gran Colombia, Vatican, Berber, Sweden, Afghanistan,
+  Kazakh, Scotland, Dominican, Haiti, and Brazil.
+
+The former Antiquity Taino identity is now **Orinoco**, with an Orinoco-basin
+history and kit; its internal `TAINO` key remains for compatibility.
+Exploration Taino is a separate Caribbean civilization. Nordic represents
+pre-Viking Scandinavian societies; Berber emphasizes modern Amazigh societies.
+Version 108 reworks the former Xiongnu slot as **GoTurks**, representing the
+sixth- to eighth-century Turkic khaganates with revised names and history.
+Its internal `XIONGNU` key remains for save compatibility; Antiquity placement
+is a gameplay convention. Every civilization now has an authored narrative
+introduction and overview. Selection names consistently omit a leading "The";
+articles in ordinary prose and generated country titles remain grammatical.
+
+Lakhota (retaining the requested spelling) emphasizes Plains kinship, mobile
+camps and mounted mobility; Navajo emphasizes Dinetah households, weaving
+and canyon agriculture. Both have authored introductions, complete civic
+and tradition kits, original illustrative icons/scenes and five nearby
+Giant Earth starts. Their geographic settlement labels, later personal-name
+pools and native visual donors are documented gameplay approximations,
+not claims of an Exploration-era census or archaeological reconstruction.
+
+Each has a civilization ability, a unique military replacement line and
+Scout (Explorer in Modern), two
+ageless unique buildings forming a unique quarter, a unique rural improvement,
+and six branching civics with three additional masteries and four slottable
+traditions. The two research branches converge at a final civic; masteries
+provide an additional application of the indicated civic's first bonus.
+The mod also supplies city names, alternate
+map emblems and culturally supported personal-name families.
+
+Original painted settlement scenes replace unrelated native civilization
+backgrounds in the menu and loading screen. Individually authored white,
+transparent icons depict the unique buildings, quarters, improvements,
+military units and recon units; upgrade tiers have distinct rank marks.
+Civilization emblems are also white, allowing native ownership recoloring.
+The scenes, including Lakhota and Navajo, are AI-generated historical
+illustrations, not archaeological reconstructions. Their white icons remain
+original procedural drawings, reproducible with
+`python tools/build-plains-southwest-art.py` (Pillow required); this command
+does not overwrite the imported scene art. Unit portraits, unit/building/improvement models and their
+textures still reuse installed base-game assets through explicit references;
+these are visual approximations, not newly authored historical models.
+No native game artwork is redistributed.
+The same white engraved style replaces installed base-game/DLC civilization
+emblems, units, buildings, improvements and unique quarters: 445 original PNGs
+(51 emblems, 179 unit families, 114 buildings, 75 improvements and 26 quarters).
+Native upgrade and named-great-person aliases retain their family's artwork.
+Owner tinting and civilization loading backgrounds are preserved. Wonders,
+leader portraits, resources, yields, technologies, civics and generic interface
+buttons are outside this icon replacement.
+Official icon replacements update only DEFAULT and FONTICON contexts.
+BACKGROUND/BACKGROUND_VERT textures and their native filename selectors
+remain untouched, preserving base-game/DLC civilization selection and
+loading artwork rather than replacing scenery with white emblems.
+Original PNGs use distinct basenames across folders: native image lookup can
+otherwise replace an emblem with a same-named settlement scene.
+Wagadu remains separate from the community Wagadu civilization.
+
+| Civilization | Historical gameplay focus |
+| --- | --- |
+| Britons | Vegetated sacred landscapes, Specialists, chariot attacks and hillfort networks |
+| Suebi | Woodland husbandry, warband production and defensive forest movement |
+| GoTurks | Pastures, mounted retinues, qaghan courts and Silk Road diplomacy |
+| Caralans | Coast-valley food exchange, cotton farming, communal construction and ceremonial Specialists |
+| Wagadu | Caravan capacity, resource storage, connected markets and Soninke cultural institutions |
+| Javanese | River-fed rice, growth, shipbuilding and interisland exchange |
+| Slavic | Riverine agriculture, woodland defense and connected settlements |
+| Orinoco | Floodplain agriculture, modeled ceramics, river exchange and connected settlements |
+
+Building and improvement modifiers apply in their settlement. Unique rural
+improvements are limited to one per settlement. Quarter bonuses require both
+unique buildings in the same district and apply only in the owning civilization's
+settlements containing that quarter. Traditions apply only while slotted.
+Military units now combine a modest base-strength advantage with situational
+combat, movement, healing or terrain abilities rather than sharing a flat bonus.
+Historical themes, sources and translation caveats are recorded in
+`tools/civilization-kits.json` and the three Age-specific additions catalogs.
+The additions include civilization, civic and unique-element Civilopedia
+histories. Attested local names and supported translations replace generic
+English labels where possible; descriptive English remains when a reliable
+historical lexicon does not support a translation. Functional translations
+are not presented as otherwise unattested historical institutions.
+
+All 45 appear among relevant existing leaders' recommended choices. Direct
+historical pairings are highlighted; geographic and strategic recommendations
+are labeled accordingly. Later-Age civilizations have leader and native-style
+gameplay unlock conditions. Original official recommendations are preserved.
+
+Fully restart Civ VII after updating, then select the appropriate Age in a new-game
+setup. Existing games do not acquire a different civilization or relocate.
+YnAMP is optional; the homeland starts below apply only to its Giant Earth map.
+
+Civilization identities are maintained in `tools/civilizations.json` and
+`tools/civilizations-<age>-additions.json`; mechanics, civic branches and
+historical notes are in the corresponding `civilization-kits` catalogs.
+Install the art-generation dependency with `python -m pip install -r tools/requirements.txt`.
+Regenerate definitions with `python tools/build-civilizations.py` (use `--base`
+for a nondefault installed `Base` directory). Run
+`node --test tests/civilizations.test.mjs tests/civilizations-giant-earth.test.mjs`
+to check the kits, naming/icon integration, homeland terrain and installed native
+schemas. Set `CIV7_BASE_PATH` when the game is installed outside the default path.
+Original icon, emblem and scene files are preserved by ordinary regeneration;
+missing original art is an error rather than a reused-symbol fallback.
+`--art-atlas <path>` replaces them from an original four-column, two-row atlas
+ordered Britons, Suebi, GoTurks, Caralans, Wagadu, Javanese, Slavic, Orinoco.
+Use `--atlas-keys` and `--atlas-grid` to import other original scene layouts.
+
+The settler overlay remains visible in native unit view. All unit-circle glyphs,
+including player-controlled units, use their owner's colors as of version 115.
+Map View applies the primary color through native Gameface image tinting rather
+than CSS masks. Native unit flags use the contrasting secondary color above
+their primary-color interiors. Health rings and non-unit icons are unchanged.
+Generated country names avoid artificial hyphens while
+preserving authentic hyphenated names. Native tooltips no longer recursively
+expand already-replaced civilization names. War-front markers are many-pointed
+stars, military locations are triangles, and the independent Unit dots and
+Building dots settings also control their map markers and hit targets.
+
+## Pause-menu layout (version 103)
+
+**Switch Civilization** appears between **Retire** and **Restart**, preserving
+the native buttons' order. All pause-menu buttons use uniform heights and
+even spacing within their existing column, including when Restart is disabled.
+The oversized Resume/Options section gaps are removed to make room without
+extending the button list into the surrounding pause-menu information.
+
+## Giant Earth expansion starts
+
+YnAMP **Giant Earth** (180x94) has bespoke true starts for **all 45 added
+civilizations**. Version 114 preserves every primary homeland and adds nearby
+alternatives: **43 civilizations have five starts each**, **Exploration Taino
+has four**, and **Tahiti has two** (221 locations total). Small islands retain
+fewer starts rather than changing geography or moving to a distant homeland.
+Every pair in a civilization's set is **2-4 hex tiles apart**, on playable
+source-map land in the same geographic region. The alternatives minimize total
+distance from the original start, which remains YnAMP's first choice.
+
+| Civilization | Homeland | Primary tile (X, Y) |
+| --- | --- | --- |
+| Iberia | Northeastern Iberian Peninsula, Tarragona region | 10, 57 |
+| Britons | Eastern Britain | 12, 73 |
+| Suebi | Elbe basin, ancient Germania | 20, 71 |
+| GoTurks | Orkhon-Selenga region, Mongolia | 75, 72 |
+| Caralans | Supe/Huacho coastal valleys, Peru | 151, 27 |
+| Wagadu | Koumbi Saleh region, southeastern Mauritania | 9, 42 |
+| Javanese | Central Java | 82, 25 |
+| Slavic | Polesia/Pripet region | 31, 70 |
+| Orinoco | Orinoco basin, South America | 161, 39 |
+| Thrace | Upper Hebros, Plovdiv region | 29, 60 |
+| Scythia | Lower Dnieper steppe, Kamyanka region | 37, 67 |
+| Nordic Communities | Funen, Voldtofte/Odense region | 20, 74 |
+| Picts | Moray Firth/Inverness region | 9, 81 |
+| Zimbabwe | Great Zimbabwe/Masvingo | 30, 16 |
+| Byzantium | European shore of the Bosporus, Constantinople region | 31, 60 |
+| Ayutthaya | Chao Phraya basin, Ayutthaya | 75, 42 |
+| Aztec | Tenochtitlan, Valley of Mexico | 138, 49 |
+| Mohawk | Mohawk Valley, west of Albany | 154, 68 |
+| Franks | Aachen, Carolingian heartland | 16, 69 |
+| Seljuks | Konya region, central Anatolia | 35, 57 |
+| Rus | Kyiv, middle Dnieper | 33, 69 |
+| Lombards | Pavia, western Po valley | 18, 62 |
+| Timurids | Samarkand | 55, 60 |
+| Venice | Venetian lagoon | 21, 62 |
+| Almohads | Marrakesh | 7, 47 |
+| Khwarazmians | Lower Oxus, Gurganj/Urgench region | 50, 61 |
+| Papal States | Rome region | 20, 58 |
+| Taino (Exploration) | Central Hispaniola | 155, 47 |
+| Ashanti | Kumasi | 11, 34 |
+| Wafdist Egypt | Cairo, Nile floodplain | 30, 47 |
+| Serbia | Belgrade | 27, 62 |
+| Indonesia | Jakarta, western Java | 80, 26 |
+| Portugal | Lisbon, Atlantic Iberia | 4, 55 |
+| Hungary | Budapest, middle Danube | 26, 64 |
+| Tahiti | Tahiti, Society Islands | 123, 23 |
+| Gran Colombia | Bogota region | 156, 37 |
+| Vatican City | Rome region | 20, 57 |
+| Amazigh | Tafilalt/Erfoud, southeastern Moroccan Atlas foothills | 10, 46 |
+| Sweden | Stockholm | 24, 79 |
+| Afghanistan | Kabul-region valley | 53, 57 |
+| Kazakhs | Turkistan, Syr Darya region | 55, 62 |
+| Scotland | Edinburgh | 10, 78 |
+| Dominican Republic | Santo Domingo, eastern Hispaniola | 156, 47 |
+| Haiti | Port-au-Prince, western Hispaniola | 155, 46 |
+| Brazil | Rio de Janeiro | 167, 22 |
+
+These are map-scale homeland approximations, not claims of exact ancient
+capital coordinates. Early Slavic origins and the identification of Koumbi
+Saleh as Ghana's capital are debated. Wagadu does not start in modern Ghana;
+the Suebi start reflects their earlier Elbe homeland rather than later Galicia.
+Caral's location is documented by [UNESCO](https://whc.unesco.org/en/list/1269/);
+the [early Slavic homeland discussion](https://www.encyclopedia.com/humanities/encyclopedias-almanacs-transcripts-and-maps/slavs-and-early-slav-culture)
+explains the uncertainty for Slavic origins.
+
+Where a city marker falls on water or mountains at this map scale, the start
+uses nearby land in the same homeland. Papal States and Vatican City use
+neighboring Rome-region cells; overlapping historical homelands remain subject
+to YnAMP's placement rules. Tahiti uses the actual Tahiti island tile, even
+though the source map groups it under its internal `MELANESIA` continent ID.
+
+Compatibility activates only with YnAMP enabled and leaves other maps and
+community civilizations, including the separate community Wagadu, unchanged.
+Enable true starts in YnAMP when creating a new Giant Earth game; existing
+games are not relocated. These entries were prepared in version 103; version
+104 adds the playable civilizations themselves. Version 112 adds Iberia's
+peninsular start; version 113 completes coverage for every added civilization,
+rather than relying on random placement or a donor civilization. Version 114
+registers the additional locations as native YnAMP `AlternateStart` rows for
+overlapping/duplicate starts. YnAMP still applies its placement checks and
+fallback rules; these are candidates, not five simultaneous capitals.
+Regenerate alternatives from the installed source terrain with
+`node tools/build-giant-earth-starts.mjs` (`YNAMP_PATH` may override its modules
+directory). Generation runs during development, not during game turns.
+
+## Permanent civilization switching (version 102)
+
+Open the pause menu and choose **Switch Civilization**. The map temporarily
+hides the HUD and every visibility layer except territory, country names and
+civilization icons. Hover another surviving major civilization's territory to
+shade everything outside it; left-click to take permanent control. Your former
+civilization becomes AI-controlled. Right-click, Escape or the top-left X
+cancels and returns to the pause menu. Map visibility preferences are restored
+when the picker closes.
+
+Save first. This is available only in single-player, non-hotseat games with
+autoplay stopped. The picker never starts autoplay or explicitly advances a
+turn; normal native turn processing resumes under the new civilization.
+Save/reload persistence and actual control of the new civilization's units
+were verified in Civ VII 1.5.1 using a disposable game.
+
+## Brighter dotted fronts and map controls (version 101)
+
+Both war-front gradients are now brighter and dotted, with aligned red and
+orange-red dots spaced 32 screen pixels apart at standard UI scale.
+Dot spacing and thickness remain screen-sized as the camera zooms.
+The shared curves, land-only restriction and **War names** checkbox are retained.
+
+The map-view exit X and main-game **Open Map** button have been removed.
+Automatic opening/hiding, the minimap, Victories integration and native map
+shortcut keep their existing behavior. Permanent civilization switching was
+added separately in version 102.
+
+## Layered land fronts and peacetime-independent names (version 100)
+
+War fronts now meander smoothly along shared land-to-land borders. A thicker
+red gradient overlays an even wider orange-red gradient on the identical path,
+with translucent stroke bands softening both edges. At standard UI scale,
+the red core is 5 pixels wide and the orange-red halo reaches 24 pixels;
+stroke widths remain screen-sized as the camera zooms.
+Ocean, coastal-water, lake and navigable-river tile borders are excluded.
+The **War names** checkbox still controls both layers and the war labels.
+
+War/peace no longer affects country names. The war-based naming rule,
+activation conditions and catalog filter have been removed, and old cached
+country names regenerate. Other naming conditions retain their priority order.
+
+## War overlay visibility (version 99)
+
+The **War names** visibility checkbox controls both existing war-name labels
+and red lines along shared territorial borders between civilizations at war.
+It works independently of ordinary borders, territory fills and geographic-name
+controls. Unrevealed borders remain hidden under fog. Fronts update when war
+ends or ownership changes, with cached geometry during camera movement.
+The minimap suppresses the overlay without changing the full-map checkbox.
+
+## Country-name word variants (version 98)
+
+Country-name cleanup now removes repeated word families, including plurals,
+possessives, government adjectives, directional variants and configured
+country/capital adjectives. For example, "Federal Federated Federation" becomes
+"Federation" and "Roman Republic of Rome" becomes "Roman Republic".
+The government noun is retained instead of its redundant adjective.
+Duplicate-country qualifiers use the same cleanup, and cached names refresh.
+
+## Map controls, country names, and realistic walkers (version 97)
+
+Visibility controls now independently switch Island names, Body of Water names,
+Mountain names, Rivers, Roads, Building dots/squares, and Unit dots/squares.
+Dot switches retain unit icons and townscapes. Road geometry and connecting
+branches never enter ocean, coastal-water, or lake tiles; navigable-river
+crossings remain allowed. Current capitals have a filled star before their map
+label; former original capitals have a hollow star.
+
+Country names are disambiguated deterministically. Map labels use the selected
+one-word base only when no other country shares or mentions that base; other
+interfaces retain full names. Expanded cultural/capital roots and geography,
+citizen-population, and religion rules feed the new **Country Names** tab
+in Victories. It lists evaluator-produced names, example activation conditions,
+priorities, search, condition-exclusion filters, and bounded 40-name pages.
+Custom capital/religion names can produce additional names.
+
+Mississippian names use their current capital as the base, including Cahokia.
+Rome's special Roma/Rome-capital override applies only to Roman civilizations
+with at least five settlements: Roman Republic for republics, otherwise
+The Roman Empire. There is no Roman Kingdom override; smaller Roman countries
+use ordinary government-appropriate naming.
+
+Military walkers form military formations only after participating in recorded
+combat on the displayed turn, including defenders. Wounds or nearby enemies
+alone do not qualify; older recordings without combat metadata remain loose.
+Combat eligibility updates without rebuilding the walking network.
+At 1x, autonomous and commanded walkers travel 3 mph (4.4 feet/second) at the
+displayed 100-miles-per-tile scale; cavalry travels twice as fast. Zoom does not
+change ground speed. The 1-5x controls and pause remain available.
+
+The Chronicle clock also deduplicates delayed native-release and DOM-mouseup
+tails in either order and clears stale panel visibility when opened.
+Native Gameface appearance and event delivery still require in-game acceptance.
+
+## Native population displays and renderer repairs (version 96)
+
+The native unit command panel displays simulated Manpower. The production
+chooser displays Population directly below the settlement name, totaling the
+Population panel's people on that settlement's purchased tiles, including units
+on those tiles. Both displays use the latest recording even during historical
+replay. New unit records retain native identities so identical units cannot
+exchange counts; older records request a fresh capture instead of guessing.
+
+Arched labels now use Gameface-supported flex children and fixed-decimal
+transforms, including curved single-word Latin names. Each line retains at most
+eight paint runs, joined scripts stay shaped together, and fitted multiline
+labels retain their separation. Persistent Regions selections take precedence
+over hover; all other known, visible areas retain the same feathered shadow,
+with large contours batched rather than omitted.
+
+The World Chronicle clock suppresses delayed duplicate native/DOM activations
+and its closed tooltip reads "Open the World Chronicle Panel". Workforce
+notifications show the actual signed yield delta, for example "(+1 Science)",
+instead of the simulated-count disclaimer. Palace leadership titles follow the
+recorded government, with Consuls in republics rather than royal titles.
+Malta is mandatory at Valletta's Giant Earth location without absorbing Sicily
+or the surrounding sea.
+
+Fully restart Civilization VII after installation. Native panel appearance and
+Chronicle activation still need in-game visual acceptance.
+
+## Earth regions and map presentation (version 95)
+
+Giant Earth merges West Asia into Middle East, South Europe into Central North
+Africa, and residual Mediterranean land into neighboring European/North African
+regions. The Mediterranean Sea remains unchanged. North Africa is now Central
+North Africa; Siberia and North Asia each have Western/Eastern divisions,
+separated near the Yenisei.
+
+Central America starts two tiles farther south, except Baja California, and ends
+at Panama before Colombia. Western Arctic America includes Alaska and its
+Aleutian islands and southeast panhandle.
+
+The Regions panel has expandable continent headings and population-descending
+areas within each continent. Exact-name groups remain combined. Cross-continent
+areas use their largest known continent share; areas without known continent
+tiles appear under Water and other areas. Search reveals matching children,
+and filters, fog protection, selections and the 40-row pool are retained.
+
+Label arches follow measured word widths with stronger curvature, bounded
+paint runs, cached layouts and extra interline clearance. Major-player diplomacy
+banners receive Map View colors when their models are created, including
+fallback banners; native leader models and independent powers are untouched.
+Native in-game banner appearance still needs visual acceptance.
+
+## Calendar dates and map labels (version 94)
+
+Dates in the Family Tree, family and world histories, notifications, map title,
+scrubber preview, Realistic calendar HUD and Skip Ahead displays use calendar
+dates followed by turn numbers, for example `4000 BCE (Turn 1)`.
+Season and month names are preserved. Dates before the first retained record
+are marked `before Turn ...` rather than assigned an invented turn.
+Date-entry fields still accept plain years such as `3000 BCE`.
+
+Civilization icons stay in the capital's connected territory; a wholly hidden
+capital component cannot transfer its icon to a visible detached holding.
+Long country labels reserve space between arched lines and use outlines
+proportional to their fitted text size. Settlement defense bars hide at full
+health, and movement badges show only when the turn count changes.
+
+Diplomacy hanging-banner tint hooks and shared geographic war-name integration
+are included, but still need in-game visual acceptance. Native enemy-hover
+combat estimates and the red movement-style attack path remain unfinished.
+
+## Visible townscapes, diplomacy colors and Earth refinements (version 93)
+
+Collision-checked townscape roofs now appear progressively while minor-road
+and entrance routing continues, instead of waiting for the whole scene.
+Camera-only changes retain that work; finished roads, roof outlines, labels
+and walking networks still wait for their own preparation.
+
+The actual local/other-player diplomacy panels use their respective Map View
+colors, including the native frame tint that previously bypassed player-color
+variables. Deferred native recolors are corrected without changing game data.
+
+Greece includes slightly more of the southern Balkans. The Malayan Peninsula
+includes its narrow Thai tail rather than leaving it in Southeast Asia.
+Arctic America follows
+the northern tundra/snow frontier and uses a more balanced east/west split,
+preserving named islands. North America ends at the head of Baja California,
+with Florida retained in the eastern division. Australia is divided into
+Western Australia and Eastern Australia, with Tasmania in the eastern division.
+
+## Consistent X controls
+
+Mod-added X controls share a circular red button with a white X, including
+panel close buttons and the map-scale reset; existing actions are unchanged.
+
+## Earth subdivisions, geographic filters and native colors (version 92)
+
+Giant Earth redistributes the former Northern Europe, Central Africa and
+North America regions into neighboring subdivisions. Siberia spans northern
+Asia from each longitude's first tundra tile to the Arctic coast, with North
+Asia directly south of it. Where biome data is unavailable, the fixed-map
+80th source row is the fallback boundary. Specific island names remain intact.
+
+The Regions panel includes **Mountains**, **Rivers** and **Continents** filters
+alongside Regions, Islands and Water. Exact matching names share one row;
+overlapping records count each known tile only once. Feature and continent
+selection supports the same fog-safe highlighting and offscreen arrows.
+
+Native leader/civilization colors no longer fail when Gameface lacks
+`style.getPropertyPriority()`: priority is read from serialized declarations
+instead, retaining native-style restoration and the Map View color pair.
+
+## Country labels and Earth-region naming (version 91)
+
+Arched labels now keep whole words together and use natural font spacing,
+instead of assigning equal widths to differently shaped letters. Rendering
+still uses at most eight text runs per line.
+
+Native leader/civilization identity backgrounds and color variables now use the
+same per-player primary/secondary pair as Map View, including duplicate civs.
+Native contrast variants are regenerated from that pair; neutral UI styling,
+independent powers, saved identity data and engine world-map colors are unchanged.
+
+Grand dynastic names such as **Great Han**, **Great Ming/Da Ming** and
+**Great Qing/Da Qing** require **eight settlements**. Historical alternatives
+use conventional dynasty/kingdom names rather than assuming a reunification
+from settlement count. Optional Great/Grand qualifiers also require eight;
+proper names such as Great Britain are unchanged. Country names never combine
+**Imperial** and **Empire**. The Roma/Rome four-settlement exception is unchanged.
+
+**Arabia**, **Greece**, **Eastern/Western Central Africa** and **Eastern/Western
+North Africa** are mandatory Giant Earth region names, alongside **North Africa**.
+North America and Arctic America each have mandatory **Eastern/Western**
+divisions. **Siberia** is separate from the remaining **North Asia**.
+Unmatched regions use containing geographic
+areas, including descriptions such as Pacific Ocean Islands or Inland Waters
+of Central Asia, rather than blank labels or invented proper names. Mainland
+regions remain connected; islands, island chains, Antarctica and naturally
+grouped mountain features may span gaps. Exact matching names share one row
+in the Regions panel without changing their physical partitions.
+
+Advanced Setup defaults remain **Score Victory off** and **Apex Civilization
+Transition**. Boolean defaults are stored numerically for the native setup UI.
+Saved setups and player-selected options are not forcibly reset.
+
+## Setup, map layers and accelerated speeds (version 90)
+
+New games default to **Giant Earth** when YnAMP supplies it, **Long** ages,
+**no age-end countdown**, **score victory off**, and YnAMP natural wonders at
+**real-world locations only**. These remain editable setup choices and do not
+change existing saves. Without YnAMP, the existing map default is preserved.
+
+The **Units** checkbox also hides unit icon circles and their click targets,
+without hiding building or resource icons. Required Giant Earth regions now
+include North Africa, Western/Central/Eastern Europe, The Balkans, The Malayan
+Peninsula, Corsica and The Balearic Isles.
+
+**Realistic x2** through **Realistic x6** advance calendar time N times faster
+and scale research, civics and celebrations to 1/N of Realistic, with integer
+rounding. Age turn budgets are rounded up. Production, growth and other
+speed-adjusted costs use **Marathon-equivalent pacing on all Realistic speeds**,
+including the base speed; movement points are not multiplied. Skip Ahead dates,
+the native calendar and recorded life-years follow the selected multiplier.
+Choose a speed when starting a new game; existing recordings retain their dates.
+
+## Decorations at the 1000-foot map scale (version 89)
+
+As soon as the displayed scale drops below **1000 feet**, townscape decorations
+upgrade from tiny preview marks to readable full artwork, even while people
+remain in crowds or the map is vertically compressed. The threshold uses the
+same rounded distance, viewport width and UI scale as the map-scale indicator.
+Cached placements upgrade on the first bounded decoration update rather than
+restarting placement work. Fog, the decorations checkbox, collision footprints
+and native drawing budgets are unchanged.
+
+## Branching river deltas and readable headings (version 88)
+
+Merged navigable-river deltas have a meandering trunk, two main distributaries
+and four tapered secondary mouths rather than a simple three-pronged fan.
+Their full channels reserve collision water; shared roots, wrapping, fog and
+native drawing budgets remain enforced. Minor-river deltas are unchanged.
+The shared dark text outline now covers panel titles and body text as well as
+controls, including Skip Ahead's expanded and minimized Autoplay headings.
+The ornate gold artwork and existing text colors are preserved.
+
+## Occupation narratives and lighter notifications (version 87)
+
+Fading notifications, civilization timelines and World Chronicle use the
+country names generated for the event's recorded turn. Yield-related events
+describe actual changes in simulated workers, for example **Roma (Roman Republic)
+hired 500 new scholars**, rather than yield-point changes. Worker losses are
+reported as losses, unchanged workforces produce no hiring event, and records
+without occupation counts explicitly say the count is unavailable.
+
+Notification rows are created only when needed. Their heights are measured
+once per new message or viewport/scale change, not during every fade tick;
+layout reads are batched before animation writes. Idle/hidden rows avoid
+redundant style updates. The live feed seeks recent events instead of scanning
+all history, and its temporary timeline releases already-delivered history.
+Queued events, four simultaneous notices, overlay pausing and the existing
+4.2-second lifetime are preserved.
+
+Joined tile-edge navigable rivers have a moderately stronger meander while
+retaining exact shared endpoints and the same channel widths and topology.
+
+## Heap-crash mitigation and map presentation (version 86)
+
+The November 16 04:03 crash dump reports V8 out-of-memory near a 128 MB
+JavaScript heap ceiling. With user approval, the local game's backed-up
+`AppOptions.txt` now sets `Script_UI_MaxHeapSize 512`. This supported setting
+requires a full game restart; it is a maximum, not a 512 MB reservation.
+Gameplay heap settings are unchanged. The mod does not change this preference
+automatically on other installations. No individual leaking cache was isolated,
+and raising the ceiling is not proof that all long-session memory growth is fixed.
+Skip Ahead's Stop control also uses a supported display value instead of
+repeatedly generating native `inline-block` warnings.
+
+Townscape preparation survives equivalent marker redraws. Circle icons remain
+full-sized until the corresponding town geometry is committed and visible, then
+refresh immediately. Leadership's crown and circle border match neighboring
+soft-white/blue controls. Shared ornate controls retain their artwork with
+heavier, dark-outlined text for contrast on gold backgrounds.
+
+Earth rivers additionally use city landmarks from the matching map projection,
+reject distant reused city names, and preserve native river names outside atlas
+coverage. Unknown rivers are not assigned invented Earth names. Navigable
+river tiles render as connected, slightly wider hex-edge channels rather than
+all-adjacency meshes. These channels approximate the recorded river footprint,
+not native flow-direction metadata; fog, wrapping, minor-river connections and
+close-up deltas remain supported. Existing saves keep their physical rivers.
+
+## Detached country labels and tile regions (version 82)
+
+Each disconnected land territory of a major civilization can display its country
+name, using the same name, territory containment, collision handling, typography,
+arches, scaling, and **Civilization labels** checkbox as the main label. Tiny fragments
+that cannot fit a label remain unlabeled. Ownership and capital changes update
+the connected groups; fog can hide label tiles but does not split a connected
+country into extra groups. Horizontal map wrapping preserves land connections.
+The visible capital-containing group is primary, otherwise the largest visible
+group is used. Civilization emblems remain single per country rather than
+repeating with each extra label.
+
+Tile hover tooltips include **Region: name** in both live Map View's native plot
+content and historical replay tooltips, independently of map-name visibility
+checkboxes. Hidden tiles disclose nothing; revealed tiles can show their region
+without revealing unseen units. Native tooltip content remains intact.
+
+The circular **Regions** map button sits immediately left of **Population**.
+Its searchable, paged list shows known region/island/water names, visible tile
+counts, settlement names and citizen counts, simulated regional population
+using the Population Panel's people, and each civilization with territory there.
+Same-named island groups appear as one row with combined statistics across their
+disconnected pieces. Other regions retain separate rows. Hover, selection and
+the offscreen arrow target every piece of a grouped island row.
+The **Regions**, **Islands**, and **Water** type toggles combine with text search;
+all types are initially included. Filtering preserves a clicked selection.
+Fog-hidden tiles, cities, and populations are excluded. Rows are pooled in
+pages of 40 to bound native UI allocation.
+
+Hovering a row temporarily highlights its region; clicking selects it until
+deselected, cleared, or the panel closes. Hover takes priority over selection,
+then selection resumes when the pointer leaves the row. This panel highlight
+works even with **Region Boundaries** unchecked. If every known fragment of the
+highlighted region is offscreen, a blinking selection arrow points toward it
+from the map edge, avoiding controls and choosing a nearby wrapped direction.
+The arrow disappears when any known fragment enters view. Map closure, hidden
+fog, and native game overlays suppress the effect.
+The map-history clock glyph is larger within its existing circular button;
+proportional insets keep both its normal and slashed states inside the circle
+at different UI scales without clipping. Population uses a soft-white, default-user
+head-and-shoulders icon. The Regions panel reuses the ornate gold-framed theme,
+decorated heading, and shared icons for controls, names, population, settlements,
+and territory. Future UI follows the same shared style.
+
 ## Connected regions, compatible curves and country-name variety (version 70)
+
+Country labels contain no repeated words and at most one government noun.
+Country-name cleanup uses Gameface-compatible word matching: unsupported
+Unicode-property regex syntax no longer interrupts map labels, Population,
+or native civilization-name updates.
+Native civilization labels refresh at turn start using the same full-map names
+as fog-off Map View. A capital named **Roma** or **Rome** takes precedence over
+every other naming rule: **Roman Republic** for a republican government;
+otherwise **The Roman Kingdom** below four settlements or **The Roman Empire**
+with four or more. Duplicate countries can sometimes use their occupied region
+or island instead of a north/south qualifier. Wars use the regions on both sides
+of the involved land border.
+
+Country icons choose between the native emblem and four original, civ-specific
+silhouettes for each of the 50 built-in/DLC civilizations, with no repeated
+alternative artwork across civs. One seed is saved per game. Adjacent countries
+of the same culture receive different alternatives, using the native emblem
+as a fifth choice only when four alternatives are insufficient. Selection uses
+the full border graph, not visible territory, camera position, government, or
+country name. It is deterministic on reload and replay; border or civilization
+changes can require reassigning icons. Graphs needing more than five emblems
+are reported rather than silently assigning conflicting neighbors.
+Rome's alternatives are a tower shield,
+a crested helmet, the Colosseum, and an SPQR standard. Unknown modded
+civilizations retain their native emblem. Alternatives use pooled inline SVG,
+not repeatedly registered engine images, and follow the Civilization icons
+checkbox and existing fog/territory placement.
+During active games, existing native civilization-icon surfaces use the same
+selected artwork. Player-tagged diplomacy entries, district emblems, diplomacy
+headers and local endgame displays resolve the corresponding player; displays
+with only a civilization use the lowest-numbered matching player's emblem.
+These UI choices follow the latest recorded turn, not a historical replay position.
+Native layout and input remain intact; identity tint follows the shared palette.
+Leader, unit, building and resource
+art is unchanged, and main-menu/save-load icons retain their native artwork.
+Native UI emblems are independent of the Map View visibility checkbox.
+
+The 63 default major-player slots have distinct, stable Map View colors,
+including duplicate civilizations. Both territory fills and secondary
+icon/border colors are tested for perceptual spacing. Native leader/civ UI now
+shares that palette; engine world-map colors and independent-power/barbarian
+styling are unchanged. With 63 colors, icons and
+labels remain important identification cues, particularly for color-blind users.
+
+Fixed stock Earth (106 x 66), YnAMP GiantEarth (180 x 94), GreatestEarthMap
+(104 x 64), and validated crops of those YnAMP sources use projection-specific
+Earth region and water landmarks. Unsupported projections retain procedural
+names; nearby landmark matching is not a complete real-world watershed atlas.
+Subcontinent/region labels follow **Subcontinent and region names**; named
+island and water-region records follow **Island, water-body and mountain names**.
+River labels retain their separate checkbox. Geographic labels remain available
+at townscape zoom, and sea labels stay within their visible water tiles.
+Label pools are viewport-culled and bounded, and refresh after camera movement
+settles rather than rebuilding on every pan frame.
+
+Population has a geographic division below each continent, while existing
+tile/home/person identities remain stable. The simulated world-population
+baseline is seven times its previous value. City details show the simulated
+civilian population in parentheses without changing gameplay citizens.
+Civilian occupation shares follow recorded settlement yields, and yield-change
+chronicles report workers gained or lost rather than yield-point differences.
+
+Recorded city defenses have linear bars, unit circles have health rings, and
+fortified units have map fortifications. Older recordings without defense
+health do not invent a health value. Movement captures are coalesced immediately,
+and disabled movement arrows explicitly hide retained SVG geometry.
+Camera movement is available during settlement growth/plot selection.
+Health and fortification paths reuse bounded pools; AI-turn decorative
+suspension and camera-settle protections remain in place. Zoomed-in marker
+placement includes only viewport and adjacent tiles; repeated refreshes resume
+the pending layout instead of restarting it. Townscapes wait for that layout
+before their first commit, and icon circles retain a 16-pixel minimum even at
+townscape scale. Road planning does not retry unchanged blocked town pairs.
+The town-link planner reads scene and neighboring tile indexes instead of
+scanning every road and river in the world. River context includes road endpoint
+neighbors, and bounds include bent road spines so their bridge crossings remain
+intact. Distant rivers are not passed to the local pathfinder.
+Dry-road trimming, dense bridge candidate searches, building acceptance, and
+entrance routing now resume in batches of at most 64 steps, yielding after
+eight milliseconds between steps instead of synchronously processing every
+roof while zooming, with at least 16 milliseconds between continuation callbacks.
+All valid approaches are retained; pending scenes resume
+without restarting and are discarded when their scene changes or Map View closes.
+The latest Windows report identifies an application hang while zooming, not a
+confirmed renderer crash; an in-game retest is still required to verify whether
+these bounded-work fixes resolve it.
+
+At townscape scale, every visible physical river endpoint (including inland
+ends) fans into three deterministic meandering channels with pointed, tapered
+tips instead of a semicircular cap. Internal joints, city-dot clipping, and fog
+boundaries do not create extra mouths. Branches retain the river's water/fog
+colors, wrap with the map, and reserve water corridors for townscape collision
+checks. Only viewport-intersecting delta polygons are submitted, within native
+SVG budgets; zoomed-out river lines retain their existing appearance.
+The v72 native retest still failed after reaching building-footprint preparation.
+Version 73 replaces that stage's unbounded custom grid enumeration with the
+existing bounded collision index, including its oversized-footprint safeguards.
+It also avoids passing the complete roof-area array as function arguments during
+subdivision. A further native retest is required; the crash is not yet confirmed
+resolved.
+The v73 retest progressed through entrance routing and reached geometry
+submission, but still failed before a settled commit. Version 74 also batches
+local walking-graph construction, approach attachments, edge scoring, and the
+combined walking network. The completed network is prepared before geometry
+publication and handed to the people renderer without a second synchronous
+build. Cancellation or preparation errors leave the running network intact.
+Focused tests compare all nodes, edges, costs, destinations, and river
+restrictions with the synchronous result. Native crash resolution remains
+unconfirmed; commit-stage diagnostics distinguish roofs, decorations, and
+people in the next retest.
+The v74 retest exposed a visibility regression: town geometry waited for the
+walking network to finish. Version 75 displays the prepared roads and roofs
+first, then builds the walking network in separate bounded batches. Existing
+walkers remain paused until that network is complete; its failure cannot hide
+the townscape. Map closure and scene replacement cancel obsolete walking jobs.
+The loading placard now says "Loading...". Dated event cards in the world,
+civilization, and family timelines expand automatically on hover or keyboard
+focus. Click/keyboard collapse remains available during the same hover, and
+hovering never seeks to another turn.
+
+The v75 retest still ended in a user-reported crash during zoom/pan, after
+geometry and walking-network preparation had completed. Version 76 also batches
+decoration obstacle indexing and candidate placement, yielding even when every
+candidate is rejected. Separate, cancelable decoration jobs cannot hold back
+the prepared roads and roofs. Contained camera changes reuse physical placements
+instead of rebuilding the collision index.
+At the exact aspect-aware, maximum-zoom-clamped crowd-dispersal threshold,
+decorations switch from preview dashes to complete artwork. Detailed artwork
+uses screen-space SVG coordinates, a three-pixel readability floor, and sampling
+that preserves each visible decoration category within 8,192 commands and
+262,144 characters. Physical sizes, walking/collision footprints, water checks,
+and simulation counts remain unchanged. Stale screen-space artwork hides during
+camera motion and returns after the settled refresh. Native crash resolution
+still needs an affected-save retest; the available logs do not establish the
+faulting native component.
+
+Version 77 applies the text-arching option to island, subcontinent, region,
+and water-body names, not just land-region names. Geographic text uses explicit,
+bounded HTML run boxes and a native paint font of at least 16 pixels before
+map scaling. Non-river geographic fonts stay between 10/11 and 24 UI-scaled pixels,
+with vertical compression compensated so close zoom cannot flatten or stretch
+names out of view. Collision reservations include the compensated label bounds.
+Region/geographic visibility checkboxes, fog filtering, and the arching toggle
+continue to work independently; river names retain their river-following layout.
+The separate user-reported v76 townscape-entry crash remains unresolved by this
+geographic-text update.
+
+Version 78 preserves location-based Earth mainland regions independently of the
+procedural region budget. Giant Earth's many islands previously consumed that
+budget, leaving whole connected continents with only a single regional name.
+Geographic text now uses viewport-sized, untransformed HTML roots in Map View;
+retained labels reproject immediately on pan/zoom without enlarging their fonts.
+This avoids scaling and clipping enormous geographic text surfaces, while
+preserving arches, fog checks, category toggles, and the map-space minimap layout.
+Local validation uses the installed 180-by-94 Giant Earth atlas; native in-game
+visibility still requires a retest. This does not resolve the separate
+townscape-entry crash.
+
+Version 79 fixes v78's Map View/minimap initialization failure
+(`ReferenceError: syncGeographyLabelViewport is not defined`). The viewport
+helper is declared at module scope rather than inside label placement.
+A regression check compiles the complete playback module with that helper
+exported, so extracting functions into test fixtures cannot hide a scope error.
+
+Version 80 matches geographic text to the working country/settlement label
+style: bold sans-serif, explicit visible text, and a transparent background.
+Region boundaries rendered correctly while the former geographic text style
+remained invisible in the native game, even with arching disabled. The affected
+Giant Earth retest now confirms visible geographic names. Bounded UI.log entries
+record available geography, placed label counts, and viewport/label positions
+when geography or category toggles change, not on every camera movement.
+
+Version 81 adds Giant Earth source-coordinate landmarks for Britain, Ireland,
+Antarctica, Greenland, Iceland, Madagascar, Borneo, Sumatra, Java, Philippines,
+Hawaiian Islands, New Zealand, Australia, Taiwan, Sri Lanka, Cyprus, Sardinia,
+Sicily, Italia, Anatolia, Scandinavia, and Korea. These names are prioritized and
+not discarded just because overview labels collide; fog, viewport culling, and
+the region/geographic-feature checkboxes still apply. Dense overview labels can
+overlap, so zoom in to separate them. Exact full-map dimensions also permit
+fixed landmarks before optional atlas metadata becomes available; cropped maps
+still require their validated source-coordinate context.
+Version 85 also reserves mainland regions for India, Southeast Asia, and Iberia
+at their Giant Earth source locations, independently of optional atlas metadata.
+Validated Giant Earth crops inherit these landmarks where the land is present;
+named islands such as Sri Lanka, Sumatra, and Borneo keep their own names.
+Jamaica is likewise reserved as a required island region at its own location.
+
+On fixed Earth projections, geographic names are unmodified real-world names,
+not procedural adjectives or saved fantasy names. Unmatched features remain
+unlabeled rather than receiving an invented mountain, island, or lake name.
+Mountain components bridge a single intervening hex, but different real ranges
+keep their own names. Chains consisting exclusively of 1-3-tile islands share
+one region when connected through coastal marine water, surrounded by ocean,
+and isolated from larger landmasses. Pacific chains use real regional names such
+as Melanesia, Micronesia, and Polynesia where their source locations match.
+All land components touching Earth's bottom row share one Antarctica island;
+intervening water remains water.
+
+With **Region Boundaries** enabled, hovering a known map region leaves that
+region clear and dims all other known regions with a strong, 72%-opacity
+dark-grey overlay. Layered screen-space edge strokes provide a soft feather
+without native blur filters or additional canvas paints. Labels and controls
+remain above it. The effect clears over controls, unknown tiles, during camera
+changes, on mouse leave, and when the checkbox or Map View is closed; it refreshes
+after a settled camera change. Geometry is cached within the same hovered region
+and clipped to the viewport even at extreme zoom. Exceptionally fragmented
+contours exceeding the hard native budget are omitted with an explicit warning.
+
+Native UI icons follow the map's owner-specific emblem even when a native slot
+still references an earlier civilization. Only custom artwork inside diplomacy
+panels is scaled to 75%; ribbons, other screens, and native emblems retain their
+size. UI country replacement consumes repeated government suffixes, including
+the Maurya Tribal Alliance case, without changing leader titles. Country names
+keep only one government noun. Fully and exclusively controlled named land
+regions become optional country-name roots, considering every detached piece
+and unclaimed tile; Roman-capital and historical overrides remain authoritative.
+
+Townscape decoration previews start twice as far out as in v80. Close-up scenes
+can display up to 1,024 complete silhouettes instead of 512, using actual path
+costs and interleaved categories. Complex scenes may show fewer: the existing
+8,192-command, 262,144-character, 6,144-placement, and incremental work limits
+remain unchanged. This does not claim to resolve the separately reported native
+townscape-entry crash.
 
 Region boundary directions now match Map View's hex edges rather than the
 native direction enum order. Subdivision uses connected graph floods, including
 across map seams and winding coastlines; detached pieces remain separate regions
-even when that exceeds the target region count. Every map tile belongs to exactly
-one connected region, including islands, lakes, rivers and ocean tiles.
+even when that exceeds the target region count, except for the explicitly grouped
+island chains and Antarctica described above. Every map tile belongs to exactly
+one region, including islands, lakes, rivers and ocean tiles.
 
 Arched country/region labels use HTML text runs instead of SVG text paths, avoiding
 the missing text and stray diagonal-line rendering problem in the game UI.
-Each line has at most eight runs, so long names do not create an unbounded
-number of transformed character elements. The arching checkbox still works.
+Each line has at most eight whole-word runs with natural horizontal spacing,
+so long names do not create an unbounded number of transformed character
+elements. The arching checkbox still works.
 
 Country names have expanded government-compatible formats, descriptive qualifiers
 and alternate cultural roots. Selection is deterministic for each country and
@@ -34,8 +968,8 @@ settlement-size bucket, not rerolled by redraws or leader changes. Historical
 pre-state/dynastic forms, era overrides, small capital states and distinct
 capital-derived roots are retained. Geographic qualifiers still compare canonical
 roots, regardless of alternate names or government titles; directional terms
-are not chosen at random. Only despotisms with more than three settlements can
-receive an Empire title.
+are not chosen at random. Outside the Roman-capital override, only despotisms
+with more than three settlements can receive an Empire title.
 
 Fully restart Civ VII after updating.
 
@@ -275,6 +1209,22 @@ excludes offscreen areas and counts all six fog-gradient passes together
 against command and character budgets. These protections reduce renderer
 load; they do not establish that the native crash is eliminated. Fully
 restart Civ VII and retest the affected save.
+
+Opening diplomacy during Skip Ahead now stops the remaining autoplay request,
+including paused autoplay, and waits for native player control to return before
+opening the native diplomacy menu. If control cannot be confirmed, an explicit
+error is shown instead of opening diplomacy in observer mode.
+The map's loading cover releases when the leader scene is showing. When Classic
+Leader Screens is enabled, a scene-wipe timeout also preserves its pending
+first-meet-to-hub handoff instead of leaving every diplomacy panel hidden.
+Version 115 coalesces Classic Leader Screens' duplicate animation-frame updates
+and supplies a single, bounded timer fallback for its native transition updates
+when rendering frames stall. It does not force diplomatic actions or report
+failed scene/resource loading as success. The loading cover also releases after
+ten seconds with an explicit diagnostic, rather than indefinitely covering the
+native controls. During diplomacy, complete Map View render roots are suspended
+without discarding them; unchanged HUD classes and hidden route geometry are
+not rewritten on every overlay poll.
 
 ## Skip Ahead and focused map history (version 56)
 
@@ -787,6 +1737,12 @@ open, including a refresh requested on opening it. Pending provisional work is c
 turn activation to avoid a duplicate scan. Tile capture reads each district once and derives
 regular-grid coordinates locally; society capture reads each player's tech/civic handles once.
 Captures taking at least 250 ms log their duration in `Logs/UI.log` for live comparison.
+Version 114 shares city collections, constructible collections and constructible
+definitions within each synchronous turn capture. The 63-major regression
+fixture reduces native constructible-collection reads from 129 to 64 and city
+collection reads from 127 to 64; repeated type lookups drop from 12,732 to five.
+Building, pillage, wonder, settlement and center-marker outputs are preserved,
+and each new capture reads fresh data, including after cities are razed.
 These changes reduce mod overhead, but native AI, other mods and game autosaving remain
 outside these measurements. No end-to-end turn-time reduction is claimed without a live test.
 Fully restart Civ VII to load v38.
@@ -799,8 +1755,9 @@ are not converted between calendar modes. The date HUD checks the gameplay marke
 so games without the realistic-calendar database changes retain their native dates.
 
 **Start a new game after installing this version.** The mod now affects gameplay and saved games,
-not just the map UI. **Realistic** replaces Standard and is the only selectable speed, including
-the multiplayer default. Its internal ID remains `GAMESPEED_STANDARD`.
+not just the map UI. **Realistic** replaces Standard and remains the default,
+including for multiplayer; version 90 adds x2 through x6 alternatives.
+Its internal ID remains `GAMESPEED_STANDARD`.
 
 - **Antiquity:** 4,400 annual turns, from 4000 BCE through 400 CE, without a year zero.
 - **Exploration:** 5,400 seasonal turns, Spring 400 CE through Winter 1749 CE.
@@ -814,15 +1771,18 @@ Age timers use these fixed turn budgets for every age-length setting. Milestones
 and other age-progress events no longer accelerate those timers. Victories and elimination can
 still end a game early. Technology/civic costs and additive repeatable costs, celebration duration
 and celebration happiness-curve parameters scale by that age's turns divided by the native Standard
-140-point age budget. Production, growth, movement and diplomacy are not slowed.
+140-point age budget, divided by the selected Realistic multiplier.
+As of version 90, other speed-adjusted costs use Marathon pacing.
+Research database costs compensate for the native Marathon multiplier so it
+does not triple research/civic costs. Integer rounding still applies.
 Agriculture and Chiefdom start from their immediate successors' base costs before
 the age multiplier; their final scaled costs are then divided by ten and rounded.
-For Antiquity this gives 220 science and 393 culture respectively using the base trees.
+Native cost scaling can round these opening costs by a few points.
 Celebration defaults absent from the database are supplied from the installed engine's native defaults.
 Other gameplay-overhaul mods can conflict with these settings.
 
 Realistic recordings carry fractional life-year durations: one year, one quarter-year, or one
-twelfth-year per turn. Disease/outbreak pacing follows that duration; battle and pillage remain
+twelfth-year per turn, multiplied by N at Realistic xN. Disease/outbreak pacing follows that duration; battle and pillage remain
 event-based. Legacy recordings retain their previous life simulation. Provisional map scans are
 coalesced during the local player's active turn rather than running throughout AI movement;
 turn-boundary, final and explicit map-open captures remain authoritative.
@@ -1234,7 +2194,7 @@ names, Arab *ibn/bint*, Russian patronymics, Greek "son of", Spanish *de* places
 gain generated family names and places, culture-typical modifiers ("Fundus Vetus", "Upper Mill") and a wider set
 of nouns.
 The circular **Population Panel** button (a three-people icon) sits at the top centre of Map View, moved
-down below anything already there (the exit button, the view and playback controls, the Victories tabs) so it
+down below anything already there (the view and playback controls, the Victories tabs) so it
 never overlaps other UI, and it hides whenever a game screen or menu opens over Map View. It opens or closes a panel on the right (hidden, with every level collapsed, each time Map View
 opens). It lists, for the viewed turn, Civilization (each major civilization by the country name the map gives it with
 the fog of war off, followed in parentheses by the name it goes by with the fog on when that differs, e.g. "The South
@@ -1466,8 +2426,8 @@ Holding the right mouse button with one of your units selected draws a
 semi-transparent arrow along the game's path to the hovered tile, with the number of
 turns marked at the end of each turn and at the destination (and on every tile when
 zoomed in closely).
-While Map View is open, city banners, unit flags and health bars are hidden, and
-the HUD button no longer re-checks the page for every game UI change. While a townscape layout is showing, the
+While Map View is open, city banners, unit flags and health bars are hidden.
+While a townscape layout is showing, the
 buildings' decorative squares underneath it are left out. All map layers, including every label inside them,
 are hidden while a leader scene (such as diplomacy) is on screen. Roads that
 follow a river are drawn beside it, rejoining it at tile centres.

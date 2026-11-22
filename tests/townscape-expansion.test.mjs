@@ -8,6 +8,7 @@ const panel = await loadModule('anthroprocenia-population-panel.js');
 const town = await loadModule('anthroprocenia-townscape.js');
 const demo = await loadModule('anthroprocenia-demography.js');
 const people = await loadModule('anthroprocenia-people.js');
+const timeline = await loadModule('anthroprocenia-timeline.js');
 const playback = await readFile(new URL('../anthroprocenia/ui/map/anthroprocenia-playback.js', import.meta.url), 'utf8');
 const recorder = await readFile(new URL('../anthroprocenia/ui/history/anthroprocenia-recorder.js', import.meta.url), 'utf8');
 function slice(name, source = playback) {
@@ -23,7 +24,7 @@ function slice(name, source = playback) {
 const runFunctions = (names, state) => {
   const context = vm.createContext({ ...panel, ...state });
   if (!names.includes('townHousingFor')) names = ['townHousingFor', ...names];
-  vm.runInContext(names.map(n => slice(n)).join('\n'), context);
+  vm.runInContext([...names, 'walkerBaseSpeed', 'mapScaleMetrics'].map(n => slice(n)).join('\n'), context);
   return context;
 };
 
@@ -149,7 +150,7 @@ test('Family Tree buttons open, toggle and update a real panel while retaining t
   const state = { open: false, nodeId: '', index: 0, gen: 0, key: '' };
   const body = { innerHTML: '', style: {} }, box = { style: {} };
   const context = runFunctions(['toggleFamilyPanel', 'syncFamilyPanel', 'familyViewport', 'popFamilyData', 'popFamilyRows', 'popFamilyMemberName', 'popFamilyButtonHtml', 'lifeSeed', 'popPersonHighlightAttrs', 'popSyncPersonHighlights', 'popHoverIdentity'], {
-    ...panel, ...people, ...demo, syncFamilyPin() {}, syncFamilyTimeline() {}, popWorkplace: () => ({ label: 'Court' }), familyState: state, mapVisible: true, ps: n => n, gameOverlayActive: () => false,
+    ...panel, ...people, ...demo, ...timeline, frames: [[0, 1, 1, '4002 BCE'], [0, 2, 0, '4000 BCE']], syncFamilyPin() {}, syncFamilyTimeline() {}, popWorkplace: () => ({ label: 'Court' }), familyState: state, mapVisible: true, ps: n => n, gameOverlayActive: () => false,
     popPerson: () => ({ life: { state: life, turn: life.turn } }), popOwnerContext: () => ({ civKey: 'ROME', religion: '' }),
     popEraNow: () => ({ age: 0 }), popState: { nodeIndex: new Map([[node.id, node]]), builtKey: 't0' },
     popRefreshModel: () => false, popLife: () => ({ state: life }), familyCache: new Map(), pos: 0, lifeTimelineNow: () => ({ years: [0, 2] }), escHtml: s => String(s),
@@ -164,7 +165,12 @@ test('Family Tree buttons open, toggle and update a real panel while retaining t
   context.pos = 1;
   context.popState.builtKey = 't1';
   context.syncFamilyPanel(true);
-  assert.match(body.innerHTML, /Died on recorded turn 2/);
+  assert.match(body.innerHTML, /Died on 4000 BCE \(Turn 2\), aged \d+: old age/);
+  assert.doesNotMatch(body.innerHTML, /Died on recorded turn/i);
+  context.frames[1][3] = 'Summer 1200 CE';
+  state.key = '';
+  context.syncFamilyPanel(true);
+  assert.match(body.innerHTML, /Died on Summer 1200 CE \(Turn 2\)/);
   assert.match(body.innerHTML, /Living, age/);
   assert.equal(state.gen, 0, 'the selected ancestor is not silently replaced by the newborn');
   context.syncFamilyPanel(false);

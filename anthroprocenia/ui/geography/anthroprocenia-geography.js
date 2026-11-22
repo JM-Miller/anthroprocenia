@@ -471,11 +471,11 @@ const EARTH_WATER_ANCHORS = [
   ["island", "Hawaiian Islands", [115, 52], [102, 36], [0, 36]],
   ["island", "Cuba", [150, 48], [21, 33], [25, 37]],
   ["island", "Hispaniola", [155, 46], [25, 32], [28, 36]],
-  ["island", "Jamaica", [152, 44], [22, 31], [26, 35]],
+  ["island", "Jamaica", [153, 46], [22, 31], [26, 35]],
   ["island", "Puerto Rico", [158, 46], [28, 32], [30, 36]],
   ["island", "Tierra del Fuego", [163, 1], [29, 1], [31, 7]],
 ];
-// Giant Earth source coordinates. Small island windows take precedence over broad atlas regions.
+// Giant Earth source coordinates. Island naming skips the mainland polygons.
 const GIANT_EARTH_LAND_AREAS = [
   ["Britain", 7, 70, 12, 83], ["Ireland", 3, 73, 6, 77],
   ["Iceland", 1, 83, 4, 86], ["Greenland", 168, 82, 2, 93],
@@ -483,39 +483,164 @@ const GIANT_EARTH_LAND_AREAS = [
   ["Sumatra", 72, 27, 78, 34], ["Java", 80, 24, 85, 26],
   ["Philippines", 86, 35, 92, 45], ["Taiwan", 87, 47, 88, 50],
   ["Sri Lanka", 62, 32, 64, 34], ["Cyprus", 32, 53, 33, 53],
-  ["Sardinia", 17, 56, 18, 57], ["Sicily", 20, 52, 21, 53],
+  ["Sardinia", 17, 56, 18, 57], ["Sicily", 20, 52, 21, 53], ["Malta", 21, 50, 22, 51],
   ["Hawaiian Islands", 113, 47, 122, 54], ["New Zealand", 107, 2, 114, 13],
-  ["Australia", 84, 4, 104, 25],
+  ["Western Australia", 84, 4, 94, 25], ["Eastern Australia", 95, 4, 104, 25],
+  ["Jamaica", 151, 45, 153, 46],
+  ["Corsica", 17, 58, 18, 59], ["The Balearic Isles", 12, 55, 14, 56],
 ];
 const GIANT_EARTH_PENINSULAS = [
   ["Italia", [[16, 65], [22, 65], [22, 59], [25, 55], [23, 53], [19, 57], [16, 62]]],
   ["Anatolia", [[30, 59], [42, 60], [44, 55], [36, 52], [30, 54]]],
   ["Scandinavia", [[17, 73], [26, 73], [37, 83], [32, 92], [20, 89]]],
   ["Korea", [[87, 65], [90, 66], [93, 60], [91, 57], [88, 60]]],
+  ["Iberia", [[2, 51], [10, 51], [13, 60], [10, 62], [2, 62]]],
+  ["India", [[52, 58], [59, 60], [65, 56], [73, 54], [73, 51], [70, 48], [67, 44], [64, 34], [60, 33], [56, 41], [51, 47]]],
+  ["The Malayan Peninsula", [[72, 40], [75, 40], [75, 38], [74, 37], [76, 35], [79, 33], [79, 30], [77, 29], [75, 32], [74, 34], [73, 35], [72, 38]]],
+  ["Southeast Asia", [[70, 50], [73, 52], [76, 49], [79, 48], [81, 43], [82, 38], [79, 36], [79, 31], [76, 31], [72, 38], [68, 44], [70, 47]]],
+  ["Arabia", [[33, 48], [36, 50], [39, 49], [42, 46], [46, 44], [47, 41], [43, 37], [38, 36], [35, 39]]],
+  ["Western Central Africa", [[12, 21], [25, 21], [25, 36], [12, 36]]],
+  ["Eastern Central Africa", [[25, 18], [37, 18], [37, 32], [34, 36], [25, 36]]],
+  ["Western North Africa", [[2, 38], [16, 38], [16, 53], [2, 53]]],
+  ["Eastern North Africa", [[28, 38], [38, 38], [38, 53], [28, 53]]],
+  ["Central North Africa", [[2, 38], [38, 38], [38, 53], [2, 53]]],
+  ["Greece", [[25, 53], [28, 52], [31, 54], [31, 59], [29, 61], [26, 61], [25, 58]]],
+  ["The Balkans", [[23, 53], [31, 51], [34, 60], [31, 65], [25, 65], [22, 61]]],
+  ["Western Europe", [[7, 62], [13, 60], [17, 63], [18, 75], [7, 75]]],
+  ["Central Europe", [[17, 63], [25, 63], [29, 66], [29, 75], [18, 75]]],
+  ["Eastern Europe", [[29, 60], [46, 61], [49, 80], [37, 84], [29, 75]]],
+  ["Western Arctic America", [[116, 70], [142, 70], [142, 94], [116, 94]]],
+  ["Eastern Arctic America", [[142, 70], [168, 70], [168, 94], [142, 94]]],
+  ["Western North America", [[116, 58], [135, 58], [135, 56], [144, 56], [144, 80], [116, 80]]],
+  ["Eastern North America", [[144, 56], [148, 56], [148, 53], [154, 53], [154, 56], [168, 56], [168, 80], [144, 80]]],
+  ["Central America", [[129, 58], [135, 58], [135, 56], [145, 56], [148, 50], [146, 46], [152, 41], [151, 39], [146, 39], [140, 45], [132, 48], [129, 54]]],
+  ["Siberia", [[37, 80], [115, 80], [115, 94], [37, 94]]],
+  ["North Asia", [[37, 71], [115, 71], [115, 94], [37, 94]]],
 ];
-function giantEarthLandName({ x, y }, islandsOnly = false) {
-  if (y === 0) return "Antarctica";
-  for (const [name, x0, y0, x1, y1] of GIANT_EARTH_LAND_AREAS) {
-    if (islandsOnly && name === "Australia" && !(x >= 98 && x <= 101 && y <= 6)) continue;
-    if ((x0 <= x1 ? x >= x0 && x <= x1 : x >= x0 || x <= x1) && y >= y0 && y <= y1) return name;
+function giantEarthTundraBoundary(sourcePlot, width, height) {
+  const boundary = new Map();
+  if (typeof GameplayMap.getBiomeType !== "function" || typeof GameInfo.Biomes?.lookup !== "function") return boundary;
+  for (let x = 0; x < width; x++) for (let y = 0; y < height; y++) {
+    const source = sourcePlot({ x, y });
+    if (!source) continue;
+    const america = source.x >= 116 && source.x < 168;
+    if ((!america && (source.x < 37 || source.x >= 115)) || source.y < (america ? 70 : 71) || GameplayMap.isWater(x, y)) continue;
+    const biome = apiValue("northern biome lookup",
+      () => GameInfo.Biomes.lookup(GameplayMap.getBiomeType(x, y))?.BiomeType, "");
+    if (biome === "BIOME_TUNDRA" || america && biome === "BIOME_SNOW") {
+      boundary.set(source.x, Math.min(boundary.get(source.x) ?? Infinity, source.y));
+    }
   }
-  if (islandsOnly) return "";
-  for (const [name, polygon] of GIANT_EARTH_PENINSULAS) {
+  return boundary;
+}
+function giantEarthLandName({ x, y }, islandsOnly = false, tundraBoundary = null) {
+  if (y === 0) return "Antarctica";
+  if (!islandsOnly && giantEarthAlaska(x, y)) return "Western Arctic America";
+  for (const [name, polygon] of islandsOnly ? [] : GIANT_EARTH_PENINSULAS) {
     let inside = false;
     for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
       const [ax, ay] = polygon[i], [bx, by] = polygon[j];
       if ((ay > y) !== (by > y) && x < (bx - ax) * (y - ay) / (by - ay) + ax) inside = !inside;
     }
-    if (inside) return name;
+    if (inside) {
+      if (name === "Siberia" || name === "North Asia") return mergedGiantEarthRegionName(name, { x, y }, tundraBoundary);
+      if (name.endsWith(" America")) return mergedGiantEarthRegionName(name, { x, y }, tundraBoundary);
+      return name;
+    }
+  }
+  for (const [name, x0, y0, x1, y1] of GIANT_EARTH_LAND_AREAS) {
+    if (islandsOnly && name.endsWith(" Australia") && !(x >= 98 && x <= 101 && y <= 6)) continue;
+    if ((x0 <= x1 ? x >= x0 && x <= x1 : x >= x0 || x <= x1) && y >= y0 && y <= y1) return name;
   }
   return "";
 }
 function fixedGiantEarthRegionLookup(mapName, width, height) {
   if (String(mapName).toUpperCase() !== "LOC_MAP_GIANT_EARTH_NAME" || width !== 180 || height !== 94) return null;
-  const lookup = plot => giantEarthLandName(plot);
+  const tundraBoundary = giantEarthTundraBoundary(plot => plot, width, height);
+  const lookup = plot => giantEarthLandName(plot, false, tundraBoundary);
   lookup.sourceMapName = "GiantEarth";
   lookup.sourcePlot = plot => plot;
+  lookup.tundraBoundary = tundraBoundary;
   return lookup;
+}
+const GIANT_EARTH_LAND_ANCHORS = [
+  ["West Africa", 8, 33], ["Western Central Africa", 19, 28], ["Eastern Central Africa", 31, 27], ["East Africa", 35, 30],
+  ["Southern Africa", 27, 11], ["Central North Africa", 20, 46],
+  ["Western Europe", 13, 68], ["Eastern Europe", 34, 71], ["Scandinavia", 25, 84],
+  ["Middle East", 47, 50], ["Central Asia", 57, 64], ["North Asia", 63, 82],
+  ["Northeast Asia", 96, 79], ["East Asia", 83, 59],
+  ["South Asia", 61, 46], ["Southeast Asia", 80, 41],
+  ["Western Australia", 89, 15], ["Eastern Australia", 100, 15], ["Oceania", 115, 26],
+  ["Western North America", 133, 69], ["Eastern North America", 153, 69], ["Central America", 143, 48],
+  ["South America", 163, 24], ["Caribbean", 153, 45], ["Greenland", 176, 87],
+  ["Antarctica", 80, 0],
+];
+function giantEarthAlaska(x, y) {
+  // Includes the Aleutians and southeast panhandle, without extending into the Yukon interior.
+  return x >= 106 && x < 113 && y >= 73 && y <= 75 ||
+    x >= 113 && x <= 125 && y >= 78 && y <= 94 ||
+    x >= 126 && x <= 130 && y >= 74 && y <= 77 && y >= x - 54;
+}
+function mergedGiantEarthRegionName(name, source, tundraBoundary) {
+  const { x, y } = source;
+  if (giantEarthAlaska(x, y)) return "Western Arctic America";
+  if (name === "West Asia") return "Middle East";
+  if (name === "Caribbean" && y < 43) return "South America";
+  if (name === "North Africa" || name === "South Europe") return "Central North Africa";
+  if (name === "Mediterranean") return y < 54 ? (x < 16 ? "Western North Africa" : x >= 28 ? "Eastern North Africa" : "Central North Africa")
+    : x < 17 ? "Western Europe" : x < 29 ? "Central Europe" : "Eastern Europe";
+  if (name === "Northern Europe" && x < 37) return "Scandinavia";
+  if (["Northern Europe", "Siberia", "North Asia", "Northern Asia"].includes(name)) {
+    // The Yenisei near Krasnoyarsk separates the western and eastern subdivisions.
+    return `${x < 68 ? "Western" : "Eastern"} ${y >= (tundraBoundary?.get(x) ?? 80) ? "Siberia" : "North Asia"}`;
+  }
+  if (name === "Central Africa") {
+    if (source.y < 18) return "Southern Africa";
+    if (source.y >= 38) return "Central North Africa";
+    return source.x < 25 ? "Western Central Africa" : "Eastern Central Africa";
+  }
+  if (name === "Central America" || /^(?:(?:Western|Eastern) )?(?:North|Arctic) America$/.test(name)) {
+    // Panama ends before Colombia; Baja retains its existing northern boundary.
+    if (y < 40 || x >= 153 && y < 43) return "South America";
+    const northernBoundary = x <= 134 ? 58 : 56;
+    if (y < northernBoundary && !(x >= 148 && x <= 154 && y >= 53)) return "Central America";
+    const arctic = source.y >= (tundraBoundary?.get(source.x) ?? 80);
+    return `${source.x < (arctic ? 142 : 144) ? "Western" : "Eastern"} ${arctic ? "Arctic" : "North"} America`;
+  }
+  return name;
+}
+function earthLandRegionName(plot, regionLookup) {
+  const name = regionLookup?.(plot);
+  if (name) return name;
+  const source = regionLookup?.sourcePlot(plot);
+  if (!source || regionLookup.sourceMapName !== "GiantEarth") return "";
+  let nearest = Infinity, region = "";
+  for (const [candidate, x, y] of GIANT_EARTH_LAND_ANCHORS) {
+    const raw = Math.abs(source.x - x);
+    const distance = Math.min(raw, 180 - raw) ** 2 + (source.y - y) ** 2;
+    if (distance < nearest) { nearest = distance; region = candidate; }
+  }
+  return mergedGiantEarthRegionName(region, source, regionLookup.tundraBoundary);
+}
+function includeConnectedItaliaTiles(regionLookup, records, locations) {
+  if (regionLookup?.sourceMapName !== "GiantEarth") return regionLookup;
+  const italia = new Set(), candidates = new Set();
+  for (const [index, record] of records) {
+    if (record.water || record.lake) continue;
+    const name = earthLandRegionName(locations.get(index), regionLookup);
+    if (name === "Italia") italia.add(index);
+    if (/^South(?:ern)? Europe$/i.test(record.continent?.name || "") ||
+        /^South(?:ern)? Europe$/i.test(name)) candidates.add(index);
+  }
+  const queue = [...italia];
+  for (let cursor = 0; cursor < queue.length; cursor++) {
+    for (const neighbor of neighborsOf(locations.get(queue[cursor]))) {
+      if (!candidates.has(neighbor.index) || italia.has(neighbor.index)) continue;
+      italia.add(neighbor.index);
+      queue.push(neighbor.index);
+    }
+  }
+  return Object.assign(plot => italia.has(indexFor(plot.x, plot.y)) ? "Italia" : regionLookup(plot), regionLookup);
 }
 const EARTH_MOUNTAIN_ANCHORS = [
   ["Alps", [18, 64], [50, 45], [50, 48], 5],
@@ -559,16 +684,78 @@ function earthMountainLookup(regionLookup) {
     return name;
   };
 }
+const EARTH_RIVER_CITIES = {
+  LONDON: "Thames", OXFORD: "Thames", PARIS: "Seine", ROUEN: "Seine",
+  LYON: "Rhone", AVIGNON: "Rhone", BORDEAUX: "Garonne", TOULOUSE: "Garonne",
+  NANTES: "Loire", ORLEANS: "Loire", ROME: "Tiber", ROMA: "Tiber",
+  FLORENCE: "Arno", PISA: "Arno", TURIN: "Po", FERRARA: "Po",
+  LISBON: "Tagus", LISBOA: "Tagus", TOLEDO: "Tagus", PORTO: "Douro",
+  SEVILLE: "Guadalquivir", ZARAGOZA: "Ebro", HAMBURG: "Elbe", DRESDEN: "Elbe",
+  BREMEN: "Weser", PRAGUE: "Vltava", BERLIN: "Spree", WARSAW: "Vistula",
+  KRAKOW: "Vistula", WROCLAW: "Oder", KIEV: "Dnieper", KYIV: "Dnieper",
+  SMOLENSK: "Dnieper", MOSCOW: "Moskva", RIGA: "Daugava", DUBLIN: "Liffey",
+  GLASGOW: "Clyde", VIENNA: "Danube", BUDAPEST: "Danube", BELGRADE: "Danube",
+  COLOGNE: "Rhine", BAMAKO: "Niger", TIMBUKTU: "Niger", GAO: "Niger",
+  CAIRO: "Nile", ASWAN: "Nile", KHARTOUM: "Nile", LUXOR: "Nile",
+  KINSHASA: "Congo", BRAZZAVILLE: "Congo", TETE: "Zambezi",
+  BAGHDAD: "Tigris", MOSUL: "Tigris", BABYLON: "Euphrates", RAQQA: "Euphrates",
+  DAMASCUS: "Barada", SAMARKAND: "Zeravshan", TASHKENT: "Chirchiq",
+  KABUL: "Kabul River", LAHORE: "Ravi", DELHI: "Yamuna", AGRA: "Yamuna",
+  VARANASI: "Ganges", PATNA: "Ganges", KOLKATA: "Hooghly", DHAKA: "Buriganga",
+  MANDALAY: "Irrawaddy", YANGON: "Yangon River", BANGKOK: "Chao Phraya",
+  HANOI: "Red River", PHNOM_PENH: "Mekong", VIENTIANE: "Mekong",
+  JAKARTA: "Ciliwung", PALEMBANG: "Musi", PONTIANAK: "Kapuas",
+  BANJARMASIN: "Barito", SURAKARTA: "Bengawan Solo", SEOUL: "Han River",
+  PYONGYANG: "Taedong", TOKYO: "Sumida", KYOTO: "Kamo", OSAKA: "Yodo",
+  WUHAN: "Yangtze", NANJING: "Yangtze", CHONGQING: "Yangtze",
+  CHANGSHA: "Xiang", GUANGZHOU: "Pearl River", FUZHOU: "Min River",
+  HANGZHOU: "Qiantang", LUOYANG: "Luo River", CHENGDU: "Jin River",
+  NOVOSIBIRSK: "Ob", OMSK: "Irtysh", TOBOLSK: "Irtysh", TOMSK: "Tom River",
+  IRKUTSK: "Angara", KRASNOYARSK: "Yenisei", YAKUTSK: "Lena", KHABAROVSK: "Amur",
+  MONTREAL: "Saint Lawrence", QUEBEC: "Saint Lawrence", OTTAWA: "Ottawa River",
+  DETROIT: "Detroit River", CHICAGO: "Chicago River", PITTSBURGH: "Ohio River",
+  CAHOKIA: "Mississippi", NEW_ORLEANS: "Mississippi", MEMPHIS: "Mississippi",
+  WASHINGTON: "Potomac", NEW_YORK: "Hudson", PHILADELPHIA: "Delaware",
+  RICHMOND: "James River", IQUITOS: "Amazon", LETICIA: "Amazon",
+  MANAUS: "Rio Negro", SANTAREM: "Tapajos", CIUDAD_BOLIVAR: "Orinoco",
+  LIMA: "Rimac", CUSCO: "Huatanay", AREQUIPA: "Chili River",
+  SANTIAGO: "Mapocho", CONCEPCION: "Biobio", ASUNCION: "Paraguay", ROSARIO: "Parana",
+};
 function earthWaterLookup(regionLookup) {
   if (!regionLookup?.sourcePlot) return null;
   const column = { GiantEarth: 2, GreatestEarthMap: 3, StockEarth: 4 }[regionLookup.sourceMapName];
   if (!column) return null;
   const width = column === 2 ? 180 : column === 3 ? 104 : 106;
   const height = column === 2 ? 94 : column === 3 ? 64 : 66;
+  const riverCities = new Map(), riverRadius = column === 2 ? 2 : 1;
+  for (const row of apiValue("Earth river city atlas lookup", () => Array.from(GameInfo.CityMap || []), [])) {
+    if (row.MapName !== regionLookup.sourceMapName) continue;
+    const city = String(row.CityLocaleName || "").replace(/^LOC_CITY_NAME_/, "");
+    const x = Number(row.X), y = Number(row.Y);
+    if (!Object.prototype.hasOwnProperty.call(EARTH_RIVER_CITIES, city)
+      || !Number.isFinite(x) || !Number.isFinite(y) || x < 0 || x >= width || y < 0 || y >= height) continue;
+    if (!riverCities.has(city)) riverCities.set(city, []);
+    riverCities.get(city).push([x, y]);
+  }
+  const riverAnchors = [];
+  for (const [city, points] of riverCities) {
+    // Reused city keys in distant countries are not reliable river landmarks.
+    if (points.some(([x, y]) => Math.min(Math.abs(x - points[0][0]), width - Math.abs(x - points[0][0])) > riverRadius * 3
+      || Math.abs(y - points[0][1]) > riverRadius * 3)) continue;
+    for (const point of points) riverAnchors.push([EARTH_RIVER_CITIES[city], ...point]);
+  }
   return (plot, kind) => {
     const source = regionLookup.sourcePlot(plot);
     if (!source) return "";
     const { x, y } = source;
+    if (kind === "river") {
+      let nearest = Infinity, name = "";
+      for (const [river, ax, ay] of riverAnchors) {
+        const raw = Math.abs(x - ax), distance = Math.min(raw, width - raw) ** 2 + (y - ay) ** 2;
+        if (distance < nearest) { nearest = distance; name = river; }
+      }
+      if (nearest <= riverRadius ** 2) return name;
+    }
     if (kind === "archipelago") {
       if (column === 2 && x >= 91 && x <= 124 && y >= 18 && y <= 33) return "Melanesia";
       if (column === 2 && x >= 98 && x <= 112 && y >= 34 && y <= 51) return "Micronesia";
@@ -663,12 +850,13 @@ function earthRegionLookup(mapName, width, height) {
     if (plot.x < context.livePlayableStartX || plot.x > context.livePlayableEndX) return "";
     return { x: (context.sourceStartX + plot.x) % context.sourceWidth, y: context.sourceStartY + plot.y };
   };
+  const tundraBoundary = context.sourceMapName === "GiantEarth" ? giantEarthTundraBoundary(sourcePlot, width, height) : null;
   const lookup = plot => {
     const source = sourcePlot(plot);
     if (!source) return "";
     const { x, y } = source;
     if (context.sourceMapName === "GiantEarth") {
-      const name = giantEarthLandName(source);
+      const name = giantEarthLandName(source, false, tundraBoundary);
       if (name) return name;
     }
     let best = null;
@@ -686,13 +874,15 @@ function earthRegionLookup(mapName, width, height) {
     }
     const name = best ? EARTH_REGION_NAMES[best.Region] : "";
     if (context.sourceMapName === "GiantEarth") {
-      return ({ Greenland: "North America", Australia: "Oceania", Madagascar: "East Africa",
+      const regionalName = ({ Greenland: "North America", Australia: "Oceania", Madagascar: "East Africa",
         Anatolia: "West Asia", Antarctica: "" })[name] ?? name;
+      return mergedGiantEarthRegionName(regionalName, source, tundraBoundary);
     }
     return name;
   };
   lookup.sourceMapName = context.sourceMapName;
   lookup.sourcePlot = sourcePlot;
+  lookup.tundraBoundary = tundraBoundary;
   return lookup;
 }
 
@@ -749,16 +939,55 @@ function rememberValidatedName(key, name) {
   }
 }
 
-function rememberWarName(key, regionName) {
-  const generated = `War of ${regionName}`;
+function rememberWarName(key, regionName, islands = false) {
+  const pair = /^border-war:(\d+)[,:](\d+):/.exec(key);
+  const canonical = pair ? `war-pair:${[Number(pair[1]), Number(pair[2])].sort((a, b) => a - b).join(":")}` : key;
+  const prior = rememberName(canonical, "");
+  if (prior) return prior;
+  if (!regionName) return "";
+  const location = regionName.replace(/^The /, "the ");
+  const formats = [
+    `War of ${location}`, `War for ${location}`, `Conflict over ${location}`,
+    `Campaign for ${location}`, `Struggle for ${location}`,
+    ...(islands ? [`Island War for ${location}`, `Island Campaign for ${location}`, `War across ${location}`] : []),
+  ];
+  const generated = formats[deterministicIndex(`${gameSeed()}|${canonical}|${regionName}`, formats.length)];
   const migrated = rememberName(`name3:${key}`, "");
   const stored = rememberName(`name4:${key}`, "") || migrated || rememberName(key, generated);
   if (/\d/.test(stored) && !/\d/.test(regionName)) {
-    return rememberName(`${migrated ? "name4" : "name3"}:${key}`, generated);
+    return rememberName(canonical, generated);
   }
   const corrected = normalizeGeographicQualifiers(stored);
-  if (corrected !== stored) return rememberName(`name4:${key}`, corrected);
-  return stored;
+  return rememberName(canonical, corrected);
+}
+function warNameForPlayers(first, second, owners = null, data = buildGeography()) {
+  const pair = [first, second].sort((a, b) => a - b), key = `border-war:${pair.join(":")}:`;
+  const stored = rememberWarName(key, "");
+  if (stored || !data) return stored;
+  if (!owners) owners = currentOwners(data);
+  const regions = new Map(data.regions.map(region => [region.id, region]));
+  const involved = new Set(), candidates = [...owners].filter(([, owner]) => pair.includes(owner)).sort((a, b) => a[0] - b[0]);
+  for (const [index, owner] of candidates) {
+    const plot = data.locations.get(index);
+    if (!plot) continue;
+    const neighbor = neighborsOf(plot).find(neighbor => owners.get(neighbor.index) === pair[1 - pair.indexOf(owner)]);
+    if (!neighbor) continue;
+    involved.add(regions.get(data.regionForTile.get(index)));
+    involved.add(regions.get(data.regionForTile.get(neighbor.index)));
+    break;
+  }
+  if (!involved.size) for (const owner of pair) {
+    const counts = new Map();
+    for (const [index, candidate] of candidates) if (candidate === owner) {
+      const region = regions.get(data.regionForTile.get(index));
+      if (region) counts.set(region, (counts.get(region) || 0) + 1);
+    }
+    const region = [...counts].sort((a, b) => b[1] - a[1] || a[0].name.localeCompare(b[0].name))[0]?.[0];
+    if (region) involved.add(region);
+  }
+  const selected = [...involved].filter(Boolean);
+  const location = [...new Set(selected.map(region => region.name))].sort().join(" and ");
+  return rememberWarName(key + location, location, selected.length > 0 && selected.every(region => region.island));
 }
 function warRegionName(index, neighbor, data = buildGeography()) {
   if (!data) return "";
@@ -1029,7 +1258,7 @@ function splitRegionTiles(tiles, locations) {
 
 // Bring the region count to `target`: split the biggest regions while short, merge the smallest while over.
 function fitRegionCount(entries, locations, target) {
-  entries = entries.flatMap(entry => entry.archipelago ? [entry] : splitConnectedBy(entry.tiles, locations, () => null)
+  entries = entries.flatMap(entry => entry.island || entry.archipelago ? [entry] : splitConnectedBy(entry.tiles, locations, () => null)
     .map(tiles => ({ ...entry, tiles })));
   while (entries.length < target) {
     let big = null;
@@ -1111,7 +1340,7 @@ function buildGeography() {
   const cacheKey = `${width}x${height}|${seed ?? "unseeded"}|${mapName || ""}`;
   if (geographyCache && geographyCacheKey === cacheKey) return geographyCache;
   neighborCache = new Map();
-  const earthRegionAt = namedEarth
+  let earthRegionAt = namedEarth
     ? earthRegionLookup(mapName, width, height) || fixedGiantEarthRegionLookup(mapName, width, height) ||
       stockEarthRegionLookup(mapName, width, height) : null;
   const earthWaterAt = earthWaterLookup(earthRegionAt);
@@ -1129,6 +1358,7 @@ function buildGeography() {
       locations.set(index, plot);
     }
   }
+  earthRegionAt = includeConnectedItaliaTiles(earthRegionAt, records, locations);
 
   let landComponents = collectComponents(records, record => !record.water && !record.lake, locations);
   const antarctic = nativeEarthRivers && landComponents.filter(tiles => tiles.some(index => {
@@ -1156,21 +1386,26 @@ function buildGeography() {
   const riverWaterComponents = collectComponents(records, record => record.water && record.river && !record.lake, locations);
   const landTileCount = landComponents.reduce((total, tiles) => total + tiles.length, 0);
   const islandThreshold = Math.max(8, Math.floor(landTileCount * 0.015));
-  const islandEarthNames = new Map();
+  const islandEarthNames = new Map(), mainlandEarthComponents = new Set();
   if (earthWaterAt) for (const tiles of landComponents) {
     if (tiles.length > Math.max(islandThreshold, width * height * 0.04)) continue;
+    if (earthRegionAt.sourceMapName === "GiantEarth" && tiles.length > 100 && tiles.some(index => {
+      const source = earthRegionAt.sourcePlot(locations.get(index));
+      return source && giantEarthLandName(source).endsWith(" Australia");
+    })) {
+      mainlandEarthComponents.add(tiles[0]);
+      continue;
+    }
     const names = new Map();
     for (const index of tiles) {
-      const plot = locations.get(index), source = earthRegionAt.sourcePlot(plot);
-      const name = earthRegionAt.sourceMapName === "GiantEarth" && tiles.length > 100 &&
-        source && giantEarthLandName(source) === "Australia" ? "Australia" : earthWaterAt(plot, "island");
+      const name = earthWaterAt(locations.get(index), "island");
       if (name) names.set(name, (names.get(name) || 0) + 1);
     }
     const name = [...names].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0];
     if (name) for (const index of tiles) islandEarthNames.set(index, name);
   }
-  const isIsland = tiles => tiles.length <= islandThreshold || antarcticTiles.has(tiles[0]) || chainTiles.has(tiles[0]) ||
-    islandEarthNames.has(tiles[0]);
+  const isIsland = tiles => !mainlandEarthComponents.has(tiles[0]) && (tiles.length <= islandThreshold ||
+    antarcticTiles.has(tiles[0]) || chainTiles.has(tiles[0]) || islandEarthNames.has(tiles[0]));
   const islandComponents = landComponents.filter(isIsland)
     .map(tiles => ({ tiles, key: tiles.slice().sort((a, b) => a - b).join(",") }))
     .sort((a, b) => deterministicIndex(`${seed}|island-style|${a.key}`, 0x7fffffff)
@@ -1206,13 +1441,22 @@ function buildGeography() {
         : islandTile !== undefined ? geographicName(historicalName, "island", sorted[0]) : historicalName;
       const region = { id: `${water ? "water" : "land"}:${sorted[0]}`, name, center, tiles: sorted, boundary: [], water, island: islandTile !== undefined };
       if (nativeEarthRivers) {
+        const source = earthRegionAt?.sourcePlot(locations.get(center));
+        const islandRegion = source && earthRegionAt.sourceMapName === "GiantEarth"
+          ? giantEarthLandName(source, false, earthRegionAt.tundraBoundary) : "";
         const earthName = antarcticTiles.has(sorted[0]) ? "Antarctica"
           : chainTiles.has(sorted[0]) && earthWaterAt?.(locations.get(center), "archipelago") ||
           (water ? earthWaterAt && earthWaterAt(locations.get(center), lake ? "lake" : river ? "river" : deepWater ? "ocean" : "sea")
-          : islandTile !== undefined && earthWaterAt ? islandEarthNames.get(sorted[0]) || "" :
-          (earthRegionAt && earthRegionAt(locations.get(center))) ||
+          : islandTile !== undefined && earthWaterAt ? islandEarthNames.get(sorted[0]) || islandRegion :
+          earthLandRegionName(locations.get(center), earthRegionAt) ||
           earthContinentName(records.get(center)?.continent?.name));
-        region.name = earthName || "";
+        const plot = locations.get(center);
+        const landName = earthLandRegionName(plot, earthRegionAt) ||
+          earthContinentName(records.get(center)?.continent?.name) || "Earth";
+        const oceanName = earthWaterAt?.(plot, "ocean") || "World Ocean";
+        region.name = earthName || (water ? lake ? `Inland Waters of ${landName}`
+          : river ? `Waterways of ${landName}` : oceanName
+          : islandTile !== undefined && earthWaterAt ? `${oceanName} Islands` : landName);
         region.nativeEarthName = true;
       }
       regions.push(region);
@@ -1227,8 +1471,11 @@ function buildGeography() {
   for (const tiles of landComponents) {
     // A land-connected island is one region, even if its continent IDs differ.
     if (isIsland(tiles)) landEntries.push({ tiles, water: false, island: true, archipelago: chainTiles.has(tiles[0]) });
-    else for (const part of splitConnectedBy(tiles, locations, index => earthRegionAt
-      ? `${continentOf(index)}|${earthRegionAt(locations.get(index))}` : continentOf(index))) {
+    else for (const part of splitConnectedBy(tiles, locations, index => {
+      if (!earthRegionAt) return continentOf(index);
+      const name = earthLandRegionName(locations.get(index), earthRegionAt);
+      return name === "Italia" ? name : `${continentOf(index)}|${name}`;
+    })) {
       landEntries.push({ tiles: part, water: false, continent: continentOf(part[0]) });
     }
     const sorted = tiles.slice().sort((a, b) => a - b);
@@ -1317,12 +1564,12 @@ function buildGeography() {
 
   const riverComponents = collectComponents(records, record => record.river, locations);
   const earthRivers = new Map();
+  const riverName = index => (earthWaterAt && earthWaterAt(locations.get(index), "river")) || records.get(index)?.riverName || "";
   for (const component of riverComponents) {
     // A connected river network is split by the game's own river names, so each named river gets its own label.
-    for (const tiles of splitConnectedBy(component, locations, index => earthWaterAt
-      ? earthWaterAt(locations.get(index), "river") : records.get(index)?.riverName || "")) {
+    for (const tiles of splitConnectedBy(component, locations, riverName)) {
       const sorted = tiles.slice().sort((a, b) => a - b);
-      const realName = earthWaterAt ? earthWaterAt(locations.get(centerIndex(sorted, locations)), "river") : records.get(sorted[0])?.riverName;
+      const realName = riverName(sorted[0]);
       if (nativeEarthRivers && (earthWaterAt || realName)) {
         if (!realName) continue;
         const key = realName.toLowerCase();
@@ -1333,8 +1580,7 @@ function buildGeography() {
       features.push({
         id: `rivers:${sorted[0]}`,
         type: "river",
-        name: realName && !/\s+river$/i.test(realName) ? realName
-          : geographicName(realName || NAME_PARTS.rivers[deterministicIndex(`${seed}|rivers|${sorted[0]}`, NAME_PARTS.rivers.length)], "river", sorted[0]),
+        name: realName || geographicName(NAME_PARTS.rivers[deterministicIndex(`${seed}|rivers|${sorted[0]}`, NAME_PARTS.rivers.length)], "river", sorted[0]),
         center: centerIndex(sorted, locations),
         tiles: sorted,
       });
@@ -1428,12 +1674,21 @@ function buildGeography() {
     if (region && region.tiles.length === feature.tiles.length) feature.name = region.name;
   }
   if (earthRegionAt?.sourceMapName === "GiantEarth") {
-    const required = new Set(["Antarctica", ...GIANT_EARTH_LAND_AREAS.map(area => area[0]),
-      ...GIANT_EARTH_PENINSULAS.map(area => area[0])]);
+    const required = new Set(["Antarctica", "Western Siberia", "Eastern Siberia", "Western North Asia", "Eastern North Asia",
+      ...GIANT_EARTH_LAND_AREAS.map(area => area[0]),
+      ...GIANT_EARTH_PENINSULAS.map(area => area[0]).filter(name => name !== "Siberia" && name !== "North Asia")]);
     for (const entry of regions.concat(features)) entry.requiredEarthName = required.has(entry.name);
   }
   for (const region of regions) boundary.push(...region.boundary.map(edge => ({ ...edge, regionId: region.id })));
-  geographyCache = { width, height, regions, features: features.filter(feature => feature.name), boundary, regionForTile, locations };
+  const continents = new Map();
+  for (const [index, record] of records) {
+    if (!record.continent) continue;
+    const { id, name } = record.continent;
+    if (!continents.has(id)) continents.set(id, { id: `continent:${id}`, name, tiles: [] });
+    continents.get(id).tiles.push(index);
+  }
+  geographyCache = { width, height, regions, continents: [...continents.values()],
+    features: features.filter(feature => feature.name), boundary, regionForTile, locations };
   geographyCacheKey = cacheKey;
   return geographyCache;
 }
@@ -1461,8 +1716,7 @@ function currentWarLabels(data = buildGeography()) {
       const regionId = data.regionForTile.get(frontier);
       const region = data.regions.find(entry => entry.id === regionId);
       if (region) {
-        const location = warRegionName(frontier, otherSide, data);
-        wars.push({ id: `war:${attacker}:${defender}`, type: "war", name: rememberWarName(`border-war:${attacker}:${defender}:${location}`, location), center: frontier, tiles: [] });
+        wars.push({ id: `war:${attacker}:${defender}`, type: "war", name: warNameForPlayers(attacker, defender, owners, data), center: frontier, tiles: [] });
       }
     }
   }
@@ -1616,6 +1870,7 @@ window.AnthroproceniaGeography = {
   getMapData: buildGeography,
   getWarLabels: currentWarLabels,
   rememberWarName,
+  warNameForPlayers,
   warRegionName,
   getOption: option => !!LensManager.isLayerEnabled(LAYER_TYPES[option]),
   setOption: setLensOption,

@@ -18,8 +18,11 @@ function slice(name) {
   return source.slice(start, end + 1);
 }
 function context(names, state) {
+  if (names.includes('drawCountryLabelLayer')) names = [...names, 'shortCountryLabels'];
   const ctx = vm.createContext({ ps: n => n, viewZoom: 1, mapPanX: 0, mapPanY: 0, viewAspectY: 1, showLabelArches: false, showRegionBoundaries: false,
     regionOutlineState: { path: null }, els: {}, syncGeographyLabelViewport() {}, syncRegionHover() {}, hideRegionHover() {},
+    showIslandNames: true, showWaterNames: true, showMountainNames: true, showWarNames: false, drawWarBorders() {},
+    settlementsForPos: () => new Map(), replayEraKey: () => '', pos: 0, routeVis: null,
     TAG: '[test]', measureArea: () => ({ x: 0, y: 0, w: 1920, h: 1080 }), ...state });
   vm.runInContext(names.map(slice).join('\n'), ctx);
   return ctx;
@@ -31,6 +34,21 @@ test('geographic viewport and country UI helpers are accessible at module scope 
   });
   assert.ifError(result.error);
   assert.equal(result.status, 0, result.stderr);
+});
+test('civ picking keeps cached map layers above the hidden HUD and restores normal depth afterward', () => {
+  const layer = { id: 'map', style: { position: 'fixed', zIndex: '100005' } };
+  const ctx = context(['applyLayerDepth'], {
+    document: { body: { children: [layer] } }, MAP_DEPTH: 300000, mapVisible: true,
+    civSwitchPicker: { active: false },
+  });
+  ctx.applyLayerDepth();
+  assert.equal(layer.style.zIndex, '-199995');
+  ctx.civSwitchPicker.active = true; ctx.applyLayerDepth();
+  assert.equal(layer.style.zIndex, '100005');
+  ctx.applyLayerDepth();
+  assert.equal(layer.style.zIndex, '100005');
+  ctx.civSwitchPicker.active = false; ctx.applyLayerDepth();
+  assert.equal(layer.style.zIndex, '-199995');
 });
 test('region hover dims only other known regions, feathers with retained paths, and respects map/checkbox/UI lifecycle', () => {
   const element = () => ({ style: {}, attrs: {}, children: [], classList: { add() {} },
@@ -69,9 +87,11 @@ test('region hover dims only other known regions, feathers with retained paths, 
   const state = ctx.regionHoverState, svg = state.svg, path = state.paths[0].attrs.d;
   assert.equal(inside(path, 10, 12), true); assert.equal(inside(path, 30, 12), false); assert.equal(inside(path, 50, 12), true);
   assert.equal(svg.style.display, 'block'); assert.equal(svg.style.transform, 'none');
+  assert.equal(svg.style.zIndex, '-199982');
   assert.equal(state.paths.length, 4);
   assert.deepEqual(state.paths.map(layer => Number(layer.attrs['stroke-width'])), [0, 12, 8, 4]);
-  assert.equal(Number(state.paths[0].attrs.opacity), 0.18);
+  assert.ok(Number(state.paths[0].attrs.opacity) >= 0.65, 'other regions receive strong dark shading, not the former faint overlay');
+  assert.ok(state.paths.slice(1).every(layer => Number(layer.attrs.opacity) > 0 && Number(layer.attrs.opacity) < Number(state.paths[0].attrs.opacity)), 'soft edge strokes remain lighter than the main shadow');
   assert.match(svg.style.cssText, /pointer-events:none/);
   ctx.syncRegionHover(event(31));
   assert.equal(geometryCalls, 1, 'moving inside the same region reuses geometry and DOM');
@@ -91,24 +111,61 @@ test('region hover dims only other known regions, feathers with retained paths, 
   geography.regions = ['a', 'b', 'c'].map((id, index) => ({ id, tiles: [index] }));
   let arrowRegion = null;
   ctx.updateRegionSelectionArrow = (data, id) => { arrowRegion = id; };
-  ctx.els.regionView = { highlight: 'b' }; ctx.showRegionBoundaries = false;
+  ctx.els.regionView = { visible: true, open: true, selected: 'b', highlight: 'c', rows: ['a', 'b', 'c'].map(id => ({ id, regionIds: [id] })) }; ctx.showRegionBoundaries = false;
   ctx.overControlPanels = () => true;
   ctx.syncRegionHover();
   assert.equal(svg.style.display, 'block', 'panel selections work without a map pointer or the borders checkbox');
   assert.equal(inside(state.paths[0].attrs.d, 30, 12), false);
   assert.equal(arrowRegion, 'b');
-  ctx.els.regionView.highlight = 'c'; ctx.fogMode = true; ctx.syncRegionHover();
+  ctx.els.regionView.rows[1].regionIds = ['b', 'c']; ctx.syncRegionHover();
+  assert.equal(inside(state.paths[0].attrs.d, 50, 12), false, 'all same-named pieces are clear when their grouped panel row is active');
+  assert.equal(inside(state.paths[0].attrs.d, 10, 12), true, 'other named groups remain shaded');
+  ctx.els.regionView.selected = null; ctx.els.regionView.highlight = 'c'; ctx.fogMode = true; ctx.syncRegionHover();
   assert.equal(svg.style.display, 'none', 'a stale panel selection cannot expose an entirely hidden region');
+  for (const id of ['river:Nile', 'mountains:Alps', 'continent:Europe']) {
+    ctx.els.regionView = { visible: true, open: true, highlight: id, rows: [{ id, regionIds: [], tileIndices: [0, 2] }] };
+    ctx.syncRegionHover();
+    assert.equal(svg.style.display, 'block', `${id} highlights without a matching region record`);
+    assert.equal(inside(state.paths[0].attrs.d, 10, 12), false, 'selected feature tiles stay clear');
+    assert.equal(inside(state.paths[0].attrs.d, 30, 12), true, 'other known tiles are dimmed');
+    assert.equal(inside(state.paths[0].attrs.d, 50, 12), false, 'hidden feature tiles are not revealed');
+    assert.equal(arrowRegion, id);
+  }
+  ctx.civSwitchPicker = { active: true, target: 1 };
+  ctx.civPickerGeography = { regionForTile: new Map([[0, null], [1, null], [2, null]]) };
+  ctx.civPickerTiles = new Map([[1, new Set([0, 2])], [2, new Set([1])]]);
+  ctx.fogMode = false; ctx.window.AnthroproceniaGeography = null;
+  ctx.syncRegionHover();
+  assert.equal(svg.style.display, 'block', 'civ picker works without geographic records, region toggles or pointer passthrough');
+  assert.equal(svg.style.zIndex, '100018', 'picker shading stays above its foreground map layers');
+  assert.equal(inside(state.paths[0].attrs.d, 10, 12), false);
+  assert.equal(inside(state.paths[0].attrs.d, 50, 12), false, 'all disconnected territory of the hovered civ stays clear');
+  assert.equal(inside(state.paths[0].attrs.d, 30, 12), true, 'other civilizations are shadowed');
+  const pickerCalls = geometryCalls; ctx.syncRegionHover();
+  assert.equal(geometryCalls, pickerCalls, 'same-civilization hover reuses geometry');
+  ctx.civSwitchPicker.target = 2; ctx.syncRegionHover();
+  assert.equal(inside(state.paths[0].attrs.d, 30, 12), false);
+  ctx.civSwitchPicker.target = null; ctx.syncRegionHover();
+  assert.equal(svg.style.display, 'none', 'unowned water clears picker shading');
+  ctx.civSwitchPicker.active = false;
+  ctx.window.AnthroproceniaGeography = { getMapData: () => geography };
   ctx.els.regionView = null; ctx.showRegionBoundaries = true; ctx.fogMode = false; ctx.overControlPanels = () => false;
-  const warnings = [];
-  ctx.console = { warn: message => warnings.push(message) };
   ctx.peopleCameraKey = () => 'fragmented fog';
-  ctx.regionHoverGeometry = () => 'M0,0L1,1Z'.repeat(1000);
+  ctx.basePos = Array.from({ length: 601 }, (_, i) => ({ x: i * 30, y: 0 }));
+  geography.regionForTile = new Map(ctx.basePos.map((_, i) => [i, i === 0 ? 'a' : 'b']));
+  ctx.neighborsByIndex = []; ctx.hexAt = () => 0;
+  ctx.window.innerWidth = 18030; ctx.measureArea = () => ({ x: 0, y: 0, w: 18030, h: 24 });
+  ctx.regionHoverGeometry = geometry;
   ctx.syncRegionHover(event(10)); ctx.syncRegionHover(event(11));
-  assert.equal(svg.style.display, 'none', 'pathological contours are explicitly omitted rather than truncated');
-  assert.ok(state.paths.every(layer => layer.attrs.d === ''));
-  assert.equal(warnings.length, 1);
-  assert.match(warnings[0], /exceeds the native geometry budget/);
+  assert.equal(svg.style.display, 'block', 'large fragmented contours retain their shading');
+  const fills = state.paths.filter(layer => layer.attrs.fill !== 'none' && layer.attrs.d);
+  assert.ok(fills.length > 1, 'overbudget geometry is batched, never truncated');
+  for (let i = 1; i < 601; i++) assert.ok(fills.some(layer => inside(layer.attrs.d, i * 30 + 10, 12)), `tile ${i} is shaded`);
+  assert.ok(fills.every(layer => !inside(layer.attrs.d, 10, 12)), 'selected tiles stay clear across batches');
+  for (const layer of state.paths) {
+    assert.ok(layer.attrs.d.length <= 65536);
+    assert.ok((layer.attrs.d.match(/[MLZ]/g) || []).length <= 2048);
+  }
 });
 test('panel region arrow blinks with the shared selection style, points offscreen and hides when any known fragment enters view', () => {
   const nodes = new Map(), element = () => ({ style: {}, children: [], attrs: {}, classList: { add() {} },
@@ -123,20 +180,27 @@ test('panel region arrow blinks with the shared selection style, points offscree
     arrowControlRects: () => blocked ? [{ x: 0, y: 0, w: 200, h: 100 }] : [],
     pointInRect: (x, y, rect) => x >= rect.x && x <= rect.x + rect.w && y >= rect.y && y <= rect.y + rect.h,
   });
-  const geography = { regions: [{ id: 0, tiles: [0, 1] }] };
-  ctx.updateRegionSelectionArrow(geography, 0, null, area);
+  const geography = { regions: [{ id: 0, tiles: [1] }, { id: 1, tiles: [0] }] };
+  const update = vis => ctx.updateRegionSelectionArrow(geography, 0, vis, area, [0, 1]);
+  update(null);
   const arrow = ctx.regionHoverState.arrow, el = arrow.el;
   assert.equal(el.style.display, 'block'); assert.match(el.style.transform, /rotate\(0deg\)/);
   assert.ok(parseFloat(el.style.left) > 150 && parseFloat(el.style.left) < 200);
   assert.match(head.children[0].textContent, /anthro-selection-pulse.*infinite/);
-  pan = -1000; ctx.updateRegionSelectionArrow(geography, 0, null, area);
+  pan = -1000; update(null);
   assert.equal(el.style.display, 'none', 'one visible island suppresses an arrow even if another is offscreen');
-  ctx.updateRegionSelectionArrow(geography, 0, [0, 2], area);
+  update([0, 2]);
   assert.equal(el.style.display, 'block', 'a hidden fragment does not count as a visible destination');
-  ctx.updateRegionSelectionArrow(geography, 0, [0, 0], area); assert.equal(el.style.display, 'none');
-  blocked = true; pan = 0; ctx.updateRegionSelectionArrow(geography, 0, null, area); assert.equal(el.style.display, 'none');
-  blocked = false; ctx.layoutCols = 110; ctx.updateRegionSelectionArrow(geography, 0, null, area);
+  update([0, 0]); assert.equal(el.style.display, 'none');
+  blocked = true; pan = 0; update(null); assert.equal(el.style.display, 'none');
+  blocked = false; ctx.layoutCols = 110; update(null);
   assert.match(el.style.transform, /rotate\(180deg\)/, 'wrapped direction points toward the nearer map edge');
+  ctx.layoutCols = 1000;
+  ctx.updateRegionSelectionArrow({ regions: [] }, 'river:Nile', null, area, [], new Set([0]));
+  assert.equal(el.style.display, 'block', 'feature-only selections get the same offscreen arrow');
+  pan = -1000;
+  ctx.updateRegionSelectionArrow({ regions: [] }, 'river:Nile', null, area, [], new Set([0]));
+  assert.equal(el.style.display, 'none', 'feature arrows disappear when their tiles enter view');
   assert.equal(body.children.length, 1); assert.equal(head.children.length, 1); assert.equal(ctx.tileArrows.length, 1);
 });
 test('projected region contours clip extreme camera coordinates before native submission', () => {
@@ -152,6 +216,79 @@ test('projected region contours clip extreme camera coordinates before native su
   assert.match(paths[0], /Z$/);
 });
 const point = (index, x, y = 0) => ({ x, y, item: { kind: 'building', index, typeIndex: 0 } });
+test('fog reconstruction rejects a cached map of the wrong size and keeps unrecorded tiles hidden', () => {
+  const ctx = context(['unpackVisI', 'unpackVisS', 'walkFrames', 'replayState', 'reconstructVisibility', 'visForPos'], {
+    reconstructionCaches: new Map(), basePos: [], manifest: {}, frames: [[0, 0, 1]],
+    readTurnCached: () => ({ vis: [2, 6, 10] }), curVis: null, curVisPos: -2,
+  });
+  assert.equal(ctx.visForPos().length, 0);
+  ctx.manifest = { w: 2, h: 1 };
+  assert.deepEqual([...ctx.visForPos()], [2, 2]);
+  ctx.basePos = [{}, {}, {}, {}];
+  const vis = ctx.visForPos();
+  assert.deepEqual([...vis], [2, 2, 2, 0]);
+  assert.equal(ctx.visForPos(), vis, 'unchanged dimensions reuse the reconstructed visibility');
+  ctx.frames = []; ctx.curVisPos = -2;
+  assert.deepEqual([...ctx.visForPos()], [0, 0, 0, 0]);
+});
+test('opening Map View defaults fog on while only active multiplayer locks its checkbox', () => {
+  const defaults = source.slice(source.indexOf('const DEFAULT_MAP_OPTIONS ='), source.indexOf('let fogMode ='));
+  for (const [multiplayer, gameOver] of [[false, false], [true, false], [true, true]]) {
+    const attrs = {};
+    const ctx = context(['setFogFromContext'], {
+      fogLocked: false, fogMode: false, suppressFog: false,
+      isMultiplayerGame: () => multiplayer, isLocalGameOver: () => gameOver,
+      els: { fogToggleCb: { setAttribute(name, value) { attrs[name] = value; } } },
+    });
+    vm.runInContext(defaults, ctx);
+    ctx.setFogFromContext();
+    assert.equal(ctx.fogMode, true);
+    assert.equal(attrs.selected, 'true');
+    assert.equal(attrs.disabled, multiplayer && !gameOver ? 'true' : 'false');
+    assert.equal(ctx.suppressFog, false);
+  }
+});
+test('fog masks retained overhangs and missing visibility before a deferred toggle redraw, reusing unchanged geometry', () => {
+  const paints = [], callbacks = [], paths = [], originalCtx = {};
+  const canvas = {
+    clearRect() { paths.length = 0; }, beginPath() {}, moveTo(x, y) { paths.push([[x, y]]); },
+    lineTo(x, y) { paths.at(-1).push([x, y]); }, closePath() {},
+    fill() { paints.push(paths.map(path => path.map(point => [...point]))); },
+  };
+  const ctx = context(['hexSubpath', 'drawFogLayer', 'setFogVisibility'], {
+    fogLayer: { el: { style: {} }, ctx: canvas, paintKey: '', vis: null, base: null },
+    mapCtx: originalCtx, mapVisible: true, miniMapVisible: false,
+    mapPxW: 40, mapPxH: 12, hexW: 10, hexH: 12, colShift: 0,
+    basePos: [0, 10, 20, 30].map(x => ({ x, y: 0 })), fogMode: false,
+    suppressFog: false, fogLocked: false, FOG_HIDDEN: '#04060a', visForPos: () => [2, 1, 0],
+    terrainMarkerDom: { el: { style: {} } }, iconDom: { el: { style: {} } },
+    fogMarkersStale: false, markBgDirty() {}, cancelPendingMapDraws() {},
+    placeIcons() {}, syncTownscapes() {}, nextPaint: callback => callbacks.push(callback), redraw() {},
+    err: message => assert.fail(message),
+  });
+  ctx.setFogVisibility(true);
+  assert.equal(callbacks.length, 1);
+  assert.equal(paints.length, 1, 'unknown content is covered before yielding to animation frames');
+  assert.deepEqual(paints[0].map(path => path[0]), [[25, 0], [35, 0]], 'both recorded-hidden and missing tiles are masked; revealed static content remains visible');
+  assert.equal(ctx.mapCtx, originalCtx);
+  assert.equal(ctx.terrainMarkerDom.el.style.display, 'none');
+  assert.equal(ctx.iconDom.el.style.display, 'none');
+  assert.equal(ctx.fogMarkersStale, true);
+  ctx.drawFogLayer(ctx.fogLayer.vis);
+  assert.equal(paints.length, 1, 'unchanged fog does not consume additional native canvas paint resources');
+  ctx.drawFogLayer([1, 2, 0]);
+  assert.equal(paints.length, 1, 'new frame arrays and line-of-sight changes reuse the same hidden-tile mask');
+  ctx.colShift++;
+  ctx.drawFogLayer(ctx.fogLayer.vis);
+  assert.equal(paints.length, 2, 'wrapped geometry is repainted');
+  ctx.fogLayer.paintKey = '';
+  ctx.drawFogLayer(ctx.fogLayer.vis);
+  assert.equal(paints.length, 3, 'resized backing stores are repainted');
+  ctx.setFogVisibility(false);
+  assert.equal(ctx.fogLayer.el.style.display, 'none');
+  ctx.fogLocked = true; ctx.setFogVisibility(true);
+  assert.equal(ctx.fogMode, false);
+});
 test('wrapping commits fog-filtered terrain before yielding and coalesces only the later marker redraw', () => {
   const callbacks = [], paints = [], fog = [0, 2, 1], frame = new Map();
   const ctx = context(['applyColumnShift'], {
@@ -163,10 +300,11 @@ test('wrapping commits fog-filtered terrain before yielding and coalesces only t
     columnShiftRedrawPending: false, columnShiftCanvasStale: false, columnShiftMarkersStale: false,
     fogMode: true, visForPos: () => fog, ensureBackground: () => paints.push('terrain'),
     drawStateLayer(current, visibility) { assert.equal(current, frame); assert.equal(visibility, fog); paints.push('fogged-state'); },
+    drawFogLayer(visibility) { assert.equal(visibility, fog); paints.push('fog-mask'); },
     drawMap: () => paints.push('markers'), requestAnimationFrame: fn => callbacks.push(fn), err: message => assert.fail(message),
   });
   ctx.applyColumnShift(1);
-  assert.deepEqual(paints, ['terrain', 'fogged-state']);
+  assert.deepEqual(paints, ['terrain', 'fogged-state', 'fog-mask']);
   assert.equal(ctx.bgLayer.el.style.visibility, '');
   assert.equal(ctx.stateLayer.el.style.visibility, '');
   assert.equal(ctx.columnShiftCanvasStale, false);
@@ -232,11 +370,53 @@ test('arched text uses bounded HTML runs, not unsupported SVG paths or unbounded
     assert.ok(rotation(row.children.at(-1)) > 0);
     assert.ok(row.style.cssText.includes('position:relative'));
     for (const run of row.children) {
-      assert.ok(run.style.cssText.includes('position:absolute'), 'native layout does not rely on flex intrinsic sizing for transformed text');
-      assert.ok(Number(run.style.cssText.match(/width:([-\d.]+)px/)[1]) > 0);
+      assert.ok(run.style.cssText.includes('display:block;flex:0 0 auto'), 'supported flex children determine horizontal spacing');
+      assert.doesNotMatch(run.style.cssText, /inline-block|e-\d+/);
+      assert.doesNotMatch(run.style.cssText, /(?:position:absolute|(?:^|;)left:|(?:^|;)width:)/);
       assert.ok(run.style.cssText.includes('font-size:12px'), 'each painted run has an explicit font size');
     }
   }
+});
+
+test('arched text curves single Latin words while preserving whitespace, combining marks and joined scripts', () => {
+  const element = () => ({ style: {}, children: [], appendChild(child) { this.children.push(child); } });
+  const ctx = context(['setArchedLines'], { document: { createElement: element } });
+  for (const line of ['AVATAR  Western Illinois', 'Wiiiiiiide WWWWW', '大漢帝國', 'Αθηναϊκή Δημοκρατία', 'الجمهورية العربية', 'AnUnbrokenCountryName', 'Re\u0301publique']) {
+    const label = element();
+    ctx.setArchedLines(label, [line], 300, 30, 12);
+    const runs = label.children[0].children;
+    assert.equal(runs.map(run => run.textContent).join(''), line);
+    assert.ok(runs.length <= 8);
+    if (/^[\x20-\u024f\u0300-\u036f]+$/.test(line)) {
+      assert.ok(new Set(runs.map(run => run.style.cssText.match(/rotate\(([^)]+)\)/)[1])).size >= 3, 'a single word has a genuine curve, not one diagonal transform');
+      assert.ok(runs.every(run => !/^[\u0300-\u036f]/.test(run.textContent)), 'combining marks stay with their base');
+    } else {
+      assert.ok(runs.every((run, i) => i === runs.length - 1 || /\s$/.test(run.textContent)), 'joined words remain shaped together');
+      if (!/\s/.test(line)) assert.equal(runs.length, 1);
+    }
+  }
+});
+
+test('arches follow measured shaped-run widths with a visible curve and read layout before writing transforms', () => {
+  const width = text => Array.from(text).reduce((sum, ch) => sum + (ch === 'i' ? 3 : ch === 'W' ? 20 : ch === ' ' ? 4 : 6), 0), runs = [];
+  const element = tag => {
+    const value = { style: {}, children: [], appendChild(child) { this.children.push(child); } };
+    if (tag === 'span') {
+      runs.push(value);
+      Object.defineProperty(value, 'offsetWidth', { get() {
+        assert.ok(runs.every(run => !run.style.cssText.includes('transform:')), 'all width reads precede transform writes');
+        return width(value.textContent);
+      } });
+    }
+    return value;
+  };
+  const ctx = context(['setArchedLines'], { document: { createElement: element } }), label = element('div');
+  ctx.setArchedLines(label, ['iiii WWWW tail', 'iiii WWWW tail'], 300, 40, 12);
+  const first = label.children[0].children[0];
+  const angle = Number(first.style.cssText.match(/rotate\(([-\d.]+)deg\)/)[1]);
+  const span = width('iiii WWWW tail'), amplitude = 12 * 0.65, t = width(first.textContent) / 2 / span;
+  assert.ok(Math.abs(angle - Math.atan2(-4 * amplitude * (1 - 2 * t), span) * 180 / Math.PI) <= 0.00051);
+  assert.ok(parseFloat(label.children[1].style.marginTop) >= 12, 'multiple arched lines reserve space for rotated run bounds');
 });
 
 test('region, subcontinent, island and water names all retain readable arches across zoom/aspect changes and toggles', () => {
@@ -357,13 +537,38 @@ test('geographic roots and arched text stay in viewport pixels through extreme z
       ctx.mapVisible = true;
     }
 });
+test('roads and rail branches never enter ocean, coastal-water or lake tiles, while river crossings remain', () => {
+  const element = () => ({ style: {}, attrs: {}, setAttribute(key, value) { this.attrs[key] = value; } });
+  const paths = Object.fromEntries(['road', 'rail', 'ties', 'roadDim', 'railDim', 'tiesDim', 'moveUnder', 'move', 'moveHead'].map(key => [key, element()]));
+  const drawn = [];
+  let level = 1;
+  const ctx = context(['drawRouteLayer', 'polylinePath'], {
+    routeDom: { el: element() }, routePaths: paths, ensureRoutePaths() {}, syncRouteWidths() {}, syncRouteStatus() {},
+    terrain: [5, 5, 0, 5], basePos: [0, 10, 20, 30].map(x => ({ x, y: 0 })), neighborsByIndex: [[1], [0, 2], [1, 3], [2]],
+    frames: [0], pos: 0, mapPxW: 40, mapPxH: 12, hexW: 10, hexH: 12, colShift: 0,
+    showUnits: false, showPreviousMovement: false, showNaturalFeatures: false, mapVisible: true, miniMapVisible: false,
+    riverEdges: new Set(), routeKey: '', roadLines: new Map(), readUnitsTurn: () => [],
+    readRoutesTurn: () => new Map([0, 1, 2, 3].map(index => [index, level])),
+    routeEdgePoints: (a, b) => { drawn.push([a, b]); return [{ x: a * 10, y: 0 }, { x: b * 10, y: 0 }]; },
+  });
+  for (level of [1, 2]) for (const water of [0, 1, 9]) for (const vis of [null, [1, 2, 2, 2]]) {
+    ctx.terrain[2] = water; ctx.routeKey = ''; drawn.length = 0;
+    ctx.drawRouteLayer(vis);
+    assert.deepEqual(drawn, [[0, 1]], 'both branches touching the water tile must be omitted');
+    assert.deepEqual([...ctx.roadLines.keys()], [0, 1], 'no hidden water road remains in collision or connector data');
+  }
+  ctx.terrain[2] = 10; ctx.routeKey = ''; drawn.length = 0;
+  ctx.drawRouteLayer(null);
+  assert.deepEqual(drawn, [[0, 1], [1, 2], [2, 3]]);
+});
+
 test('previous movement visibility changes only motion paths, retaining road geometry and attack paths', () => {
   const element = () => ({ style: {}, attrs: {}, setAttribute(k, v) { this.attrs[k] = v; } });
   const paths = Object.fromEntries(['road', 'rail', 'ties', 'roadDim', 'railDim', 'tiesDim', 'moveUnder', 'move', 'moveHead', 'atk'].map(key => [key, element()]));
   paths.atk.attrs.d = 'attack';
   const ctx = context(['drawRouteLayer', 'polylinePath'], {
     routeDom: { el: element() }, routePaths: paths, ensureRoutePaths() {}, syncRouteWidths() {}, syncRouteStatus() {},
-    basePos: [{ x: 0, y: 0 }, { x: 10, y: 0 }], neighborsByIndex: [[1], [0]], frames: [0], pos: 0,
+    terrain: [5, 5], basePos: [{ x: 0, y: 0 }, { x: 10, y: 0 }], neighborsByIndex: [[1], [0]], frames: [0], pos: 0,
     mapPxW: 100, mapPxH: 100, hexW: 10, hexH: 12, colShift: 0, showUnits: true, showPreviousMovement: true,
     showNaturalFeatures: true, mapVisible: true, miniMapVisible: false, riverEdges: new Set(), routeKey: '', roadLines: new Map(),
     readRoutesTurn: () => new Map([[0, 1], [1, 1]]), readUnitsTurn: () => [[1, 0, 0, 0, 0]],
@@ -375,6 +580,11 @@ test('previous movement visibility changes only motion paths, retaining road geo
   assert.equal(paths.move.attrs.d, ''); assert.equal(paths.moveHead.attrs.d, '');
   assert.equal(paths.road.attrs.d, road); assert.equal(paths.atk.attrs.d, 'attack');
   ctx.showPreviousMovement = true; ctx.drawRouteLayer(null); assert.ok(paths.move.attrs.d);
+  ctx.drawRouteLayer([2]);
+  assert.equal(paths.road.attrs.d, '', 'roads cannot extend into a tile missing from the visibility record');
+  assert.equal(paths.move.attrs.d, '', 'movement cannot expose a missing visibility entry');
+  ctx.drawRouteLayer([2, 2]);
+  assert.equal(paths.road.attrs.d, road, 'fully visible road geometry is preserved');
 });
 
 test('region outlines are independent of continent outlines and never reveal hidden region tiles', () => {
@@ -408,7 +618,7 @@ test('country land connectivity follows ownership and wrap, not fog, and updates
   });
   const visible = [2, 0, 2, 2, 2, 2, 2, 2];
   const groups = () => ctx.countryLabelComponents(frame, ctx.countryTerritories(frame, visible).get(0), 0);
-  const indices = components => Array.from(components, tiles => Array.from(tiles, tile => tile.index).sort((a, b) => a - b));
+  const indices = components => Array.from(components, group => Array.from(group.tiles, tile => tile.index).sort((a, b) => a - b));
   assert.deepEqual(indices(groups()), [[0, 2, 7], [3, 4]], 'hidden land connects, wrapping land connects, water and foreign land do not');
   visible[0] = visible[2] = visible[7] = 0;
   assert.deepEqual(indices(groups()), [[3, 4]], 'a fully hidden capital component contributes no label tiles');
@@ -435,7 +645,7 @@ test('country labels use reusable whole-line text through zoom-out without layin
     document: { createElement: () => { created++; return element(); } },
     showCountryLabels: true, showCivIcons: false, showBorders: false, frames: [0], hexW: 20,
     countryTerritories: () => territories, majorCountryNames: () => names,
-    countryLabelComponents: (frame, tiles) => [tiles],
+    countryLabelComponents: (frame, tiles) => [{ tiles, capital: false }],
     identityForPos: () => new Map([...names.keys()].map(owner => [owner, ['', '', '', '', '', 'ROME']])),
     ownerMeta: () => ({ kind: 'major' }), drawCivBorderLabels() {}, placeBorderLabels() {},
     countryLabelGeometry: tiles => ({ ...tiles[0], angle: 12, span: 300 }),
@@ -469,7 +679,7 @@ test('country labels use reusable whole-line text through zoom-out without layin
   assert.equal(iconScans, names.size, 'enabled icons still use territory-constrained placement');
   assert.ok(ctx.countryLabelSlots.every(slot => slot.icon.style.opacity === '1' && slot.icon.style.width === '20px'));
   assert.ok(ctx.countryLabelSlots.every(slot => slot.el.style.opacity === '0'), 'icons do not force text labels on');
-  ctx.countryLabelComponents = (frame, tiles, owner) => owner === 0 ? [tiles, [{ x: 10000, y: 0, index: 1000 }]] : [tiles];
+  ctx.countryLabelComponents = (frame, tiles, owner) => owner === 0 ? [{ tiles, capital: false }, { tiles: [{ x: 10000, y: 0, index: 1000 }], capital: false }] : [{ tiles, capital: false }];
   ctx.showCountryLabels = true; ctx.drawCountryLabelLayer(new Map(), null);
   const matching = ctx.countryLabelSlots.filter(slot => slot.op && slot.el.children.map(row => row.textContent).join(' ') === names.get(0));
   assert.equal(matching.length, 2, 'detached territory repeats the exact main country name through the same text pipeline');
@@ -477,9 +687,21 @@ test('country labels use reusable whole-line text through zoom-out without layin
   assert.equal(matching.filter(slot => slot.icon.style.opacity === '1').length, 1, 'extra country labels do not duplicate civilization emblems');
   ctx.showCountryLabels = false; ctx.drawCountryLabelLayer(new Map(), null);
   assert.ok(ctx.countryLabelSlots.every(slot => slot.el.style.opacity === '0'));
-  ctx.countryLabelComponents = (frame, tiles) => [tiles];
+  ctx.countryLabelComponents = (frame, tiles) => [{ tiles, capital: false }];
   ctx.showCountryLabels = true; ctx.drawCountryLabelLayer(new Map(), null);
   assert.equal(ctx.countryLabelSlots.filter(slot => slot.op).length, names.size, 'reconnection parks the spare label');
+  const anchors = [];
+  ctx.countryIconTile = tiles => { anchors.push(tiles[0].index); return { ...tiles[0], maxIconSize: 20 }; };
+  ctx.showCountryLabels = false;
+  ctx.countryLabelComponents = (frame, tiles, owner) => owner === 0
+    ? [{ tiles: [{ x: 10000, y: 0, index: 1000 }], capital: false }, { tiles, capital: true }]
+    : [{ tiles, capital: false }];
+  ctx.drawCountryLabelLayer(new Map([[0, 4]]), null);
+  assert.ok(anchors.includes(0) && !anchors.includes(1000), 'the icon remains on capital-connected land even if a detached label is listed first');
+  anchors.length = 0;
+  ctx.countryLabelComponents = (frame, tiles) => [{ tiles, capital: false }];
+  ctx.drawCountryLabelLayer(new Map([[1000, 4]]), null);
+  assert.ok(!anchors.includes(0), 'a wholly hidden capital component never transfers its icon to visible detached land');
 });
 
 test('region-name toggles restore parent opacity and cached text without reopening Map View, retaining fog filtering', () => {
@@ -563,6 +785,161 @@ test('geographic toggles display named island and water regions, retain land nam
   assert.deepEqual(text('regions'), ['Iberia', 'Gaul']);
   ctx.showGeographicLabels = true; ctx.drawGeographyLayers(frame, vis);
   assert.deepEqual(text('features'), ['Britain', 'Atlantic Ocean']);
+  ctx.showIslandNames = false; ctx.drawGeographyLayers(frame, vis);
+  assert.deepEqual(text('features'), ['Atlantic Ocean']);
+  ctx.showIslandNames = true; ctx.showWaterNames = false; ctx.drawGeographyLayers(frame, vis);
+  assert.deepEqual(text('features'), ['Britain']);
+  geography.features.push(region('mountains:5', 'Alps', 5, { type: 'mountains' }));
+  ctx.geographyLabelCache = {}; ctx.drawGeographyLayers(frame, vis);
+  assert.deepEqual(text('features'), ['Britain', 'Alps']);
+  ctx.showMountainNames = false; ctx.drawGeographyLayers(frame, vis);
+  assert.deepEqual(text('features'), ['Britain']);
+  assert.deepEqual(text('regions'), ['Iberia', 'Gaul'], 'independent geographic filters never suppress land regions');
+});
+
+test('war fronts draw shared hostile borders once, update for peace, and respect fog, seams and the combined toggle', () => {
+  const element = () => ({ attrs: {}, style: {}, writes: 0, children: [],
+    setAttribute(key, value) { this.attrs[key] = value; if (key === 'd') this.writes++; },
+    appendChild(child) { this.children.push(child); } });
+  let relations = new Map([['0,1', 4], ['1,2', 3]]);
+  const frame = new Map([[0, 0], [1, 8], [2, 16], [3, 8], [4, 8]]);
+  const ctx = context(['drawWarBorders', 'meanderingWarPath', 'warFrontCenters', 'polyStar', 'polyPts', 'hexVert', 'connectedBoundaryPaths', 'hashString', 'isWaterTile'], {
+    showWarNames: true, showBorders: false, showTerritory: false, mapVisible: true, miniMapVisible: false,
+    warBorderState: { group: null }, regionBorderDom: { el: element() }, terrain: [5, 5, 5, 5, 5, 5],
+    relationshipForPos: () => relations, document: { createElementNS: element },
+    basePos: [0, 20, 40, 60, 1000, -20].map(x => ({ x, y: 0 })),
+    neighborsByIndex: [[1, 5, 4], [2, 0], [3, 1], [-1, 2], [-1, -1, 0], [0]],
+    hexW: 20, hexH: 24, colShift: 0, mapPxW: 1020, mapPxH: 24,
+    EDGE_VERTS: [[1, 2], [4, 5], [0, 1], [5, 0], [2, 3], [3, 4]],
+    mapToScreen: (x, y) => ({ x, y }),
+  });
+  ctx.drawWarBorders(frame, null);
+  const state = ctx.warBorderState, path = state.strokes.at(-1).path, geometry = state.geometry, stars = path.attrs.d;
+  assert.ok(geometry.startsWith('M20,6C') && geometry.endsWith('20,18'), 'only the one shared hostile land edge becomes a front');
+  assert.equal((geometry.match(/C/g) || []).length, 3, 'the front meanders through smooth cubic curves, not straight hex segments');
+  const xs = geometry.match(/-?\d+(?:\.\d+)?(?:e[+-]?\d+)?/gi).map(Number).filter((value, i) => i % 2 === 0);
+  assert.ok(Math.min(...xs) < 20 && Math.max(...xs) > 20);
+  assert.ok(xs.every(x => Math.abs(x - 20) < 3), 'meandering stays near the shared territorial edge');
+  assert.ok(state.strokes.every(stroke => (stroke.path.attrs.d.match(/L/g) || []).length === 23), 'each gradient layer draws a 12-point star rather than a round dash');
+  assert.deepEqual(Array.from(state.strokes, stroke => stroke.width), [24, 20, 16, 10, 7, 5]);
+  assert.equal(state.gradients.length, 2);
+  assert.equal(state.gradients[0].children[1].attrs['stop-color'], '#ffbb62');
+  assert.equal(state.gradients[1].children[1].attrs['stop-color'], '#ff7968');
+  assert.ok(state.strokes.every(stroke => stroke.path.attrs.fill.startsWith('url(#anthroprocenia-war-front-') && stroke.path.attrs.stroke === 'none'));
+  assert.equal(ctx.regionBorderDom.el.style.opacity, '1', 'fronts do not depend on ordinary borders or territory fills');
+  const writes = path.writes;
+  ctx.drawWarBorders(frame, null);
+  assert.equal(path.writes, writes, 'unchanged camera reuses retained star geometry');
+  ctx.viewZoom = 2; ctx.drawWarBorders(frame, null);
+  assert.equal(state.geometry, geometry, 'camera zoom reuses boundary curves');
+  assert.notEqual(path.attrs.d, stars, 'star size and spacing remain screen-sized while zooming');
+  ctx.viewZoom = 1; ctx.drawWarBorders(frame, null); assert.equal(path.attrs.d, stars);
+  ctx.drawWarBorders(frame, [2, 0, 2, 2, 2, 2]); assert.equal(path.attrs.d, '');
+  ctx.drawWarBorders(frame, [0, 2, 2, 2, 2, 2]); assert.equal(path.attrs.d, '');
+  ctx.drawWarBorders(frame, [2, 1, 2, 2, 2, 2]); assert.equal(path.attrs.d, stars);
+  for (const water of [0, 1, 9, 10]) for (const index of [0, 1]) {
+    ctx.terrain = [5, 5, 5, 5, 5, 5]; ctx.terrain[index] = water;
+    ctx.drawWarBorders(frame, null);
+    assert.ok(state.strokes.every(stroke => stroke.path.attrs.d === ''), 'neither gradient covers ocean, coast, lake or navigable-river borders');
+  }
+  ctx.terrain = [5, 5, 5, 5, 5, 5];
+  ctx.drawWarBorders(frame, null); assert.equal(path.attrs.d, stars);
+  relations = new Map([['0,1', 0]]);
+  ctx.drawWarBorders(frame, null); assert.equal(path.attrs.d, '', 'peace updates even when territory is unchanged');
+  relations = new Map([['0,1', 4]]);
+  ctx.drawWarBorders(new Map([[0, 0], [1, 0]]), null); assert.equal(path.attrs.d, '', 'same-owner borders stay empty');
+  ctx.drawWarBorders(frame, null); assert.ok(path.attrs.d);
+  ctx.showWarNames = false; ctx.drawWarBorders(frame, null); assert.equal(state.group.style.display, 'none');
+  ctx.showWarNames = true; ctx.drawWarBorders(frame, null); assert.equal(state.group.style.display, 'block');
+  ctx.mapVisible = false; ctx.drawWarBorders(frame, null); assert.equal(state.group.style.display, 'none');
+});
+
+test('war stars have twelve readable spikes and evenly spaced, viewport-filtered centers without joining separate fronts', () => {
+  const ctx = context(['warFrontCenters', 'polyStar', 'polyPts'], {});
+  const curve = 'M0,0C32,0 64,0 96,0M0,50C32,50 64,50 96,50';
+  const centers = ctx.warFrontCenters(curve, 32);
+  assert.deepEqual(Array.from(centers, point => Array.from(point, value => Math.round(value * 1e6) / 1e6)), [[0, 0], [32, 0], [64, 0], [96, 0], [0, 50], [32, 50], [64, 50], [96, 50]]);
+  assert.deepEqual(Array.from(ctx.warFrontCenters(curve, 32, ([x]) => x >= 64), point => Array.from(point)), [[64, 0], [96, 0], [64, 50], [96, 50]]);
+  assert.equal(ctx.warFrontCenters('M0,0C10000,0 20000,0 30000,0', 1).length, 1024, 'front detail has a hard visible-marker budget');
+  assert.equal(ctx.warFrontCenters('', 32).length, 0);
+  const star = ctx.polyStar(0, 0, 12);
+  const vertices = star.match(/[ML][^MLZ]+/g).map(point => point.slice(1).split(',').map(Number));
+  assert.equal(vertices.length, 24);
+  for (let index = 0; index < vertices.length; index++) {
+    const [x, y] = vertices[index];
+    assert.ok(Math.abs(Math.hypot(x, y) - (index % 2 ? 12 * 0.58 : 12)) < 0.1);
+  }
+});
+
+test('war names toggle independently of other geographic names and refresh across turns without territory changes', () => {
+  const element = () => ({ style: {}, attrs: {}, setAttribute(key, value) { this.attrs[key] = value; } });
+  const geography = { regions: [], features: [] }, frame = new Map(), vis = [2], placed = [];
+  const slot = { visible: true, el: element() };
+  const ctx = context(['drawGeographyLayers'], {
+    showWarNames: true, showGeographicLabels: false, showRiverNames: false, showRegionLabels: false, showRegionBorders: false,
+    mapVisible: true, miniMapVisible: false, regionLabelDom: { el: element() }, geographicLabelDom: { el: element() },
+    regionBorderDom: { el: element() }, regionBorderPath: element(), regionBorderKey: '',
+    geographyLabelSlots: { regions: [], features: [slot], rivers: [] }, geographyLabelCache: {},
+    window: { AnthroproceniaGeography: { getMapData: () => geography } }, basePos: [{}],
+    hexW: 20, hexH: 24, colShift: 0, labelTier: () => 1, townLabelScale: () => 1, makeLabelBoxIndex: () => ({}),
+    historicalWarLabels: () => [{ type: 'war', name: `War ${ctx.pos}` }],
+    placeGeographyLabels: (kind, labels) => placed.push([kind, Array.from(labels, label => label.name)]),
+    drawRegionBoundaries() {}, placeBorderLabels() {}, console: { warn() {} },
+  });
+  ctx.drawGeographyLayers(frame, vis);
+  assert.deepEqual(placed.at(-1), ['features', ['War 0']]);
+  assert.equal(ctx.geographicLabelDom.el.style.opacity, '1');
+  assert.equal(ctx.regionBorderDom.el.style.opacity, '1');
+  ctx.pos = 1; ctx.drawGeographyLayers(frame, vis);
+  assert.deepEqual(placed.at(-1), ['features', ['War 1']]);
+  ctx.showWarNames = false; ctx.drawGeographyLayers(frame, vis);
+  assert.equal(slot.visible, false);
+  assert.equal(ctx.geographicLabelDom.el.style.opacity, '0');
+  assert.equal(ctx.regionBorderDom.el.style.opacity, '0');
+});
+
+test('minimap suppresses war overlays without losing the full map checkbox setting', () => {
+  const save = slice('rememberMiniMapOptions');
+  const fields = save.match(/miniMapSavedOptions = \{([\s\S]*?)\};/)[1].match(/\bshow\w+|\bfogMode\b/g);
+  const ctx = context(['rememberMiniMapOptions', 'restoreMiniMapOptions'], {
+    ...Object.fromEntries(fields.map(field => [field, true])), miniMapSavedOptions: null,
+  });
+  ctx.rememberMiniMapOptions(); assert.equal(ctx.showWarNames, false);
+  ctx.restoreMiniMapOptions(); assert.equal(ctx.showWarNames, true);
+  ctx.showWarNames = false;
+  ctx.rememberMiniMapOptions(); ctx.restoreMiniMapOptions(); assert.equal(ctx.showWarNames, false);
+});
+
+test('the native map shortcut still opens Map View without the removed HUD button and respects UI focus', () => {
+  const opened = [];
+  let worldFocused = true;
+  const ctx = context(['onRawMapInput', 'openMapScreenFromShortcut'], {
+    dispatchedCameraInput: null, gamepadControlsActive: false, mapVisible: false,
+    InputActionStatuses: { FINISH: 2 }, FocusManager: { get: () => ({ isWorldFocused: () => worldFocused }) },
+    gameOverlayActive: () => false, settlementExpansionActive: () => false,
+    mapHudGameReady: () => true, lastMapShortcutActivation: 0,
+    Date: { now: () => 1000 }, requestShow: value => opened.push(value), err: message => assert.fail(message),
+  });
+  ctx.onRawMapInput('shell-action-3', 2, 0, 0);
+  assert.deepEqual(opened, [true]);
+  worldFocused = false;
+  ctx.onRawMapInput('shell-action-3', 2, 0, 0);
+  assert.deepEqual(opened, [true], 'a native menu cannot be bypassed');
+});
+
+test('capital stars are filled for current capitals, hollow for former originals, and occur only before the first line', () => {
+  const element = () => ({ attrs: {}, style: {}, children: [], set textContent(value) { this.children = []; this.text = value; },
+    setAttribute(key, value) { this.attrs[key] = value; }, appendChild(child) { this.children.push(child); } });
+  const ctx = context(['setPlainLines'], { document: { createElement: element, createElementNS: element } }), root = element();
+  ctx.setPlainLines(root, ['New', 'Cahokia'], 2);
+  assert.equal(root.children[0].children[0].attrs['aria-label'], 'Capital city');
+  assert.equal(root.children[0].children[0].children[0].attrs.fill, 'currentColor');
+  assert.equal(root.children[1].children.length, 0);
+  ctx.setPlainLines(root, ['New', 'Cahokia'], 1);
+  assert.equal(root.children[0].children[0].attrs['aria-label'], 'Original capital');
+  assert.equal(root.children[0].children[0].children[0].attrs.fill, 'none');
+  ctx.setPlainLines(root, ['New', 'Cahokia'], 0);
+  assert.ok(root.children.every(row => !row.children.length));
 });
 
 test('long replay scans keep parsed turn records bounded and reload evicted history', () => {

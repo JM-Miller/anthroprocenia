@@ -28,10 +28,61 @@ const makePerson = id => ({ id, node: 0, x: 0, y: 0, target: 2, route: [0, 1, 2]
 function makeGroup(sub, state = '', count = 32) {
   const people = Array.from({ length: count }, (_, id) => makePerson(id));
   return { people, byId: new Map(people.map(p => [p.id, p])), unitSub: sub, unitState: state,
-    military: ['cavalry', 'infantry', 'ranged', 'siege'].includes(sub), streetNodes: [2, 1] };
+    military: ['cavalry', 'infantry', 'ranged', 'siege'].includes(sub), battleReady: true, streetNodes: [2, 1] };
 }
 const extent = points => ({ width: Math.max(...points.map(p => p.x)) - Math.min(...points.map(p => p.x)),
   height: Math.max(...points.map(p => p.y)) - Math.min(...points.map(p => p.y)) });
+
+test('military formations require battle this turn and dissolve immediately at the next turn at both zoom levels', () => {
+  for (const coarse of [false, true]) {
+    const graph = makeGraph(), group = makeGroup('cavalry'), clumps = new crowds.WalkerClumps();
+    group.battleReady = false;
+    clumps.sync([group], graph, { coarse, project: p => p });
+    assert.equal(clumps.clumps.size, 0);
+    assert.equal(crowds.crowdFormation(group.people[0], group, graph), 'loose');
+    group.battleReady = true;
+    clumps.sync([group], graph, { coarse, project: p => p });
+    assert.ok(clumps.clumps.size);
+    assert.equal(crowds.crowdFormation(group.people[0], group, graph), 'wedge');
+    group.battleReady = false;
+    clumps.sync([group], graph, { coarse, project: p => p, time: 1 });
+    assert.equal(clumps.clumps.size, 0);
+    assert.ok(group.people.every(person => !person.clump));
+    if (coarse) assert.ok(clumps.markers(p => p, [group]).every(marker => marker.kind === 'loose' && marker.clump.military));
+  }
+});
+
+test('combat participation records both surviving units, roundtrips and does not spill into another turn or age', () => {
+  const units = [{ owner: 0, location: { x: 0 } }, { owner: 1, location: { x: 1 } }, { owner: 1, location: { x: 2 } }];
+  const saved = new Map(), ctx = context(['readUnits', 'recordUnitBattle'], {
+    Game: { age: 0, turn: 7 }, unitCombatTurns: new Map(), unitFormationOperations: new Map(), lastUnitPlot: new Map(),
+    frameIndex: (age, turn) => age === 0 && turn === 7 ? 0 : -1,
+    OBJ_UNITS: 'units', getCatalog: () => ({ getObject: () => ({ read: key => saved.get(key) }) }),
+    MAX_PLAYER_ID: 1, Players: { get: owner => ({ Units: { getUnitIds: () => units.flatMap((unit, id) => unit.owner === owner ? [{ id }] : []) } }) },
+    Units: { get: id => units[id.id] }, GameplayMap: { getIndexFromLocation: loc => loc.x },
+    unitStrengthBonusPercent: () => 0, unitFormationState: () => 0, unitTypeIndex: () => 0, unitHealthPercent: () => 100,
+    packUnit: (plot, owner) => plot * 65536 + owner * 1024, readRoutes: () => [], scheduleMidTurnRecord() {},
+    err: message => assert.fail(message),
+  }, recorder);
+  ctx.recordUnitBattle({ attacker: { id: 0 }, defender: { id: 1 } });
+  const recorded = ctx.readUnits(7);
+  assert.deepEqual(Array.from(recorded.b), [0, 1]);
+  saved.set('u0', JSON.stringify(recorded)); ctx.unitCombatTurns.clear();
+  assert.deepEqual(Array.from(ctx.readUnits(7).b), [0, 1], 'same-turn saved participation survives reload');
+  ctx.Game.turn = 8;
+  assert.equal(ctx.readUnits(8).b.length, 0);
+  assert.deepEqual(Array.from(ctx.readUnits(7).b), [0, 1], 'turn-begin capture labels the prior completed turn correctly');
+  ctx.Game.age = 1;
+  assert.equal(ctx.readUnits(7).b.length, 0);
+  const playback = context(['readUnitsTurn', 'unpackUnit', 'walkerFormationTraits'], {
+    getCatalog: () => ({ getObject: () => ({ read: () => JSON.stringify(recorded) }) }), OBJ_UNITS: 'units',
+    unitsCache: new Map(), routesCache: new Map(), pos: 0, popIconTraits: () => ({ unit: { sub: 'cavalry' } }), err: message => assert.fail(message),
+  });
+  assert.equal(playback.walkerFormationTraits({ kind: 'unit', row: 0 }).battleReady, true);
+  assert.equal(playback.walkerFormationTraits({ kind: 'unit', row: 2 }).battleReady, false);
+  delete recorded.b; playback.unitsCache.clear();
+  assert.equal(playback.walkerFormationTraits({ kind: 'unit', row: 0 }).battleReady, false, 'old wounds or enemy adjacency never invent combat participation');
+});
 
 test('cavalry skeins form a filled pointed wedge, ranged/siege ranks are long and loose, and shield walls are compact', () => {
   const wedge = crowds.formationLayout(64, 'wedge'), line = crowds.formationLayout(64, 'line'), shield = crowds.formationLayout(64, 'shield');
@@ -139,6 +190,7 @@ test('recorded unit activity survives roundtrip and old unit records stay compat
   const units = [11, 12, 13, 14, 15, 16, 99].map((activityType, id) => ({ activityType, owner: 1, location: { x: id }, type: 0 }));
   const ctx = context(['unitFormationState', 'readUnits', 'recordUnitFormationActivity'], {
     UnitActivityTypes, UnitOperationTypes: { FORTIFY: 100 }, unitFormationOperations: new Map(), lastUnitPlot: new Map(),
+    Game: { age: 0, turn: 1 }, frameIndex: () => -1, unitCombatTurns: new Map(),
     MAX_PLAYER_ID: 1, Players: { get: pid => pid === 1 ? { Units: { getUnitIds: () => units.map((_, id) => ({ id })) } } : null },
     Units: { get: id => units[id.id] }, GameplayMap: { getIndexFromLocation: loc => loc.x },
     unitStrengthBonusPercent: () => 0, unitTypeIndex: () => 0, unitHealthPercent: () => 100,
@@ -154,11 +206,14 @@ test('recorded unit activity survives roundtrip and old unit records stay compat
     popIconTraits: () => ({ unit: { sub: 'infantry' } }), pos: 0, err: message => { throw Error(message); },
   });
   assert.equal(playback.readUnitsTurn(0)[2][6], 3);
+  assert.equal(playback.readUnitsTurn(0)[0][7], '1:0');
+  assert.equal(playback.readUnitsTurn(0)[2][7], '1:2', 'native identities survive recorder/playback roundtrip independently of unit type or location');
   assert.equal(playback.walkerFormationTraits({ kind: 'unit', row: 2 }).unitState, 'fortified');
   assert.equal(playback.walkerFormationTraits({ kind: 'unit', row: 1 }).unitState, 'sleeping');
   assert.equal(playback.walkerFormationTraits({ kind: 'unit', row: 6 }).unitState, '');
-  delete recorded.a; playback.unitsCache.clear();
+  delete recorded.a; delete recorded.i; playback.unitsCache.clear();
   assert.equal(playback.readUnitsTurn(0)[0][6], undefined);
+  assert.equal(playback.readUnitsTurn(0)[0][7], undefined, 'old recordings never invent a native identity');
   assert.equal(playback.walkerFormationTraits({ kind: 'unit', row: 0 }).unitState, '');
   units[2].activityType = 16;
   assert.equal(ctx.unitFormationState(units[2], { id: 2 }, 1), 6, 'old fortify event does not override an awake unit');
@@ -206,11 +261,13 @@ test('loading backdrop covers the entire game view only for the loading/error pl
   });
   test('diplomacy loading stays through native camera transitions, releases when ready and preserves newer errors', () => {
     const paints = [], manager = { cameraDollyQueued: true }, body = { appendChild() {} };
+    let time = 0;
     const ctx = context(['showDiplomacyLoading', 'showLoading', 'hideLoading'], {
       mapVisible: true, diplomacyTransition: { token: 0 }, LeaderModelManager: manager, building: false, mapOpenPending: false,
       els: {}, ps: n => n, measureArea: () => ({ x: 0, y: 0, w: 800, h: 600 }),
       document: { body, createElement: () => ({ style: {}, setAttribute() {} }) },
-      nextPaint: fn => paints.push(fn),
+      setTimeout: (fn, delay) => { assert.equal(delay, 100); paints.push(fn); },
+      Date: { now: () => time }, err: () => {},
     });
     ctx.showDiplomacyLoading();
     assert.equal(ctx.els.loading.textContent, 'Loading...');
@@ -220,8 +277,20 @@ test('loading backdrop covers the entire game view only for the loading/error pl
     paints.shift()(); assert.equal(ctx.els.loadingBackdrop.style.display, 'block');
     manager.isClosing = false; paints.shift()();
     assert.equal(ctx.els.loading.style.display, 'none'); assert.equal(ctx.els.loadingBackdrop.style.display, 'none');
+    manager.isLeaderShowing = true; manager.cameraDollyQueued = true;
+    manager.leaderSequenceGate = { waitingForForegroundCameraId: 7 };
+    ctx.showDiplomacyLoading(); paints.shift()();
+    assert.equal(ctx.els.loadingBackdrop.style.display, 'none', 'native dialogue is not covered while its scene sequence is waiting');
+    manager.isClosing = true;
+    ctx.showDiplomacyLoading(); paints.shift()();
+    assert.equal(ctx.els.loadingBackdrop.style.display, 'block', 'closing still shields the map until the scene clears');
+    manager.isClosing = false; paints.shift()();
+    assert.equal(ctx.els.loadingBackdrop.style.display, 'none');
     ctx.showDiplomacyLoading(); ctx.showLoading('Map failed');
     paints.shift()(); assert.equal(ctx.els.loading.textContent, 'Map failed'); assert.equal(ctx.els.loadingBackdrop.style.display, 'block');
+    manager.isLeaderShowing = false; manager.isClosing = true;
+    ctx.showDiplomacyLoading(); time = 10000; paints.shift()();
+    assert.equal(ctx.els.loadingBackdrop.style.display, 'none', 'stalled animation frames cannot keep the cover indefinitely');
     ctx.mapVisible = false; ctx.hideLoading(); ctx.showDiplomacyLoading();
     assert.equal(paints.length, 0); assert.equal(ctx.els.loading.style.display, 'none');
   });

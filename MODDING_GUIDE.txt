@@ -72,7 +72,17 @@ ui\history\anthroprocenia-calendar-hud.js
     Native calendar display.
 
 ui\map\anthroprocenia-calendar.js
-    Shared realistic-calendar definitions and annual/seasonal/monthly dates.
+    Shared realistic-calendar definitions, x2-x6 multipliers, turn budgets and
+    annual/seasonal/monthly dates. Recorder life-years and Skip Ahead use the
+    same selected multiplier.
+
+data\realistic-speeds.sql and data\realistic-x*.sql
+    Gameplay speed definitions load at 990, the selected multiplier at 995,
+    and the age calendar/research/celebration scaling at 1000. All Realistic
+    speeds use Marathon non-research costs and native duration overrides;
+    research compensates for the 3x native multiplier before integer rounding.
+    SetupDefaults.sql sets Giant Earth (when supplied), Long ages, no countdown,
+    score victory off and YnAMP real-only natural wonders without locking them.
 
 ui\geography\anthroprocenia-geography.js
     Connected geographic divisions, Earth projections, landmark matching,
@@ -84,6 +94,20 @@ ui\geography\anthroprocenia-names-db.js
 ui\map\anthroprocenia-playback.js
     Main Map View, playback reconstruction, layers, country naming, native UI
     integration, camera behavior, marker layout, and townscape lifecycle.
+    No main-game map-open button or map-view exit X. Preserve automatic map
+    opening/hiding, minimap scheduling, Victories integration and native shortcut.
+    The pause-menu civilization picker snapshots/restores visibility options,
+    fits the live map, and reuses the region shadow geometry for civ territory.
+ui\map\anthroprocenia-civ-switch.js
+    Permanent single-player takeover uses Autoplay.setAsLocalPlayer(playerID),
+    not an autoplay start/stop sequence. The native function's reported length
+    is zero, but it accepts the target ID. Verified on Civ VII 1.5.1: local and
+    observer IDs plus human ownership survive save/reload and permit commanding
+    the new civ's units. These updates can arrive across multiple UI ticks;
+    await confirmed ownership and suppress duplicate clicks while waiting.
+    Do not explicitly advance turns; native turn processing may resume afterward.
+    Revalidate surviving major targets and reject multiplayer/hotseat/autoplay.
+    Check native postconditions; never silently accept an observer-only change.
     Search for the relevant function before adding another implementation.
 
 ui\map\anthroprocenia-ui.js
@@ -224,14 +248,81 @@ ui\map\anthroprocenia-placement.js and anthroprocenia-unit-highlights.js
 5) When adding a geographic division, preserve existing tile/home/person IDs.
 6) Update population hierarchy consumers if a new tree level is introduced.
 7) Country labels must use one government noun and no repeated words.
-8) Preserve the Roma/Rome capital override: Roman Republic for republics;
-   otherwise The Roman Kingdom below four settlements, The Roman Empire
-   with four or more. Do not bypass the shared normalizer.
+   normalizeCountryName compares known word families, plurals and possessives,
+   including configured related root/adjective pairs and generated capital
+   adjectives. Preserve the government noun over a redundant adjective.
+   Do not blindly strip adjective suffixes from unrelated proper names.
+   Unique-country qualifiers must pass the same cleanup without replacing
+   existing base words. Increment the country cache namespace when this changes.
+   Never combine Imperial with Empire. Grand dynastic forms and optional
+   Great/Grand qualifiers require eight settlements; preserve proper-name roots.
+   Keep historical alternatives conventional, not inferred unification events.
+   Country-name cache keys must distinguish the eight-settlement transition.
+8) The Roma/Rome capital override requires a Roman civilization and at least
+   five settlements: Roman Republic for republics, otherwise The Roman Empire.
+   There is no Roman Kingdom override. Smaller Roman states use normal rules.
+   Mississippian names always derive their base from the current named capital,
+   including Cahokia, while preserving government-compatible titles.
+   Do not bypass the shared normalizer.
 9) Native civilization text and fog-off map names must use the same naming
    pipeline. Do not create a separate native-UI naming rule.
 10) War names should use the shared border-region helper.
+    showWarNames controls labels and red shared territorial fronts together,
+    independently of ordinary borders, territory fills and geographic names.
+    Fronts use relationshipForPos code 4, require land at both endpoints,
+    suppress edges with either endpoint unrevealed, and skip map seams.
+    meanderingWarPath builds deterministic smooth curves near the shared edges.
+    Both red and wider orange-red SVG gradients share exactly that geometry;
+    translucent nested strokes soften their edges without blur filters.
+    Round-capped short dashes make aligned dots on every stroke, using the
+    same screen-sized period on both gradients. Bright gradient colors and
+    opacity are independent of cached curve geometry.
+    Cache geometry by frame, relationships, terrain, visibility and map layout;
+    update screen-sized stroke widths separately on zoom.
+    War-label layout keys include the recorded turn even on unchanged territory.
+    Minimap transitions suppress the overlay and restore its previous setting.
 11) Useful tests include country-names, earth-names, shared-territory,
     population-panel, and native-camera-isolation.
+    countryNameCatalogFor evaluates the actual naming engine over documented
+    scenarios. Keep its priority metadata synchronized with countryName.
+    countryNamesCatalog uses the latest recorded local player without moving
+    replay. The Victories Country Names view supports condition exclusions,
+    search and 40-name pages. Custom names make the complete name space unbounded.
+    Naming facts (religion, citizen counts, owned island/mountain shares)
+    must come from the requested recorded turn and affect country cache keys.
+    War/peace must not affect names, cache keys, catalog conditions or filters.
+    Full names are disambiguated before applying map-only one-word base labels.
+12) Arabia, Greece, Eastern/Western Central Africa and Eastern/Western North
+    Africa are required Giant Earth regions, alongside Central North Africa. Test source
+    coordinates with and without atlas metadata.
+    Eastern/Western North America, Eastern/Western Arctic America, Eastern/Western
+    Siberia and Eastern/Western North Asia are also required; retain precise island names such as Greenland.
+    No region may have a blank name: use a containing real-world area when an
+    exact island/lake name is unavailable. Ordinary mainland regions must be
+    connected; island chains and naturally grouped mountain features may span gaps.
+    Retire broad Northern Europe, Central Africa and North America atlas names
+    in favor of their surrounding subdivisions. Siberia follows each source
+    longitude's southernmost northern-Asian tundra tile to the Arctic coast;
+    North Asia lies below it. Divide both at source x=68 near the Yenisei.
+    Do not retain plain Siberia or North Asia names. Use source row 80 only when tundra data is absent.
+    Merge West Asia into Middle East and South Europe into Central North Africa;
+    distribute residual Mediterranean land into adjacent European/North African
+    regions without renaming the Mediterranean Sea.
+    Arctic America similarly follows northern tundra/snow from source row 70
+    upward. Split its east/west divisions at source x=142 (ordinary North
+    America remains x=144); measure balance on the actual map with named
+    Greenland islands excluded, retaining natural island groups. Ordinary
+    North America ends at source row 56, except Baja at x<=134 retains row 58
+    and Florida at x=148..154 retains y>=53. Central America ends at Panama:
+    source y<40 and Colombian land at x>=153,y<43 must not remain Central America.
+    All Alaska, including the Aleutians and southeast panhandle, belongs to
+    Western Arctic America even below the tundra frontier; do not absorb Chukotka.
+    Divide Australian mainland at x=95; never coalesce the entire
+    mainland into one island name. Tasmania belongs to Eastern Australia.
+    The Malayan Peninsula includes the narrow Thai coastal tail through Hua
+    Hin, Prachuap Khiri Khan and Surat Thani; keep Pattaya, Bangkok and the
+    Indochinese mainland in Southeast Asia and preserve Sumatra/Java.
+    The Regions panel groups all exact matching names, deduplicating tiles.
 
 Map View colors:
 1) The PALETTE table and ownerColors function in playback assign distinct
@@ -239,6 +330,16 @@ Map View colors:
 2) Duplicate civilizations still get different country colors.
 3) Preserve the primary-fill/secondary-border contract and independent-power
    styling. Do not mutate recorded colors or native game color APIs.
+   CivColorUi consumes ownerColors for native leader/civilization identity
+   variables and leader-icon backgrounds. Rebuild native contrast variants from
+   that pair, restore excluded/minor UI slots, and ignore self-generated mutations.
+   Gameface lacks CSSStyleDeclaration.getPropertyPriority; read serialized
+   declarations when that method is unavailable and test the reduced API.
+   The actual diplomacy owners are panel-player-diplomacy-actions (local)
+   and panel-other-player-diplomacy-actions (selected player). A shared civ
+   symbol ID must not override its local-panel ancestor. Manage the direct
+   fxs-background-image-tint property only on subsystem-frame__diplo-tint
+   surfaces, preserving priorities, native rewrites, and restoration.
 4) Run tests\map-colors.test.mjs when changing this palette. It checks all
    63 rendered primary and secondary colors, measured CIE76 separation,
    stability across turns, and unchanged native data.
@@ -302,6 +403,14 @@ Map View colors:
    placement, or frame signature. Do not bump unrelated formats.
 9) Preserve road/roof retention through zoom and pan, and AI interturn
    suspension. Wait for marker anchors before the first townscene commit.
+   Publish accepted roof fills incrementally after dry-ground, waterfront,
+   and collision checks, without waiting for minor/entrance road routing.
+   Throttle changing previews to 100 milliseconds; a changed viewport may
+   refresh immediately. Clear obsolete static roads and hit targets before
+   replacing a committed scene with a preview. Keep pending true until the
+   complete scene is ready; outlines, labels, hits, and walkers wait for their
+   corresponding preparation. Preview roofs use no SVG stroke so the native
+   default stroke cannot overwhelm tiny world-coordinate geometry.
 10) Avoid retrying unchanged blocked road connections or rebuilding the
     whole walking world on every animation frame. Preserve resumable dry-road,
     bridge-search, footprint, entrance, and walking-network
@@ -344,8 +453,12 @@ Map View colors:
     shared by world, civilization, and family views. Keep manual collapse
     effective until the pointer leaves, and never seek a turn on hover.
     Geographic name arches apply to non-river features as well as land regions.
-    setArchedLines uses at most eight explicitly positioned HTML runs per line;
-    do not depend on flex intrinsic sizing or unsupported SVG textPath.
+    setArchedLines uses at most eight whole-word inline-block runs per line.
+    Let native text layout determine horizontal spacing; do not assign widths
+    from character counts, split joined scripts, or use unsupported SVG textPath.
+    Batch natural run-width reads before transform writes and retain text/scale
+    layout caching. Reserve interline clearance and fitted height for stronger
+    arches; verify transformed bounds, including the font-relative outline.
     Keep the local paint font at least 16 pixels and scale it down into map
     space, preserving fractional bounds instead of rounding tiny boxes to zero.
     Bound the displayed geographic font to 10/11-24 UI-scaled pixels, compensate
@@ -389,7 +502,7 @@ Map View colors:
     Keep the hovered region and hidden fog tiles clear. Cache within a region,
     invalidate on camera/layout/visibility changes, and clear on controls, leave,
     blur, or map closure. Use one viewport-sized SVG with four retained paths:
-    18% fill and three low-opacity feather strokes, not blur filters or canvas.
+    72% dark-grey fill and three lighter feather strokes, not blur filters or canvas.
     Project and clip closed contours before serializing; all four copies together
     must stay within 8,192 commands and 262,144 characters. Report and omit an
     oversized contour; never truncate it and accidentally fill a hidden region.
@@ -404,9 +517,26 @@ Map View colors:
     Check fog before querying geography. Mount native reactive content into its
     own child container so it cannot overwrite the plain-text region row.
     The RegionsPanel and regionRows helpers live in anthroprocenia-regions-panel.js.
+    Group panel rows by exact geographic name, aggregate their known statistics,
+    and retain every source region ID for grouped dimming and offscreen arrows.
+    Region/Island/Water/Mountains/River/Continent toggles compose with text search, reset pagination,
+    and preserve clicked selection. Clear stale row hover when filtered away;
+    reset all types when resetting the map. Use shared ornate icon buttons.
+    Use expandable continent headings with children ordered by population
+    descending, then name. Keep structural headings when the Continent filter
+    is off. Assign cross-continent areas by their largest known tile share
+    (continent-name tie break), never hidden tiles. Put areas without a known
+    continent in Water and other areas. Search opens matching sections while
+    allowing manual collapse; reset expansion state with the map.
+    Giant Earth reserves India, Southeast Asia, and Iberia mainland polygons
+    before broad atlas fallback. Island naming skips mainland polygons so nearby
+    island windows cannot swallow the Malay Peninsula. Jamaica's required island
+    window covers its source land at (152,46)-(153,46); retain other island names.
     Keep the circular button immediately left of Population. Reuse 40 row slots,
     and aggregate simulated populations from Population Panel tile totals, not
     gameplay citizen counts. Check fog before aggregating cities or ownership.
+    Preserve feature/continent IDs and known tile indices for selections that
+    have no region ID. Continents use the map's localized continent metadata.
     Panel hover overrides its persistent selection, which overrides map hover;
     panel-driven dimming is independent of the Region Boundaries checkbox.
     Offscreen panel targets reuse the shared blinking selection-arrow style and
@@ -431,12 +561,18 @@ Map View colors:
 ----------------------------------------------------------
 1) Use the shared population/home calculations in units and people modules.
    Do not independently rescale city details, town roofs, and Population.
+   recordedPopulationSnapshot also supplies exact tile and unit totals.
+   Native production totals sum deduplicated city.getPurchasedPlots() plus
+   the center tile; do not substitute the nearest-settlement home aggregate.
+   Native panels use the latest recorded frame, never the replay position.
 2) Keep the sevenfold civilian baseline consistent across consumers.
 3) Follow existing occupation records and occupationYieldIndex mappings.
 4) Preserve total population when redistributing civilian occupations.
    Military home plans have their own behavior; do not alter them accidentally.
 5) Timeline yield changes report workers gained/lost, not raw yield points.
    Use recorded settlement occupation snapshots for the relevant turns.
+   Append the actual signed yield delta in parentheses, such as (+1 Science);
+   do not imply that simulated occupation changes caused that yield change.
 6) Keep geographic hierarchy changes compatible with search, ancestor
    traversal, pins, selection, and existing tile/home/person IDs.
 7) Update persisted signatures when cached population behavior changes.
@@ -563,6 +699,16 @@ Run commands from the repository root in PowerShell.
    successful empty output as a workaround.
 9) Verify the repair in tests, install it, restart, and repeat the actual
    in-game action. Clearly distinguish verified fixes from remaining uncertainty.
+
+For a confirmed V8 heap-exhaustion dump, distinguish the heap ceiling from a
+proven leaking cache. With the user's approval, back up AppOptions.txt beside
+the Logs directory, verify the backup hash, and set one active
+Script_UI_MaxHeapSize 512 line. Leave gameplay/minimum settings unchanged.
+Fully close the game before editing preferences and restart afterward; an
+already-running process cannot pick up the new heap limit. This is a local,
+supported maximum rather than a reservation or a distributed mod setting.
+Restore the backed-up preference with the game closed to undo it. Keep native
+reproduction checks and long-session uncertainty explicit after raising it.
 
 16. YOUR FIRST EDIT: A COMPLETE SMALL WALKTHROUGH
 -------------------------------------------------
@@ -814,6 +960,29 @@ Common structures:
   units.u
       Full packed unit list for that frame, not a movement delta.
       Parallel optional metadata must remain aligned with its unit rows.
+  units.i
+      Optional parallel native identity keys ("owner:id"), decoded at unit
+      row index 7. Missing in older recordings. Native manpower requests a
+      fresh capture when identities are absent; never guess from tile/type.
+      Replay lineage and population seeds remain backward compatible.
+  units.b
+      Optional array of unit row indices that participated in actual Combat
+      events on this frame's in-age turn. Decoded as true at unit row index 8.
+      Both surviving attackers and defenders qualify. Absence means no proven
+      combat, not a guess from health or adjacent enemies. Same-turn captures
+      and reloads preserve saved participation through native identity keys;
+      other turns/ages never inherit it. Turn-begin capture passes the prior
+      completed turn explicitly to readUnits.
+
+Military route formations and formation-shaped crowd layouts require this
+combat flag. Keep the occupational military flag separate so soldier colors
+and roles remain correct even when walking loosely. Refresh traits on unchanged
+walking networks as recordings change. walkerBaseSpeed uses mapScaleMetrics
+to convert 4.4 feet/second (3 mph) into map units; cavalry doubles that value.
+Autonomous and commanded movement share that pace. Animation and offscreen
+activity clocks apply the visible 1-5x multiplier directly to real seconds.
+Ocean/coastal-water/lake road endpoints and both connecting branches are
+excluded from drawing and roadLines collision data; river crossings remain.
 
 Do not assume a missing field means zero. Zero health, an absent health API,
 and a removed entity have different meanings and different display behavior.
@@ -874,6 +1043,11 @@ C. Modify the calendar
    life-history tests when deliberately changing the calendar's meaning.
 6) Test native/non-realistic games too. Their recorded dates must not be
    silently reinterpreted using a newly selected realistic calendar.
+7) Format displayed dates with calendarDateLabel: "4000 BCE (Turn 1)".
+   Use the frame's in-age turn, not its global recording index. Preserve raw
+   dates for parsing, storage, date-entry fields and same-date history groups.
+   Family displays use familyEventDateLabel; pre-record dates say "before
+   Turn ...". Grouped headings show a turn range where dates repeat.
 
 D. Diagnose visible missing names or "-1" dates
 1) Trace the exact text back to its recorded value or Locale.compose result.

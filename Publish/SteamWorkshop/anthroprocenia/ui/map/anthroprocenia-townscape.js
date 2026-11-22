@@ -821,7 +821,8 @@ export function* quarterBuildingGroups(buildings) {
     const box = b.box || polygonBounds(b.poly);
     return (box.x1 - box.x0) * (box.y1 - box.y0);
   });
-  const largest = Math.max(0, ...areas);
+  let largest = 0;
+  for (const area of areas) if (area > largest) largest = area;
   const clip = (poly, axis, boundary, sign) => {
     const out = [];
     for (let i = 0; i < poly.length; i++) {
@@ -950,11 +951,11 @@ export function townscapeShapeCount(shapes) {
 export const DECO_GROUPS = ['decoPlants', 'decoBushes', 'decoRocks', 'decoFurniture', 'decoLamps'];
 export const DECORATION_STROKE_FEET = 0.125;
 export function decorationGroup(kind) {
-  if (kind === 'plant') return 'decoPlants';
+  if (kind === 'plant' || kind === 'reedBundle') return 'decoPlants';
   if (kind === 'bush') return 'decoBushes';
   if (kind === 'rock' || kind === 'pebbles') return 'decoRocks';
-  if (kind === 'lamp') return 'decoLamps';
-  if (['bench', 'barrel', 'crate', 'table', 'cart', 'well', 'statue', 'stall', 'basket'].includes(kind)) return 'decoFurniture';
+  if (['lamp', 'torch', 'lantern'].includes(kind)) return 'decoLamps';
+  if (['bench', 'barrel', 'crate', 'table', 'cart', 'well', 'statue', 'stall', 'basket', 'amphora', 'grainSack', 'fishingRack', 'fountain', 'signpost', 'handpump', 'bicycle', 'mailbox'].includes(kind)) return 'decoFurniture';
   throw new Error(`Unknown decoration kind: ${kind}`);
 }
 export function decorationTouchesWater(x, y, radius, isWater) {
@@ -965,11 +966,16 @@ export function decorationTouchesWater(x, y, radius, isWater) {
   }
   return false;
 }
-const DECO_KINDS = [['plant', 0.465], ['bush', 0.23], ['rock', 0.05], ['pebbles', 0.04], ['lamp', 0.025], ['bench', 0.025], ['barrel', 0.02], ['crate', 0.02],
-  ['table', 0.025], ['cart', 0.025], ['well', 0.02], ['statue', 0.02], ['stall', 0.02], ['basket', 0.015]];
-export function townDecorations(seed, count) {
+const DECO_NATURE = [['plant', 34], ['bush', 22], ['rock', 6], ['pebbles', 5]];
+const DECO_ERAS = [
+  [...DECO_NATURE, ['amphora', 8], ['grainSack', 5], ['basket', 5], ['torch', 3], ['reedBundle', 3], ['well', 3], ['bench', 2], ['statue', 2], ['stall', 2], ['fishingRack', 3]],
+  [...DECO_NATURE, ['barrel', 5], ['crate', 4], ['cart', 4], ['table', 3], ['well', 3], ['statue', 3], ['stall', 4], ['lantern', 3], ['fountain', 2], ['signpost', 3], ['basket', 3]],
+  [...DECO_NATURE, ['crate', 5], ['bench', 5], ['lamp', 4], ['table', 3], ['handpump', 3], ['bicycle', 3], ['mailbox', 3], ['signpost', 4], ['fountain', 3], ['cart', 2], ['statue', 2]],
+];
+export function townDecorations(seed, count, age = 0) {
   const rand = random((Number(seed) >>> 0) || 7), out = [], n = clamp(Math.round(Number(count) || 0), 0, 12000);
-  const pickKind = () => { let v = rand(); for (const [kind, w] of DECO_KINDS) { if ((v -= w) < 0) return kind; } return 'plant'; };
+  const kinds = DECO_ERAS[clamp(Math.floor(Number(age) || 0), 0, 2)], total = kinds.reduce((sum, [, weight]) => sum + weight, 0);
+  const pickKind = () => { let v = rand() * total; for (const [kind, w] of kinds) { if ((v -= w) < 0) return kind; } return 'plant'; };
   while (out.length < n) {
     // A clump: a few of one or two kinds around a spot, as plants and stones gather in real ground.
     const a = rand() * TAU, d = Math.sqrt(rand()) * 1.15, cx = Math.cos(a) * d, cy = Math.sin(a) * d;
@@ -1031,6 +1037,17 @@ function decorationShapePath(deco, x, y, unit) {
   const s = unit * deco.size, f = v => (Math.round(v * 1000000) / 1000000).toString(), a = deco.a;
   const at = (r, an) => `${f(x + Math.cos(an) * r)},${f(y + Math.sin(an) * r)}`;
   const path = points => points.map(([px, py], i) => `${i ? 'L' : 'M'}${f(x + (px * Math.cos(a) - py * Math.sin(a)) * s)},${f(y + (px * Math.sin(a) + py * Math.cos(a)) * s)}`).join('');
+  if (deco.kind === 'amphora') return ['decoFurniture', path([[-0.25, -0.7], [0.25, -0.7], [0.25, -0.4], [0.5, 0], [0.35, 0.7], [-0.35, 0.7], [-0.5, 0], [-0.25, -0.4]]) + 'Z'];
+  if (deco.kind === 'grainSack') return ['decoFurniture', path([[-0.2, -0.6], [0.2, -0.6], [0.55, 0.35], [0.3, 0.65], [-0.3, 0.65], [-0.55, 0.35]]) + 'Z' + path([[-0.25, -0.4], [0.25, -0.4]])];
+  if (deco.kind === 'reedBundle') return ['decoPlants', path([[-0.25, -0.65], [-0.25, 0.65]]) + path([[0, -0.8], [0, 0.7]]) + path([[0.25, -0.7], [0.25, 0.6]]) + path([[-0.35, 0.05], [0.35, 0.05]])];
+  if (deco.kind === 'torch') return ['decoLamps', path([[-0.12, 0.7], [0.12, 0.7], [0.12, -0.25], [-0.12, -0.25]]) + 'Z' + path([[-0.25, -0.3], [0, -0.8], [0.25, -0.3]]) + 'Z'];
+  if (deco.kind === 'fishingRack') return ['decoFurniture', path([[-0.7, -0.65], [-0.7, 0.65]]) + path([[0.7, -0.65], [0.7, 0.65]]) + path([[-0.8, -0.5], [0.8, -0.5]]) + path([[0, -0.4], [-0.18, 0.35], [0.18, 0.35]]) + 'Z'];
+  if (deco.kind === 'lantern') return ['decoLamps', path([[-0.35, -0.35], [0, -0.55], [0.35, -0.35], [0.35, 0.45], [0, 0.65], [-0.35, 0.45]]) + 'Z' + path([[-0.2, -0.55], [0, -0.85], [0.2, -0.55]])];
+  if (deco.kind === 'fountain') return ['decoFurniture', path([[-0.7, 0], [-0.4, -0.55], [0.4, -0.55], [0.7, 0], [0.4, 0.55], [-0.4, 0.55]]) + 'Z' + path([[0, 0.25], [0, -0.7]])];
+  if (deco.kind === 'signpost') return ['decoFurniture', path([[0, -0.8], [0, 0.8]]) + path([[-0.5, -0.55], [0.65, -0.55], [0.85, -0.3], [0.65, -0.05], [-0.5, -0.05]]) + 'Z'];
+  if (deco.kind === 'handpump') return ['decoFurniture', path([[-0.2, 0.7], [0.2, 0.7], [0.2, -0.3], [-0.2, -0.3]]) + 'Z' + path([[0, -0.3], [0, -0.6], [0.65, -0.6]]) + path([[-0.2, 0], [-0.55, 0]])];
+  if (deco.kind === 'mailbox') return ['decoFurniture', path([[-0.5, -0.55], [0.5, -0.55], [0.5, 0.15], [-0.5, 0.15]]) + 'Z' + path([[0, 0.15], [0, 0.8]]) + path([[0.5, -0.25], [0.75, -0.25]])];
+  if (deco.kind === 'bicycle') return ['decoFurniture', path([[-0.8, 0], [-0.5, -0.3], [-0.2, 0], [-0.5, 0.3]]) + 'Z' + path([[0.2, 0], [0.5, -0.3], [0.8, 0], [0.5, 0.3]]) + 'Z' + path([[-0.5, 0], [0, -0.55], [0.5, 0], [-0.5, 0]]) + path([[0, -0.55], [0.25, -0.75]])];
   if (deco.kind === 'table') return ['decoFurniture', path([[-0.7, -0.5], [0.7, -0.5], [0.7, 0.5], [-0.7, 0.5]]) + 'Z' + path([[-0.8, -0.7], [0.8, -0.7]]) + path([[-0.8, 0.7], [0.8, 0.7]])];
   if (deco.kind === 'cart') return ['decoFurniture', path([[-0.65, -0.5], [0.45, -0.5], [0.45, 0.5], [-0.65, 0.5]]) + 'Z' + path([[0.45, -0.35], [0.95, -0.35]]) + path([[0.45, 0.35], [0.95, 0.35]]) + path([[-0.5, -0.7], [0.3, -0.7]]) + path([[-0.5, 0.7], [0.3, 0.7]])];
   if (deco.kind === 'well') return ['decoFurniture', path([[-0.6, -0.4], [0, -0.7], [0.6, -0.4], [0.6, 0.4], [0, 0.7], [-0.6, 0.4]]) + 'Z' + path([[-0.4, 0], [0.4, 0]])];
@@ -1043,7 +1060,7 @@ function decorationShapePath(deco, x, y, unit) {
   if (deco.kind === 'crate') return ['decoFurniture', path([[-0.5, -0.5], [0.5, -0.5], [0.5, 0.5], [-0.5, 0.5]]) + 'Z' + path([[-0.5, -0.5], [0.5, 0.5]]) + path([[0.5, -0.5], [-0.5, 0.5]])];
   if (deco.kind === 'plant') {
     let d = '';
-    for (let k = 0; k < 4; k++) { const an = -Math.PI / 2 + (k - 1.5) * 0.45 + Math.sin(a + k) * 0.15; d += `M${f(x)},${f(y)}L${at(s * (0.8 + 0.25 * (k % 2)), an)}`; }
+    for (let k = 0; k < 2; k++) { const an = -Math.PI / 2 + (k - 0.5) * 0.9 + Math.sin(a + k) * 0.15; d += `M${f(x)},${f(y)}L${at(s * (0.8 + 0.25 * k), an)}`; }
     return ['decoPlants', d];
   }
   if (deco.kind === 'bush') return ['decoBushes', path([[-0.65, 0.2], [-0.5, -0.3], [-0.2, -0.65], [0.2, -0.55], [0.65, -0.1], [0.5, 0.45], [0, 0.65]]) + 'Z'];
@@ -1587,7 +1604,7 @@ export function stepWalker(walker, graph, dt, pickDestination, rand, visitRoute 
 // the target point (x, y) off the network. They walk from wherever they stand, along the route, on to the target, in plain sight
 // (paused or not) and at a steady walking pace, never jumping; then stay there for the rest of the turn (`walker.cmd.arrived`).
 // Without a route they walk straight to the target.
-export const COMMAND_PACE = 1.1;
+export const COMMAND_PACE = 1;
 export function stepCommanded(walker, graph, dt) {
   const cmd = walker.cmd;
   if (!cmd) return;

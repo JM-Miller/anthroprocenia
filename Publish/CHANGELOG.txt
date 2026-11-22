@@ -1,6 +1,187 @@
 Anthroprocenia changelog
 (Newest first. Paste the latest entry into the Workshop change notes and the CivFanatics update.)
 
+Version 120 - 2026-11-20
+- Replace Lakhota and Navajo procedural settlement backgrounds with original AI-generated historical illustrations matching the other civilizations' painted scene style; retain their white tintable icons and prevent icon regeneration from overwriting imported scenes.
+- Fix base-game/DLC civilization selection and loading artwork: restrict official icon updates to DEFAULT/FONTICON contexts and exclude native background textures from emblem CSS selectors. Preserve background paths, sizes, aliases and tint metadata.
+
+Version 119 - 2026-11-20
+- Add Exploration Lakhota and Navajo with complete gameplay kits, authored narrative descriptions, personal-name families, original procedural icons/scenes and five terrain-verified nearby Giant Earth starts each.
+- Publish townscape pools/lakes first, then roofs and decorations, minor/entry roads, walking networks and walkers, then remaining layers and town labels. Retain collision-safe invisible preparation, shared geometry budgets, cancellation and disabled-layer handling.
+- Limit nearby townscape compass targets to three quarters of the shorter viewport dimension after horizontal wrapping.
+- Make the non-blocking loading indicator transparent and borderless at bottom-center, moving it upward around measured map controls.
+
+Version 118 - 2026-11-20
+- Hide circles for townscapes with accepted roofs, including partial commits, while preserving resource/unrendered fallback icons and restoring circles when roofs hide.
+- Show collision-checked decoration previews with the first roofs; increase dense placements and complete silhouette limits by 50% without raising native command/character budgets. Add age-specific amphorae, fishing racks, torches, lanterns, trade furniture, hand pumps, mailboxes and bicycles.
+- Prepare dense decoration geometry incrementally and retain safe map-space previews during camera changes.
+- Add an ornate, accessible, pointer-transparent status indicator naming active terrain, marker, townscape, decoration, walking-network, geographic-label and unit-lens jobs.
+- Defer and batch native unit destination scans and lens geometry; coalesce polling, cancel obsolete work and preserve native legal targets, fog, colors and error reporting.
+
+Version 117 - 2026-11-20
+- Enable Fog of War by default on initial map setup, reopening and restoring default visibility settings. Keep the single-player checkbox available and preserve the active-multiplayer lock.
+- Reuse identical hidden-tile masks across recorded frames and line-of-sight changes to avoid unnecessary native canvas paints.
+- Include the version 116 fog-leak protections and the version 115 diplomacy/unit-color fixes.
+
+Version 116 - 2026-11-20
+- Apply fog protection immediately when enabling the checkbox, cancel pending map work, and cover retained SVG/label overhangs with a cached topmost fog layer. Reuse unchanged masks to limit native canvas paints.
+- Keep missing visibility entries hidden and reconstruct visibility again when map dimensions change. Preserve revealed static information and current-line-of-sight unit filtering.
+- Hide entire stale marker roots before recent-pan deferrals, restore them only after rebuilt geometry commits, refresh route caches when visibility changes, and prevent movement arrows extending into unknown tiles.
+- Include the version 115 diplomacy-transition and owner-color icon fixes.
+
+Version 115 - 2026-11-20
+- Color all unit-circle glyphs, including local-player units, using native Gameface image tinting instead of browser-style CSS masks. Native unit flags retain contrast with secondary-owner-color glyphs on their primary-color interiors; health rings and non-unit artwork are unchanged.
+- Prevent Classic Leader Screens transitions from depending solely on rendering frames: coalesce duplicate RAF updates and add one bounded timer fallback that runs the existing native transition logic. Preserve first-meet callbacks and normal diplomatic behavior; surface native failures explicitly.
+- Suspend whole Map View render roots during diplomacy, avoid redundant HUD class/hidden route updates, and bound the diplomacy loading cover to ten seconds instead of allowing a stuck camera flag to cover native controls indefinitely.
+
+Version 114 - 2026-11-19
+- Preserve all 45 original Giant Earth homelands and register 176 nearby alternate starts: five candidates for 43 civilizations, four for Exploration Taino and two for Tahiti, without changing island geography. Every pair in each set is 2-4 hex tiles apart; alternatives minimize total distance from the original homeland.
+- Reduce turn-recording overhead by sharing native city/constructible collections and constructible definitions within each capture, never across captures. The 63-major regression fixture cuts collection reads roughly in half and repeated definition lookups from 12,732 to five, with unchanged building, pillage, wonder, settlement and center outputs.
+- Validate all 221 locations against actual YnAMP terrain/regions and its candidate collector, preserve primary preference and reload idempotence, and test fresh capture data after razing. No end-to-end native AI turn-time speedup is claimed from fixture measurements.
+
+Version 113 - 2026-11-19
+- Complete YnAMP Giant Earth true starts for all 45 Anthroprocenia civilizations, adding the remaining 35 homeland locations across Antiquity, Exploration and Modern while preserving the ten existing starts.
+- Use distinct settleable land tiles, including Tahiti itself, separate western/eastern Hispaniola starts for Haiti and the Dominican Republic, neighboring Rome-region cells for Vatican City and Papal States, and nearby land where Constantinople/Kabul city markers fall on water or mountains.
+- Test coverage against the complete shipped civilization catalog, native terrain and geographic regions, nearby native homeland city markers, real YnAMP candidate collection, reload idempotence and isolation from other maps/community civilizations. Existing saves are not relocated.
+
+Version 112 - 2026-11-18
+- Give Iberia an explicit YnAMP Giant Earth true start on the northeastern Iberian Peninsula (Tarragona region, tile 10,57). Validate that YnAMP recognizes the start and that its source terrain is settleable land in CONTINENT_IBERIA. Preserve other maps, community civilizations and existing saves.
+
+Version 111 - 2026-11-18
+- Allow peace negotiations on the same turn a war begins by removing the native minimum-war-duration gate. Preserve the other leader's right to accept or reject and the normal restriction on declaring another war after peace.
+- Update the relevant native English war/peace advice without replacing unrelated advice or translations. Validate all three native Age databases and preserve negotiated consent.
+- Major-civilization vassalage and the independent-power effect/text migration remain unimplemented; do not present renamed city-state mechanics as working major-civilization vassals.
+
+Version 110 - 2026-11-18
+- Add five starter buildings for every Antiquity civilization, without unlock requirements: Pastural Enclosure (+1 Food/+1 Production), Fire Pit (+1 Food/+1 Happiness), Toolmaker's Hut (+2 Production), Barter Post (+2 Gold), and Story Circle (+1 Culture/+1 Happiness). Retain normal urban placement and production/purchase costs.
+- Add the unrestricted Latched Reed Oarboat, Clubman and Stone Thrower as cheaper, weaker alternatives to the Galley, Warrior and Slinger. Preserve the existing native units and normal naval deployment rules.
+- Add gold-purchase-only land privateers for all civilizations: Raider at Bronze Working in Antiquity, Highwaymen at Heraldry in Exploration, and Partisan at Industrialization in Modern. Apply native Pirate/foreign-entry behavior through a scoped ability rather than altering naval Privateers.
+- Register localized, icon-rich descriptions, existing white icon artwork, native model remaps and live portraits for all additions. Validate exact base yields, purchase-only rules, weakness thresholds, Age isolation and technology gates against all three native Age databases.
+
+Version 109 - 2026-11-18
+- Use Child under 13, Youth from 13 up to 16, Adult from 16 to 59, and Elder from 60. Prevent youths from holding adult leadership offices, retaining the hereditary heir exception and the existing adulthood milestone at 16.
+- Require opposite-gender modeled spouses using each person's canonical named profile, including historical generations and moving unit cohorts. Preserve the minimum marriage age of 18, arrival/death boundaries and ancestry restrictions.
+- Speed up family reconstruction by caching ancestry with parent-link invalidation, pruning expired partner candidates and limiting birth-parent searches to eligible couples. Retain all historical marriages and the bounded, turn-cached home cohorts.
+
+Version 108 - 2026-11-18
+- Preserve Classic Leader Screens' first-meet-to-hub handoff if its scene-wipe watchdog ends a slow transition before running the callback. Do not duplicate completed handoffs or change unrelated scene cancellations.
+- Release the full-screen loading cover once the native leader scene is showing, rather than hiding diplomacy controls behind a camera-sequence wait. Preserve native dialogue and closing transitions.
+- Stop owned Skip Ahead autoplay before opening diplomacy, including while paused. Wait for native player/observer control to return before constructing diplomacy panels; surface restoration failures instead of opening with an invalid local player.
+- Complete the authored, evocative introductions and historical/gameplay overviews for every modded civilization without replacing existing authored narratives.
+- Rework the former Xiongnu slot as GoTurks, with early Turkic history, settlement and personal names, unique-content names and map polity labels. Preserve internal keys, artwork references, mechanics and start compatibility.
+- Consistently omit leading "The" from modded civilization selection names, including Orinoco and Taino.
+
+Version 107 - 2026-11-18
+- Stop the unique-quarter icon observer from repeatedly rewriting equivalent CSS image URLs when Gameface normalizes their quotation marks. This feedback loop could prevent the loading screen from completing.
+- Scope every custom military and recon ability to its own native unit class, preventing unscoped ability effects from stalling new-game initialization. Preserve all civilization abilities, unique effects and the configured player count.
+- Make the inline tooltip-name helper available to the native name observer, avoiding repeated startup ReferenceErrors.
+
+Version 106 - 2026-11-17
+- Expand the roster to 45 civilizations: 13 Antiquity, 15 Exploration and 17 Modern, including Haiti and Brazil. Rework Antiquity Taino as Orinoco and add a separate Exploration Taino.
+- Add branching civic trees, traditions, distinctive settlement and unit mechanics, historical Civilopedia entries, supported local-language names and translation/source caveats.
+- Register relevant existing-leader recommendations and later-Age unlock conditions without replacing official recommendations. Validate each Age against its own native database.
+- Add original historical settlement illustrations and individually authored, transparent WHITE emblems and unique-element icons. Preserve native 3D model/portrait references as disclosed approximations.
+- Replace official base-game/DLC civilization emblems, units, buildings, improvements and unique quarters with 445 original white icons. Preserve owner tint, unit-family aliases, loading backgrounds and optional DLC dependencies; leave wonders and general interface artwork unchanged.
+- Keep quarter plot effects confined to the quarter's settlement; avoid inactive-Age donors and inherited desert-only restrictions on unrelated improvements.
+- Keep the settler overlay visible in unit view, recolor foreign unit-circle glyphs, remove artificial country-name hyphens and prevent recursive tooltip name expansion.
+- Render war-front markers as 12-point stars and military locations as triangles. Fix Unit dots/Building dots visibility for map markers and hit targets.
+- Correct the Orinoco Giant Earth mainland start and give Exploration Taino its own Caribbean start. Bespoke expansion true starts currently cover nine civilizations.
+
+Version 105 - 2026-11-17
+- Expand all eight new Antiquity civilizations to six branching civics, three optional masteries and four slottable traditions. Add permanent research benefits and a capstone requiring both branches.
+- Replace generic capital-yield identities with historically themed farming, woodland, river, coast, trade-capacity, resource, Specialist, growth and connected-settlement mechanics.
+- Give unique buildings distinct settlement effects and each civilization a one-per-settlement rural improvement. Add situational military and Scout abilities, preserving inherited native unit abilities and AI roles.
+- Correct quarter activation: UniqueQuarterModifiers is AI evaluation only. Attach the actual effects to the owning civilization with explicit completed-quarter requirements.
+- Add eight original AI-generated settlement illustrations and original gold-toned unique-content icons. Keep native 3D models and textures as disclosed approximations; no native artwork is redistributed.
+- Display original menu artwork through Gameface, including the newer menu stage; prevent tiled cards and keep scene art separate from civilization emblems.
+- Include all land-connected South Europe tiles in Italia on Giant Earth, retaining disconnected islands and other continents.
+- Hide hanging diplomacy banners, including first-meet, war, peace, defeat and independent-power scenes, without removing native leader models or animation handles.
+- Keep all eight in Antiquity by design. Start a new game after fully restarting Civ VII.
+
+Version 104 - 2026-11-17
+- Register Britons, Suebi, Xiongnu, Caralans, Wagadu, Javanese, Slavic and Taino as selectable Antiquity civilizations in new-game setup, with localized selection details and gameplay definitions.
+- Give each civilization an ability, unique military replacement line and Scout, two ageless unique buildings, a unique quarter, and a three-civic tree with three traditions.
+- Include eight original civilization emblems, four alternate map emblems per civilization, city names and supported personal-name families.
+- Reference installed base-game loading art, unit/building models, textures and icons; redirect live unique-unit portraits to their native donors. These are explicit visual approximations, not new historical meshes or redistributed native assets.
+- Activate the previously prepared optional YnAMP Giant Earth homeland starts. Keep community Wagadu independent and leave existing games and other maps unchanged.
+- Fully restart Civ VII and start a new Antiquity game after updating.
+
+Version 103 - 2026-11-17
+- Place Switch Civilization between native Retire and Restart, including localized labels and tooltip-wrapped disabled Restart. Repair placement after native rerenders without duplicating buttons or activation handlers.
+- Give pause-menu rows uniform button heights and evenly distribute them within the existing column; remove oversized section gaps so the extra button no longer extends below the menu.
+- Prepare optional YnAMP Giant Earth true-start entries for the eight Anthroprocenia civilizations under development: eastern Britain, the Elbe basin, Orkhon-Selenga, Supe/Huacho, Koumbi Saleh, central Java, Polesia and central Hispaniola.
+- Use the actual 180x94 source grid, avoiding mountain/water candidates. Keep community Wagadu and all other civilizations/maps untouched.
+- This compatibility preparation does not yet introduce the eight playable civilizations or relocate existing saves. Their full civilization kits remain in development.
+
+Version 102 - 2026-11-17
+- Add Switch Civilization to the native pause menu: stripped live-map picker, country/territory/icon-only visibility, cached region-style territory shadows, permanent left-click takeover and right-click/Escape/top-left-X cancellation back to pause.
+- Restore map visibility preferences after switching or cancelling. Reject multiplayer, hotseat, autoplay, invalid targets and unconfirmed native handoffs.
+- Use the native target-ID setAsLocalPlayer call without starting autoplay or advancing turns. Verified persistence through save/reload and real unit command authority in a disposable Civ VII 1.5.1 game.
+
+Version 101 - 2026-11-17
+- Brighten both war-front gradients and render them as aligned round dots, retaining shared curves, land-only borders, visibility controls and screen-sized widths/spacing during zoom.
+- Remove the map-view exit X and main-game map-open button, including the removed button's observer/timer. Preserve existing automatic opening/hiding, minimap scheduling, Victories integration and native map shortcut.
+- Permanent civilization switching remains deferred pending a verified save/load-safe native player-control transfer API; no speculative autoplay handoff is installed.
+
+Version 100 - 2026-11-17
+- Replace straight thin war fronts with smooth deterministic meanders, a thicker red gradient and an even wider orange-red gradient behind it, using identical paths and soft translucent stroke bands.
+- Restrict both layers to shared land-to-land borders; exclude ocean, coastal-water, lakes and navigable rivers. Preserve fog filtering, peace/ownership updates, the shared visibility checkbox and cached geometry during zoom.
+- Remove war/peace as a country-naming condition, including its catalog rule, example conditions, filter and cache input. Refresh cached names and preserve the relative priority of remaining rules.
+
+Version 99 - 2026-11-17
+- Add a War names visibility checkbox controlling both war labels and red shared territorial borders between civilizations at war.
+- Keep the overlay independent of ordinary borders, territory fills and other geographic names; hide unrevealed edges and skip map seams.
+- Refresh fronts for peace or ownership changes and war labels across recorded turns, while retaining cached boundary geometry during camera movement.
+- Suppress the overlay on the minimap without losing the full-map checkbox setting.
+
+Version 98 - 2026-11-17
+- Prevent country names from repeating inflected or related word forms, including plurals, possessives, government adjectives, directions and related country/capital roots.
+- Retain the government noun over redundant adjectives (Federal Federated Federation becomes Federation), clean dangling connectors, and apply cleanup to duplicate-country qualifiers without replacing the existing base.
+- Refresh the country-name cache so previously saved repeated labels regenerate.
+
+Version 97 - 2026-11-17
+- Deduplicate delayed native-release/DOM-mouseup/click Chronicle gestures in both orders, preserve fresh presses and keyboard input, and clear stale panel visibility.
+- Split island, body-of-water and mountain name controls; add independent river, road, building-dot and unit-dot visibility while retaining unit icons and townscapes. Hide ordinary, fogged and delta river paths consistently.
+- Never draw roads/rails or connecting branches on ocean, coastal-water or lake tiles. Keep navigable-river crossings.
+- Add filled current-capital and hollow former-original-capital stars before map settlement names.
+- Resolve duplicate full country names deterministically and use unique one-word bases only on the map. Add cultural/capital alternatives and recorded geography, citizen-population, war and religion conditions.
+- Add the Victories Country Names tab with real-evaluator examples, activation conditions, rule priorities, condition exclusions, search and 40-name pages.
+- Derive Mississippian country bases from their current capital. Restrict Rome's Roma/Rome-capital override to Roman civilizations with at least five settlements: Roman Republic or The Roman Empire, with no Kingdom override.
+- Record actual attackers and defenders per turn; enable military formations only after that unit fought on the displayed turn, never merely from wounds or enemy adjacency. Preserve loose walking for older records without proof of combat.
+- Calibrate 1x walking to 3 mph (4.4 feet/second), cavalry to 6 mph, using the map's physical scale. Match commanded movement, update retained walkers after subtype/scale changes, and preserve pause and 1-5x controls.
+- Fully restart Civilization VII after installation. Native Gameface appearance and combat event delivery require in-game acceptance; browser checks do not replace that acceptance.
+
+Version 96 - 2026-11-16
+- Add simulated Manpower to native unit commands and purchased-tile Population beneath the settlement name in the native production chooser. Reuse Population calculations and the latest recording without moving historical replay.
+- Preserve optional native unit identities in recordings; match exact units instead of guessing between identical stacks. Older recordings request a fresh capture.
+- Replace unsupported inline-block label runs with native-compatible flex layout and fixed-decimal transforms. Curve single Latin words, preserve joined scripts, retain eight runs per line, and keep fitted multiline labels separated.
+- Keep persistent Regions selections clear while shading all other known visible areas with the existing feathered shadow. Batch oversized fill geometry without filling selected holes or outlining internal batch edges.
+- Prevent a delayed DOM click after native release from closing the World Chronicle immediately. Set its closed tooltip to "Open the World Chronicle Panel".
+- Replace the workforce disclaimer with actual signed yield changes, including fractional and negative changes. Use government-appropriate palace leadership titles, including Consul in republics.
+- Add mandatory Malta at the actual Valletta tile on Giant Earth, preserving Sicily and surrounding water names.
+- Validation includes focused native-UI regressions, 144 browser-rendered fitted label cases without line self-overlap, and unique coverage of all 16,920 actual Giant Earth tiles with and without atlas metadata.
+- Fully restart Civilization VII after installation. Native UI appearance and Chronicle activation still need in-game visual acceptance.
+
+Version 95 - 2026-11-16
+- Merge West Asia into Middle East, South Europe into Central North Africa, and residual Mediterranean land into neighboring European/North African regions. Preserve the Mediterranean Sea. Rename North Africa to Central North Africa.
+- Divide Siberia and North Asia into Western/Eastern regions near the Yenisei, retaining tundra-based north/south boundaries and removing the unsplit names.
+- Lower Central America's northern boundary by two tiles except Baja California, preserve Florida, end Central America at Panama before Colombia, and include Alaska's mainland, Aleutians and southeast panhandle in Western Arctic America.
+- Add expandable continent headings to the Regions panel and sort child areas by population descending, then name. Preserve exact-name grouping, filters, search, fog protection, selections and the bounded 40-row pool.
+- Correct label arches using measured word widths, stronger curvature and increased fitted/interline clearance while retaining bounded runs and cached layouts.
+- Apply Map View colors when major-player diplomacy banner models are created, including fallback assets, without recoloring native leaders or independent powers. Native banner appearance still needs in-game visual acceptance.
+- Validation: 730 automated tests passed; all 16,920 native Giant Earth tiles retain unique coverage with and without atlas metadata, including 48 Alaska landmarks. Browser checks covered 288 fitted label cases without self-overlap.
+- Fully restart Civilization VII after installation. Native enemy-hover combat estimates and the red movement-style attack path remain unfinished.
+
+Version 94 - 2026-11-16
+- Display calendar dates followed by the actual in-age turn throughout modded date displays, including family deaths, family/world histories, notifications, map titles, scrubber previews, the Realistic HUD and Skip Ahead. Preserve seasons, months, date entry and same-date grouping; show turn ranges for repeated dates and mark dates before retained records explicitly.
+- Keep civilization icons on capital-connected land instead of transferring them to detached holdings when the capital component is hidden. Separate arched country-label lines and scale outlines with fitted text.
+- Hide full-health settlement defense bars. Show movement-turn badges only where the number changes from the preceding tile.
+- Include diplomacy hanging-banner color hooks and shared region/island-based war-name integration. These native integrations still require live-game visual acceptance.
+- Include the previously installed local updates 71-93: progressive townscape roof rendering, native diplomacy/leader/civilization colors, mandatory real-world Earth regions and subdivisions, geographic panel filters and exact-name grouping, Realistic x2-x6 calendars and setup defaults. See README.md and MODDING_GUIDE.txt for details.
+- Validation: 723 automated tests passed; browser checks covered 36 fitted country-label renderings without self-overlap. This is not a claim of live-game acceptance.
+- Known limitation: native enemy-hover combat estimates and the red movement-style attack path are not finished.
+- Fully restart Civilization VII after installation. This mod includes gameplay/calendar changes and is marked as affecting saved games; back up saves before updating.
+
 Version 70
 - Map native direction enums explicitly to Map View's E/W/NE/NW/SE/SW hex edges. This fixes misplaced region boundaries and incorrect seam detection.
 - Normalize detached region inputs into connected components; subdivide with graph-distance seeds and connected floods rather than assigning unreachable tiles by straight-line distance. Preserve complete, nonoverlapping coverage, even when connectivity requires more regions than the target.

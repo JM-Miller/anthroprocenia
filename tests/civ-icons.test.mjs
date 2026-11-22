@@ -289,6 +289,7 @@ test('country icons reuse SVG nodes, restore the native mask and obey the icons 
     countryDom: { el: element() }, civIconDom: { el: element() }, countryLabelSlots: slots,
     document: { createElement: element, createElementNS: () => { created++; return element(); } },
     showCountryLabels: false, showCivIcons: true, showBorders: false, frames: [0], hexW: 20,
+    settlementsForPos: () => new Map(), replayEraKey: () => '', pos: 0,
     countryTerritories: () => new Map([[0, [{ x: 32, y: 32, index: 0 }]]]),
     countryLabelComponents: (frame, tiles) => [tiles],
     majorCountryNames: () => new Map([[0, 'Roman Republic']]), identityForPos: () => new Map([[0, ['', '', '', '', '', 'CIVILIZATION_ROME']]]),
@@ -298,7 +299,7 @@ test('country icons reuse SVG nodes, restore the native mask and obey the icons 
     countryIconSeed: () => { seedCalls++; return 42; }, countryIconsForFrame: () => new Map([[0, selection]]),
     civSymbolFor: () => { nativeCalls++; return 'native-roman-icon'; },
   });
-  vm.runInContext(['countryLabelSlot', 'drawCountryLabelLayer'].map(slice).join('\n'), ctx);
+  vm.runInContext(['countryLabelSlot', 'shortCountryLabels', 'drawCountryLabelLayer'].map(slice).join('\n'), ctx);
   ctx.drawCountryLabelLayer(new Map(), null);
   const slot = slots[0];
   assert.equal(slot.alternatePath.attrs.d, selection.path);

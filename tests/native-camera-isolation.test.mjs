@@ -91,7 +91,7 @@ for (const first of ['turn', 'detail', 'capture']) test(`zooming out across turn
     frameFor: pos => pos, curFrame: 4, updateControls() {},
     bgLayer: { ctx: {} }, stateLayer: { ctx: {} }, unitDom: { el: {} }, HB: { draws: 0 },
     fogMode: false, showWonders: false, columnShiftCanvasStale: false,
-    ensureBackground() {}, drawStateLayer(frame) { drawn.push(frame); },
+    ensureBackground() {}, drawFogLayer() {}, drawStateLayer(frame) { drawn.push(frame); },
     syncLayerDisplays() {}, drawDotLayer() {}, drawRiverLayer() {}, drawMapDetails() {},
     drawUnitLayer() {}, drawTradeRouteLayer() {}, drawRouteLayer() {}, drawGeographyLayers() {},
     drawCountryLabelLayer() {}, drawSettlementLabelLayer() {}, err: message => assert.fail(message),

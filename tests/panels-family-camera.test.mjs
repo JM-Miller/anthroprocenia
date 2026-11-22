@@ -5,6 +5,7 @@ import vm from 'node:vm';
 import { loadModule } from './load.mjs';
 
 const demo = await loadModule('anthroprocenia-demography.js');
+const people = await loadModule('anthroprocenia-people.js');
 const panel = await loadModule('anthroprocenia-population-panel.js');
 const timeline = await loadModule('anthroprocenia-timeline.js');
 const source = await readFile(new URL('../anthroprocenia/ui/map/anthroprocenia-playback.js', import.meta.url), 'utf8');
@@ -26,6 +27,8 @@ function context(names, state) {
 }
 const life = (born, extra = {}) => ({ gen: 0, family: 0, parent: null, born, since: 0, kind: 'initial', history: [], ...extra });
 const rows = states => states.map((state, index) => ({ index, state }));
+const fixtureGender = index => index % 2 ? 'female' : 'male';
+const families = (lives, year, years, unit = false, genderOf = fixtureGender) => demo.simulateFamilies(lives, year, years, unit, genderOf);
 const plain = data => JSON.parse(JSON.stringify([...data.members]));
 test('family timeline narrates births, marriages, deaths, arrivals and observed career moves in date order', () => {
   const members = [
@@ -38,13 +41,36 @@ test('family timeline narrates births, marriages, deaths, arrivals and observed 
     [{ id: '0:0', turn: 1, text: 'changed occupations to Farmer and moved to Chicago.' }, { id: '9:0', turn: 1, text: 'must not appear' }]);
   assert.equal(events.length, 8);
   assert.ok(events.some(event => /Person 1:0 was widowed/.test(event.text)));
-  assert.match(events[0].text, /^In 5029 BCE Person 0:0 was born/);
+  assert.match(events[0].text, /^In 5029 BCE \(before Turn 1\) Person 0:0 was born/);
   assert.equal(events.filter(event => /married/.test(event.text)).length, 1);
-  assert.ok(events.some(event => event.text === 'In 4998 BCE Person 0:0 changed occupations to Farmer and moved to Chicago.'));
+  assert.ok(events.some(event => event.text === 'In 4998 BCE (Turn 2) Person 0:0 changed occupations to Farmer and moved to Chicago.'));
   assert.ok(events.some(event => /4997 BCE.*died of disease/.test(event.text)));
   assert.ok(events.every((event, i) => !i || event.year >= events[i - 1].year));
   assert.equal(timeline.familyEventDate(-1, [0], [[0, 1, 1, '1 CE']]), '1 BCE');
   assert.equal(timeline.familyEventDate(0, [0], [[0, 1, 1, 'Spring 400 CE']]), 'Spring 400 CE');
+});
+
+test('family dates and grouped history headings retain real age turns, calendar detail and same-date grouping', () => {
+  const frames = [[0, 40, 1, '2 BCE'], [0, 41, 0, '1 BCE'], [1, 1, 0, 'Spring 400 CE']];
+  assert.equal(timeline.familyEventDateLabel(0, [0, 1, 2], frames), '2 BCE (Turn 40)');
+  assert.equal(timeline.familyEventDateLabel(-1, [0, 1, 2], frames), '3 BCE (before Turn 40)');
+  assert.equal(timeline.familyEventDateLabel(2, [0, 1, 2], frames), 'Spring 400 CE (Turn 1)');
+  assert.equal(timeline.familyEventDateLabel(0, [0], [[0, 17, 1, '']]), 'Date unknown (Turn 17)');
+  const model = new timeline.CivilizationTimeline(null);
+  for (const [turn, calendarTurn] of [40, 41].entries()) {
+    model.observe(turn, [0, calendarTurn, turn ? 0 : 1, '4000 BCE'],
+      { s: 1, terr: [10], set: [[0, 'Roma', turn + 1, 'City']] },
+      { idd: [[0, 'Leader', 'Romans', 'Roman']] }, () => '', () => '');
+  }
+  const groups = timeline.groupTimelineEvents(model.events);
+  assert.equal(groups.length, 1, 'adding turn numbers never splits matching calendar-date groups');
+  assert.equal(timeline.timelineDateLabel(groups[0]), '4000 BCE (Turns 40-41)');
+  assert.ok(model.events.every(event => event.text.includes(`4000 BCE (Turn ${event.calendarTurn})`)));
+  for (const turn of [2, 3]) model.observe(turn, [0, turn + 40, 0, ''],
+    { terr: [], set: [[0, 'Roma', turn + 1, 'City']] }, {}, () => '', () => '');
+  const undated = timeline.groupTimelineEvents(model.events).filter(group => !group.date);
+  assert.equal(undated.length, 2, 'missing dates do not merge unrelated turns into a false calendar-date group');
+  assert.deepEqual(undated.map(group => timeline.timelineDateLabel(group)), ['Date unknown (Turn 42)', 'Date unknown (Turn 43)']);
 });
 
 test('civilization timeline follows delta ownership, wars, peace and discoveries without inventing initial transitions', () => {
@@ -59,8 +85,8 @@ test('civilization timeline follows delta ownership, wars, peace and discoveries
     { rel: [[0, 1, 4]], soc: [[0, [0, 1]]] }, id => `Tech ${id}`, () => 'The War of the Plains');
   model.observe(2, frame(2), { terr: [], set: [[1, 'New York', 2, 'City']] },
     { rel: [[0, 1, 0]] }, id => `Tech ${id}`, () => 'War');
-  assert.ok(model.events.some(event => event.text === 'In 4999 BCE New York City was founded.'));
-  assert.ok(model.events.some(event => event.text === 'In 4998 BCE The War of the Plains began between The Americans and The Spanish.'));
+  assert.ok(model.events.some(event => event.text === 'In 4999 BCE (Turn 1) New York City was founded.'));
+  assert.ok(model.events.some(event => event.text === 'In 4998 BCE (Turn 2) The War of the Plains began between The Americans and The Spanish.'));
   assert.ok(model.events.some(event => /Madrid came under The Americans control/.test(event.text)));
   assert.ok(model.events.some(event => /mastered Tech 1/.test(event.text)));
   assert.ok(model.events.some(event => /war between.*ended/.test(event.text)));
@@ -113,6 +139,62 @@ test('civilization timeline refresh replaces a provisional frame and resets when
   assert.equal(ctx.civTimelineEvents().length, 2, 'forward processing does not duplicate events');
 });
 
+test('timeline country names use the event turn and share one full-map naming pass across owners', () => {
+  const calls = [], frame = new Map(), identities = new Map(), settlements = new Map();
+  const ctx = context(['civTimelineExtras'], {
+    readSuzerainTurn: () => [], manifest: { ages: [[0, 'old', 'Antiquity'], [10, 'new', 'Modern']] },
+    frames: [[0]], frameFor(turn) { calls.push(['frame', turn]); return frame; },
+    reconstructIdentity(turn) { calls.push(['identity', turn]); return identities; },
+    reconstructSettlements(turn) { calls.push(['settlements', turn]); return settlements; },
+    countryTerritories(actual, vis) { assert.equal(actual, frame); assert.equal(vis, null); return 'territories'; },
+    majorCountryNames(...args) { calls.push(['names', ...args]); return new Map([[0, 'Roman Republic'], [1, 'Gallic Kingdom']]); },
+    ageEraKey: (id, name) => name, civTimelinePlaceName() {}, normalizeCountryName: name => name,
+  });
+  const extra = ctx.civTimelineExtras(0);
+  assert.equal(calls.length, 0, 'unused names do not reconstruct a world');
+  assert.equal(extra.civilizationName(['Leader', 'Romans'], 0), 'Roman Republic');
+  assert.equal(extra.civilizationName(['Leader', 'Gauls'], 1), 'Gallic Kingdom');
+  assert.deepEqual(calls, [['frame', 0], ['identity', 0], ['settlements', 0], ['names', frame, 'territories', identities, settlements, 'Antiquity', 0]]);
+});
+
+test('fading notifications do no idle DOM work, measure new rows once, and retain fade, pause and resize behavior', () => {
+  let created = 0, reads = 0, writes = 0, builds = 0;
+  const state = { feed: new timeline.LiveTimelineFeed(), key: '', slots: [], lastTick: 0, timeline: { model: null, next: 0 } };
+  const ctx = context(['syncCivNotices'], {
+    civNoticeState: state, now: 100, nowMs: () => ctx.now, mapVisible: true, playing: false, pos: 0, frames: [[0, 1, 1]],
+    overlay: false, gameOverlayActive: () => ctx.overlay, manifest: { rev: 1 }, cmdLocalPlayer: () => 0,
+    ps: n => n, window: { innerWidth: 1000, innerHeight: 800 }, MAP_CHROME_CLASS: 'chrome', events: [],
+    civTimelineEvents(model) { builds++; model.model = { events: ctx.events.slice() }; return model.model.events.slice(); },
+    document: { body: { appendChild() {} }, createElement() {
+      created++;
+      return { style: new Proxy({}, { set(target, key, value) { writes++; target[key] = value; return true; } }),
+        classList: { add() {} }, setAttribute() {}, get offsetHeight() { reads++; return 54; } };
+    } },
+  });
+  for (let i = 0; i < 100; i++) { ctx.now += 16; ctx.syncCivNotices(); }
+  assert.equal(builds, 1); assert.equal(created, 0); assert.equal(reads, 0); assert.equal(writes, 0);
+  ctx.events = Array.from({ length: 4 }, (_, i) => ({ turn: 0, text: `Hired ${i + 1} new scholars` }));
+  ctx.manifest.rev++; ctx.now += 16; ctx.syncCivNotices();
+  assert.equal(created, 4); assert.equal(reads, 4);
+  assert.equal(state.timeline.model.events.length, 0, 'notices do not retain a second full Chronicle');
+  for (let i = 0; i < 100; i++) { ctx.now += 16; ctx.syncCivNotices(); }
+  assert.equal(reads, 4, '100 animation ticks cannot force 400 row measurements');
+  assert.ok(state.slots.every(slot => slot.el.style.opacity === '1'));
+  ctx.window.innerWidth = 500; ctx.now += 16; ctx.syncCivNotices(); assert.equal(reads, 8);
+  ctx.overlay = true; ctx.now += 16; ctx.syncCivNotices();
+  const age = state.slots[0].age, hiddenWrites = writes;
+  for (let i = 0; i < 100; i++) { ctx.now += 16; ctx.syncCivNotices(); }
+  assert.equal(writes, hiddenWrites); assert.equal(state.slots[0].age, age);
+  ctx.overlay = false;
+  for (let i = 0; i < 7; i++) { ctx.now += 250; ctx.syncCivNotices(); }
+  assert.ok(state.slots.every(slot => Number(slot.el.style.opacity) < 1));
+  for (let i = 0; i < 5; i++) { ctx.now += 250; ctx.syncCivNotices(); }
+  assert.ok(state.slots.every(slot => !slot.event && slot.el.style.display === 'none'));
+  const idleWrites = writes;
+  ctx.now += 16; ctx.syncCivNotices(); assert.equal(writes, idleWrites); assert.equal(reads, 8);
+  ctx.playing = true; ctx.syncCivNotices(); assert.equal(state.timeline.model, null);
+});
+
 test('civilization timeline UI pages, escapes event text and hides while a game overlay is open', () => {
   const element = () => ({
     style: {}, events: {}, attrs: {}, children: [], classList: { add() {} },
@@ -127,12 +209,14 @@ test('civilization timeline UI pages, escapes event text and hides while a game 
     assert.match(html, /4999 BCE/);
     assert.match(html, /&quot;Timothy&quot;/);
     assert.match(html, /&lt;McGee&gt; &amp; relatives/);
-    assert.match(html, /Recorded turn 5/);
+    assert.match(html, /4999 BCE \(Turn 5\)/);
+    assert.doesNotMatch(html, /Recorded turn/);
   });
   test('leadership section names follow the recorded government on replay', () => {
     const identity = [];
     const ctx = context(['leadHomeName'], { identityForPos: () => new Map([[0, identity]]), LEAD_HOME_NAMES: { center: 'Governors', unit: 'Officers' } });
-    for (const [government, expected] of [['Chiefdom', "Chief's Council"], ['Classical Republic', 'Lead Senators'], ['Despotism', 'Noble Family Heads'], ['Monarchy', 'Royal Court']]) {
+    for (const [government, expected] of [['Chiefdom', "Chief's Council"], ['Classical Republic', 'Lead Senators'],
+      ['Despotism', 'Council of Ministers'], ['Democracy', 'Cabinet'], ['Communism', 'Central Committee'], ['Monarchy', 'Royal Court']]) {
       identity[7] = government; assert.equal(ctx.leadHomeName('palace', 0), expected);
     }
     assert.equal(ctx.leadHomeName('unit', 0), 'Officers');
@@ -162,7 +246,7 @@ test('civilization timeline UI pages, escapes event text and hides while a game 
 });
 
 test('leader household restriction follows actual family links rather than everyone in the palace cohort', () => {
-  const data = demo.simulateFamilies(rows([life(-40), life(-38), life(-10), life(-2, { kind: 'moved' })]), 0, [0]);
+  const data = families(rows([life(-40), life(-38), life(-10), life(-2, { kind: 'moved' })]), 0, [0]);
   const ctx = context(['popLeaderHousehold', 'popFamilyRows'], {
     popLeaderHome: () => 'palace', popLeaderRole: (traits, index) => index === 0 ? 'King' : '',
     popFamilyData: () => data, lifeTimelineNow: () => ({ years: [0] }), pos: 0,
@@ -177,7 +261,7 @@ test('leader household restriction follows actual family links rather than every
 test('modeled spouses are reciprocal adults, and existing children link back to both parents', () => {
   const input = rows([life(-40), life(-38), life(-10), life(-8)]);
   const original = JSON.stringify(input);
-  const data = demo.simulateFamilies(input, 0, [0]);
+  const data = families(input, 0, [0]);
   const [a, b, child, sibling] = input.map((_, i) => data.members.get(`${i}:0`));
   assert.equal(a.spouse, b.id);
   assert.equal(b.spouse, a.id);
@@ -188,33 +272,69 @@ test('modeled spouses are reciprocal adults, and existing children link back to 
   assert.deepEqual(b.children, a.children);
   assert.equal(child.spouse, null);
   assert.equal(JSON.stringify(input), original, 'simulation does not mutate life records');
-  assert.deepEqual(plain(demo.simulateFamilies(JSON.parse(original), 0, [0])), plain(data), 'reload reconstructs exact relationship IDs');
-  const future = demo.simulateFamilies(input, 30, [0]);
+  assert.deepEqual(plain(families(JSON.parse(original), 0, [0])), plain(data), 'reload reconstructs exact relationship IDs');
+  const future = families(input, 30, [0]);
   assert.equal(future.members.get(child.id).spouse, null, 'siblings never marry as they become adults');
   assert.equal(future.members.get(sibling.id).spouse, null);
+});
+
+test('marriages require opposite canonical genders in civilian and unit cohorts', () => {
+  const input = rows([life(-40), life(-38), life(-36)]);
+  for (const unit of [false, true]) {
+    for (const gender of ['male', 'female']) assert.equal(families(input, 0, [0], unit, () => gender).marriages.length, 0);
+    const data = families(input, 0, [0], unit, index => index === 2 ? 'female' : 'male');
+    assert.equal(data.members.get('0:0').spouse, '2:0');
+    assert.equal(data.members.get('1:0').spouse, null);
+    assert.notEqual(data.members.get('0:0').gender, data.members.get('2:0').gender);
+  }
+  assert.throws(() => demo.simulateFamilies(input, 0, [0], false), /canonical gender resolver/);
+  assert.throws(() => families(input, 0, [0], false, () => undefined), /Invalid family member gender/);
+  assert.equal(families(rows([life(-17.999), life(-18)]), 0, [0]).marriages.length, 0);
+  assert.equal(families(rows([life(-18), life(-18)]), 0, [0]).marriages.length, 1, 'marriage still requires both partners to be eighteen');
+});
+
+test('long family histories retain old marriages while excluding expired parents from new births', () => {
+  const input = rows(Array.from({ length: 8 }, () => life(0, {
+    gen: 64, parent: 63,
+    history: Array.from({ length: 64 }, (_, gen) => life((gen - 64) * 60, {
+      gen, parent: gen ? gen - 1 : null, deathYear: (gen - 64) * 60 + 70, deathTurn: gen,
+    })),
+  })));
+  let resolutions = 0;
+  const data = families(input, 40, [0, 40], false, index => { resolutions++; return fixtureGender(index); });
+  assert.equal(data.members.size, 520);
+  assert.equal(resolutions, data.members.size, 'resolve each generation once, not once per candidate pair');
+  assert.equal(data.marriages.length, 260, 'pruning the birth search retains every historical marriage');
+  for (const member of data.members.values()) {
+    assert.notEqual(member.gender, data.members.get(member.spouse).gender);
+    if (member.gen) assert.deepEqual(member.parents, [`${member.index}:${member.gen - 1}`], 'no expired couple becomes an extra parent');
+  }
+  assert.deepEqual(plain(families(input, 40, [0, 40])), plain(data), 'long histories reconstruct deterministically');
 });
 
 test('marriage and parentage obey arrival, death, age and generation boundaries', () => {
   const deceased = life(-40, { deathYear: -5, deathTurn: 1 });
   const child = life(-2, { kind: 'born' });
-  const data = demo.simulateFamilies(rows([deceased, life(-38), child, life(-1, { kind: 'moved', since: 1 })]), 0, [-10, -1]);
+  const data = families(rows([deceased, life(-38), child, life(-1, { kind: 'moved', since: 1 })]), 0, [-10, -1]);
   assert.equal(data.members.get('1:0').spouse, '0:0', 'a dead spouse remains in the retained marriage');
   assert.equal(data.members.get('2:0').parents.length, 0, 'no conception assigned after a parent died');
   assert.equal(data.members.get('3:0').parents.length, 0, 'newcomers do not acquire invented local parents');
-  const lateArrival = demo.simulateFamilies(rows([life(-40, { kind: 'moved', since: 1 }), life(-38), life(-10)]), 0, [-30, -1]);
+  const lateArrival = families(rows([life(-40, { kind: 'moved', since: 1 }), life(-38), life(-10)]), 0, [-30, -1]);
   assert.equal(lateArrival.members.get('0:0').married, -1);
   assert.equal(lateArrival.members.get('2:0').parents.length, 0, 'no child assigned before a partner moved in');
   const replacement = life(-2, { gen: 1, family: 1, kind: 'moved', since: 1, history: [deceased] });
-  const later = demo.simulateFamilies(rows([replacement, life(-38)]), 0, [-10, -2]);
+  const later = families(rows([replacement, life(-38)]), 0, [-10, -2]);
   assert.equal(later.members.get('0:1').spouse, null, 'marriages do not transfer to a replacement generation');
   assert.equal(later.members.get('0:0').spouse, '1:0');
-  assert.deepEqual(demo.simulateFamilies(rows([life(10)]), 0, [0]).members.size, 0, 'future births are not exposed');
+  assert.deepEqual(families(rows([life(10)]), 0, [0]).members.size, 0, 'future births are not exposed');
 });
 
 test('home family work remains bounded with millions of people and caches by turn and cohort', () => {
   let calls = 0;
   const node = { id: 'home', total: 10000000, tile: 4, icon: { owner: 1 } };
-  const ctx = context(['popFamilyData'], {
+  const ctx = context(['popFamilyData', 'lifeSeed'], {
+    ...people, personKey: panel.personKey, stablePersonKey: panel.stablePersonKey,
+    popOwnerContext: () => ({ civKey: 'ROME', religion: '' }),
     familyCache: new Map(), pos: 0, popState: { builtKey: '0' },
     popLife: (id, index) => { calls++; return { state: life(-40 + index % 8 * 5) }; },
     lifeTimelineNow: () => ({ years: [0, 2] }),
@@ -232,8 +352,30 @@ test('home family work remains bounded with millions of people and caches by tur
   assert.equal(calls, demo.FAMILY_COHORT_SIZE * 3, 'same-turn deaths and model refreshes invalidate family data');
 });
 
+test('family genders match canonical named profiles across generations, reloads and unit movement', () => {
+  const node = { id: 'c:o1|k:3|t:77|g:ut1|i:u7.12@4', total: 8, tile: 77, icon: { owner: 1, unit: { sub: 'melee' } } };
+  const owner = { civKey: 'ROME', religion: '' };
+  const ctx = context(['popFamilyData', 'lifeSeed'], {
+    ...people, personKey: panel.personKey, stablePersonKey: panel.stablePersonKey,
+    familyCache: new Map(), pos: 0, popState: { builtKey: '0' }, popOwnerContext: () => owner,
+    popLife: () => ({ state: life(-40, { gen: 1, family: 0, history: [life(-100, { deathYear: -50, deathTurn: 0 })] }) }),
+    lifeTimelineNow: () => ({ years: [0] }),
+  });
+  const data = ctx.popFamilyData(node, 0);
+  assert.ok(data.marriages.length > 0);
+  for (const member of data.members.values()) {
+    const seed = ctx.lifeSeed(panel.stablePersonKey(panel.personKey(node.id, member.index)), member.gen);
+    const profile = people.personProfile({ ...owner, seed, age: 0, category: 'military', unit: node.icon.unit });
+    assert.equal(member.gender, profile.gender, `${member.id} matches its displayed person`);
+    if (member.spouse) assert.notEqual(member.gender, data.members.get(member.spouse).gender);
+  }
+  ctx.familyCache.clear();
+  assert.deepEqual(plain(ctx.popFamilyData(node, 0)), plain(data));
+  assert.deepEqual(plain(ctx.popFamilyData({ ...node, id: node.id.replace('t:77', 't:99'), tile: 99 }, 0)), plain(data), 'unit relocation retains canonical people and marriages');
+});
+
 test('Population family summaries and tree rows expose spouses, both parents and children', () => {
-  const data = demo.simulateFamilies(rows([life(-40), life(-38), life(-10)]), 0, [0]);
+  const data = families(rows([life(-40), life(-38), life(-10)]), 0, [0]);
   const ctx = context(['popFamilyRows', 'popFamilySummary'], {
     popFamilyData: () => data, popPerson: () => ({ life: { state: { gen: 0 } } }),
     popFamilyMemberName: (node, member) => `Name ${member.index}`,
@@ -461,7 +603,7 @@ test('actual Leader tab controls switch filters, reset scrolling and expose thei
 });
 
 test('traditional family layout pairs spouses, branches to siblings and keeps parents above children without overlapping boxes', () => {
-  const data = demo.simulateFamilies(rows([life(-40), life(-38), life(-10), life(-8)]), 0, [0]);
+  const data = families(rows([life(-40), life(-38), life(-10), life(-8)]), 0, [0]);
   const members = [...data.members.values()], layout = demo.familyTreeLayout(members);
   const box = id => layout.boxes.find(b => b.id === id);
   assert.equal(layout.boxes.length, members.length);

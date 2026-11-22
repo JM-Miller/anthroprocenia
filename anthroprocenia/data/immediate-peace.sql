@@ -1,0 +1,2 @@
+INSERT OR REPLACE INTO GlobalParameters (Name, Value)
+VALUES ('DIPLOMACY_WAR_MIN_TURNS', '0');

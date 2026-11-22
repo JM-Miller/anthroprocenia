@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 import { loadModule } from './load.mjs';
-const { unitDestinationGroups, destinationPaths, UNIT_DESTINATION_STYLES } = await loadModule('anthroprocenia-unit-highlights.js');
+const { unitDestinationGroups, destinationPaths, unitDestinationGroupSteps, destinationPathSteps, UNIT_DESTINATION_STYLES } = await loadModule('anthroprocenia-unit-highlights.js');
 function fixture(type) {
   return { type, definition: { UnitType: type, FoundCity: type === 'UNIT_SETTLER', MakeTradeRoute: type === 'UNIT_MERCHANT', SpreadCharges: type === 'UNIT_MISSIONARY' ? 3 : 0 },
     lens: type === 'UNIT_SCOUT' ? 'fxs-discovery-lens' : null,
@@ -41,15 +41,17 @@ test('highlight geometry is viewport-filtered and bounded without altering the n
 });
 
 const playback = await readFile(new URL('../anthroprocenia/ui/map/anthroprocenia-playback.js', import.meta.url), 'utf8');
-function highlightFixture() {
-  const native = fixture('UNIT_SCOUT'), callbacks = new Map();
+function highlightFixture(incremental = false) {
+  const native = fixture('UNIT_SCOUT'), callbacks = new Map(), timers = new Map();
+  let sequence = 0;
   native.unit.location = { x: 0, y: 0 };
   const element = () => ({ attrs: {}, style: {}, children: [],
     setAttribute(key, value) { this.attrs[key] = value; }, getAttribute(key) { return this.attrs[key]; },
     appendChild(child) { this.children.push(child); }, classList: { add() {} } });
   const state = { key: '', geometry: '', groups: null, paths: {}, legend: null, revision: 0 };
   const ctx = vm.createContext({
-    unitHighlightState: state, unitDestinationGroups, destinationPaths, UNIT_DESTINATION_STYLES,
+    unitHighlightState: state, unitDestinationGroupSteps, destinationPathSteps, UNIT_DESTINATION_STYLES,
+    setTimeout(fn) { const id = ++sequence; timers.set(id, fn); return id; }, clearTimeout(id) { timers.delete(id); },
     LensManager: { getLensForUnit: () => native.lens, layers: new Map() },
     mapVisible: true, cmdLiveTurn: () => true, gameOverlayActive: () => false, riverDom: { el: element() },
     UI: { Player: { getHeadSelectedUnit: () => 1 } }, Units: { get: () => native.unit },
@@ -69,7 +71,16 @@ function highlightFixture() {
   vm.runInContext(playback.slice(playback.indexOf('function syncUnitHighlights('), playback.indexOf('function prepareTownLeisure(')), ctx);
   const start = playback.indexOf("try {\n  engine.on('UnitSelectionChanged'");
   vm.runInContext(playback.slice(start, playback.indexOf('function sizeScreenSvg(', start)), ctx);
-  return { ctx, state, native, callbacks };
+  const sync = ctx.syncUnitHighlights;
+  function flush() {
+    let batches = 0;
+    while (timers.size) {
+      assert.ok(++batches < 1000, 'highlight jobs finish');
+      const [id, fn] = timers.entries().next().value; timers.delete(id); fn();
+    }
+  }
+  if (!incremental) ctx.syncUnitHighlights = () => { sync(); flush(); };
+  return { ctx, state, native, callbacks, timers, flush };
 }
 test('selected scout highlights update when discoveries are revealed, added or collected and hide on deselection or replay', () => {
   const { ctx, state, native, callbacks } = highlightFixture();
@@ -110,6 +121,51 @@ test('a transient discovery lookup failure is surfaced and retried instead of po
   ctx.syncUnitHighlights();
   assert.deepEqual(state.groups.discoveries, [1, 3]); assert.equal(state.paths.discoveries.style.display, 'block');
 });
+test('large lenses defer both native scanning and geometry, coalesce polls and cancel obsolete selection work', () => {
+  const { ctx, native, state, timers, flush } = highlightFixture(true);
+  let reads = 0, vertices = 0;
+  native.map.getGridWidth = () => 4096;
+  native.map.getRevealedState = () => { reads++; return 2; };
+  ctx.basePos = Array.from({ length: 4096 }, () => ({ x: 0, y: 0 }));
+  ctx.hexVert = (i, k) => { vertices++; return [k, k]; };
+  const tick = () => {
+    const [id, fn] = timers.entries().next().value; timers.delete(id); fn();
+  };
+  ctx.syncUnitHighlights();
+  assert.equal(reads, 0, 'the native lens gets its first paint before scanning');
+  tick();
+  assert.ok(reads > 0 && reads <= 128);
+  const firstBatch = reads;
+  for (let i = 0; i < 10; i++) ctx.syncUnitHighlights();
+  assert.equal(reads, firstBatch, 'overlay polls do not force additional work before the scheduled continuation');
+  assert.equal(timers.size, 1);
+  native.unit.owner = 1; ctx.syncUnitHighlights();
+  assert.equal(timers.size, 0); assert.equal(state.job, null); assert.equal(state.groups, null);
+  native.unit.owner = 0; ctx.syncUnitHighlights();
+  while (state.job && state.job.key.startsWith('destinations|')) tick();
+  assert.equal(vertices, 0, 'path construction is deferred separately from scanning');
+  assert.equal(state.groups.discoveries.length, 4095);
+  let batches = 0;
+  while (timers.size) {
+    const before = vertices; tick(); batches++;
+    assert.ok(vertices - before <= 128 * 6, 'a geometry batch never builds the whole lens');
+  }
+  assert.ok(batches > 1);
+  assert.equal(state.job, null); assert.equal(state.paths.discoveries.style.display, 'block');
+  state.revision++; ctx.syncUnitHighlights(); ctx.mapVisible = false; ctx.syncUnitHighlights(); flush();
+  assert.equal(state.job, null); assert.equal(state.paths.discoveries.style.display, 'none');
+});
+test('slow native plot queries stop a lens batch at its time budget before the step limit', () => {
+  const { ctx, native, timers } = highlightFixture(true);
+  let clock = 0, reads = 0;
+  ctx.Date = { now: () => clock };
+  native.map.getGridWidth = () => 1000;
+  native.map.getRevealedState = () => { clock += 2; reads++; return 2; };
+  ctx.syncUnitHighlights();
+  const [id, fn] = timers.entries().next().value; timers.delete(id); fn();
+  assert.equal(reads, 3, 'three two-millisecond queries consume the six-millisecond batch budget');
+  ctx.mapVisible = false; ctx.syncUnitHighlights(); assert.equal(timers.size, 0);
+});
 
 test('selected-unit highlights survive native lens panels and repeated overlay polls but hide behind real menus', () => {
   const { ctx, state, native } = highlightFixture();
@@ -128,6 +184,7 @@ test('selected-unit highlights survive native lens panels and repeated overlay p
   ctx.syncUnitHighlights();
   assert.equal(state.paths.freshwater.style.display, 'block');
   for (const tagName of ['PANEL-SETTLER-LEGEND', 'TRADE-ROUTE-CHOOSER', 'PANEL-CONTINENTS']) {
+    ctx.ViewManager.current.getName = () => 'Unit';
     ctx.ContextManager.screens = [{ tagName, isConnected: true }];
     for (let poll = 0; poll < 5; poll++) ctx.syncUnitHighlights();
     assert.equal(state.paths.freshwater.style.display, 'block', tagName);
@@ -137,8 +194,17 @@ test('selected-unit highlights survive native lens panels and repeated overlay p
     ctx.ContextManager.screens.pop(); ctx.syncUnitHighlights();
     assert.equal(state.paths.freshwater.style.display, 'block');
   }
+  ctx.ViewManager.current.getName = () => 'UnitPromotion';
+  ctx.syncUnitHighlights();
+  assert.equal(state.paths.freshwater.style.display, 'none', 'unit modal views still hide the lens');
+  ctx.ViewManager.current.getName = () => 'Unit';
+  ctx.syncUnitHighlights();
+  assert.equal(state.paths.freshwater.style.display, 'block', 'returning to the native unit harness restores cached geometry');
   ctx.cmdLiveTurn = () => false; ctx.syncUnitHighlights();
   assert.equal(state.paths.freshwater.style.display, 'none', 'historical playback still hides live classifications');
+  ctx.cmdLiveTurn = () => true;
+  native.unit.owner = 1; ctx.syncUnitHighlights();
+  assert.equal(state.paths.freshwater.style.display, 'none', 'foreign settlers do not reveal legal sites');
 });
 
 test('replacement units use native capabilities and settlers omit blocked water and hidden land', () => {

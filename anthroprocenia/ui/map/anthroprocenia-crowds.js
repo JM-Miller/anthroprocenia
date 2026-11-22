@@ -56,6 +56,7 @@ export function crowdFormation(person, group, graph) {
   const sub = group.unitSub || '', state = group.unitState || '';
   const moving = !!(person.route && person.leg < person.route.length - 1 && person.wait <= 0 && !(person.strollPause > 0));
   if (group.military) {
+    if (group.battleReady !== true) return 'loose';
     if (sub === 'infantry' && ['alert', 'sleeping', 'fortified'].includes(state)) return 'shield';
     if (['idle', 'holding', 'healing', 'sleeping'].includes(state)) return 'loose';
     if (sub === 'cavalry') return 'wedge';
@@ -215,6 +216,7 @@ export class WalkerClumps {
       !person.cmd && !person.pinned && !person.inside && !person.exiting && person.fade >= 0.35 &&
       !exclude(person, group) && graph.nodes[person.node];
     for (const clump of this.clumps) {
+      if (clump.military && clump.group.battleReady !== true) { this.remove(clump); continue; }
       const members = clump.members.filter(person => current.has(clump.group) &&
         clump.group.byId.get(person.id) === person && eligible(person, clump.group));
       const retained = new Set(members);
@@ -222,6 +224,7 @@ export class WalkerClumps {
         person.clump = null; person.speed = person.baseSpeed || person.speed;
       }
       clump.members = members;
+      clump.speed = Math.min(...members.map(person => person.baseSpeed || person.speed));
       members.forEach((person, slot) => { person.formationSlot = slot; });
       if ((!coarse && !clump.military && !clump.group.unitSub) || members.length < 2) { this.remove(clump); continue; }
       const arrived = members.every(person => person.node === clump.goal && (!person.route || person.leg >= person.route.length - 1));
@@ -238,6 +241,7 @@ export class WalkerClumps {
       } else clump.readyAt = undefined;
     }
     for (const group of groups) {
+      if (group.military && group.battleReady !== true) continue;
       if ((!coarse && !group.military && !group.unitSub) || !group.streetNodes.length) continue;
       const buckets = new Map(), limit = group.military ? MAX_FORMATION_MEMBERS : MAX_CLUMP_MEMBERS;
       for (const person of group.people) {

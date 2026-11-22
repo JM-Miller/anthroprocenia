@@ -14,6 +14,10 @@ const cap = text => text.charAt(0).toUpperCase() + text.slice(1);
 
 // a: onsets, b: middles (may be ''), m/f: male / female endings, s: surname endings, p: place endings, j: how parts are joined
 const FAMILIES = {
+  // These are fictionalized naming palettes, not reconstructions of unknown ancient languages.
+  xiongnu: { a: ['Mo', 'Lao', 'Hu', 'Jun', 'Zhi', 'Lou', 'Qie'], b: ['', 'lu', 'ti'], m: ['du', 'shang', 'chen', 'ye', 'hu'], f: ['zhi', 'ning', 'yan', 'hu'], s: ['Luanti', 'Huyan', 'Lan', 'Xubu'], p: ['cheng', 'ula', 'gol', 'nur'] },
+  caralan: { a: ['Cara', 'Aspe', 'Mira', 'Luri', 'Chupa', 'Vicha'], b: ['', 'a'], m: ['l', 'ro', 'ya', 'si'], f: ['ya', 'na', 'ma', 'ri'], s: ['Supe', 'Pativilca', 'Fortaleza', 'Huaura'], p: ['l', 'ya', 'co', 'si'] },
+  taino: { a: ['Agua', 'Ana', 'Cao', 'Gua', 'Hua', 'Yuca', 'Maca'], b: ['', 'ri', 'na'], m: ['nabo', 'nex', 'guay', 'can'], f: ['caona', 'bona', 'ma', 'nita'], s: ['Maguana', 'Xaragua', 'Marien', 'Magua'], p: ['bo', 'bona', 'yeke', 'gua'] },
   latin: { a: ['Ae', 'Cas', 'Fab', 'Luc', 'Mar', 'Pom', 'Sev', 'Val', 'Tit', 'Ner', 'Sab', 'Vit', 'Gal', 'Cor', 'Lic', 'Pla', 'Rut', 'Sul', 'Ner', 'Cat', 'Hor', 'Ocr', 'Pap', 'Ter'], b: ['i', 'a', 'o', 'pi', 'ri', 'ti', 'ni', 'li', 'ci', 'vi', ''], m: ['us', 'ius', 'anus', 'inus', 'o', 'ianus', 'ax'], f: ['a', 'ia', 'illa', 'ina', 'ana'], s: ['ius', 'ianus', 'inus', 'ilius', 'anus', 'ca'], p: ['ium', 'ia', 'um', 'ae', 'ona', 'entum'] },
   greek: { a: ['Alk', 'Dem', 'Euk', 'Phil', 'Kall', 'Nik', 'Pyth', 'Theo', 'Hip', 'Lys', 'Mel', 'Ari', 'Kle', 'Pol', 'Sim', 'Tim', 'Xen', 'Zen', 'Dio', 'Ant'], b: ['o', 'a', 'e', 'i', 'ia', 'ono', 'ome', 'ika', ''], m: ['os', 'ides', 'on', 'eus', 'ias', 'ander', 'ocles', 'ippos'], f: ['e', 'a', 'ia', 'ene', 'ippe', 'ydora'], s: ['ides', 'ades', 'akos', 'eus', 'ion', 'ikos'], p: ['ai', 'ia', 'os', 'ion', 'opolis', 'ene'] },
   egyptian: { a: ['Ah', 'Amen', 'Ptah', 'Khen', 'Sen', 'Ram', 'Mery', 'Nef', 'Ipu', 'Bak', 'Hat', 'Kha', 'Mentu', 'Seti', 'Tut'], b: ['mose', 'em', 'u', 'a', 'et', 'en', ''], m: ['hotep', 'mose', 'ankh', 're', 'mes', 'iry', 'ef', 'amun'], f: ['ankh', 'it', 'ret', 'tari', 'mut', 'nebty', 'iset'], s: ['hotep', 'em-hat', 'ankhu', 'iry', 'nakht', 'amun'], p: ['is', 'et', 'opolis', 'ut', 'ibis'] },
@@ -47,7 +51,39 @@ const FAMILIES = {
   generic: { a: ['Al', 'Bar', 'Cor', 'Dun', 'El', 'Far', 'Gar', 'Hal', 'Iv', 'Jor', 'Kes', 'Lor', 'Mor', 'Nor', 'Ors', 'Per'], b: ['a', 'e', 'i', 'o', 'u', ''], m: ['an', 'en', 'in', 'on', 'ric', 'ard', 'ell', 'ow'], f: ['a', 'ia', 'ina', 'elle', 'ara', 'wen', 'is'], s: ['er', 'ton', 'ow', 'ell', 'ard', 'ing', 'ley'], p: ['ton', 'ford', 'dale', 'wick', 'mere', 'field'] },
 };
 
+// These smaller pools retain whole attested names instead of combining unrelated language families.
+for (const [family, male, female, surnames, places] of [
+  ['lakota', ['Red Cloud', 'Crazy Horse', 'Sitting Bull', 'Spotted Tail'], ['Moving Robe Woman', 'Eagle Woman', 'Her Eagle Robe', 'Iron Cedar Woman'], ['Red Cloud', 'Standing Bear', 'Black Elk'], ['Black Hills', 'Cheyenne River', 'White River', 'Grand River']],
+  ['navajo', ['Manuelito', 'Barboncito', 'Narbona', 'Delgadito'], ['Juanita', 'Annie', 'Clara', 'Laura'], ['Begay', 'Nez', 'Yazzie', 'Benally'], ['Dinetah', 'Chuska', 'Black Mesa', 'Canyon de Chelly']],
+  ['gokturk', ['Bumin', 'Istemi', 'Mugan', 'Taspar', 'Bilge', 'Tonyukuk', 'Kul Tigin'], ['Elbilge', 'Qutlug Sebag'], ['Ashina', 'Ashide'], ['Otuken', 'Orkhon', 'Altai', 'Talas']],
+  ['nahuatl', ['Nezahualcoyotl', 'Cuauhtemoc', 'Itzcoatl', 'Cuitlahuac'], ['Atotoztli', 'Tecuichpo', 'Miahuaxochitl'], ['Xochitl', 'Tecpatl', 'Mazatl'], ['Texcoco', 'Tlacopan', 'Tlatelolco']],
+  ['kanienkeha', ['Thayendanegea', 'Teyoninhokarawen', 'Ayonwahta'], ['Konwatsiatsienni', 'Tekakwitha', 'Kateri'], ['Karonghyontye', 'Orenhyatekha', 'Satekariwate'], ['Kahnawake', 'Kanatsiohareke', 'Akwesasne']],
+  ['akan', ['Kofi', 'Kwame', 'Kwesi', 'Kwadwo', 'Yaw'], ['Akua', 'Abena', 'Afia', 'Ama', 'Yaa'], ['Bonsu', 'Osei', 'Opoku', 'Agyeman'], ['Kumasi', 'Mampong', 'Bekwai', 'Ejisu']],
+  ['magyar', ['Istvan', 'Lajos', 'Ferenc', 'Laszlo'], ['Ilona', 'Erzsebet', 'Judit', 'Eszter'], ['Nagy', 'Kovacs', 'Szabo', 'Toth'], ['Szeged', 'Debrecen', 'Pecs', 'Gyor']],
+  ['amazigh', ['Moha', 'Massin', 'Idir', 'Amghar'], ['Tiziri', 'Tafukt', 'Tudert', 'Tassadit'], ['Ait Atta', 'Ait Waryaghar', 'Ait Oumalou'], ['Tiznit', 'Azrou', 'Tafraout', 'Ifrane']],
+  ['portuguese', ['Joaquim', 'Manuel', 'Antonio', 'Pedro'], ['Maria', 'Ana', 'Isabel', 'Teresa'], ['Silva', 'Santos', 'Pereira', 'Costa'], ['Braga', 'Coimbra', 'Evora', 'Guimaraes']],
+  ['italian', ['Giovanni', 'Lorenzo', 'Francesco', 'Marco'], ['Giulia', 'Lucia', 'Caterina', 'Chiara'], ['Rossi', 'Conti', 'Moretti', 'Bianchi'], ['Viterbo', 'Ancona', 'Perugia', 'Treviso']],
+  ['swedish', ['Erik', 'Johan', 'Karl', 'Gustav'], ['Anna', 'Karin', 'Ingrid', 'Astrid'], ['Lindberg', 'Andersson', 'Lindgren', 'Bergstrom'], ['Uppsala', 'Lund', 'Vasteras', 'Orebro']],
+]) FAMILIES[family] = { a: [''], b: [''], m: male, f: female, s: surnames, p: places };
+
 const CULTURE_BY_CIV = {
+  ANTHROBRITONS: 'celtic', ANTHROSUEBI: 'germanic', ANTHROWAGADU: 'mande',
+  ANTHROJAVANESE: 'austronesian', ANTHROSLAVIC: 'slavic',
+  ANTHROXIONGNU: 'gokturk', ANTHROGOTURKS: 'gokturk', ANTHROGOKTURKS: 'gokturk', ANTHROCARALANS: 'caralan', ANTHROTAINO: 'taino',
+  ANTHROIBERIA: 'iberian', ANTHROTHRACE: 'greek', ANTHROSCYTHIA: 'persian',
+  ANTHRONORDIC: 'norse', ANTHROPICTISH: 'celtic', ANTHROZIMBABWE: 'bantu',
+  ANTHROBYZANTIUM: 'greek', ANTHROAYUTTHAYA: 'tai', ANTHROAZTEC: 'nahuatl',
+  ANTHROMOHAWK: 'kanienkeha', ANTHROFRANKS: 'germanic', ANTHROSELJUK: 'turkic',
+  ANTHROLAKHOTA: 'lakota', ANTHROLAKOTA: 'lakota', ANTHRONAVAJO: 'navajo',
+  ANTHRORUS: 'slavic', ANTHROLOMBARDS: 'germanic', ANTHROTIMURIDS: 'turkic',
+  ANTHROVENICE: 'italian', ANTHROALMOHADS: 'amazigh', ANTHROKHWARAZMIANS: 'persian',
+  ANTHROPAPALSTATES: 'italian', ANTHROTAINOEXPLORATION: 'taino',
+  ANTHROASHANTI: 'akan', ANTHROWAFDISTEGYPT: 'arabic', ANTHROSERBIA: 'slavic',
+  ANTHROINDONESIA: 'austronesian', ANTHROPORTUGAL: 'portuguese', ANTHROHUNGARY: 'magyar',
+  ANTHROTAHITI: 'polynesian', ANTHROGRANCOLOMBIA: 'iberian', ANTHROVATICAN: 'italian',
+  ANTHROBERBER: 'amazigh', ANTHROSWEDEN: 'swedish', ANTHROAFGHANISTAN: 'persian',
+  ANTHROKAZAKH: 'turkic', ANTHROSCOTLAND: 'celtic', ANTHRODOMINICAN: 'iberian',
+  ANTHROHAITI: 'norman', ANTHROBRAZIL: 'portuguese',
   ROME: 'latin', GREECE: 'greek', EGYPT: 'egyptian', PERSIA: 'persian', ABBASID: 'arabic', ASSYRIA: 'mesopotamian', BABYLON: 'mesopotamian', GAUL: 'celtic',
   HAN: 'sinitic', MING: 'sinitic', QING: 'sinitic', MAURYA: 'indic', CHOLA: 'indic', MUGHAL: 'indic', NEPAL: 'indic', KHMER: 'tai', SIAM: 'tai', DAIVIET: 'viet',
   MAJAPAHIT: 'austronesian', MAYA: 'maya', INCA: 'andean', MISSISSIPPIAN: 'algonquian', SHAWNEE: 'algonquian', BUGANDA: 'bantu', HAWAII: 'polynesian', TONGA: 'polynesian',
@@ -57,7 +93,7 @@ const CULTURE_BY_CIV = {
   ICELAND: 'norse', PIRATEREPUBLIC: 'pirate',
 };
 export const NAME_CULTURES = Object.keys(FAMILIES);
-export function cultureOf(civKey) { return CULTURE_BY_CIV[civKey] || 'generic'; }
+export function cultureOf(civKey) { return CULTURE_BY_CIV[String(civKey).toUpperCase().replace(/_/g, '')] || 'generic'; }
 
 function compose(family, seed, ends) {
   const f = FAMILIES[family] || FAMILIES.generic, join = f.j == null ? '' : f.j;

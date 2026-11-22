@@ -33,8 +33,9 @@ function element(tag) {
 }
 test('Gameface controls display speed on a div and accept DOM releases, engine releases and keyboard without double toggles', () => {
   let now = 1000;
-  const ctx = context(['buildWalkerControls', 'syncWalkerSpeed', 'popSyncPauseButton', 'walkerControlAt', 'mapGamepadAction'], {
+  const ctx = context(['buildWalkerControls', 'syncWalkerSpeed', 'popSyncPauseButton', 'walkerControlAt', 'mapGamepadAction', 'toggleMapHistory'], {
     els: {}, popState: { walkerSpeed: 5, peoplePaused: false }, ps: n => n, MAP_CHROME_CLASS: 'chrome',
+    cmdConsumeInput() {}, resetWorldTimeline() {}, updatePanelControls() {}, positionPanel() {}, syncWorldTimeline() {},
     Date: { now: () => now }, document: { body: element('body'), createElement: element, createElementNS: (ns, tag) => element(tag) },
     mapVisible: true, LeaderModelManager: { isLeaderShowing: false }, gameOverlayActive: () => false,
     settlementExpansionActive: () => false, mapPlotSelectionActive: () => false,
@@ -80,6 +81,7 @@ test('Gameface controls display speed on a div and accept DOM releases, engine r
   speed.events.mouseup(event({ type: 'mouseup', button: 2 }));
   assert.equal(ctx.popState.walkerSpeed, 3, 'keyboard repeats and right clicks cannot toggle speed');
   now += 400;
+  speed.events.mousedown(event({ type: 'mousedown', button: 0 }));
   speed.events.mouseup(event({ type: 'mouseup', button: 0 }));
   checkSpeed(4);
   now += 400;
@@ -94,9 +96,32 @@ test('Gameface controls display speed on a div and accept DOM releases, engine r
   assert.equal(ctx.popState.peoplePaused, true);
   assert.equal(pause.attrs['aria-label'], 'Resume walkers');
   now += 400;
+  pause.events.mousedown(event({ type: 'mousedown', button: 0 }));
   pause.events.mouseup(event({ type: 'mouseup', button: 0 }));
   assert.equal(ctx.popState.peoplePaused, false);
   assert.equal(pause.attrs['aria-label'], 'Pause walkers');
+  const clock = ctx.els.historyButton;
+  now += 400;
+  clock.walkerActivate(event({ detail: { name: 'mousebutton-left', status: 2 } }));
+  assert.equal(ctx.historyControlsExpanded, true);
+  now += 1000;
+  clock.events.mouseup(event({ type: 'mouseup', button: 0 }));
+  clock.events.click(event({ type: 'click', button: 0 }));
+  assert.equal(ctx.historyControlsExpanded, true, 'a delayed DOM click after native FINISH cannot close the Chronicle');
+  clock.events.mousedown(event({ type: 'mousedown', button: 0 }));
+  clock.events.mouseup(event({ type: 'mouseup', button: 0 }));
+  clock.events.click(event({ type: 'click', button: 0 }));
+  assert.equal(ctx.historyControlsExpanded, false, 'the next intentional press closes the Chronicle');
+  now += 1000;
+  clock.walkerActivate(event({ detail: { name: 'mousebutton-left', status: 2 } }));
+  assert.equal(ctx.historyControlsExpanded, false, 'delayed native FINISH after DOM release cannot reopen the Chronicle');
+  clock.walkerPress();
+  now += 400;
+  clock.walkerActivate(event({ detail: { name: 'mousebutton-left', status: 2 } }));
+  now += 1000;
+  clock.events.mouseup(event({ type: 'mouseup', button: 0 }));
+  clock.events.click(event({ type: 'click', button: 0 }));
+  assert.equal(ctx.historyControlsExpanded, true, 'a fresh native gesture opens once despite delayed DOM tails');
 });
 
 test('doors are on roof boundaries, and people physically walk off the road before entering', () => {

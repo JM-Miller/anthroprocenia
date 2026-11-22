@@ -48,49 +48,63 @@ export function bridgeAt(crossing, direction, riverClear, width) {
 }
 
 // Only facing dry road ends can form a bridge; spatial buckets bound the candidate search.
-export function bridgeRoadGaps(roads, { width, maxSpan, isWet, clear = () => true, limit = 128, minFacing = 0.94 }) {
-  const cells = new Map(), ends = [], bridges = [], links = [], used = new Set();
-  if (!(width > 0) || !(maxSpan > width)) return { bridges, roads: links };
-  for (const road of roads) {
-    const pts = road.pts;
-    if (pts.length < 2) continue;
-    for (const [point, inner] of [[pts[0], pts[1]], [pts[pts.length - 1], pts[pts.length - 2]]]) {
-      const length = Math.hypot(point.x - inner.x, point.y - inner.y);
-      if (!length || isWet(point.x, point.y)) continue;
-      const end = { point, road, dx: (point.x - inner.x) / length, dy: (point.y - inner.y) / length, id: ends.length };
-      ends.push(end);
-      const key = `${Math.floor(point.x / maxSpan)},${Math.floor(point.y / maxSpan)}`;
-      const list = cells.get(key) || [];
-      list.push(end); cells.set(key, list);
+export function bridgeRoadGaps(roads, { width, maxSpan, isWet, clear = () => true, limit = 128, minFacing = 0.94, incremental = false }) {
+  const steps = (function* () {
+    const cells = new Map(), ends = [], bridges = [], links = [], used = new Set();
+    if (!(width > 0) || !(maxSpan > width)) return { bridges, roads: links };
+    for (const road of roads) {
+      yield;
+      const pts = road.pts;
+      if (pts.length < 2) continue;
+      for (const [point, inner] of [[pts[0], pts[1]], [pts[pts.length - 1], pts[pts.length - 2]]]) {
+        const length = Math.hypot(point.x - inner.x, point.y - inner.y);
+        if (!length || isWet(point.x, point.y)) continue;
+        const end = { point, road, dx: (point.x - inner.x) / length, dy: (point.y - inner.y) / length, id: ends.length };
+        ends.push(end);
+        const key = `${Math.floor(point.x / maxSpan)},${Math.floor(point.y / maxSpan)}`;
+        const list = cells.get(key) || [];
+        list.push(end); cells.set(key, list);
+      }
     }
-  }
-  for (const a of ends) {
-    if (used.has(a.id) || bridges.length >= limit) continue;
-    const x = Math.floor(a.point.x / maxSpan), y = Math.floor(a.point.y / maxSpan), candidates = [];
-    for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) for (const b of cells.get(`${x + dx},${y + dy}`) || []) {
-      if (b.id <= a.id || used.has(b.id) || b.road === a.road) continue;
-      const vx = b.point.x - a.point.x, vy = b.point.y - a.point.y, length = Math.hypot(vx, vy);
-      if (length <= width * 0.1 || length > maxSpan ||
-          (vx * a.dx + vy * a.dy) / length < minFacing || (-vx * b.dx - vy * b.dy) / length < minFacing) continue;
-      candidates.push({ b, length });
+    let comparisons = 0;
+    for (const a of ends) {
+      yield;
+      if (used.has(a.id) || bridges.length >= limit) continue;
+      const x = Math.floor(a.point.x / maxSpan), y = Math.floor(a.point.y / maxSpan), candidates = [];
+      for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) for (const b of cells.get(`${x + dx},${y + dy}`) || []) {
+        if (++comparisons % 64 === 0) yield;
+        if (b.id <= a.id || used.has(b.id) || b.road === a.road) continue;
+        const vx = b.point.x - a.point.x, vy = b.point.y - a.point.y, length = Math.hypot(vx, vy);
+        if (length <= width * 0.1 || length > maxSpan ||
+            (vx * a.dx + vy * a.dy) / length < minFacing || (-vx * b.dx - vy * b.dy) / length < minFacing) continue;
+        candidates.push({ b, length });
+      }
+      candidates.sort((a, b) => a.length - b.length || a.b.id - b.b.id);
+      for (const { b, length } of candidates) {
+        yield;
+        const mid = { x: (a.point.x + b.point.x) / 2, y: (a.point.y + b.point.y) / 2 };
+        if (!isWet(mid.x, mid.y) || !clear(a.point, b.point, width / 2)) continue;
+        const steps = Math.min(256, Math.max(16, Math.ceil(length / (width / 2))));
+        let wet = 0;
+        for (let k = 1; k < steps; k++) {
+          if (k % 32 === 0) yield;
+          if (isWet(a.point.x + (b.point.x - a.point.x) * k / steps, a.point.y + (b.point.y - a.point.y) * k / steps)) wet++;
+        }
+        if (wet < steps / 4) continue;
+        const bridge = bridgeAt(mid, { x: (b.point.x - a.point.x) / length, y: (b.point.y - a.point.y) / length }, length / 2, width);
+        bridge.start = a.point; bridge.end = b.point;
+        bridges.push(bridge);
+        links.push({ pts: [a.point, b.point], towns: [...new Set([...(a.road.towns || []), ...(b.road.towns || [])])], kind: 'bridge' });
+        used.add(a.id); used.add(b.id);
+        break;
+      }
     }
-    candidates.sort((a, b) => a.length - b.length || a.b.id - b.b.id);
-    for (const { b, length } of candidates) {
-      const mid = { x: (a.point.x + b.point.x) / 2, y: (a.point.y + b.point.y) / 2 };
-      if (!isWet(mid.x, mid.y) || !clear(a.point, b.point, width / 2)) continue;
-      const steps = Math.min(256, Math.max(16, Math.ceil(length / (width / 2))));
-      let wet = 0;
-      for (let k = 1; k < steps; k++) if (isWet(a.point.x + (b.point.x - a.point.x) * k / steps, a.point.y + (b.point.y - a.point.y) * k / steps)) wet++;
-      if (wet < steps / 4) continue;
-      const bridge = bridgeAt(mid, { x: (b.point.x - a.point.x) / length, y: (b.point.y - a.point.y) / length }, length / 2, width);
-      bridge.start = a.point; bridge.end = b.point;
-      bridges.push(bridge);
-      links.push({ pts: [a.point, b.point], towns: [...new Set([...(a.road.towns || []), ...(b.road.towns || [])])], kind: 'bridge' });
-      used.add(a.id); used.add(b.id);
-      break;
-    }
-  }
-  return { bridges, roads: links };
+    return { bridges, roads: links };
+  })();
+  if (incremental) return steps;
+  let result = steps.next();
+  while (!result.done) result = steps.next();
+  return result.value;
 }
 
 // Waterfront decks are visual structures, not permission for ordinary road links or walkers to cross water.
@@ -201,9 +215,12 @@ export function planTownLinks({ towns, rivers = [], mapRoads = [], width = 1, ma
   const join = (a, b) => parents.set(root(a), root(b));
   for (const road of roads) for (const id of road.towns.slice(1)) join(road.towns[0], id);
   const connectedPairs = new Set(roads.filter(road => road.towns.length === 2).map(road => road.towns.slice().sort().join('|')));
+  const attemptedPairs = new Set();
   const connectTowns = (a, b, kind) => {
     const pair = [a.id, b.id].sort().join('|');
     if (connectedPairs.has(pair)) return true;
+    if (attemptedPairs.has(pair)) return false;
+    attemptedPairs.add(pair);
     const distance = Math.hypot(b.x - a.x, b.y - a.y) || 1, dx = (b.x - a.x) / distance, dy = (b.y - a.y) / distance;
     const gateA = outermostNode(a.nodes, a, dx, dy), gateB = outermostNode(b.nodes, b, -dx, -dy);
     if (!gateA || !gateB) return false;

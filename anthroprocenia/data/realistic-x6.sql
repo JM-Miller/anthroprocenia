@@ -1,0 +1,1 @@
+UPDATE GlobalParameters SET Value = '6' WHERE Name = 'ANTHRO_REALISTIC_SPEED_FACTOR';

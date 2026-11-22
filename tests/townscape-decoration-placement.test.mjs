@@ -18,7 +18,10 @@ function slice(name) {
   return source.slice(start, i + 1);
 }
 function context(names, state) {
-  const ctx = vm.createContext({ pos: 0, fogMode: false, hexH: 115, colShift: 0, walkerCrowdsActive: () => false, ...state });
+  if (names.includes('townDecoPaths')) names = [...names, 'townDecoPathSteps'];
+  const ctx = vm.createContext({ pos: 0, fogMode: false, hexH: 115, colShift: 0, townRender: {}, townscapeActive: () => false,
+    showTownDecorationPreview() {}, walkerCrowdsActive: () => false, ...state });
+  ctx.townDecoFullDetail = () => !ctx.walkerCrowdsActive();
   ctx.peopleCameraKey = () => `${ctx.viewZoom}|${ctx.viewAspectY}|${ctx.mapPanX}|${ctx.mapPanY}`;
   ctx.mapToScreen = (x, y) => ({ x, y });
   ctx.syncTownDecorationVisibility = () => {};
@@ -35,6 +38,60 @@ const emptyPlan = () => ({ roads: [], water: [], rivers: [], bridges: [] });
 const setup = () => context(['townDecorationIndex', 'townDecoPlacements', 'townDecoPaths'], {
   ...town, hexW: 100, isWaterAt: () => false,
   hashString: s => [...s].reduce((h, c) => (Math.imul(h, 31) + c.charCodeAt(0)) >>> 0, 7),
+});
+test('era palettes provide distinct appropriate artwork and denser silhouettes without expanding native budgets', () => {
+  const palettes = [0, 1, 2].map(age => town.townDecorations(91, 4000, age));
+  const kinds = palettes.map(decos => new Set(decos.map(deco => deco.kind)));
+  assert.ok(kinds[0].has('amphora') && kinds[0].has('fishingRack') && kinds[0].has('torch'));
+  assert.ok(kinds[1].has('lantern') && kinds[1].has('cart') && kinds[1].has('signpost'));
+  assert.ok(kinds[2].has('handpump') && kinds[2].has('mailbox') && kinds[2].has('bicycle'));
+  for (const kind of ['lamp', 'handpump', 'mailbox', 'bicycle']) {
+    assert.equal(kinds[0].has(kind), false, `Antiquity excludes ${kind}`);
+    assert.equal(kinds[1].has(kind), false, `Exploration excludes ${kind}`);
+  }
+  for (const decos of palettes) for (const kind of new Set(decos.map(deco => deco.kind))) {
+    const [group, path] = town.decorationPath({ kind, size: 4, a: 0 }, 0, 0, 1);
+    assert.ok(town.DECO_GROUPS.includes(group));
+    assert.ok(path.startsWith('M') && !path.includes('NaN'), `${kind} has valid artwork`);
+  }
+  assert.deepEqual(palettes[2], town.townDecorations(91, 4000, 2), 'era placement stays deterministic');
+  const unit = 100 / (100 * 5280);
+  const placements = Array.from({ length: 2000 }, (_, i) => ({ x: i % 100, y: Math.floor(i / 100), unit, pad: unit * 10,
+    deco: { kind: 'plant', size: 4, a: 0 } }));
+  const paths = setup().townDecoPaths(placements, { x0: -1, x1: 101, y0: -1, y1: 101 }, 4096, 20, true);
+  assert.equal(paths.rendered, 1536, '50 percent more complete silhouettes fit than the old 1024-shape limit');
+  const geometry = town.DECO_GROUPS.map(name => paths[name]).join('');
+  assert.ok(geometry.length <= 262144 && geometry.match(/[MLZ]/g).length <= 8192);
+});
+test('cancelled incremental decoration geometry never publishes new cache metadata or unfinished paths', () => {
+  const home = entry(), unit = 100 / (100 * 5280);
+  home.decorations = Array.from({ length: 2000 }, (_, i) => ({ x: i % 20, y: Math.floor(i / 20), unit, pad: unit * 10,
+    deco: { kind: 'plant', size: 4, a: 0 } }));
+  const paths = Object.fromEntries(town.DECO_GROUPS.map(name => [name, { style: {}, decorationHasGeometry: true, d: 'previous',
+    setAttribute(key, value) { this[key] = value; } }]));
+  let shapes = 0;
+  const ctx = context(['syncTownDecorations', 'townDecoPaths', 'townDecorationIndex', 'tileDecoPlacements'], {
+    ...town, TAG: '[test]', console: { warn() {} }, townElementVisibility: { townDecorations: true },
+    townDecoActive: () => true, townPaths: paths, townDecoScene: { key: 'previous', placements: [], rect: null },
+    townKey: 'replacement', townPlan: emptyPlan(), townDecoTiles: () => [], tileDecoPlacements: () => [],
+    townDecorationIndex: () => ({ circle() {} }), hashString: () => 1, viewportVegetation: function* () {},
+    mapPxW: 1000, mapPxH: 1000, mapX: 0, mapY: 0, mapPanX: 0, mapPanY: 0, hexW: 100,
+    viewZoom: 1, viewAspectY: 1, window: { innerWidth: 1000, innerHeight: 1000 },
+    decorationPath(...args) { shapes++; return town.decorationPath(...args); },
+  });
+  const job = ctx.syncTownDecorations([home], true);
+  for (let steps = 0; shapes < 10; steps++) {
+    assert.ok(steps < 4000);
+    const before = shapes;
+    assert.equal(job.next().done, false);
+    assert.ok(shapes - before <= 1, 'normalizing dense SVG silhouettes yields between shapes');
+  }
+  job.return();
+  assert.equal(ctx.townDecoScene.key, 'previous');
+  assert.ok(Object.values(paths).every(path => path.d === 'previous'));
+  ctx.syncTownDecorations([home]);
+  assert.equal(ctx.townDecoScene.key, 'replacement');
+  assert.ok(paths.decoPlants.d.startsWith('M'));
 });
 test('world-scale segments and queries stay bounded at tiny townscape cell sizes without losing collisions', () => {
   const index = new town.DecorationIndex(0.01);
@@ -323,15 +380,15 @@ test('dense scene rendering diagnoses detail limiting once, preserves placements
     viewZoom: 1, viewAspectY: 1, window: { innerWidth: 1000, innerHeight: 1000 },
   });
   ctx.syncTownDecorations([home]);
-  assert.equal(ctx.townDecoScene.placements.length, 6144);
+  assert.equal(ctx.townDecoScene.placements.length, 9216);
   assert.equal(home.decorations.length, 16000, 'draw limits do not modify simulation/leisure geometry');
   assert.ok(paths.decoFurniture.d.length > 0);
   assert.equal(warnings.length, 1);
   ctx.walkerCrowdsActive = () => true; ctx.syncTownDecorations([home]);
-  assert.equal(ctx.townDecoScene.placements.length, 6144);
+  assert.equal(ctx.townDecoScene.placements.length, 9216);
   assert.equal((paths.decoFurniture.d.match(/M/g) || []).length, 4096, 'early townscape zoom shows eight times the previous 512 previews');
   ctx.walkerCrowdsActive = () => false; ctx.syncTownDecorations([home]);
-  assert.equal(ctx.townDecoScene.placements.length, 6144, 'closer zoom upgrades detail even inside the same padded scene');
+  assert.equal(ctx.townDecoScene.placements.length, 9216, 'closer zoom upgrades detail even inside the same padded scene');
   const detailed = (paths.decoFurniture.d.match(/Z/g) || []).length;
   assert.ok(detailed >= 512 && detailed <= 1024, 'closer zoom spends the unchanged command budget on complete silhouettes');
   ctx.mapPanX = 2000; ctx.syncTownDecorations([home]);
@@ -364,6 +421,44 @@ test('early decoration previews are visible at townscape entry, transition to ph
   const first = [...dense.decoBushes.matchAll(/[ML](-?[\d.]+),(-?[\d.]+)/g)].slice(0, 2);
   const feet = Math.hypot(+first[1][1] - +first[0][1], +first[1][2] - +first[0][2]) / unit + town.DECORATION_STROKE_FEET;
   assert.ok(Math.abs(feet - 8) < 0.0001, 'dense close-zoom fallback retains the physical span');
+});
+
+test('decorations upgrade on the first update below the displayed 1000-foot boundary, independently of crowds and aspect', () => {
+  for (const [width, scale, aspect] of [[1000, 1, 1], [400, 0.75, 0.001], [3840, 2, 0.5]]) {
+    const home = entry(), unit = 100 / (100 * 5280);
+    home.decorations = [{ x: 0, y: 0, unit, pad: unit * 10, deco: { kind: 'bush', size: 8, a: 0.4 } }];
+    const paths = Object.fromEntries(town.DECO_GROUPS.map(k => [k, { style: {}, setAttribute(name, value) { this[name] = value; } }]));
+    const target = Math.min(180 * scale, width * 0.3);
+    let indexing = 0;
+    const ctx = context(['townDecoAtScale', 'townDecoFullDetail', 'mapScaleForView', 'mapScaleMetrics',
+      'syncTownDecorations', 'townDecoPaths', 'advanceTownDecorations', 'syncTownDecorationVisibility'], {
+      ...town, TAG: '[test]', console: { warn() {} }, townElementVisibility: { townDecorations: true },
+      townDecoActive: () => true, townPaths: paths, townDecorationLayer: { style: {} },
+      townDecoScene: { key: '', placements: [], rect: null }, townKey: 'scale', townPlan: emptyPlan(),
+      townRender: {}, townZoomKey: () => String(ctx.viewZoom), scheduleTownRefresh() {},
+      columnShiftMarkersStale: false, fogMarkersStale: false, sizeScreenSvg() {}, syncMapSvgViewport() {},
+      townDecoTiles: () => [], tileDecoPlacements: () => [], townDecorationIndex() { indexing++; return { circle() {} }; },
+      hashString: () => 1, viewportVegetation: function* () {},
+      mapPxW: 0, mapPxH: 0, mapX: 0, mapY: 0, mapPanX: 0, mapPanY: 0, hexW: 100,
+      viewZoom: target * 5280 / 1500, viewAspectY: aspect, ps: n => n * scale,
+      measureArea: () => ({ w: width }), window: { innerWidth: width, innerHeight: 600 }, walkerCrowdsActive: () => true,
+    });
+    assert.equal(ctx.mapScaleForView().label, '1000 feet');
+    assert.equal(ctx.townDecoAtScale(), false);
+    ctx.syncTownDecorations([home]);
+    assert.equal(ctx.townDecoScene.fullDetail, false);
+    assert.ok(!paths.decoBushes.d.includes('Z'));
+    ctx.viewZoom = target * 5280 / 999;
+    assert.equal(ctx.mapScaleForView().label, '500 feet');
+    ctx.advanceTownDecorations([home]);
+    assert.equal(ctx.walkerCrowdsActive(), true, 'decorations cannot wait for individual walkers');
+    assert.equal(ctx.townDecoScene.fullDetail, true);
+    assert.equal(ctx.townDecorationLayer.style.display, 'block');
+    assert.ok(paths.decoBushes.d.includes('Z'), 'first bounded update paints closed, readable decoration artwork');
+    assert.equal(indexing, 1, 'upgrading cached previews does not restart placement work');
+    const commands = (paths.decoBushes.d.match(/[MLZ]/g) || []).length;
+    assert.ok(commands > 0 && commands <= 8192); assert.ok(paths.decoBushes.d.length <= 262144);
+  }
 });
 
 test('crowd dispersal immediately submits readable full decoration artwork within native budgets', () => {

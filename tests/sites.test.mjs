@@ -86,11 +86,13 @@ test('label text shrinks as the player zooms in and never drops below a legible 
   assert.ok(siteLabelFontPx(480, font) < siteLabelFontPx(5, font));
 });
 
-test('path preview unwraps map seams and numbers the last tile of each turn', () => {
+test('path preview unwraps map seams and labels only changes from the previous movement turn', () => {
   const points = unwrapPathPoints([{ x: 990 }, { x: 1010 }, { x: 10 }, { x: 30 }], 1000);
   assert.deepEqual(points.map(p => p.x), [990, 1010, 1010, 1030]);
-  const labels = pathTurnLabels([5, 6, 7, 8, 9], [0, 1, 1, 2, 2], false);
-  assert.deepEqual(labels, [{ i: 2, turn: 1 }, { i: 4, turn: 2 }]);
-  assert.equal(pathTurnLabels([5, 6, 7], [0, 1, 1], true).length, 2);
-  assert.deepEqual(pathTurnLabels([5], undefined, false), []);
+  const labels = pathTurnLabels([5, 6, 7, 8, 9], [0, 1, 1, 2, 2]);
+  assert.deepEqual(labels, [{ i: 1, turn: 1 }, { i: 3, turn: 2 }]);
+  assert.deepEqual(pathTurnLabels([5, 6, 7], [0, 0, 0]), []);
+  assert.deepEqual(pathTurnLabels([5, 6, 7, 8], [0, 0, 1, 1]), [{ i: 2, turn: 1 }]);
+  assert.deepEqual(pathTurnLabels([5, 6, 7], [0, NaN, 2]), [{ i: 2, turn: 2 }]);
+  assert.deepEqual(pathTurnLabels([5], undefined), []);
 });
