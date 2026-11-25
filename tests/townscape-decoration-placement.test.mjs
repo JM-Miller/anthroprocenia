@@ -18,6 +18,7 @@ function slice(name) {
   return source.slice(start, i + 1);
 }
 function context(names, state) {
+  names = [...new Set([...names, 'mapScaleMetrics'])];
   if (names.includes('townDecoPaths')) names = [...names, 'townDecoPathSteps'];
   const ctx = vm.createContext({ pos: 0, fogMode: false, hexH: 115, colShift: 0, townRender: {}, townscapeActive: () => false,
     showTownDecorationPreview() {}, walkerCrowdsActive: () => false, ...state });

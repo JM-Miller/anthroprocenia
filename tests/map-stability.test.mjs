@@ -18,6 +18,7 @@ function slice(name) {
   return source.slice(start, end + 1);
 }
 function context(names, state) {
+  names = [...new Set([...names, 'mapScaleMetrics'])];
   if (names.includes('drawCountryLabelLayer')) names = [...names, 'shortCountryLabels'];
   const ctx = vm.createContext({ ps: n => n, viewZoom: 1, mapPanX: 0, mapPanY: 0, viewAspectY: 1, showLabelArches: false, showRegionBoundaries: false,
     regionOutlineState: { path: null }, els: {}, syncGeographyLabelViewport() {}, syncRegionHover() {}, hideRegionHover() {},
@@ -908,6 +909,40 @@ test('minimap suppresses war overlays without losing the full map checkbox setti
   ctx.restoreMiniMapOptions(); assert.equal(ctx.showWarNames, true);
   ctx.showWarNames = false;
   ctx.rememberMiniMapOptions(); ctx.restoreMiniMapOptions(); assert.equal(ctx.showWarNames, false);
+});
+
+test('Map View automatically opens after loading with single-player and observer-scoped recordings', () => {
+  for (const scope of ['', 'observer0__', 'observer63__']) {
+    const events = new Map(), timers = [], opened = [];
+    const recording = { frames: [], rev: 1 };
+    const ctx = context(['installMiniMapIntegration', 'recordedFrameCount'], {
+      window: { addEventListener: (name, callback) => events.set(name, callback) },
+      engine: { on() {} }, document: { body: null }, miniMapObserver: null,
+      mapVisible: false, building: false, miniMapVisible: false, miniMapCameraTimer: 0,
+      scheduleMiniMapUpdate() {}, syncToLatestCapture() {},
+      setTimeout: (callback, delay) => { timers.push({ callback, delay }); },
+      mapHudGameReady: () => true, readManifest: () => recording,
+      replayStore: { scope: () => scope }, requestShow: value => opened.push(value),
+      err: message => assert.fail(message),
+    });
+    ctx.installMiniMapIntegration();
+    events.get('loading-start-curtain-removed')();
+    const initial = timers.shift();
+    assert.equal(initial.delay, 800);
+    initial.callback();
+    assert.equal(opened.length, 0, 'wait for an actual frame, not just a revision');
+    const retry = timers.shift();
+    assert.equal(retry.delay, 700);
+    recording.frames = [[1, 46]];
+    assert.equal(ctx.recordedFrameCount(), `${scope}:1@1`);
+    retry.callback();
+    assert.deepEqual(opened, [true], `${scope || 'single-player'} opens the full Map View`);
+    assert.equal(timers.length, 0, 'successful opening stops retries');
+    events.get('loading-start-curtain-removed')();
+    ctx.mapVisible = true;
+    timers.shift().callback();
+    assert.deepEqual(opened, [true], 'an already-visible map is not rebuilt');
+  }
 });
 
 test('the native map shortcut still opens Map View without the removed HUD button and respects UI focus', () => {

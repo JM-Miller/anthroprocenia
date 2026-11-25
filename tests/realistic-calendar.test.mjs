@@ -153,7 +153,7 @@ test('Agriculture and Chiefdom cost one tenth of the previous scaled cost withou
     assert.equal(cost('mysticism'), 1310);
   } finally { db.close(); }
 });
-test('shell setup offers Realistic and x2 through x6 and resets both single-player and multiplayer defaults', async () => {
+test('shell setup offers Realistic, x2 through x6, x10 and x20 for single-player and multiplayer', async () => {
   const db = new DatabaseSync(':memory:');
   try {
     db.exec(`CREATE TABLE GameSpeeds(Domain TEXT,GameSpeedType TEXT,Name TEXT,Description TEXT,SortIndex INTEGER DEFAULT 30);
@@ -162,16 +162,16 @@ test('shell setup offers Realistic and x2 through x6 and resets both single-play
       INSERT INTO Parameters VALUES ('SP','GameSpeeds','GAMESPEED_STANDARD'),('MP','GameSpeeds','GAMESPEED_ONLINE');`);
     db.exec(await readFile(new URL('config/RealisticSpeed.sql', root), 'utf8'));
     const speeds = db.prepare('SELECT GameSpeedType,Name FROM GameSpeeds').all();
-    assert.equal(speeds.length, 6);
+    assert.equal(speeds.length, 8);
     assert.equal(speeds[0].Name, 'LOC_ANTHRO_REALISTIC_SPEED');
-    assert.deepEqual(speeds.slice(1).map(row => row.GameSpeedType), [2,3,4,5,6].map(n => `GAMESPEED_ANTHRO_REALISTIC_X${n}`));
+    assert.deepEqual(speeds.slice(1).map(row => row.GameSpeedType), [2,3,4,5,6,10,20].map(n => `GAMESPEED_ANTHRO_REALISTIC_X${n}`));
     assert.ok(db.prepare('SELECT DefaultValue FROM Parameters').all().every(row => row.DefaultValue === 'GAMESPEED_STANDARD'));
   } finally { db.close(); }
 });
 test('all accelerated speeds use matching native calendars, research fractions and Marathon non-research scaling in every Age', async () => {
   for (const [file, age, turns, months] of [
     ['antiquity', 'AGE_ANTIQUITY', 4400, 12], ['exploration', 'AGE_EXPLORATION', 5400, 3], ['modern', 'AGE_MODERN', 2400, 1],
-  ]) for (const factor of [2,3,4,5,6]) {
+  ]) for (const factor of [2,3,4,5,6,10,20]) {
     const db = database();
     try {
       db.prepare('INSERT INTO AgeProgressions VALUES (?,?,1,120,140,160)').run('end', age);
@@ -197,7 +197,7 @@ test('all accelerated speeds use matching native calendars, research fractions a
 });
 
 test('accelerated date labels and selected speed metadata agree without year zero', async () => {
-  for (const factor of [2,3,4,5,6]) {
+  for (const factor of [2,3,4,5,6,10,20]) {
     for (const age of Object.keys(calendar.REALISTIC_AGES)) {
       assert.equal(calendar.realisticDate(age, 20, factor), calendar.realisticDate(age, 1 + 19 * factor, 1));
     }
@@ -231,7 +231,7 @@ test('AI turns and closed map views skip provisional scans while visible local t
   let visible = false;
   const ctx = vm.createContext({
     Players: { get: () => ({ isTurnActive: active }) }, GameContext: { localPlayerID: 0 },
-    started: true, midTurnTimer: null, MID_TURN_RECORD_DELAY_MS: 1000, setTimeout: () => ++calls,
+    started: true, midTurnTimer: null, MID_TURN_RECORD_DELAY_MS: 250, midTurnDelayMs: 250, setTimeout: () => ++calls,
     window: { AnthroproceniaReplay: { isVisible: () => visible } },
   });
   vm.runInContext(['localRecordingTurn', 'scheduleMidTurnRecord'].map(name => slice(recorder, name)).join('\n'), ctx);

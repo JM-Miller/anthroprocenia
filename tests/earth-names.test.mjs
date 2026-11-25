@@ -52,6 +52,73 @@ function giantContext(ctx) {
     liveWidth: 180, liveHeight: 94, livePlayableStartX: 0, livePlayableEndX: 179,
   }) };
 }
+test('procedural continents get distinct invented names while every Earth map keeps native names', () => {
+  const { ctx } = world('LOC_MAP_FRACTAL_NAME');
+  const names = Array.from({ length: 64 }, (_, id) => ctx.continentNameForMap(id, 'Africa'));
+  assert.equal(new Set(names).size, 64);
+  assert.ok(names.every(name => /^[A-Za-z]+$/.test(name) && !/Africa|Asia|Europe|America|Antarctica|Australia|Oceania/.test(name)));
+  assert.equal(ctx.continentNameForMap(3, 'Africa'), names[3]);
+  const data = ctx.window.AnthroproceniaGeography.getMapData();
+  assert.ok(data.continents.every(continent => !/Antartica|Antarctica/.test(continent.name)));
+  for (const mapName of ['LOC_MAP_EARTH_NAME', 'LOC_MAP_GIANT_EARTH_NAME', 'LOC_MAP_RANDOM_EARTH_NAME']) {
+    const earth = world(mapName).ctx;
+    assert.equal(earth.continentNameForMap(3, 'Africa'), 'Africa');
+    assert.equal(earth.continentNameForMap(3, 'Antartica'), 'Antarctica');
+  }
+});
+
+test('generated geographic duplicates use only locational qualifiers, including crowded maps and stale saved names', () => {
+  const { ctx } = world('LOC_MAP_FRACTAL_NAME');
+  const used = new Set();
+  for (let n = 0; n < 150; n++) {
+    const name = ctx.uniqueGeographicName('The Vallerian Isle', used);
+    assert.ok(!used.has(name));
+    assert.doesNotMatch(name, /Misty|Windswept|Hidden|Rocky|Shimmering|Fabled|Remote|Distant/);
+    used.add(name);
+  }
+  const data = ctx.window.AnthroproceniaGeography.getMapData();
+  assert.ok(data.regions.concat(data.features.filter(feature => feature.type === 'mountains' || feature.type === 'island'))
+    .every(entry => !/Misty|Windswept|Hidden|Rocky|Shimmering|Fabled|Remote|Ashen|Bright|Storm/.test(entry.name)));
+});
+test('procedural geographic names retire descriptive words, use Mount for singleton peaks and justify nearby directional pairs', () => {
+  const { ctx } = world('LOC_MAP_FRACTAL_NAME', { width: 32, height: 16,
+    tile: (x, y) => ({ mountain: x === 8 && y === 8, river: x === 5 && y === 5, riverName: 'The Misty Elysium River' }) });
+  const data = ctx.window.AnthroproceniaGeography.getMapData();
+  assert.ok(data.features.some(feature => feature.type === 'mountains' && /^Mount [A-Za-z]+$/.test(feature.name)));
+  assert.ok(data.features.some(feature => feature.type === 'river' && !/Misty/.test(feature.name)));
+  const pair = [{ id: 'mountains:0', type: 'mountains', name: 'The Elysium Mountains', center: 0, tiles: [0] },
+    { id: 'mountains:1', type: 'mountains', name: 'The Elysium Mountains', center: 1, tiles: [1] }];
+  ctx.validateGeographicNames(pair, new Map([[0, { x: 3, y: 2 }], [1, { x: 7, y: 2 }]]), 32);
+  assert.deepEqual(pair.map(row => row.name), ['The Western Elysium Mountains', 'The Eastern Elysium Mountains']);
+  const far = pair.map((row, i) => ({ ...row, id: `mountains:${i}`, name: 'The Elysium Mountains' }));
+  ctx.validateGeographicNames(far, new Map([[0, { x: 0, y: 0 }], [1, { x: 15, y: 15 }]]), 32);
+  assert.ok(far.every(row => !/Eastern|Western|Northern|Southern|Central|Coastal/.test(row.name)));
+  assert.equal(new Set(far.map(row => row.name)).size, 2);
+});
+test('sub-regions deterministically partition each parent into connected, bounded children without altering parent membership', () => {
+  const { ctx } = world('LOC_MAP_FRACTAL_NAME', { width: 32, height: 16, tile: () => ({}) });
+  const data = ctx.window.AnthroproceniaGeography.getMapData();
+  const tiles = Array.from({ length: 4 }, (_, y) => Array.from({ length: 8 }, (_, x) => y * 32 + x + 4)).flat();
+  const parent = { id: 'land:4', name: 'Elysium', tiles };
+  const result = ctx.buildSubregions([parent], data.locations);
+  assert.equal(result.subregions.length, 4);
+  assert.equal(result.subregionForTile.size, tiles.length);
+  assert.deepEqual([...result.subregions.flatMap(row => [...row.tiles])].sort((a, b) => a - b), tiles.slice().sort((a, b) => a - b));
+  for (const child of result.subregions) {
+    assert.equal(child.parentId, parent.id);
+    const remaining = new Set(child.tiles), queue = [child.tiles[0]]; remaining.delete(queue[0]);
+    for (const index of queue) for (const neighbor of ctx.neighborsOf(data.locations.get(index))) if (remaining.delete(neighbor.index)) queue.push(neighbor.index);
+    assert.equal(remaining.size, 0); assert.ok(child.boundary.length);
+    for (const index of child.tiles) for (let direction = 0; direction < 6; direction++) {
+      if (!ctx.neighborsOf(data.locations.get(index)).some(neighbor => neighbor.direction === direction)) {
+        assert.ok(child.boundary.some(edge => edge.index === index && edge.direction === direction), 'subregions outline the map edge');
+      }
+    }
+  }
+  assert.deepEqual(JSON.parse(JSON.stringify(ctx.buildSubregions([parent], data.locations).subregions)),
+    JSON.parse(JSON.stringify(result.subregions)));
+  assert.equal(ctx.buildSubregions([{ ...parent, tiles: [4, 5] }], data.locations).subregions.length, 0);
+});
 test('Giant Earth required islands and peninsulas retain exact real names at their own source locations', () => {
   const places = [
     ['Britain', 10, 76], ['Ireland', 4, 75], ['Antarctica', 45, 0],

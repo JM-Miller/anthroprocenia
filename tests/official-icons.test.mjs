@@ -107,7 +107,7 @@ if schema.is_file():
             seen.add(data['ID'])
     assert seen == {id for e in catalog['entries'] for id in e['ids']}
     assert before == db.execute("SELECT * FROM IconDefinitions WHERE Context LIKE 'BACKGROUND%' ORDER BY ID,Context,IconSize").fetchall()
-    assert db.execute("SELECT Path FROM IconDefinitions WHERE ID='BUILDING_LIBRARY' AND Context='FONTICON'").fetchone()[0].startswith('fs://game/anthroprocenia_map_history/art/official-icons/')
+    assert db.execute("SELECT Path FROM IconDefinitions WHERE ID='BUILDING_LIBRARY' AND Context='FONTICON'").fetchone()[0].startswith('fs://game/anthroprocenia/art/official-icons/')
     for row in sizes:
         assert row == db.execute('SELECT ID,Context,IconSize,NeedsTinting,FitToContent FROM IconDefinitions WHERE ID=? AND Context=? AND IconSize=?', row[:3]).fetchone()
     assert db.execute("SELECT OtherID FROM IconAliases WHERE ID='TEST_ROMAN_ALIAS'").fetchone()[0] == 'CIVILIZATION_ROME'
@@ -201,7 +201,7 @@ test('optional renderer remaps named quarters and native filename emblems withou
   ]);
   const styles = [];
   const quarter = catalog.entries.find((e) => e.category === 'quarter');
-  const url = `url("fs://game/anthroprocenia_map_history/${quarter.art}")`;
+  const url = `url("fs://game/anthroprocenia/${quarter.art}")`;
   const makeElement = (initialStyle, computedStyle = {}, serialize = (value) => value) => {
     const writes = { style: 0, attributes: 0 };
     const attributes = new Map([['data-icon-id', 'CITY_UNIQUE_QUARTER']]);

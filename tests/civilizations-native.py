@@ -11,6 +11,13 @@ from PIL import Image
 
 root = Path(__file__).resolve().parents[1]
 mod = root / "anthroprocenia"
+for path in [root / "tools" / "build-civilizations.py", mod / "config" / "Civilizations.xml",
+             mod / "data" / "civilizations.sql", mod / "data" / "civilization-icons.xml",
+             mod / "data" / "early-content-icons.xml",
+             mod / "ui" / "map" / "anthroprocenia-civilization-backgrounds.js",
+             mod / "ui" / "map" / "anthroprocenia-unit-art.js",
+             mod / "ui" / "map" / "anthroprocenia-playback.js"]:
+    assert b"fs://game/anthroprocenia_map_history/" not in path.read_bytes(), f"Legacy resource mount: {path}"
 base = Path(sys.argv[1])
 content = json.loads((root / "tools/civilizations.json").read_text(encoding="utf-8"))
 kits = json.loads((root / "tools/civilization-kits.json").read_text(encoding="utf-8"))
@@ -311,7 +318,7 @@ for civ in content:
     loading = one(game, "SELECT * FROM LoadingInfo_Civilizations WHERE CivilizationType=?", civ_id)
     check(translations[loading["CivilizationText"]] == civ["intro"],
           civ_id + ": loading and selection share the authored introduction")
-    scene = f"fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_{key.lower()}.png"
+    scene = f"fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_{key.lower()}.png"
     check(all(loading[field] == scene for field in ["BackgroundImageHigh", "BackgroundImageLow"]), civ_id + ": original loading art")
     check(loading["ForegroundImage"] is None, civ_id + ": no unrelated donor foreground")
     emblem = {r["Path"] for r in art if r["ID"] == civ_id and not r.get("Context")}
@@ -476,8 +483,8 @@ for file in [*(mod / "art/civilizations").glob("*.png"),
     element_silhouettes.add(silhouette)
 for icon in art:
     path = icon["Path"]
-    if path.startswith("fs://game/anthroprocenia_map_history/"):
-        file = mod / path.removeprefix("fs://game/anthroprocenia_map_history/")
+    if path.startswith("fs://game/anthroprocenia/"):
+        file = mod / path.removeprefix("fs://game/anthroprocenia/")
         check(file.read_bytes().startswith(b"\x89PNG\r\n\x1a\n"), str(file) + ": valid original PNG")
         for scope in ["shell", "game"]:
             imports = {item.text for group in manifest.findall("m:ActionGroups/m:ActionGroup", ns)

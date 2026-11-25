@@ -117,10 +117,12 @@ function payContext(opts = {}) {
     } },
     Units: { get: id => (`${id.owner}:${id.id}` === '0:7' ? { Health: health('0:7') } : null) },
     Game: { turn: 12 }, cmdState: { yreq: null }, cmdLocalPlayer: () => 0, err: () => {},
+    Configuration: { getGame: () => ({ isAnyMultiplayer: !!opts.multiplayer, isHotseat: !!opts.hotseat }) },
+    CMD_MULTIPLAYER_TIP: 'Synchronized commands unavailable',
     viewRead: key => (store.has(key) ? JSON.parse(store.get(key)) : null),
     viewSave: (key, produce) => store.set(key, JSON.stringify(produce())),
   });
-  vm.runInContext(['cmdGameTurn', 'cmdYieldQueue', 'cmdSaveYieldQueue', 'cmdOweYield', 'cmdOweRivalYields', 'cmdPayYield', 'cmdHealUnit', 'cmdPayYields'].map(slice).join('\n') + '\nlet cmdPayLogged = false;', context);
+  vm.runInContext(['cmdGameplayAllowed', 'cmdGameTurn', 'cmdYieldQueue', 'cmdSaveYieldQueue', 'cmdOweYield', 'cmdOweRivalYields', 'cmdPayYield', 'cmdHealUnit', 'cmdPayYields'].map(slice).join('\n') + '\nlet cmdPayLogged = false;', context);
   return { context, grants, damage, store, run: code => vm.runInContext(code, context) };
 }
 
@@ -135,6 +137,19 @@ test('what commands earn is owed until the turn ends, then paid in once with Pla
   t.run("cmdPayYields('turn end'); cmdPayYields('turn begin', true)");
   assert.equal(t.grants.length, 2, 'never paid twice');
   assert.equal(JSON.parse(t.store.get('yreq')).paid, true);
+});
+test('multiplayer and hotseat cannot queue, grant, heal or settle saved single-player rewards', () => {
+  for (const opts of [{ multiplayer: true }, { hotseat: true }]) {
+    const t = payContext(opts);
+    assert.throws(() => t.run("cmdOweYield('gold', 3)"), /Synchronized commands unavailable/);
+    assert.equal(t.run("cmdPayYield(0, 'gold', 3)"), false);
+    assert.equal(t.run('cmdHealUnit(0, 7, 1, 15)'), false);
+    t.context.cmdState.yreq = { v: 2, p: 0, turn: 11, due: { gold: 8 }, units: [[0, 7, 1, 10]], paid: false };
+    t.run("cmdPayYields('turn begin', true)");
+    assert.deepEqual(t.grants, []);
+    assert.equal(t.damage.get('0:7'), 40);
+    assert.equal(t.context.cmdState.yreq.paid, false);
+  }
 });
 
 test('a queue left unpaid is paid at the next turn, and Gold falls back to the treasury', () => {

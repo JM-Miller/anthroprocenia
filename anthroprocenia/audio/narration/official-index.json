@@ -1,0 +1,627 @@
+{
+  "voice": "bf_emma",
+  "language": "en-gb",
+  "speed": 0.94,
+  "complete": true,
+  "total_recordings": 88,
+  "format": "PCM_16 mono WAV, 24000 Hz",
+  "recordings": [
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_ADA_LOVELACE",
+      "text": "Ada Lovelace, imagination can perceive possibilities that calculation has not yet reached. Unite rigorous thought with invention, and open new paths for human knowledge.",
+      "file": "anthro_narrator_leader_ada_lovelace.wav",
+      "script_sha256": "92c8f239814442306b73d62acb46b5520a8235aa1af926cf551c6b1b44d70c3e",
+      "duration_seconds": 10.248
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_ALEXANDER",
+      "text": "Alexander, ambition draws you beyond familiar frontiers. Lead boldly, but build connections strong enough to survive the passing of a conqueror.",
+      "file": "anthro_narrator_leader_alexander.wav",
+      "script_sha256": "5c84d72f73acdf3852d0fec0663c12901460724072e24d5732b94c4867c5933f",
+      "duration_seconds": 8.617
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_AMINA",
+      "text": "Amina of Zazzau, your authority travels with the caravans. Secure the roads, strengthen the cities, and make prosperity a source of lasting power.",
+      "file": "anthro_narrator_leader_amina.wav",
+      "script_sha256": "a02237134c57ef3d265bdd22955953f9c5628603a8db2c4aab04d7b754edaa8c",
+      "duration_seconds": 8.541
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_ASHOKA",
+      "text": "Ashoka, an empire may be won by conquest, yet held by compassion. Let the welfare of your people become the measure of your reign.",
+      "file": "anthro_narrator_leader_ashoka.wav",
+      "script_sha256": "96f53758bd7148a05977da5637026ba561599140287728c79f885b12a642bde1",
+      "duration_seconds": 8.142
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_ASHOKA_ALT",
+      "text": "Ashoka, the ambitions of kings leave deep marks upon the world. Weigh every victory against its cost, and build a realm worthy of enduring.",
+      "file": "anthro_narrator_leader_ashoka_alt.wav",
+      "script_sha256": "38be08f7f932c70ca0ff5081facbd0462c60e554856f3e27860d34bee5c2fc24",
+      "duration_seconds": 8.21
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_AUGUSTUS",
+      "text": "Augustus, order rises from the ruins of civil war. Build institutions that outlive their founder, and turn the strength of Rome towards a lasting peace.",
+      "file": "anthro_narrator_leader_augustus.wav",
+      "script_sha256": "454805ce896eda253d52a30350189fe981261e528b68b1e63292a3e8b88af8a6",
+      "duration_seconds": 9.181
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_BENJAMIN_FRANKLIN",
+      "text": "Benjamin Franklin, curiosity can illuminate a nation. Bring invention into public service, and let diplomacy accomplish what force alone cannot.",
+      "file": "anthro_narrator_leader_benjamin_franklin.wav",
+      "script_sha256": "edd834b719f38898ebb1a65273db066c8082da671f1e408a470d40dfe2451b66",
+      "duration_seconds": 9.309
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_BOLIVAR",
+      "text": "Simon Bolivar, independence is the beginning of a nation's work, not its conclusion. Unite resolve with institution building, and give liberty the means to endure.",
+      "file": "anthro_narrator_leader_bolivar.wav",
+      "script_sha256": "66aed2ce132e24e124f6208622688030e49326341e8c7242196705ff44fb374d",
+      "duration_seconds": 9.993
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_CATHERINE",
+      "text": "Catherine, the horizons of your empire are wide, but its future must be cultivated. Give learning a home, and let culture speak with authority.",
+      "file": "anthro_narrator_leader_catherine.wav",
+      "script_sha256": "80db856e25de8f966610d2c119fea52ac403e4a25749931c64a57b290cfd0ff8",
+      "duration_seconds": 8.553
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_CHARLEMAGNE",
+      "text": "Charlemagne, divided kingdoms await a common purpose. Unite power with learning, and lay foundations that the centuries may inherit.",
+      "file": "anthro_narrator_leader_charlemagne.wav",
+      "script_sha256": "c784fe34372694ae7ee2726f771915fbfa7ce7810c9436ca7a7820a80d4cda4d",
+      "duration_seconds": 8.361
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_CONFUCIUS",
+      "text": "Confucius, the character of a state begins with the conduct of its people. Cultivate wisdom, honour responsibility, and make good government an everyday practice.",
+      "file": "anthro_narrator_leader_confucius.wav",
+      "script_sha256": "5a11615cb366275d5db7f6983e2e636cf29771437286c81cd56a59b9e0c72f72",
+      "duration_seconds": 9.787
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_EDWARD_TEACH",
+      "text": "Edward Teach, reputation travels swiftly across the sea. Master the opportunities of the coast, and remember that even audacity depends upon preparation.",
+      "file": "anthro_narrator_leader_edward_teach.wav",
+      "script_sha256": "0251b5f8c1f5c4631e4fb1d345accae1c2d457675bd80e70d7cedf43a646902a",
+      "duration_seconds": 9.545
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_ELIZABETH",
+      "text": "Elizabeth, your island kingdom looks towards an uncertain horizon. Balance counsel with conviction, and let commerce, culture, and seamanship extend its influence.",
+      "file": "anthro_narrator_leader_elizabeth.wav",
+      "script_sha256": "f3f8ee659733cc41d24eb5e9bf371f4190fe87a7857dfe0f425d1970fbf84ae0",
+      "duration_seconds": 9.883
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_FRIEDRICH",
+      "text": "Friedrich, discipline is most valuable when it serves clear judgement. Guard your realm with resolve, and give its people room to prosper.",
+      "file": "anthro_narrator_leader_friedrich.wav",
+      "script_sha256": "c8175a16267d573183ea2b274dae4d9aecb414c85f3d0d3457fadec5fc95e8d1",
+      "duration_seconds": 7.644
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_FRIEDRICH_ALT",
+      "text": "Friedrich, strength and refinement need not be strangers. Let the arts flourish beside the sciences, and make achievement more enduring than spectacle.",
+      "file": "anthro_narrator_leader_friedrich_alt.wav",
+      "script_sha256": "54e5c98b617de9db93643e3a8032108f056b878298f7fc1f8a1d132e64751bd3",
+      "duration_seconds": 9.229
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_GENGHIS_KHAN",
+      "text": "Genghis Khan, the steppe rewards speed, organisation, and resolve. Unite scattered strengths, and make the movement of people and knowledge part of your legacy.",
+      "file": "anthro_narrator_leader_genghis_khan.wav",
+      "script_sha256": "6fb79b4ceba0f4f38d32f90506337013e4a891f6d4f6e45c704522b817061226",
+      "duration_seconds": 9.267
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_GILGAMESH",
+      "text": "Gilgamesh, a city becomes great through the lives it protects. Build its walls, honour its people, and seek a legacy beyond personal glory.",
+      "file": "anthro_narrator_leader_gilgamesh.wav",
+      "script_sha256": "866adb49f941a76a5d93f21b06de1c473f41ca8a176709009836cccc1ada6df4",
+      "duration_seconds": 8.371
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_HARRIET_TUBMAN",
+      "text": "Harriet Tubman, freedom begins with the courage to act. Protect those who depend upon you, and make solidarity a strength no tyrant can command.",
+      "file": "anthro_narrator_leader_harriet_tubman.wav",
+      "script_sha256": "7e28c12d57f116e113ab524e3d9fa32ac948877e959518d656c171cb7bc1aa17",
+      "duration_seconds": 8.551
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_HATSHEPSUT",
+      "text": "Hatshepsut, the Nile sustains your people, but ambition carries them beyond its banks. Open the routes of trade, and build monuments to shared prosperity.",
+      "file": "anthro_narrator_leader_hatshepsut.wav",
+      "script_sha256": "a753550bfd15a1fe79f00af157b96fde3fbe75f4d3acddc1fa5decd9a1d848c9",
+      "duration_seconds": 9.131
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_HIMIKO",
+      "text": "Himiko, trust can bind a realm more firmly than fear. Tend the relationships that sustain your authority, and guide your people through uncertainty.",
+      "file": "anthro_narrator_leader_himiko.wav",
+      "script_sha256": "40d46fafa09dddc02678f982ad4c7c080dd679ddafbed2ab5a7fd8d471c01240",
+      "duration_seconds": 8.819
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_HIMIKO_ALT",
+      "text": "Himiko, a sovereign's voice carries both promise and responsibility. Bring rival interests into balance, and make cooperation the foundation of your rule.",
+      "file": "anthro_narrator_leader_himiko_alt.wav",
+      "script_sha256": "c56672857f8e4a33cda570903df9e8bcf0b3b34d5ab3f029a91f4524a00f815f",
+      "duration_seconds": 9.405
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_IBN_BATTUTA",
+      "text": "Ibn Battuta, every journey reveals another way to live. Follow the roads between cultures, and turn discovery into understanding.",
+      "file": "anthro_narrator_leader_ibn_battuta.wav",
+      "script_sha256": "0c60c4714a4824dec71fd9de51de68d984433bc75b812ba683e21b1888324685",
+      "duration_seconds": 8.201
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_ISABELLA",
+      "text": "Isabella, your kingdom stands at the threshold of a wider world. Prepare its fleets, strengthen its institutions, and consider carefully the legacy of expansion.",
+      "file": "anthro_narrator_leader_isabella.wav",
+      "script_sha256": "6e34aa5a35642864d51251e2acd654b72c285ac4377ce1ef333a3615067a94a1",
+      "duration_seconds": 9.288
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_JOSE_RIZAL",
+      "text": "Jose Rizal, ideas can awaken a people before armies ever march. Defend learning and dignity, and give your nation the confidence to shape its future.",
+      "file": "anthro_narrator_leader_jose_rizal.wav",
+      "script_sha256": "3dcf4740cae54a535c34cd9ff1acad1c65c2a1c984881dfe9fc7d20a2170eba2",
+      "duration_seconds": 9.332
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_LAFAYETTE",
+      "text": "Lafayette, liberty asks more than an inspiring declaration. Build alliances, defend public trust, and make freedom secure in the life of the nation.",
+      "file": "anthro_narrator_leader_lafayette.wav",
+      "script_sha256": "49a969c18e6caf3728c6c5f52f12aa7bafcf51764e42f18e89d93c77ddc56767",
+      "duration_seconds": 9.186
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_LAKSHMIBAI",
+      "text": "Lakshmibai, sovereignty is tested when its defenders face impossible choices. Stand resolute, protect your people, and make courage a common inheritance.",
+      "file": "anthro_narrator_leader_lakshmibai.wav",
+      "script_sha256": "f73b8a4d75e25c2824230869146afda3d13636fb49bd4cc589e62f5c69923514",
+      "duration_seconds": 9.577
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_MACHIAVELLI",
+      "text": "Machiavelli, power rewards those who understand its workings. Read the moment clearly, choose your allies carefully, and remember that stability must be earned.",
+      "file": "anthro_narrator_leader_machiavelli.wav",
+      "script_sha256": "ce56e4e514bb00719ade70a704438190678a34af2669638251d19c56ffa1e52e",
+      "duration_seconds": 9.244
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_NAPOLEON",
+      "text": "Napoleon, decisive action can remake the balance of a continent. Organise your resources with precision, and give ambition the discipline it requires.",
+      "file": "anthro_narrator_leader_napoleon.wav",
+      "script_sha256": "68eff4f07e3eecb60f91edbd303b822d828333b8faf73ce9992fd86308feb0b5",
+      "duration_seconds": 9.031
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_NAPOLEON_ALT",
+      "text": "Napoleon, the energies of revolution demand direction. Turn opportunity into effective institutions, and judge every triumph by what it leaves behind.",
+      "file": "anthro_narrator_leader_napoleon_alt.wav",
+      "script_sha256": "740e65057e43c9ad4119ca48978494fa3ebc0c6db3a10b96cccf4e45950540ba",
+      "duration_seconds": 9.503
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_PACHACUTI",
+      "text": "Pachacuti, the mountains challenge every ambition. Join distant communities with roads and purpose, and make the heights a foundation rather than a barrier.",
+      "file": "anthro_narrator_leader_pachacuti.wav",
+      "script_sha256": "ff21a555de4086e505b7ab86a21b080b3b8bb006e2dfdb118c24ecc4560ea28a",
+      "duration_seconds": 9.311
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_SAYYIDA_AL_HURRA",
+      "text": "Sayyida al Hurra, the coast is a meeting place of commerce and power. Command its routes, defend your independence, and negotiate from a position of strength.",
+      "file": "anthro_narrator_leader_sayyida_al_hurra.wav",
+      "script_sha256": "ebd42269a152b4f7a086b1d5b2741114e069ba856b6b6ed20156eaf4b856e006",
+      "duration_seconds": 9.126
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_TECUMSEH",
+      "text": "Tecumseh, unity gives scattered communities a stronger voice. Build a common purpose, protect the land, and let cooperation sustain your people's independence.",
+      "file": "anthro_narrator_leader_tecumseh.wav",
+      "script_sha256": "0477a8ea50a5cd4f2e5047960ce6744aef07732b082a740ddbd856a9540def78",
+      "duration_seconds": 9.801
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_TOYOTOMI_HIDEYOSHI",
+      "text": "Toyotomi Hideyoshi, a divided country offers neither security nor lasting prosperity. Bring its resources together, and turn hard won authority towards durable order.",
+      "file": "anthro_narrator_leader_toyotomi_hideyoshi.wav",
+      "script_sha256": "6a1c693914273a8b43dbf69a8fd65f85b7a6e58119b6f3209d35e4b6ed23d87d",
+      "duration_seconds": 11.177
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_TRUNG_TRAC",
+      "text": "Trung Trac, resistance begins when a people refuses to surrender its future. Lead with courage, and turn determination into a lasting independence.",
+      "file": "anthro_narrator_leader_trung_trac.wav",
+      "script_sha256": "1bb803284decc7b2db1c57647a14b484050a2ed8fdeade8716d4aa8e4dc0cfdf",
+      "duration_seconds": 9.299
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_WASHINGTON",
+      "text": "George Washington, a republic must learn to govern after it has learned to resist. Guard public trust, strengthen its foundations, and place duty before personal power.",
+      "file": "anthro_narrator_leader_washington.wav",
+      "script_sha256": "928f31e1ed961a25975bd0afb9ca0daf7a90a80c953f19877f3b8e126d6e4bbd",
+      "duration_seconds": 10.366
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_XERXES",
+      "text": "Xerxes, the resources of a great empire rest in your hands. Coordinate its strength wisely, and let each province find a place within your purpose.",
+      "file": "anthro_narrator_leader_xerxes.wav",
+      "script_sha256": "7bfb82d064bd362bfffa8998c0e3ea72621f0d243ede818d4fec024d1dbbc67a",
+      "duration_seconds": 8.803
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_XERXES_ALT",
+      "text": "Xerxes, imperial grandeur is sustained by more than royal command. Nurture exchange across your lands, and make abundance an instrument of unity.",
+      "file": "anthro_narrator_leader_xerxes_alt.wav",
+      "script_sha256": "bb6de762969d170645cc9a02ef4b7e975a4fb735b409d6f217478e10d014d0b4",
+      "duration_seconds": 9.116
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_LEADER_YI_SUN_SIN",
+      "text": "Yi Sun Sin, preparation can overturn the advantage of greater numbers. Know your waters, preserve your fleet, and make steadfast leadership your strongest defence.",
+      "file": "anthro_narrator_leader_yi_sun_sin.wav",
+      "script_sha256": "51eec2ea00678c6e89ef91610b74fd436f537bc87ae3bfe1c01a199b87fe9bd8",
+      "duration_seconds": 9.81
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_ABBASID",
+      "text": "The Abbasid world draws strength from scholarship and exchange. Gather knowledge across distant horizons, and make your cities meeting places of invention.",
+      "file": "anthro_narrator_civilization_abbasid.wav",
+      "script_sha256": "cb2dd0610442510c00faa04ced8bf29584c58b474f03cd01597c8ac142c41a21",
+      "duration_seconds": 9.129
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_AKSUM",
+      "text": "Aksum stands between the highlands and the sea. Connect the routes of trade, and let the prosperity of your crossroads sustain an enduring kingdom.",
+      "file": "anthro_narrator_civilization_aksum.wav",
+      "script_sha256": "a3642a346190f6b773ceb470ccc4e4151f89e2eac24dbf3451dbd4f1595da083",
+      "duration_seconds": 8.372
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_AMERICA",
+      "text": "America's future takes shape through invention, migration, and public ambition. Build connections across the land, and turn opportunity into a prosperity that can endure.",
+      "file": "anthro_narrator_civilization_america.wav",
+      "script_sha256": "09f5878bf6d4f79c6ffdd78720d70470d07fd80657ce7f45f2a7a06ca9f076ba",
+      "duration_seconds": 10.467
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_ASSYRIA",
+      "text": "Assyria's cities unite organisation, craftsmanship, and formidable strength. Build a realm whose learning and institutions can stand beside its military achievements.",
+      "file": "anthro_narrator_civilization_assyria.wav",
+      "script_sha256": "05762dc7369b79b976e7e10578f0f9ee82c77260c01c459e4506418f2702d609",
+      "duration_seconds": 9.961
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_BABYLON",
+      "text": "Babylon rises where careful observation meets urban ambition. Cultivate knowledge, strengthen your cities, and give discovery a place in the life of the state.",
+      "file": "anthro_narrator_civilization_babylon.wav",
+      "script_sha256": "09eb2b128a574c7fcf33f2db167d0f201b7a26f201da3f314eafbc41a9f4b0ee",
+      "duration_seconds": 9.695
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_BUGANDA",
+      "text": "Buganda's communities flourish through organisation and exchange. Strengthen the relationships between your settlements, and make cooperation a source of regional influence.",
+      "file": "anthro_narrator_civilization_buganda.wav",
+      "script_sha256": "6132b181a2b25279553d6673362818ad69c84a7fcf31fa68c56282a8433b9838",
+      "duration_seconds": 10.195
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_BULGARIA",
+      "text": "Bulgaria stands where empires and traditions meet. Defend your independence, cultivate learning, and give your people institutions worthy of their resilience.",
+      "file": "anthro_narrator_civilization_bulgaria.wav",
+      "script_sha256": "eb8f0e8cbd438c90b8db6c26dda2901c12f3eac9057c9e1c778f4632644f0a3c",
+      "duration_seconds": 9.311
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_CARTHAGE",
+      "text": "Carthage looks to the sea for opportunity. Build a network of thriving ports, and make commerce the foundation of a power that reaches beyond the coast.",
+      "file": "anthro_narrator_civilization_carthage.wav",
+      "script_sha256": "17b60fbb6d35960124dbe6152b4c3b1a0fd039347c163205b33940cdd309bf7c",
+      "duration_seconds": 8.617
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_CHOLA",
+      "text": "The Chola realm joins fertile lands to far reaching maritime connections. Sustain your cities, strengthen your fleets, and let exchange carry your influence abroad.",
+      "file": "anthro_narrator_civilization_chola.wav",
+      "script_sha256": "277157e01a3fef5028c1181147df0896d0bd24990f439a01874062085aa2755b",
+      "duration_seconds": 9.941
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_DAI_VIET",
+      "text": "Dai Viet draws resilience from its communities and landscapes. Defend the river valleys, cultivate their abundance, and make independence a living tradition.",
+      "file": "anthro_narrator_civilization_dai_viet.wav",
+      "script_sha256": "ca4a93ef6d42a0b8489627e3ac3a685018b07b632a0accee0ec9c2e78e4d9f18",
+      "duration_seconds": 9.363
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_EGYPT",
+      "text": "Egypt's story begins with the rhythms of the Nile. Organise its abundance, nurture its cities, and build works that speak across the centuries.",
+      "file": "anthro_narrator_civilization_egypt.wav",
+      "script_sha256": "19d5034faf04297c3d0e3aa6e2bd1defc117b430e6d2efc3731fc43b8be0af90",
+      "duration_seconds": 8.595
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_ENGLAND",
+      "text": "England's institutions grow through contest, adaptation, and exchange. Develop the towns and ports, and turn an island's connections into lasting influence.",
+      "file": "anthro_narrator_civilization_england.wav",
+      "script_sha256": "266540e30fe9ebd050f07257da8485bac6136b6964b7754b911a64d23573c730",
+      "duration_seconds": 9.311
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_FRENCH_EMPIRE",
+      "text": "The French Empire joins administrative ambition to cultural prestige. Organise the nation, encourage innovation, and weigh expansion against the demands of stability.",
+      "file": "anthro_narrator_civilization_french_empire.wav",
+      "script_sha256": "7e5cfde0dc46e2a040c5fcf418411bf0c436c8f359b0f1004f08d5eb505b1aed",
+      "duration_seconds": 10.622
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_GAUL",
+      "text": "The communities of Gaul bring skilled craftsmanship and deep regional connections. Strengthen their settlements, and turn local resourcefulness into a shared political purpose.",
+      "file": "anthro_narrator_civilization_gaul.wav",
+      "script_sha256": "0e3039a4be75ba8cd342e27f52cb2f080b49146bbc7109ed340b3e49a1efbb2a",
+      "duration_seconds": 10.259
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_GORYEO",
+      "text": "Goryeo cultivates scholarship, artistry, and capable government. Support the workshops and schools, and give your kingdom the confidence to endure changing times.",
+      "file": "anthro_narrator_civilization_goryeo.wav",
+      "script_sha256": "cf3e8b9661115161e2f2e594a6b354010c3f00613baa7bcd5199c0c537631e7c",
+      "duration_seconds": 9.624
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_GREAT_BRITAIN",
+      "text": "Great Britain stands at the meeting of industry and maritime exchange. Connect invention with commerce, and consider the responsibilities that accompany global influence.",
+      "file": "anthro_narrator_civilization_great_britain.wav",
+      "script_sha256": "d2443fefa4d442f506725ee6b7bb27fe9fd6b576e7fa72ef9da0621e7bc966cb",
+      "duration_seconds": 10.089
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_GREECE",
+      "text": "Greece's cities find strength in argument, artistry, and exchange. Cultivate civic life, and let competition inspire achievements greater than any single city.",
+      "file": "anthro_narrator_civilization_greece.wav",
+      "script_sha256": "87e2bb474e1dfebd47e5b21d41eb4115166d262f61e310238480f81db5cea50b",
+      "duration_seconds": 10.164
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_HAN",
+      "text": "The Han realm depends upon the careful organisation of a vast land. Strengthen its administration, sustain its farms, and keep the roads of exchange open.",
+      "file": "anthro_narrator_civilization_han.wav",
+      "script_sha256": "da5baaee11dbc523a505fb285209ef0b222744b23e81b0ca54c65e910ab92d15",
+      "duration_seconds": 9.769
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_HAWAII",
+      "text": "Hawaii's islands are joined by seamanship, knowledge, and community. Steward their resources carefully, and make the ocean a connection rather than a boundary.",
+      "file": "anthro_narrator_civilization_hawaii.wav",
+      "script_sha256": "ee2b5dc6cdcd3fd0f0af856cb880e98fa3c6aeec9b37fe55c6e6d11a8a1ac6c4",
+      "duration_seconds": 9.337
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_HEIAN",
+      "text": "Heian Japan cultivates a rich world of literature and courtly expression. Sustain its communities, and let refinement become part of a broader cultural legacy.",
+      "file": "anthro_narrator_civilization_heian.wav",
+      "script_sha256": "6ee015cd18a4a637b4220185659b0051b2457e61c28f46f0fd16f1c90e8778f4",
+      "duration_seconds": 10.003
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_ICELAND",
+      "text": "Iceland's settlements meet a demanding landscape with resourcefulness. Sustain their independence, strengthen the bonds of community, and learn what the northern seas can offer.",
+      "file": "anthro_narrator_civilization_iceland.wav",
+      "script_sha256": "3dd93f4570cd807565980c56538dfaa6d721a8f8325a4b7f452c71a999f66689",
+      "duration_seconds": 10.238
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_INCA",
+      "text": "The Inca realm turns mountain distances into an organised network. Join its communities with roads and careful stewardship, and make cooperation a source of remarkable strength.",
+      "file": "anthro_narrator_civilization_inca.wav",
+      "script_sha256": "2de4b40ab11e53101b738373e7bfff275dfd9fc63767bed587df8ddea37c1e5d",
+      "duration_seconds": 10.7
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_JOSEON",
+      "text": "Joseon places learning at the heart of government. Invest in scholarship and practical invention, and make knowledge useful throughout the life of the kingdom.",
+      "file": "anthro_narrator_civilization_joseon.wav",
+      "script_sha256": "5e1ee3786df6a7bcc651f7498eacf334caf34d84f8662afeb2a4423167e08bb5",
+      "duration_seconds": 8.595
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_KHMER",
+      "text": "The Khmer realm transforms water management into the foundation of urban life. Sustain the fields and reservoirs, and let careful planning support great cultural achievements.",
+      "file": "anthro_narrator_civilization_khmer.wav",
+      "script_sha256": "4fac54bb5f86055e3ee069983d1f7cae3031ef8671f4f4d84c05e6fcc25f0dbf",
+      "duration_seconds": 10.077
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_MAJAPAHIT",
+      "text": "Majapahit thrives among the connected islands of Southeast Asia. Strengthen maritime exchange, nurture your cities, and give a diverse realm a common direction.",
+      "file": "anthro_narrator_civilization_majapahit.wav",
+      "script_sha256": "f5f2a59be6da1487be620e28c63debddf87ed65f1c86fd0c7ce80ae303388ea6",
+      "duration_seconds": 10.143
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_MAURYA",
+      "text": "The Mauryan realm brings a vast region under organised government. Coordinate its resources wisely, and let public welfare become part of imperial strength.",
+      "file": "anthro_narrator_civilization_maurya.wav",
+      "script_sha256": "cf571f4c30457b5eee7f1c63e46038f5f4dd53175845636be365a78a8420cd73",
+      "duration_seconds": 9.631
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_MAYA",
+      "text": "Maya cities cultivate intricate traditions of knowledge, artistry, and authority. Develop their connections, sustain their landscapes, and give achievement a lasting home.",
+      "file": "anthro_narrator_civilization_maya.wav",
+      "script_sha256": "236f695f2ebbf34cde15af1cbac6b8452d9b00e232afdc817500393d0f6bdeba",
+      "duration_seconds": 10.011
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_MEIJI",
+      "text": "Meiji Japan faces rapid change with disciplined ambition. Build institutions that can support new industries, and join technical progress to an enduring sense of purpose.",
+      "file": "anthro_narrator_civilization_meiji.wav",
+      "script_sha256": "2cc738504f86b49452c6467a58c7638dc3f95d167b63a8aae3d96dcb4f9c68f4",
+      "duration_seconds": 10.857
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_MEXICO",
+      "text": "Mexico's future draws upon deep traditions and the work of building a nation. Strengthen its communities, encourage invention, and let cultural confidence sustain its development.",
+      "file": "anthro_narrator_civilization_mexico.wav",
+      "script_sha256": "c96829d6d74f748c12b3f94eae30d6e71762f35f73d95230ce69939792dcb657",
+      "duration_seconds": 11.188
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_MING",
+      "text": "The Ming realm joins administrative reach to skilled production. Sustain the cities and countryside together, and make sound institutions the foundation of prosperity.",
+      "file": "anthro_narrator_civilization_ming.wav",
+      "script_sha256": "d0afe53f5e5afa3f688c7f4e451931c00ff408c4db3f07a06f44ae56bb7231b2",
+      "duration_seconds": 9.791
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_MISSISSIPPIAN",
+      "text": "Mississippian communities build thriving centres within a connected river landscape. Sustain their farms and gathering places, and strengthen the relationships that give them influence.",
+      "file": "anthro_narrator_civilization_mississippian.wav",
+      "script_sha256": "13882881bc8f57996cb956ea75f55d9f8d97c281427fc4a0c60ebf0ff459c3ff",
+      "duration_seconds": 10.356
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_MONGOLIA",
+      "text": "Mongolia's steppe networks turn mobility into far reaching power. Organise your forces, protect the routes of exchange, and let connection extend beyond conquest.",
+      "file": "anthro_narrator_civilization_mongolia.wav",
+      "script_sha256": "aaf8bbab3168ae397adaacb1a758cafb753fb3cd0ce7f1917b190559e3c0b21a",
+      "duration_seconds": 10.484
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_MUGHAL",
+      "text": "The Mughal realm brings diverse traditions into a rich imperial setting. Support craftsmanship and exchange, and make effective government a partner to cultural splendour.",
+      "file": "anthro_narrator_civilization_mughal.wav",
+      "script_sha256": "6f3416be4126a3703a09f48afb6b1997d35dcc46952877d858f2ecd061eeb364",
+      "duration_seconds": 10.1
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_NEPAL",
+      "text": "Nepal's valleys connect communities across a demanding mountain landscape. Sustain their craftsmanship and exchange, and turn the challenges of geography into enduring strengths.",
+      "file": "anthro_narrator_civilization_nepal.wav",
+      "script_sha256": "38c7ef4115c27b3c0094b0866d97e4ebcae5fadaad7027ab1892217e9421a007",
+      "duration_seconds": 10.313
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_NORMAN",
+      "text": "The Norman realm combines adaptation with forceful ambition. Build durable institutions in newly connected lands, and make authority effective beyond the moment of conquest.",
+      "file": "anthro_narrator_civilization_norman.wav",
+      "script_sha256": "af04addbce4f73ee12b40a4a1025dca9c2cf6dda02a54ea390a0129b23fe2c64",
+      "duration_seconds": 10.558
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_OTTOMANS",
+      "text": "The Ottoman realm grows through organisation across many peoples and regions. Coordinate its resources, sustain its cities, and make administration as capable as its armies.",
+      "file": "anthro_narrator_civilization_ottomans.wav",
+      "script_sha256": "4912d83c2710c8fa80fc1228ae8c336bd5cff30e5411edf144a2399891297fa2",
+      "duration_seconds": 10.74
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_PERSIA",
+      "text": "Achaemenid Persia draws strength from connecting a diverse empire. Maintain its roads, cultivate capable government, and give distant provinces a share in common prosperity.",
+      "file": "anthro_narrator_civilization_persia.wav",
+      "script_sha256": "f96de32c97a19e7ec5adfd71be4d2d987ad32cbde7e5d8fc451dd393c75384eb",
+      "duration_seconds": 10.996
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_PIRATE_REPUBLIC",
+      "text": "The Republic of Pirates seeks opportunity beyond the authority of distant empires. Master the sea routes, strengthen your havens, and turn uncertain fortunes into lasting security.",
+      "file": "anthro_narrator_civilization_pirate_republic.wav",
+      "script_sha256": "2054f704251956969467424c83b326a1e84713a8d0814bc82cec5a2e39f23941",
+      "duration_seconds": 11.369
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_PRUSSIA",
+      "text": "Prussia cultivates discipline, education, and organised state power. Develop its institutions, encourage practical knowledge, and make preparation the foundation of achievement.",
+      "file": "anthro_narrator_civilization_prussia.wav",
+      "script_sha256": "f30455dcc7606f322585805f9cb0d21ccb414191b2f0d35043bd40656dd189bb",
+      "duration_seconds": 10.907
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_QAJAR",
+      "text": "Qajar Persia stands between deep traditions and a changing international order. Strengthen its institutions, nurture commerce, and choose carefully how your realm meets the wider world.",
+      "file": "anthro_narrator_civilization_qajar.wav",
+      "script_sha256": "260fc08e807d5bcdae776eb16a849a4dcf41b28bd73de1ec3ac1be61cf3122a7",
+      "duration_seconds": 10.947
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_QING",
+      "text": "The Qing realm governs a vast and diverse landscape. Sustain its productive communities, coordinate its administration, and meet changing circumstances with clear judgement.",
+      "file": "anthro_narrator_civilization_qing.wav",
+      "script_sha256": "e2d5fefac4c9242d9695ee416c53e5300436b4006e4e36aad4ffeca908927b0c",
+      "duration_seconds": 10.74
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_ROME",
+      "text": "Rome's influence grows through roads, institutions, and civic ambition. Build connections that outlive their builders, and make the strength of the state useful to its people.",
+      "file": "anthro_narrator_civilization_rome.wav",
+      "script_sha256": "cac79f8e67f20cc88524abe0d86ada16c3dedff378005e68a444e73c018bfd20",
+      "duration_seconds": 9.975
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_RUSSIA",
+      "text": "Russia's great distances demand connection and resolve. Develop its cities, support learning and industry, and give the breadth of the land a shared direction.",
+      "file": "anthro_narrator_civilization_russia.wav",
+      "script_sha256": "d09ee3c84aed30ac7d526fe886b7e7c386bcdabe803d310f52adf689e4adc8ce",
+      "duration_seconds": 9.321
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_SENGOKU",
+      "text": "Sengoku Japan faces the challenge of rival authorities and uncertain alliances. Organise your resources, secure your communities, and turn competition towards a lasting settlement.",
+      "file": "anthro_narrator_civilization_sengoku.wav",
+      "script_sha256": "5b71fbd3eedde8712e2d057fe79840673c14f2493854f1ea729d96afd4a1beab",
+      "duration_seconds": 11.882
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_SHAWNEE",
+      "text": "Shawnee communities draw strength from relationships, stewardship, and determination. Protect their independence, sustain the land, and make cooperation a source of resilience.",
+      "file": "anthro_narrator_civilization_shawnee.wav",
+      "script_sha256": "3c2047e44564e80d567ee900bb2f2112d473d7752bb6763303530ed81a8032c1",
+      "duration_seconds": 10.465
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_SIAM",
+      "text": "Siam flourishes where diplomacy, exchange, and cultural confidence meet. Strengthen its cities, cultivate capable government, and preserve room for independent judgement.",
+      "file": "anthro_narrator_civilization_siam.wav",
+      "script_sha256": "42d334b1129a885d219a42e81e0b34fa977d59a1a3b6296aeee8cbd41497d6d0",
+      "duration_seconds": 10.679
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_SILLA",
+      "text": "Silla brings political ambition into partnership with craftsmanship and learning. Strengthen the foundations of unity, and give your people a cultural legacy that endures.",
+      "file": "anthro_narrator_civilization_silla.wav",
+      "script_sha256": "de82fa1a7fc80520902f8c9e1f5078ee06140ea787c847c38297af8944c9a40f",
+      "duration_seconds": 9.801
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_SONGHAI",
+      "text": "Songhai's river routes connect productive lands to centres of trade and learning. Secure those connections, sustain your cities, and make exchange the basis of regional power.",
+      "file": "anthro_narrator_civilization_songhai.wav",
+      "script_sha256": "51b586550fb806adf33295bb1b13f3421cdecda827aefef55b67469ee8451994",
+      "duration_seconds": 10.419
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_SPAIN",
+      "text": "Spain looks beyond familiar shores with maritime ambition. Prepare its fleets and institutions, and remember that the reach of power also widens its responsibilities.",
+      "file": "anthro_narrator_civilization_spain.wav",
+      "script_sha256": "28d7d04982a2eb5c3592fee38d8823e8694293023a602116e038ed65313f2ce2",
+      "duration_seconds": 10.259
+    },
+    {
+      "tag": "ANTHRO_NARRATOR_CIVILIZATION_TONGA",
+      "text": "Tonga's ocean networks depend upon skill, exchange, and organised leadership. Connect the islands, care for their resources, and let seamanship sustain a thriving realm.",
+      "file": "anthro_narrator_civilization_tonga.wav",
+      "script_sha256": "cc93861739b7bf29e2566dcbbafbdee14ca3994040c8a001c389a1ca16aeff32",
+      "duration_seconds": 10.633
+    }
+  ],
+  "dynamic": []
+}

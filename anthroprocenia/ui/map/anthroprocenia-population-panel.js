@@ -82,8 +82,12 @@ export function buildPopulationTree(entries) {
     const region = regionId ? child(continent.map, regionId, () => ({
       id: regionId, kind: 'region', geographicKind: entry.region.type, label: entry.region.name, total: 0, children: [],
     })) : null;
+    const subregionId = region && entry.subregion && `${regionId}|s:${entry.subregion.id}`;
+    const subregion = subregionId ? child(region.map, subregionId, () => ({
+      id: subregionId, kind: 'region', geographicKind: 'subregion', label: entry.subregion.name, total: 0, children: [],
+    })) : null;
     const tileId = tileNodeId(entry.civ.id, entry.continent.id, entry.tile.index);
-    const tile = child((region || continent).map, tileId, () => ({ id: tileId, kind: 'tile', label: entry.tile.name, tile: entry.tile.index, total: 0, children: [] }));
+    const tile = child((subregion || region || continent).map, tileId, () => ({ id: tileId, kind: 'tile', label: entry.tile.name, tile: entry.tile.index, total: 0, children: [] }));
     const home = homeGroupFor(entry.icon), groupId = `${tileId}|g:${home.id}`;
     const iconId = `${groupId}|i:${entry.icon.id}`;
     if (tile.map.has(groupId) && tile.map.get(groupId).map.has(iconId)) continue;
@@ -92,6 +96,7 @@ export function buildPopulationTree(entries) {
     group.map.set(iconId, icon);
     group.total += population; tile.total += population; continent.total += population; civ.total += population;
     if (region) region.total += population;
+    if (subregion) subregion.total += population;
   }
   const finish = node => {
     if (!node.map) return node;

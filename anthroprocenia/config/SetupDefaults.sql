@@ -14,8 +14,8 @@ WHERE ParameterID = 'Map' AND EXISTS (
       AND Domain = Parameters.Domain
 );
 
-UPDATE MapSizes SET DefaultPlayers = 63, MaxPlayers = MAX(MaxPlayers, 63);
-DELETE FROM MapSizes WHERE MapSizeType NOT IN ('MAPSIZE_GIANT', 'MAPSIZE_GIANT_EARTH', 'MAPSIZE_LUDICROUS');
+UPDATE MapSizes SET DefaultPlayers = 63, MaxPlayers = MAX(MaxPlayers, 63)
+WHERE MapSizeType IN ('MAPSIZE_GIANT', 'MAPSIZE_GIANT_EARTH', 'MAPSIZE_LUDICROUS', 'MAPSIZE_ANTHRO_COLOSSAL');
 
 -- Giant is supplied by map mods such as YnAMP, not the base game.
 UPDATE Parameters SET DefaultValue = 'MAPSIZE_GIANT'

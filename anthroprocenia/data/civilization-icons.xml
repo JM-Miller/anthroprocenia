@@ -1,609 +1,609 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Database>
   <IconDefinitions>
-    <Row ID="CIVILIZATION_ANTHRO_BRITONS" Path="fs://game/anthroprocenia_map_history/art/civilizations/britons.png" />
-    <Row ID="cult_anthro_britons" Path="fs://game/anthroprocenia_map_history/art/civilizations/britons.png" />
-    <Row ID="CIVILIZATION_ANTHRO_BRITONS" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_britons.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_BRITONS" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_britons.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_BRITONS" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_britons.png" />
-    <Row ID="BUILDING_ANTHRO_BRITONS_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_britons_1.png" />
-    <Row ID="BUILDING_ANTHRO_BRITONS_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_britons_2.png" />
-    <Row ID="QUARTER_ANTHRO_BRITONS" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_britons.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_BRITONS" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_britons.png" />
-    <Row ID="UNIT_ANTHRO_BRITONS_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_britons_1.png" />
-    <Row ID="UNIT_ANTHRO_BRITONS_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_britons_2.png" />
-    <Row ID="UNIT_ANTHRO_BRITONS_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_britons_3.png" />
-    <Row ID="CIVILIZATION_ANTHRO_SUEBI" Path="fs://game/anthroprocenia_map_history/art/civilizations/suebi.png" />
-    <Row ID="cult_anthro_suebi" Path="fs://game/anthroprocenia_map_history/art/civilizations/suebi.png" />
-    <Row ID="CIVILIZATION_ANTHRO_SUEBI" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_suebi.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_SUEBI" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_suebi.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_SUEBI" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_suebi.png" />
-    <Row ID="BUILDING_ANTHRO_SUEBI_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_suebi_1.png" />
-    <Row ID="BUILDING_ANTHRO_SUEBI_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_suebi_2.png" />
-    <Row ID="QUARTER_ANTHRO_SUEBI" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_suebi.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_SUEBI" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_suebi.png" />
-    <Row ID="UNIT_ANTHRO_SUEBI_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_suebi_1.png" />
-    <Row ID="UNIT_ANTHRO_SUEBI_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_suebi_2.png" />
-    <Row ID="UNIT_ANTHRO_SUEBI_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_suebi_3.png" />
-    <Row ID="UNIT_ANTHRO_SUEBI_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_suebi_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_XIONGNU" Path="fs://game/anthroprocenia_map_history/art/civilizations/xiongnu.png" />
-    <Row ID="cult_anthro_xiongnu" Path="fs://game/anthroprocenia_map_history/art/civilizations/xiongnu.png" />
-    <Row ID="CIVILIZATION_ANTHRO_XIONGNU" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_xiongnu.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_XIONGNU" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_xiongnu.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_XIONGNU" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_xiongnu.png" />
-    <Row ID="BUILDING_ANTHRO_XIONGNU_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_xiongnu_1.png" />
-    <Row ID="BUILDING_ANTHRO_XIONGNU_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_xiongnu_2.png" />
-    <Row ID="QUARTER_ANTHRO_XIONGNU" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_xiongnu.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_XIONGNU" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_xiongnu.png" />
-    <Row ID="UNIT_ANTHRO_XIONGNU_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_xiongnu_1.png" />
-    <Row ID="UNIT_ANTHRO_XIONGNU_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_xiongnu_2.png" />
-    <Row ID="UNIT_ANTHRO_XIONGNU_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_xiongnu_3.png" />
-    <Row ID="CIVILIZATION_ANTHRO_CARALANS" Path="fs://game/anthroprocenia_map_history/art/civilizations/caralans.png" />
-    <Row ID="cult_anthro_caralans" Path="fs://game/anthroprocenia_map_history/art/civilizations/caralans.png" />
-    <Row ID="CIVILIZATION_ANTHRO_CARALANS" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_caralans.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_CARALANS" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_caralans.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_CARALANS" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_caralans.png" />
-    <Row ID="BUILDING_ANTHRO_CARALANS_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_caralans_1.png" />
-    <Row ID="BUILDING_ANTHRO_CARALANS_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_caralans_2.png" />
-    <Row ID="QUARTER_ANTHRO_CARALANS" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_caralans.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_CARALANS" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_caralans.png" />
-    <Row ID="UNIT_ANTHRO_CARALANS_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_caralans_1.png" />
-    <Row ID="UNIT_ANTHRO_CARALANS_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_caralans_2.png" />
-    <Row ID="UNIT_ANTHRO_CARALANS_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_caralans_3.png" />
-    <Row ID="CIVILIZATION_ANTHRO_WAGADU" Path="fs://game/anthroprocenia_map_history/art/civilizations/wagadu.png" />
-    <Row ID="cult_anthro_wagadu" Path="fs://game/anthroprocenia_map_history/art/civilizations/wagadu.png" />
-    <Row ID="CIVILIZATION_ANTHRO_WAGADU" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_wagadu.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_WAGADU" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_wagadu.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_WAGADU" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_wagadu.png" />
-    <Row ID="BUILDING_ANTHRO_WAGADU_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_wagadu_1.png" />
-    <Row ID="BUILDING_ANTHRO_WAGADU_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_wagadu_2.png" />
-    <Row ID="QUARTER_ANTHRO_WAGADU" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_wagadu.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_WAGADU" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_wagadu.png" />
-    <Row ID="UNIT_ANTHRO_WAGADU_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_wagadu_1.png" />
-    <Row ID="UNIT_ANTHRO_WAGADU_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_wagadu_2.png" />
-    <Row ID="UNIT_ANTHRO_WAGADU_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_wagadu_3.png" />
-    <Row ID="CIVILIZATION_ANTHRO_JAVANESE" Path="fs://game/anthroprocenia_map_history/art/civilizations/javanese.png" />
-    <Row ID="cult_anthro_javanese" Path="fs://game/anthroprocenia_map_history/art/civilizations/javanese.png" />
-    <Row ID="CIVILIZATION_ANTHRO_JAVANESE" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_javanese.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_JAVANESE" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_javanese.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_JAVANESE" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_javanese.png" />
-    <Row ID="BUILDING_ANTHRO_JAVANESE_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_javanese_1.png" />
-    <Row ID="BUILDING_ANTHRO_JAVANESE_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_javanese_2.png" />
-    <Row ID="QUARTER_ANTHRO_JAVANESE" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_javanese.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_JAVANESE" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_javanese.png" />
-    <Row ID="UNIT_ANTHRO_JAVANESE_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_javanese_1.png" />
-    <Row ID="UNIT_ANTHRO_JAVANESE_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_javanese_2.png" />
-    <Row ID="UNIT_ANTHRO_JAVANESE_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_javanese_3.png" />
-    <Row ID="CIVILIZATION_ANTHRO_SLAVIC" Path="fs://game/anthroprocenia_map_history/art/civilizations/slavic.png" />
-    <Row ID="cult_anthro_slavic" Path="fs://game/anthroprocenia_map_history/art/civilizations/slavic.png" />
-    <Row ID="CIVILIZATION_ANTHRO_SLAVIC" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_slavic.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_SLAVIC" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_slavic.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_SLAVIC" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_slavic.png" />
-    <Row ID="BUILDING_ANTHRO_SLAVIC_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_slavic_1.png" />
-    <Row ID="BUILDING_ANTHRO_SLAVIC_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_slavic_2.png" />
-    <Row ID="QUARTER_ANTHRO_SLAVIC" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_slavic.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_SLAVIC" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_slavic.png" />
-    <Row ID="UNIT_ANTHRO_SLAVIC_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_slavic_1.png" />
-    <Row ID="UNIT_ANTHRO_SLAVIC_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_slavic_2.png" />
-    <Row ID="UNIT_ANTHRO_SLAVIC_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_slavic_3.png" />
-    <Row ID="UNIT_ANTHRO_SLAVIC_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_slavic_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_TAINO" Path="fs://game/anthroprocenia_map_history/art/civilizations/taino.png" />
-    <Row ID="cult_anthro_taino" Path="fs://game/anthroprocenia_map_history/art/civilizations/taino.png" />
-    <Row ID="CIVILIZATION_ANTHRO_TAINO" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_taino.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_TAINO" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_taino.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_TAINO" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_taino.png" />
-    <Row ID="BUILDING_ANTHRO_TAINO_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_taino_1.png" />
-    <Row ID="BUILDING_ANTHRO_TAINO_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_taino_2.png" />
-    <Row ID="QUARTER_ANTHRO_TAINO" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_taino.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_TAINO" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_taino.png" />
-    <Row ID="UNIT_ANTHRO_TAINO_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_taino_1.png" />
-    <Row ID="UNIT_ANTHRO_TAINO_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_taino_2.png" />
-    <Row ID="UNIT_ANTHRO_TAINO_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_taino_3.png" />
-    <Row ID="UNIT_ANTHRO_TAINO_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_taino_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_IBERIA" Path="fs://game/anthroprocenia_map_history/art/civilizations/iberia.png" />
-    <Row ID="cult_anthro_iberia" Path="fs://game/anthroprocenia_map_history/art/civilizations/iberia.png" />
-    <Row ID="CIVILIZATION_ANTHRO_IBERIA" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_iberia.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_IBERIA" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_iberia.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_IBERIA" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_iberia.png" />
-    <Row ID="BUILDING_ANTHRO_IBERIA_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_iberia_1.png" />
-    <Row ID="BUILDING_ANTHRO_IBERIA_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_iberia_2.png" />
-    <Row ID="QUARTER_ANTHRO_IBERIA" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_iberia.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_IBERIA" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_iberia.png" />
-    <Row ID="UNIT_ANTHRO_IBERIA_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_iberia_1.png" />
-    <Row ID="UNIT_ANTHRO_IBERIA_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_iberia_2.png" />
-    <Row ID="UNIT_ANTHRO_IBERIA_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_iberia_3.png" />
-    <Row ID="UNIT_ANTHRO_IBERIA_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_iberia_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_THRACE" Path="fs://game/anthroprocenia_map_history/art/civilizations/thrace.png" />
-    <Row ID="cult_anthro_thrace" Path="fs://game/anthroprocenia_map_history/art/civilizations/thrace.png" />
-    <Row ID="CIVILIZATION_ANTHRO_THRACE" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_thrace.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_THRACE" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_thrace.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_THRACE" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_thrace.png" />
-    <Row ID="BUILDING_ANTHRO_THRACE_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_thrace_1.png" />
-    <Row ID="BUILDING_ANTHRO_THRACE_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_thrace_2.png" />
-    <Row ID="QUARTER_ANTHRO_THRACE" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_thrace.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_THRACE" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_thrace.png" />
-    <Row ID="UNIT_ANTHRO_THRACE_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_thrace_1.png" />
-    <Row ID="UNIT_ANTHRO_THRACE_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_thrace_2.png" />
-    <Row ID="UNIT_ANTHRO_THRACE_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_thrace_3.png" />
-    <Row ID="CIVILIZATION_ANTHRO_SCYTHIA" Path="fs://game/anthroprocenia_map_history/art/civilizations/scythia.png" />
-    <Row ID="cult_anthro_scythia" Path="fs://game/anthroprocenia_map_history/art/civilizations/scythia.png" />
-    <Row ID="CIVILIZATION_ANTHRO_SCYTHIA" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_scythia.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_SCYTHIA" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_scythia.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_SCYTHIA" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_scythia.png" />
-    <Row ID="BUILDING_ANTHRO_SCYTHIA_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_scythia_1.png" />
-    <Row ID="BUILDING_ANTHRO_SCYTHIA_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_scythia_2.png" />
-    <Row ID="QUARTER_ANTHRO_SCYTHIA" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_scythia.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_SCYTHIA" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_scythia.png" />
-    <Row ID="UNIT_ANTHRO_SCYTHIA_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_scythia_1.png" />
-    <Row ID="UNIT_ANTHRO_SCYTHIA_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_scythia_2.png" />
-    <Row ID="UNIT_ANTHRO_SCYTHIA_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_scythia_3.png" />
-    <Row ID="CIVILIZATION_ANTHRO_NORDIC" Path="fs://game/anthroprocenia_map_history/art/civilizations/nordic.png" />
-    <Row ID="cult_anthro_nordic" Path="fs://game/anthroprocenia_map_history/art/civilizations/nordic.png" />
-    <Row ID="CIVILIZATION_ANTHRO_NORDIC" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_nordic.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_NORDIC" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_nordic.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_NORDIC" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_nordic.png" />
-    <Row ID="BUILDING_ANTHRO_NORDIC_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_nordic_1.png" />
-    <Row ID="BUILDING_ANTHRO_NORDIC_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_nordic_2.png" />
-    <Row ID="QUARTER_ANTHRO_NORDIC" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_nordic.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_NORDIC" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_nordic.png" />
-    <Row ID="UNIT_ANTHRO_NORDIC_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_nordic_1.png" />
-    <Row ID="UNIT_ANTHRO_NORDIC_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_nordic_2.png" />
-    <Row ID="UNIT_ANTHRO_NORDIC_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_nordic_3.png" />
-    <Row ID="UNIT_ANTHRO_NORDIC_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_nordic_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_PICTISH" Path="fs://game/anthroprocenia_map_history/art/civilizations/pictish.png" />
-    <Row ID="cult_anthro_pictish" Path="fs://game/anthroprocenia_map_history/art/civilizations/pictish.png" />
-    <Row ID="CIVILIZATION_ANTHRO_PICTISH" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_pictish.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_PICTISH" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_pictish.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_PICTISH" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_pictish.png" />
-    <Row ID="BUILDING_ANTHRO_PICTISH_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_pictish_1.png" />
-    <Row ID="BUILDING_ANTHRO_PICTISH_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_pictish_2.png" />
-    <Row ID="QUARTER_ANTHRO_PICTISH" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_pictish.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_PICTISH" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_pictish.png" />
-    <Row ID="UNIT_ANTHRO_PICTISH_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_pictish_1.png" />
-    <Row ID="UNIT_ANTHRO_PICTISH_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_pictish_2.png" />
-    <Row ID="UNIT_ANTHRO_PICTISH_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_pictish_3.png" />
-    <Row ID="UNIT_ANTHRO_PICTISH_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_pictish_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_LAKHOTA" Path="fs://game/anthroprocenia_map_history/art/civilizations/lakhota.png" />
-    <Row ID="cult_anthro_lakhota" Path="fs://game/anthroprocenia_map_history/art/civilizations/lakhota.png" />
-    <Row ID="CIVILIZATION_ANTHRO_LAKHOTA" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_lakhota.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_LAKHOTA" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_lakhota.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_LAKHOTA" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_lakhota.png" />
-    <Row ID="BUILDING_ANTHRO_LAKHOTA_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_lakhota_1.png" />
-    <Row ID="BUILDING_ANTHRO_LAKHOTA_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_lakhota_2.png" />
-    <Row ID="QUARTER_ANTHRO_LAKHOTA" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_lakhota.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_LAKHOTA" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_lakhota.png" />
-    <Row ID="UNIT_ANTHRO_LAKHOTA_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_lakhota_1.png" />
-    <Row ID="UNIT_ANTHRO_LAKHOTA_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_lakhota_2.png" />
-    <Row ID="UNIT_ANTHRO_LAKHOTA_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_lakhota_3.png" />
-    <Row ID="UNIT_ANTHRO_LAKHOTA_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_lakhota_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_NAVAJO" Path="fs://game/anthroprocenia_map_history/art/civilizations/navajo.png" />
-    <Row ID="cult_anthro_navajo" Path="fs://game/anthroprocenia_map_history/art/civilizations/navajo.png" />
-    <Row ID="CIVILIZATION_ANTHRO_NAVAJO" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_navajo.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_NAVAJO" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_navajo.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_NAVAJO" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_navajo.png" />
-    <Row ID="BUILDING_ANTHRO_NAVAJO_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_navajo_1.png" />
-    <Row ID="BUILDING_ANTHRO_NAVAJO_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_navajo_2.png" />
-    <Row ID="QUARTER_ANTHRO_NAVAJO" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_navajo.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_NAVAJO" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_navajo.png" />
-    <Row ID="UNIT_ANTHRO_NAVAJO_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_navajo_1.png" />
-    <Row ID="UNIT_ANTHRO_NAVAJO_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_navajo_2.png" />
-    <Row ID="UNIT_ANTHRO_NAVAJO_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_navajo_3.png" />
-    <Row ID="UNIT_ANTHRO_NAVAJO_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_navajo_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_ZIMBABWE" Path="fs://game/anthroprocenia_map_history/art/civilizations/zimbabwe.png" />
-    <Row ID="cult_anthro_zimbabwe" Path="fs://game/anthroprocenia_map_history/art/civilizations/zimbabwe.png" />
-    <Row ID="CIVILIZATION_ANTHRO_ZIMBABWE" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_zimbabwe.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_ZIMBABWE" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_zimbabwe.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_ZIMBABWE" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_zimbabwe.png" />
-    <Row ID="BUILDING_ANTHRO_ZIMBABWE_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_zimbabwe_1.png" />
-    <Row ID="BUILDING_ANTHRO_ZIMBABWE_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_zimbabwe_2.png" />
-    <Row ID="QUARTER_ANTHRO_ZIMBABWE" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_zimbabwe.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_ZIMBABWE" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_zimbabwe.png" />
-    <Row ID="UNIT_ANTHRO_ZIMBABWE_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_zimbabwe_1.png" />
-    <Row ID="UNIT_ANTHRO_ZIMBABWE_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_zimbabwe_2.png" />
-    <Row ID="UNIT_ANTHRO_ZIMBABWE_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_zimbabwe_3.png" />
-    <Row ID="UNIT_ANTHRO_ZIMBABWE_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_zimbabwe_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_BYZANTIUM" Path="fs://game/anthroprocenia_map_history/art/civilizations/byzantium.png" />
-    <Row ID="cult_anthro_byzantium" Path="fs://game/anthroprocenia_map_history/art/civilizations/byzantium.png" />
-    <Row ID="CIVILIZATION_ANTHRO_BYZANTIUM" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_byzantium.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_BYZANTIUM" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_byzantium.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_BYZANTIUM" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_byzantium.png" />
-    <Row ID="BUILDING_ANTHRO_BYZANTIUM_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_byzantium_1.png" />
-    <Row ID="BUILDING_ANTHRO_BYZANTIUM_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_byzantium_2.png" />
-    <Row ID="QUARTER_ANTHRO_BYZANTIUM" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_byzantium.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_BYZANTIUM" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_byzantium.png" />
-    <Row ID="UNIT_ANTHRO_BYZANTIUM_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_byzantium_1.png" />
-    <Row ID="UNIT_ANTHRO_BYZANTIUM_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_byzantium_2.png" />
-    <Row ID="UNIT_ANTHRO_BYZANTIUM_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_byzantium_3.png" />
-    <Row ID="UNIT_ANTHRO_BYZANTIUM_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_byzantium_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_AYUTTHAYA" Path="fs://game/anthroprocenia_map_history/art/civilizations/ayutthaya.png" />
-    <Row ID="cult_anthro_ayutthaya" Path="fs://game/anthroprocenia_map_history/art/civilizations/ayutthaya.png" />
-    <Row ID="CIVILIZATION_ANTHRO_AYUTTHAYA" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_ayutthaya.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_AYUTTHAYA" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_ayutthaya.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_AYUTTHAYA" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_ayutthaya.png" />
-    <Row ID="BUILDING_ANTHRO_AYUTTHAYA_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_ayutthaya_1.png" />
-    <Row ID="BUILDING_ANTHRO_AYUTTHAYA_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_ayutthaya_2.png" />
-    <Row ID="QUARTER_ANTHRO_AYUTTHAYA" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_ayutthaya.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_AYUTTHAYA" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_ayutthaya.png" />
-    <Row ID="UNIT_ANTHRO_AYUTTHAYA_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_ayutthaya_1.png" />
-    <Row ID="UNIT_ANTHRO_AYUTTHAYA_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_ayutthaya_2.png" />
-    <Row ID="UNIT_ANTHRO_AYUTTHAYA_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_ayutthaya_3.png" />
-    <Row ID="UNIT_ANTHRO_AYUTTHAYA_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_ayutthaya_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_AZTEC" Path="fs://game/anthroprocenia_map_history/art/civilizations/aztec.png" />
-    <Row ID="cult_anthro_aztec" Path="fs://game/anthroprocenia_map_history/art/civilizations/aztec.png" />
-    <Row ID="CIVILIZATION_ANTHRO_AZTEC" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_aztec.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_AZTEC" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_aztec.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_AZTEC" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_aztec.png" />
-    <Row ID="BUILDING_ANTHRO_AZTEC_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_aztec_1.png" />
-    <Row ID="BUILDING_ANTHRO_AZTEC_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_aztec_2.png" />
-    <Row ID="QUARTER_ANTHRO_AZTEC" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_aztec.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_AZTEC" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_aztec.png" />
-    <Row ID="UNIT_ANTHRO_AZTEC_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_aztec_1.png" />
-    <Row ID="UNIT_ANTHRO_AZTEC_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_aztec_2.png" />
-    <Row ID="UNIT_ANTHRO_AZTEC_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_aztec_3.png" />
-    <Row ID="UNIT_ANTHRO_AZTEC_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_aztec_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_MOHAWK" Path="fs://game/anthroprocenia_map_history/art/civilizations/mohawk.png" />
-    <Row ID="cult_anthro_mohawk" Path="fs://game/anthroprocenia_map_history/art/civilizations/mohawk.png" />
-    <Row ID="CIVILIZATION_ANTHRO_MOHAWK" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_mohawk.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_MOHAWK" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_mohawk.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_MOHAWK" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_mohawk.png" />
-    <Row ID="BUILDING_ANTHRO_MOHAWK_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_mohawk_1.png" />
-    <Row ID="BUILDING_ANTHRO_MOHAWK_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_mohawk_2.png" />
-    <Row ID="QUARTER_ANTHRO_MOHAWK" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_mohawk.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_MOHAWK" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_mohawk.png" />
-    <Row ID="UNIT_ANTHRO_MOHAWK_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_mohawk_1.png" />
-    <Row ID="UNIT_ANTHRO_MOHAWK_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_mohawk_2.png" />
-    <Row ID="UNIT_ANTHRO_MOHAWK_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_mohawk_3.png" />
-    <Row ID="UNIT_ANTHRO_MOHAWK_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_mohawk_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_FRANKS" Path="fs://game/anthroprocenia_map_history/art/civilizations/franks.png" />
-    <Row ID="cult_anthro_franks" Path="fs://game/anthroprocenia_map_history/art/civilizations/franks.png" />
-    <Row ID="CIVILIZATION_ANTHRO_FRANKS" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_franks.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_FRANKS" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_franks.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_FRANKS" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_franks.png" />
-    <Row ID="BUILDING_ANTHRO_FRANKS_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_franks_1.png" />
-    <Row ID="BUILDING_ANTHRO_FRANKS_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_franks_2.png" />
-    <Row ID="QUARTER_ANTHRO_FRANKS" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_franks.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_FRANKS" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_franks.png" />
-    <Row ID="UNIT_ANTHRO_FRANKS_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_franks_1.png" />
-    <Row ID="UNIT_ANTHRO_FRANKS_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_franks_2.png" />
-    <Row ID="UNIT_ANTHRO_FRANKS_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_franks_3.png" />
-    <Row ID="UNIT_ANTHRO_FRANKS_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_franks_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_SELJUK" Path="fs://game/anthroprocenia_map_history/art/civilizations/seljuk.png" />
-    <Row ID="cult_anthro_seljuk" Path="fs://game/anthroprocenia_map_history/art/civilizations/seljuk.png" />
-    <Row ID="CIVILIZATION_ANTHRO_SELJUK" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_seljuk.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_SELJUK" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_seljuk.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_SELJUK" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_seljuk.png" />
-    <Row ID="BUILDING_ANTHRO_SELJUK_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_seljuk_1.png" />
-    <Row ID="BUILDING_ANTHRO_SELJUK_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_seljuk_2.png" />
-    <Row ID="QUARTER_ANTHRO_SELJUK" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_seljuk.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_SELJUK" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_seljuk.png" />
-    <Row ID="UNIT_ANTHRO_SELJUK_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_seljuk_1.png" />
-    <Row ID="UNIT_ANTHRO_SELJUK_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_seljuk_2.png" />
-    <Row ID="UNIT_ANTHRO_SELJUK_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_seljuk_3.png" />
-    <Row ID="UNIT_ANTHRO_SELJUK_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_seljuk_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_RUS" Path="fs://game/anthroprocenia_map_history/art/civilizations/rus.png" />
-    <Row ID="cult_anthro_rus" Path="fs://game/anthroprocenia_map_history/art/civilizations/rus.png" />
-    <Row ID="CIVILIZATION_ANTHRO_RUS" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_rus.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_RUS" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_rus.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_RUS" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_rus.png" />
-    <Row ID="BUILDING_ANTHRO_RUS_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_rus_1.png" />
-    <Row ID="BUILDING_ANTHRO_RUS_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_rus_2.png" />
-    <Row ID="QUARTER_ANTHRO_RUS" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_rus.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_RUS" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_rus.png" />
-    <Row ID="UNIT_ANTHRO_RUS_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_rus_1.png" />
-    <Row ID="UNIT_ANTHRO_RUS_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_rus_2.png" />
-    <Row ID="UNIT_ANTHRO_RUS_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_rus_3.png" />
-    <Row ID="UNIT_ANTHRO_RUS_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_rus_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_LOMBARDS" Path="fs://game/anthroprocenia_map_history/art/civilizations/lombards.png" />
-    <Row ID="cult_anthro_lombards" Path="fs://game/anthroprocenia_map_history/art/civilizations/lombards.png" />
-    <Row ID="CIVILIZATION_ANTHRO_LOMBARDS" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_lombards.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_LOMBARDS" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_lombards.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_LOMBARDS" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_lombards.png" />
-    <Row ID="BUILDING_ANTHRO_LOMBARDS_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_lombards_1.png" />
-    <Row ID="BUILDING_ANTHRO_LOMBARDS_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_lombards_2.png" />
-    <Row ID="QUARTER_ANTHRO_LOMBARDS" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_lombards.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_LOMBARDS" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_lombards.png" />
-    <Row ID="UNIT_ANTHRO_LOMBARDS_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_lombards_1.png" />
-    <Row ID="UNIT_ANTHRO_LOMBARDS_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_lombards_2.png" />
-    <Row ID="UNIT_ANTHRO_LOMBARDS_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_lombards_3.png" />
-    <Row ID="UNIT_ANTHRO_LOMBARDS_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_lombards_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_TIMURIDS" Path="fs://game/anthroprocenia_map_history/art/civilizations/timurids.png" />
-    <Row ID="cult_anthro_timurids" Path="fs://game/anthroprocenia_map_history/art/civilizations/timurids.png" />
-    <Row ID="CIVILIZATION_ANTHRO_TIMURIDS" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_timurids.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_TIMURIDS" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_timurids.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_TIMURIDS" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_timurids.png" />
-    <Row ID="BUILDING_ANTHRO_TIMURIDS_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_timurids_1.png" />
-    <Row ID="BUILDING_ANTHRO_TIMURIDS_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_timurids_2.png" />
-    <Row ID="QUARTER_ANTHRO_TIMURIDS" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_timurids.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_TIMURIDS" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_timurids.png" />
-    <Row ID="UNIT_ANTHRO_TIMURIDS_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_timurids_1.png" />
-    <Row ID="UNIT_ANTHRO_TIMURIDS_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_timurids_2.png" />
-    <Row ID="UNIT_ANTHRO_TIMURIDS_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_timurids_3.png" />
-    <Row ID="UNIT_ANTHRO_TIMURIDS_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_timurids_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_VENICE" Path="fs://game/anthroprocenia_map_history/art/civilizations/venice.png" />
-    <Row ID="cult_anthro_venice" Path="fs://game/anthroprocenia_map_history/art/civilizations/venice.png" />
-    <Row ID="CIVILIZATION_ANTHRO_VENICE" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_venice.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_VENICE" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_venice.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_VENICE" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_venice.png" />
-    <Row ID="BUILDING_ANTHRO_VENICE_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_venice_1.png" />
-    <Row ID="BUILDING_ANTHRO_VENICE_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_venice_2.png" />
-    <Row ID="QUARTER_ANTHRO_VENICE" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_venice.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_VENICE" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_venice.png" />
-    <Row ID="UNIT_ANTHRO_VENICE_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_venice_1.png" />
-    <Row ID="UNIT_ANTHRO_VENICE_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_venice_2.png" />
-    <Row ID="UNIT_ANTHRO_VENICE_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_venice_3.png" />
-    <Row ID="UNIT_ANTHRO_VENICE_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_venice_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_ALMOHADS" Path="fs://game/anthroprocenia_map_history/art/civilizations/almohads.png" />
-    <Row ID="cult_anthro_almohads" Path="fs://game/anthroprocenia_map_history/art/civilizations/almohads.png" />
-    <Row ID="CIVILIZATION_ANTHRO_ALMOHADS" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_almohads.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_ALMOHADS" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_almohads.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_ALMOHADS" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_almohads.png" />
-    <Row ID="BUILDING_ANTHRO_ALMOHADS_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_almohads_1.png" />
-    <Row ID="BUILDING_ANTHRO_ALMOHADS_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_almohads_2.png" />
-    <Row ID="QUARTER_ANTHRO_ALMOHADS" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_almohads.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_ALMOHADS" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_almohads.png" />
-    <Row ID="UNIT_ANTHRO_ALMOHADS_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_almohads_1.png" />
-    <Row ID="UNIT_ANTHRO_ALMOHADS_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_almohads_2.png" />
-    <Row ID="UNIT_ANTHRO_ALMOHADS_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_almohads_3.png" />
-    <Row ID="UNIT_ANTHRO_ALMOHADS_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_almohads_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_KHWARAZMIANS" Path="fs://game/anthroprocenia_map_history/art/civilizations/khwarazmians.png" />
-    <Row ID="cult_anthro_khwarazmians" Path="fs://game/anthroprocenia_map_history/art/civilizations/khwarazmians.png" />
-    <Row ID="CIVILIZATION_ANTHRO_KHWARAZMIANS" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_khwarazmians.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_KHWARAZMIANS" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_khwarazmians.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_KHWARAZMIANS" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_khwarazmians.png" />
-    <Row ID="BUILDING_ANTHRO_KHWARAZMIANS_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_khwarazmians_1.png" />
-    <Row ID="BUILDING_ANTHRO_KHWARAZMIANS_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_khwarazmians_2.png" />
-    <Row ID="QUARTER_ANTHRO_KHWARAZMIANS" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_khwarazmians.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_KHWARAZMIANS" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_khwarazmians.png" />
-    <Row ID="UNIT_ANTHRO_KHWARAZMIANS_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_khwarazmians_1.png" />
-    <Row ID="UNIT_ANTHRO_KHWARAZMIANS_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_khwarazmians_2.png" />
-    <Row ID="UNIT_ANTHRO_KHWARAZMIANS_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_khwarazmians_3.png" />
-    <Row ID="UNIT_ANTHRO_KHWARAZMIANS_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_khwarazmians_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_PAPAL_STATES" Path="fs://game/anthroprocenia_map_history/art/civilizations/papal_states.png" />
-    <Row ID="cult_anthro_papal_states" Path="fs://game/anthroprocenia_map_history/art/civilizations/papal_states.png" />
-    <Row ID="CIVILIZATION_ANTHRO_PAPAL_STATES" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_papal_states.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_PAPAL_STATES" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_papal_states.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_PAPAL_STATES" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_papal_states.png" />
-    <Row ID="BUILDING_ANTHRO_PAPAL_STATES_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_papal_states_1.png" />
-    <Row ID="BUILDING_ANTHRO_PAPAL_STATES_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_papal_states_2.png" />
-    <Row ID="QUARTER_ANTHRO_PAPAL_STATES" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_papal_states.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_PAPAL_STATES" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_papal_states.png" />
-    <Row ID="UNIT_ANTHRO_PAPAL_STATES_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_papal_states_1.png" />
-    <Row ID="UNIT_ANTHRO_PAPAL_STATES_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_papal_states_2.png" />
-    <Row ID="UNIT_ANTHRO_PAPAL_STATES_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_papal_states_3.png" />
-    <Row ID="UNIT_ANTHRO_PAPAL_STATES_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_papal_states_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_TAINO_EXPLORATION" Path="fs://game/anthroprocenia_map_history/art/civilizations/taino_exploration.png" />
-    <Row ID="cult_anthro_taino_exploration" Path="fs://game/anthroprocenia_map_history/art/civilizations/taino_exploration.png" />
-    <Row ID="CIVILIZATION_ANTHRO_TAINO_EXPLORATION" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_taino_exploration.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_TAINO_EXPLORATION" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_taino_exploration.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_TAINO_EXPLORATION" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_taino_exploration.png" />
-    <Row ID="BUILDING_ANTHRO_TAINO_EXPLORATION_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_taino_exploration_1.png" />
-    <Row ID="BUILDING_ANTHRO_TAINO_EXPLORATION_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_taino_exploration_2.png" />
-    <Row ID="QUARTER_ANTHRO_TAINO_EXPLORATION" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_taino_exploration.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_TAINO_EXPLORATION" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_taino_exploration.png" />
-    <Row ID="UNIT_ANTHRO_TAINO_EXPLORATION_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_taino_exploration_1.png" />
-    <Row ID="UNIT_ANTHRO_TAINO_EXPLORATION_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_taino_exploration_2.png" />
-    <Row ID="UNIT_ANTHRO_TAINO_EXPLORATION_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_taino_exploration_3.png" />
-    <Row ID="UNIT_ANTHRO_TAINO_EXPLORATION_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_taino_exploration_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_ASHANTI" Path="fs://game/anthroprocenia_map_history/art/civilizations/ashanti.png" />
-    <Row ID="cult_anthro_ashanti" Path="fs://game/anthroprocenia_map_history/art/civilizations/ashanti.png" />
-    <Row ID="CIVILIZATION_ANTHRO_ASHANTI" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_ashanti.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_ASHANTI" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_ashanti.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_ASHANTI" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_ashanti.png" />
-    <Row ID="BUILDING_ANTHRO_ASHANTI_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_ashanti_1.png" />
-    <Row ID="BUILDING_ANTHRO_ASHANTI_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_ashanti_2.png" />
-    <Row ID="QUARTER_ANTHRO_ASHANTI" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_ashanti.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_ASHANTI" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_ashanti.png" />
-    <Row ID="UNIT_ANTHRO_ASHANTI_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_ashanti_1.png" />
-    <Row ID="UNIT_ANTHRO_ASHANTI_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_ashanti_2.png" />
-    <Row ID="UNIT_ANTHRO_ASHANTI_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_ashanti_3.png" />
-    <Row ID="UNIT_ANTHRO_ASHANTI_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_ashanti_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_WAFDIST_EGYPT" Path="fs://game/anthroprocenia_map_history/art/civilizations/wafdist_egypt.png" />
-    <Row ID="cult_anthro_wafdist_egypt" Path="fs://game/anthroprocenia_map_history/art/civilizations/wafdist_egypt.png" />
-    <Row ID="CIVILIZATION_ANTHRO_WAFDIST_EGYPT" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_wafdist_egypt.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_WAFDIST_EGYPT" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_wafdist_egypt.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_WAFDIST_EGYPT" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_wafdist_egypt.png" />
-    <Row ID="BUILDING_ANTHRO_WAFDIST_EGYPT_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_wafdist_egypt_1.png" />
-    <Row ID="BUILDING_ANTHRO_WAFDIST_EGYPT_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_wafdist_egypt_2.png" />
-    <Row ID="QUARTER_ANTHRO_WAFDIST_EGYPT" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_wafdist_egypt.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_WAFDIST_EGYPT" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_wafdist_egypt.png" />
-    <Row ID="UNIT_ANTHRO_WAFDIST_EGYPT_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_wafdist_egypt_1.png" />
-    <Row ID="UNIT_ANTHRO_WAFDIST_EGYPT_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_wafdist_egypt_2.png" />
-    <Row ID="UNIT_ANTHRO_WAFDIST_EGYPT_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_wafdist_egypt_3.png" />
-    <Row ID="UNIT_ANTHRO_WAFDIST_EGYPT_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_wafdist_egypt_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_SERBIA" Path="fs://game/anthroprocenia_map_history/art/civilizations/serbia.png" />
-    <Row ID="cult_anthro_serbia" Path="fs://game/anthroprocenia_map_history/art/civilizations/serbia.png" />
-    <Row ID="CIVILIZATION_ANTHRO_SERBIA" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_serbia.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_SERBIA" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_serbia.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_SERBIA" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_serbia.png" />
-    <Row ID="BUILDING_ANTHRO_SERBIA_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_serbia_1.png" />
-    <Row ID="BUILDING_ANTHRO_SERBIA_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_serbia_2.png" />
-    <Row ID="QUARTER_ANTHRO_SERBIA" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_serbia.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_SERBIA" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_serbia.png" />
-    <Row ID="UNIT_ANTHRO_SERBIA_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_serbia_1.png" />
-    <Row ID="UNIT_ANTHRO_SERBIA_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_serbia_2.png" />
-    <Row ID="UNIT_ANTHRO_SERBIA_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_serbia_3.png" />
-    <Row ID="UNIT_ANTHRO_SERBIA_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_serbia_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_INDONESIA" Path="fs://game/anthroprocenia_map_history/art/civilizations/indonesia.png" />
-    <Row ID="cult_anthro_indonesia" Path="fs://game/anthroprocenia_map_history/art/civilizations/indonesia.png" />
-    <Row ID="CIVILIZATION_ANTHRO_INDONESIA" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_indonesia.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_INDONESIA" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_indonesia.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_INDONESIA" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_indonesia.png" />
-    <Row ID="BUILDING_ANTHRO_INDONESIA_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_indonesia_1.png" />
-    <Row ID="BUILDING_ANTHRO_INDONESIA_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_indonesia_2.png" />
-    <Row ID="QUARTER_ANTHRO_INDONESIA" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_indonesia.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_INDONESIA" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_indonesia.png" />
-    <Row ID="UNIT_ANTHRO_INDONESIA_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_indonesia_1.png" />
-    <Row ID="UNIT_ANTHRO_INDONESIA_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_indonesia_2.png" />
-    <Row ID="UNIT_ANTHRO_INDONESIA_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_indonesia_3.png" />
-    <Row ID="UNIT_ANTHRO_INDONESIA_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_indonesia_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_PORTUGAL" Path="fs://game/anthroprocenia_map_history/art/civilizations/portugal.png" />
-    <Row ID="cult_anthro_portugal" Path="fs://game/anthroprocenia_map_history/art/civilizations/portugal.png" />
-    <Row ID="CIVILIZATION_ANTHRO_PORTUGAL" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_portugal.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_PORTUGAL" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_portugal.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_PORTUGAL" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_portugal.png" />
-    <Row ID="BUILDING_ANTHRO_PORTUGAL_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_portugal_1.png" />
-    <Row ID="BUILDING_ANTHRO_PORTUGAL_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_portugal_2.png" />
-    <Row ID="QUARTER_ANTHRO_PORTUGAL" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_portugal.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_PORTUGAL" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_portugal.png" />
-    <Row ID="UNIT_ANTHRO_PORTUGAL_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_portugal_1.png" />
-    <Row ID="UNIT_ANTHRO_PORTUGAL_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_portugal_2.png" />
-    <Row ID="UNIT_ANTHRO_PORTUGAL_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_portugal_3.png" />
-    <Row ID="UNIT_ANTHRO_PORTUGAL_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_portugal_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_HUNGARY" Path="fs://game/anthroprocenia_map_history/art/civilizations/hungary.png" />
-    <Row ID="cult_anthro_hungary" Path="fs://game/anthroprocenia_map_history/art/civilizations/hungary.png" />
-    <Row ID="CIVILIZATION_ANTHRO_HUNGARY" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_hungary.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_HUNGARY" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_hungary.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_HUNGARY" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_hungary.png" />
-    <Row ID="BUILDING_ANTHRO_HUNGARY_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_hungary_1.png" />
-    <Row ID="BUILDING_ANTHRO_HUNGARY_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_hungary_2.png" />
-    <Row ID="QUARTER_ANTHRO_HUNGARY" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_hungary.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_HUNGARY" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_hungary.png" />
-    <Row ID="UNIT_ANTHRO_HUNGARY_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_hungary_1.png" />
-    <Row ID="UNIT_ANTHRO_HUNGARY_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_hungary_2.png" />
-    <Row ID="UNIT_ANTHRO_HUNGARY_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_hungary_3.png" />
-    <Row ID="UNIT_ANTHRO_HUNGARY_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_hungary_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_TAHITI" Path="fs://game/anthroprocenia_map_history/art/civilizations/tahiti.png" />
-    <Row ID="cult_anthro_tahiti" Path="fs://game/anthroprocenia_map_history/art/civilizations/tahiti.png" />
-    <Row ID="CIVILIZATION_ANTHRO_TAHITI" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_tahiti.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_TAHITI" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_tahiti.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_TAHITI" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_tahiti.png" />
-    <Row ID="BUILDING_ANTHRO_TAHITI_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_tahiti_1.png" />
-    <Row ID="BUILDING_ANTHRO_TAHITI_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_tahiti_2.png" />
-    <Row ID="QUARTER_ANTHRO_TAHITI" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_tahiti.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_TAHITI" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_tahiti.png" />
-    <Row ID="UNIT_ANTHRO_TAHITI_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_tahiti_1.png" />
-    <Row ID="UNIT_ANTHRO_TAHITI_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_tahiti_2.png" />
-    <Row ID="UNIT_ANTHRO_TAHITI_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_tahiti_3.png" />
-    <Row ID="UNIT_ANTHRO_TAHITI_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_tahiti_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_GRAN_COLOMBIA" Path="fs://game/anthroprocenia_map_history/art/civilizations/gran_colombia.png" />
-    <Row ID="cult_anthro_gran_colombia" Path="fs://game/anthroprocenia_map_history/art/civilizations/gran_colombia.png" />
-    <Row ID="CIVILIZATION_ANTHRO_GRAN_COLOMBIA" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_gran_colombia.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_GRAN_COLOMBIA" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_gran_colombia.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_GRAN_COLOMBIA" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_gran_colombia.png" />
-    <Row ID="BUILDING_ANTHRO_GRAN_COLOMBIA_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_gran_colombia_1.png" />
-    <Row ID="BUILDING_ANTHRO_GRAN_COLOMBIA_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_gran_colombia_2.png" />
-    <Row ID="QUARTER_ANTHRO_GRAN_COLOMBIA" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_gran_colombia.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_GRAN_COLOMBIA" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_gran_colombia.png" />
-    <Row ID="UNIT_ANTHRO_GRAN_COLOMBIA_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_gran_colombia_1.png" />
-    <Row ID="UNIT_ANTHRO_GRAN_COLOMBIA_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_gran_colombia_2.png" />
-    <Row ID="UNIT_ANTHRO_GRAN_COLOMBIA_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_gran_colombia_3.png" />
-    <Row ID="UNIT_ANTHRO_GRAN_COLOMBIA_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_gran_colombia_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_VATICAN" Path="fs://game/anthroprocenia_map_history/art/civilizations/vatican.png" />
-    <Row ID="cult_anthro_vatican" Path="fs://game/anthroprocenia_map_history/art/civilizations/vatican.png" />
-    <Row ID="CIVILIZATION_ANTHRO_VATICAN" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_vatican.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_VATICAN" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_vatican.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_VATICAN" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_vatican.png" />
-    <Row ID="BUILDING_ANTHRO_VATICAN_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_vatican_1.png" />
-    <Row ID="BUILDING_ANTHRO_VATICAN_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_vatican_2.png" />
-    <Row ID="QUARTER_ANTHRO_VATICAN" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_vatican.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_VATICAN" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_vatican.png" />
-    <Row ID="UNIT_ANTHRO_VATICAN_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_vatican_1.png" />
-    <Row ID="UNIT_ANTHRO_VATICAN_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_vatican_2.png" />
-    <Row ID="UNIT_ANTHRO_VATICAN_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_vatican_3.png" />
-    <Row ID="UNIT_ANTHRO_VATICAN_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_vatican_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_BERBER" Path="fs://game/anthroprocenia_map_history/art/civilizations/berber.png" />
-    <Row ID="cult_anthro_berber" Path="fs://game/anthroprocenia_map_history/art/civilizations/berber.png" />
-    <Row ID="CIVILIZATION_ANTHRO_BERBER" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_berber.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_BERBER" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_berber.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_BERBER" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_berber.png" />
-    <Row ID="BUILDING_ANTHRO_BERBER_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_berber_1.png" />
-    <Row ID="BUILDING_ANTHRO_BERBER_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_berber_2.png" />
-    <Row ID="QUARTER_ANTHRO_BERBER" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_berber.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_BERBER" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_berber.png" />
-    <Row ID="UNIT_ANTHRO_BERBER_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_berber_1.png" />
-    <Row ID="UNIT_ANTHRO_BERBER_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_berber_2.png" />
-    <Row ID="UNIT_ANTHRO_BERBER_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_berber_3.png" />
-    <Row ID="UNIT_ANTHRO_BERBER_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_berber_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_SWEDEN" Path="fs://game/anthroprocenia_map_history/art/civilizations/sweden.png" />
-    <Row ID="cult_anthro_sweden" Path="fs://game/anthroprocenia_map_history/art/civilizations/sweden.png" />
-    <Row ID="CIVILIZATION_ANTHRO_SWEDEN" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_sweden.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_SWEDEN" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_sweden.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_SWEDEN" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_sweden.png" />
-    <Row ID="BUILDING_ANTHRO_SWEDEN_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_sweden_1.png" />
-    <Row ID="BUILDING_ANTHRO_SWEDEN_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_sweden_2.png" />
-    <Row ID="QUARTER_ANTHRO_SWEDEN" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_sweden.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_SWEDEN" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_sweden.png" />
-    <Row ID="UNIT_ANTHRO_SWEDEN_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_sweden_1.png" />
-    <Row ID="UNIT_ANTHRO_SWEDEN_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_sweden_2.png" />
-    <Row ID="UNIT_ANTHRO_SWEDEN_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_sweden_3.png" />
-    <Row ID="UNIT_ANTHRO_SWEDEN_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_sweden_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_AFGHANISTAN" Path="fs://game/anthroprocenia_map_history/art/civilizations/afghanistan.png" />
-    <Row ID="cult_anthro_afghanistan" Path="fs://game/anthroprocenia_map_history/art/civilizations/afghanistan.png" />
-    <Row ID="CIVILIZATION_ANTHRO_AFGHANISTAN" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_afghanistan.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_AFGHANISTAN" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_afghanistan.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_AFGHANISTAN" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_afghanistan.png" />
-    <Row ID="BUILDING_ANTHRO_AFGHANISTAN_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_afghanistan_1.png" />
-    <Row ID="BUILDING_ANTHRO_AFGHANISTAN_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_afghanistan_2.png" />
-    <Row ID="QUARTER_ANTHRO_AFGHANISTAN" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_afghanistan.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_AFGHANISTAN" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_afghanistan.png" />
-    <Row ID="UNIT_ANTHRO_AFGHANISTAN_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_afghanistan_1.png" />
-    <Row ID="UNIT_ANTHRO_AFGHANISTAN_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_afghanistan_2.png" />
-    <Row ID="UNIT_ANTHRO_AFGHANISTAN_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_afghanistan_3.png" />
-    <Row ID="UNIT_ANTHRO_AFGHANISTAN_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_afghanistan_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_KAZAKH" Path="fs://game/anthroprocenia_map_history/art/civilizations/kazakh.png" />
-    <Row ID="cult_anthro_kazakh" Path="fs://game/anthroprocenia_map_history/art/civilizations/kazakh.png" />
-    <Row ID="CIVILIZATION_ANTHRO_KAZAKH" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_kazakh.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_KAZAKH" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_kazakh.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_KAZAKH" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_kazakh.png" />
-    <Row ID="BUILDING_ANTHRO_KAZAKH_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_kazakh_1.png" />
-    <Row ID="BUILDING_ANTHRO_KAZAKH_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_kazakh_2.png" />
-    <Row ID="QUARTER_ANTHRO_KAZAKH" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_kazakh.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_KAZAKH" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_kazakh.png" />
-    <Row ID="UNIT_ANTHRO_KAZAKH_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_kazakh_1.png" />
-    <Row ID="UNIT_ANTHRO_KAZAKH_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_kazakh_2.png" />
-    <Row ID="UNIT_ANTHRO_KAZAKH_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_kazakh_3.png" />
-    <Row ID="UNIT_ANTHRO_KAZAKH_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_kazakh_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_SCOTLAND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scotland.png" />
-    <Row ID="cult_anthro_scotland" Path="fs://game/anthroprocenia_map_history/art/civilizations/scotland.png" />
-    <Row ID="CIVILIZATION_ANTHRO_SCOTLAND" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_scotland.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_SCOTLAND" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_scotland.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_SCOTLAND" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_scotland.png" />
-    <Row ID="BUILDING_ANTHRO_SCOTLAND_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_scotland_1.png" />
-    <Row ID="BUILDING_ANTHRO_SCOTLAND_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_scotland_2.png" />
-    <Row ID="QUARTER_ANTHRO_SCOTLAND" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_scotland.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_SCOTLAND" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_scotland.png" />
-    <Row ID="UNIT_ANTHRO_SCOTLAND_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_scotland_1.png" />
-    <Row ID="UNIT_ANTHRO_SCOTLAND_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_scotland_2.png" />
-    <Row ID="UNIT_ANTHRO_SCOTLAND_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_scotland_3.png" />
-    <Row ID="UNIT_ANTHRO_SCOTLAND_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_scotland_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_DOMINICAN" Path="fs://game/anthroprocenia_map_history/art/civilizations/dominican.png" />
-    <Row ID="cult_anthro_dominican" Path="fs://game/anthroprocenia_map_history/art/civilizations/dominican.png" />
-    <Row ID="CIVILIZATION_ANTHRO_DOMINICAN" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_dominican.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_DOMINICAN" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_dominican.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_DOMINICAN" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_dominican.png" />
-    <Row ID="BUILDING_ANTHRO_DOMINICAN_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_dominican_1.png" />
-    <Row ID="BUILDING_ANTHRO_DOMINICAN_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_dominican_2.png" />
-    <Row ID="QUARTER_ANTHRO_DOMINICAN" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_dominican.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_DOMINICAN" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_dominican.png" />
-    <Row ID="UNIT_ANTHRO_DOMINICAN_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_dominican_1.png" />
-    <Row ID="UNIT_ANTHRO_DOMINICAN_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_dominican_2.png" />
-    <Row ID="UNIT_ANTHRO_DOMINICAN_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_dominican_3.png" />
-    <Row ID="UNIT_ANTHRO_DOMINICAN_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_dominican_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_HAITI" Path="fs://game/anthroprocenia_map_history/art/civilizations/haiti.png" />
-    <Row ID="cult_anthro_haiti" Path="fs://game/anthroprocenia_map_history/art/civilizations/haiti.png" />
-    <Row ID="CIVILIZATION_ANTHRO_HAITI" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_haiti.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_HAITI" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_haiti.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_HAITI" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_haiti.png" />
-    <Row ID="BUILDING_ANTHRO_HAITI_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_haiti_1.png" />
-    <Row ID="BUILDING_ANTHRO_HAITI_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_haiti_2.png" />
-    <Row ID="QUARTER_ANTHRO_HAITI" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_haiti.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_HAITI" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_haiti.png" />
-    <Row ID="UNIT_ANTHRO_HAITI_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_haiti_1.png" />
-    <Row ID="UNIT_ANTHRO_HAITI_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_haiti_2.png" />
-    <Row ID="UNIT_ANTHRO_HAITI_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_haiti_3.png" />
-    <Row ID="UNIT_ANTHRO_HAITI_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_haiti_4.png" />
-    <Row ID="CIVILIZATION_ANTHRO_BRAZIL" Path="fs://game/anthroprocenia_map_history/art/civilizations/brazil.png" />
-    <Row ID="cult_anthro_brazil" Path="fs://game/anthroprocenia_map_history/art/civilizations/brazil.png" />
-    <Row ID="CIVILIZATION_ANTHRO_BRAZIL" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_brazil.png" IconSize="1080" />
-    <Row ID="CIVILIZATION_ANTHRO_BRAZIL" Context="BACKGROUND" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_brazil.png" IconSize="720" />
-    <Row ID="CIVILIZATION_ANTHRO_BRAZIL" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia_map_history/art/civilizations/scenes/scene_anthro_brazil.png" />
-    <Row ID="BUILDING_ANTHRO_BRAZIL_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_brazil_1.png" />
-    <Row ID="BUILDING_ANTHRO_BRAZIL_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/building_anthro_brazil_2.png" />
-    <Row ID="QUARTER_ANTHRO_BRAZIL" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/quarter_anthro_brazil.png" />
-    <Row ID="IMPROVEMENT_ANTHRO_BRAZIL" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/improvement_anthro_brazil.png" />
-    <Row ID="UNIT_ANTHRO_BRAZIL_1" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_brazil_1.png" />
-    <Row ID="UNIT_ANTHRO_BRAZIL_2" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_brazil_2.png" />
-    <Row ID="UNIT_ANTHRO_BRAZIL_3" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_brazil_3.png" />
-    <Row ID="UNIT_ANTHRO_BRAZIL_4" Path="fs://game/anthroprocenia_map_history/art/civilizations/icons/unit_anthro_brazil_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_BRITONS" Path="fs://game/anthroprocenia/art/civilizations/britons.png" />
+    <Row ID="cult_anthro_britons" Path="fs://game/anthroprocenia/art/civilizations/britons.png" />
+    <Row ID="CIVILIZATION_ANTHRO_BRITONS" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_britons.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_BRITONS" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_britons.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_BRITONS" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_britons.png" />
+    <Row ID="BUILDING_ANTHRO_BRITONS_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_britons_1.png" />
+    <Row ID="BUILDING_ANTHRO_BRITONS_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_britons_2.png" />
+    <Row ID="QUARTER_ANTHRO_BRITONS" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_britons.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_BRITONS" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_britons.png" />
+    <Row ID="UNIT_ANTHRO_BRITONS_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_britons_1.png" />
+    <Row ID="UNIT_ANTHRO_BRITONS_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_britons_2.png" />
+    <Row ID="UNIT_ANTHRO_BRITONS_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_britons_3.png" />
+    <Row ID="CIVILIZATION_ANTHRO_SUEBI" Path="fs://game/anthroprocenia/art/civilizations/suebi.png" />
+    <Row ID="cult_anthro_suebi" Path="fs://game/anthroprocenia/art/civilizations/suebi.png" />
+    <Row ID="CIVILIZATION_ANTHRO_SUEBI" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_suebi.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_SUEBI" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_suebi.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_SUEBI" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_suebi.png" />
+    <Row ID="BUILDING_ANTHRO_SUEBI_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_suebi_1.png" />
+    <Row ID="BUILDING_ANTHRO_SUEBI_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_suebi_2.png" />
+    <Row ID="QUARTER_ANTHRO_SUEBI" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_suebi.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_SUEBI" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_suebi.png" />
+    <Row ID="UNIT_ANTHRO_SUEBI_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_suebi_1.png" />
+    <Row ID="UNIT_ANTHRO_SUEBI_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_suebi_2.png" />
+    <Row ID="UNIT_ANTHRO_SUEBI_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_suebi_3.png" />
+    <Row ID="UNIT_ANTHRO_SUEBI_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_suebi_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_XIONGNU" Path="fs://game/anthroprocenia/art/civilizations/xiongnu.png" />
+    <Row ID="cult_anthro_xiongnu" Path="fs://game/anthroprocenia/art/civilizations/xiongnu.png" />
+    <Row ID="CIVILIZATION_ANTHRO_XIONGNU" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_xiongnu.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_XIONGNU" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_xiongnu.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_XIONGNU" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_xiongnu.png" />
+    <Row ID="BUILDING_ANTHRO_XIONGNU_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_xiongnu_1.png" />
+    <Row ID="BUILDING_ANTHRO_XIONGNU_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_xiongnu_2.png" />
+    <Row ID="QUARTER_ANTHRO_XIONGNU" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_xiongnu.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_XIONGNU" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_xiongnu.png" />
+    <Row ID="UNIT_ANTHRO_XIONGNU_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_xiongnu_1.png" />
+    <Row ID="UNIT_ANTHRO_XIONGNU_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_xiongnu_2.png" />
+    <Row ID="UNIT_ANTHRO_XIONGNU_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_xiongnu_3.png" />
+    <Row ID="CIVILIZATION_ANTHRO_CARALANS" Path="fs://game/anthroprocenia/art/civilizations/caralans.png" />
+    <Row ID="cult_anthro_caralans" Path="fs://game/anthroprocenia/art/civilizations/caralans.png" />
+    <Row ID="CIVILIZATION_ANTHRO_CARALANS" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_caralans.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_CARALANS" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_caralans.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_CARALANS" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_caralans.png" />
+    <Row ID="BUILDING_ANTHRO_CARALANS_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_caralans_1.png" />
+    <Row ID="BUILDING_ANTHRO_CARALANS_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_caralans_2.png" />
+    <Row ID="QUARTER_ANTHRO_CARALANS" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_caralans.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_CARALANS" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_caralans.png" />
+    <Row ID="UNIT_ANTHRO_CARALANS_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_caralans_1.png" />
+    <Row ID="UNIT_ANTHRO_CARALANS_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_caralans_2.png" />
+    <Row ID="UNIT_ANTHRO_CARALANS_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_caralans_3.png" />
+    <Row ID="CIVILIZATION_ANTHRO_WAGADU" Path="fs://game/anthroprocenia/art/civilizations/wagadu.png" />
+    <Row ID="cult_anthro_wagadu" Path="fs://game/anthroprocenia/art/civilizations/wagadu.png" />
+    <Row ID="CIVILIZATION_ANTHRO_WAGADU" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_wagadu.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_WAGADU" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_wagadu.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_WAGADU" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_wagadu.png" />
+    <Row ID="BUILDING_ANTHRO_WAGADU_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_wagadu_1.png" />
+    <Row ID="BUILDING_ANTHRO_WAGADU_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_wagadu_2.png" />
+    <Row ID="QUARTER_ANTHRO_WAGADU" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_wagadu.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_WAGADU" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_wagadu.png" />
+    <Row ID="UNIT_ANTHRO_WAGADU_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_wagadu_1.png" />
+    <Row ID="UNIT_ANTHRO_WAGADU_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_wagadu_2.png" />
+    <Row ID="UNIT_ANTHRO_WAGADU_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_wagadu_3.png" />
+    <Row ID="CIVILIZATION_ANTHRO_JAVANESE" Path="fs://game/anthroprocenia/art/civilizations/javanese.png" />
+    <Row ID="cult_anthro_javanese" Path="fs://game/anthroprocenia/art/civilizations/javanese.png" />
+    <Row ID="CIVILIZATION_ANTHRO_JAVANESE" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_javanese.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_JAVANESE" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_javanese.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_JAVANESE" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_javanese.png" />
+    <Row ID="BUILDING_ANTHRO_JAVANESE_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_javanese_1.png" />
+    <Row ID="BUILDING_ANTHRO_JAVANESE_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_javanese_2.png" />
+    <Row ID="QUARTER_ANTHRO_JAVANESE" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_javanese.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_JAVANESE" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_javanese.png" />
+    <Row ID="UNIT_ANTHRO_JAVANESE_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_javanese_1.png" />
+    <Row ID="UNIT_ANTHRO_JAVANESE_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_javanese_2.png" />
+    <Row ID="UNIT_ANTHRO_JAVANESE_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_javanese_3.png" />
+    <Row ID="CIVILIZATION_ANTHRO_SLAVIC" Path="fs://game/anthroprocenia/art/civilizations/slavic.png" />
+    <Row ID="cult_anthro_slavic" Path="fs://game/anthroprocenia/art/civilizations/slavic.png" />
+    <Row ID="CIVILIZATION_ANTHRO_SLAVIC" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_slavic.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_SLAVIC" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_slavic.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_SLAVIC" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_slavic.png" />
+    <Row ID="BUILDING_ANTHRO_SLAVIC_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_slavic_1.png" />
+    <Row ID="BUILDING_ANTHRO_SLAVIC_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_slavic_2.png" />
+    <Row ID="QUARTER_ANTHRO_SLAVIC" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_slavic.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_SLAVIC" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_slavic.png" />
+    <Row ID="UNIT_ANTHRO_SLAVIC_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_slavic_1.png" />
+    <Row ID="UNIT_ANTHRO_SLAVIC_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_slavic_2.png" />
+    <Row ID="UNIT_ANTHRO_SLAVIC_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_slavic_3.png" />
+    <Row ID="UNIT_ANTHRO_SLAVIC_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_slavic_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_TAINO" Path="fs://game/anthroprocenia/art/civilizations/taino.png" />
+    <Row ID="cult_anthro_taino" Path="fs://game/anthroprocenia/art/civilizations/taino.png" />
+    <Row ID="CIVILIZATION_ANTHRO_TAINO" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_taino.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_TAINO" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_taino.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_TAINO" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_taino.png" />
+    <Row ID="BUILDING_ANTHRO_TAINO_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_taino_1.png" />
+    <Row ID="BUILDING_ANTHRO_TAINO_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_taino_2.png" />
+    <Row ID="QUARTER_ANTHRO_TAINO" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_taino.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_TAINO" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_taino.png" />
+    <Row ID="UNIT_ANTHRO_TAINO_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_taino_1.png" />
+    <Row ID="UNIT_ANTHRO_TAINO_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_taino_2.png" />
+    <Row ID="UNIT_ANTHRO_TAINO_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_taino_3.png" />
+    <Row ID="UNIT_ANTHRO_TAINO_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_taino_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_IBERIA" Path="fs://game/anthroprocenia/art/civilizations/iberia.png" />
+    <Row ID="cult_anthro_iberia" Path="fs://game/anthroprocenia/art/civilizations/iberia.png" />
+    <Row ID="CIVILIZATION_ANTHRO_IBERIA" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_iberia.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_IBERIA" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_iberia.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_IBERIA" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_iberia.png" />
+    <Row ID="BUILDING_ANTHRO_IBERIA_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_iberia_1.png" />
+    <Row ID="BUILDING_ANTHRO_IBERIA_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_iberia_2.png" />
+    <Row ID="QUARTER_ANTHRO_IBERIA" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_iberia.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_IBERIA" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_iberia.png" />
+    <Row ID="UNIT_ANTHRO_IBERIA_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_iberia_1.png" />
+    <Row ID="UNIT_ANTHRO_IBERIA_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_iberia_2.png" />
+    <Row ID="UNIT_ANTHRO_IBERIA_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_iberia_3.png" />
+    <Row ID="UNIT_ANTHRO_IBERIA_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_iberia_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_THRACE" Path="fs://game/anthroprocenia/art/civilizations/thrace.png" />
+    <Row ID="cult_anthro_thrace" Path="fs://game/anthroprocenia/art/civilizations/thrace.png" />
+    <Row ID="CIVILIZATION_ANTHRO_THRACE" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_thrace.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_THRACE" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_thrace.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_THRACE" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_thrace.png" />
+    <Row ID="BUILDING_ANTHRO_THRACE_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_thrace_1.png" />
+    <Row ID="BUILDING_ANTHRO_THRACE_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_thrace_2.png" />
+    <Row ID="QUARTER_ANTHRO_THRACE" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_thrace.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_THRACE" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_thrace.png" />
+    <Row ID="UNIT_ANTHRO_THRACE_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_thrace_1.png" />
+    <Row ID="UNIT_ANTHRO_THRACE_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_thrace_2.png" />
+    <Row ID="UNIT_ANTHRO_THRACE_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_thrace_3.png" />
+    <Row ID="CIVILIZATION_ANTHRO_SCYTHIA" Path="fs://game/anthroprocenia/art/civilizations/scythia.png" />
+    <Row ID="cult_anthro_scythia" Path="fs://game/anthroprocenia/art/civilizations/scythia.png" />
+    <Row ID="CIVILIZATION_ANTHRO_SCYTHIA" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_scythia.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_SCYTHIA" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_scythia.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_SCYTHIA" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_scythia.png" />
+    <Row ID="BUILDING_ANTHRO_SCYTHIA_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_scythia_1.png" />
+    <Row ID="BUILDING_ANTHRO_SCYTHIA_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_scythia_2.png" />
+    <Row ID="QUARTER_ANTHRO_SCYTHIA" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_scythia.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_SCYTHIA" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_scythia.png" />
+    <Row ID="UNIT_ANTHRO_SCYTHIA_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_scythia_1.png" />
+    <Row ID="UNIT_ANTHRO_SCYTHIA_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_scythia_2.png" />
+    <Row ID="UNIT_ANTHRO_SCYTHIA_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_scythia_3.png" />
+    <Row ID="CIVILIZATION_ANTHRO_NORDIC" Path="fs://game/anthroprocenia/art/civilizations/nordic.png" />
+    <Row ID="cult_anthro_nordic" Path="fs://game/anthroprocenia/art/civilizations/nordic.png" />
+    <Row ID="CIVILIZATION_ANTHRO_NORDIC" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_nordic.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_NORDIC" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_nordic.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_NORDIC" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_nordic.png" />
+    <Row ID="BUILDING_ANTHRO_NORDIC_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_nordic_1.png" />
+    <Row ID="BUILDING_ANTHRO_NORDIC_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_nordic_2.png" />
+    <Row ID="QUARTER_ANTHRO_NORDIC" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_nordic.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_NORDIC" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_nordic.png" />
+    <Row ID="UNIT_ANTHRO_NORDIC_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_nordic_1.png" />
+    <Row ID="UNIT_ANTHRO_NORDIC_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_nordic_2.png" />
+    <Row ID="UNIT_ANTHRO_NORDIC_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_nordic_3.png" />
+    <Row ID="UNIT_ANTHRO_NORDIC_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_nordic_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_PICTISH" Path="fs://game/anthroprocenia/art/civilizations/pictish.png" />
+    <Row ID="cult_anthro_pictish" Path="fs://game/anthroprocenia/art/civilizations/pictish.png" />
+    <Row ID="CIVILIZATION_ANTHRO_PICTISH" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_pictish.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_PICTISH" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_pictish.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_PICTISH" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_pictish.png" />
+    <Row ID="BUILDING_ANTHRO_PICTISH_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_pictish_1.png" />
+    <Row ID="BUILDING_ANTHRO_PICTISH_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_pictish_2.png" />
+    <Row ID="QUARTER_ANTHRO_PICTISH" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_pictish.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_PICTISH" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_pictish.png" />
+    <Row ID="UNIT_ANTHRO_PICTISH_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_pictish_1.png" />
+    <Row ID="UNIT_ANTHRO_PICTISH_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_pictish_2.png" />
+    <Row ID="UNIT_ANTHRO_PICTISH_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_pictish_3.png" />
+    <Row ID="UNIT_ANTHRO_PICTISH_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_pictish_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_LAKHOTA" Path="fs://game/anthroprocenia/art/civilizations/lakhota.png" />
+    <Row ID="cult_anthro_lakhota" Path="fs://game/anthroprocenia/art/civilizations/lakhota.png" />
+    <Row ID="CIVILIZATION_ANTHRO_LAKHOTA" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_lakhota.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_LAKHOTA" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_lakhota.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_LAKHOTA" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_lakhota.png" />
+    <Row ID="BUILDING_ANTHRO_LAKHOTA_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_lakhota_1.png" />
+    <Row ID="BUILDING_ANTHRO_LAKHOTA_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_lakhota_2.png" />
+    <Row ID="QUARTER_ANTHRO_LAKHOTA" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_lakhota.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_LAKHOTA" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_lakhota.png" />
+    <Row ID="UNIT_ANTHRO_LAKHOTA_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_lakhota_1.png" />
+    <Row ID="UNIT_ANTHRO_LAKHOTA_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_lakhota_2.png" />
+    <Row ID="UNIT_ANTHRO_LAKHOTA_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_lakhota_3.png" />
+    <Row ID="UNIT_ANTHRO_LAKHOTA_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_lakhota_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_NAVAJO" Path="fs://game/anthroprocenia/art/civilizations/navajo.png" />
+    <Row ID="cult_anthro_navajo" Path="fs://game/anthroprocenia/art/civilizations/navajo.png" />
+    <Row ID="CIVILIZATION_ANTHRO_NAVAJO" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_navajo.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_NAVAJO" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_navajo.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_NAVAJO" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_navajo.png" />
+    <Row ID="BUILDING_ANTHRO_NAVAJO_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_navajo_1.png" />
+    <Row ID="BUILDING_ANTHRO_NAVAJO_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_navajo_2.png" />
+    <Row ID="QUARTER_ANTHRO_NAVAJO" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_navajo.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_NAVAJO" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_navajo.png" />
+    <Row ID="UNIT_ANTHRO_NAVAJO_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_navajo_1.png" />
+    <Row ID="UNIT_ANTHRO_NAVAJO_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_navajo_2.png" />
+    <Row ID="UNIT_ANTHRO_NAVAJO_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_navajo_3.png" />
+    <Row ID="UNIT_ANTHRO_NAVAJO_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_navajo_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_ZIMBABWE" Path="fs://game/anthroprocenia/art/civilizations/zimbabwe.png" />
+    <Row ID="cult_anthro_zimbabwe" Path="fs://game/anthroprocenia/art/civilizations/zimbabwe.png" />
+    <Row ID="CIVILIZATION_ANTHRO_ZIMBABWE" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_zimbabwe.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_ZIMBABWE" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_zimbabwe.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_ZIMBABWE" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_zimbabwe.png" />
+    <Row ID="BUILDING_ANTHRO_ZIMBABWE_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_zimbabwe_1.png" />
+    <Row ID="BUILDING_ANTHRO_ZIMBABWE_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_zimbabwe_2.png" />
+    <Row ID="QUARTER_ANTHRO_ZIMBABWE" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_zimbabwe.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_ZIMBABWE" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_zimbabwe.png" />
+    <Row ID="UNIT_ANTHRO_ZIMBABWE_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_zimbabwe_1.png" />
+    <Row ID="UNIT_ANTHRO_ZIMBABWE_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_zimbabwe_2.png" />
+    <Row ID="UNIT_ANTHRO_ZIMBABWE_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_zimbabwe_3.png" />
+    <Row ID="UNIT_ANTHRO_ZIMBABWE_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_zimbabwe_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_BYZANTIUM" Path="fs://game/anthroprocenia/art/civilizations/byzantium.png" />
+    <Row ID="cult_anthro_byzantium" Path="fs://game/anthroprocenia/art/civilizations/byzantium.png" />
+    <Row ID="CIVILIZATION_ANTHRO_BYZANTIUM" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_byzantium.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_BYZANTIUM" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_byzantium.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_BYZANTIUM" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_byzantium.png" />
+    <Row ID="BUILDING_ANTHRO_BYZANTIUM_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_byzantium_1.png" />
+    <Row ID="BUILDING_ANTHRO_BYZANTIUM_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_byzantium_2.png" />
+    <Row ID="QUARTER_ANTHRO_BYZANTIUM" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_byzantium.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_BYZANTIUM" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_byzantium.png" />
+    <Row ID="UNIT_ANTHRO_BYZANTIUM_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_byzantium_1.png" />
+    <Row ID="UNIT_ANTHRO_BYZANTIUM_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_byzantium_2.png" />
+    <Row ID="UNIT_ANTHRO_BYZANTIUM_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_byzantium_3.png" />
+    <Row ID="UNIT_ANTHRO_BYZANTIUM_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_byzantium_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_AYUTTHAYA" Path="fs://game/anthroprocenia/art/civilizations/ayutthaya.png" />
+    <Row ID="cult_anthro_ayutthaya" Path="fs://game/anthroprocenia/art/civilizations/ayutthaya.png" />
+    <Row ID="CIVILIZATION_ANTHRO_AYUTTHAYA" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_ayutthaya.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_AYUTTHAYA" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_ayutthaya.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_AYUTTHAYA" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_ayutthaya.png" />
+    <Row ID="BUILDING_ANTHRO_AYUTTHAYA_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_ayutthaya_1.png" />
+    <Row ID="BUILDING_ANTHRO_AYUTTHAYA_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_ayutthaya_2.png" />
+    <Row ID="QUARTER_ANTHRO_AYUTTHAYA" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_ayutthaya.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_AYUTTHAYA" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_ayutthaya.png" />
+    <Row ID="UNIT_ANTHRO_AYUTTHAYA_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_ayutthaya_1.png" />
+    <Row ID="UNIT_ANTHRO_AYUTTHAYA_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_ayutthaya_2.png" />
+    <Row ID="UNIT_ANTHRO_AYUTTHAYA_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_ayutthaya_3.png" />
+    <Row ID="UNIT_ANTHRO_AYUTTHAYA_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_ayutthaya_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_AZTEC" Path="fs://game/anthroprocenia/art/civilizations/aztec.png" />
+    <Row ID="cult_anthro_aztec" Path="fs://game/anthroprocenia/art/civilizations/aztec.png" />
+    <Row ID="CIVILIZATION_ANTHRO_AZTEC" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_aztec.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_AZTEC" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_aztec.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_AZTEC" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_aztec.png" />
+    <Row ID="BUILDING_ANTHRO_AZTEC_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_aztec_1.png" />
+    <Row ID="BUILDING_ANTHRO_AZTEC_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_aztec_2.png" />
+    <Row ID="QUARTER_ANTHRO_AZTEC" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_aztec.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_AZTEC" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_aztec.png" />
+    <Row ID="UNIT_ANTHRO_AZTEC_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_aztec_1.png" />
+    <Row ID="UNIT_ANTHRO_AZTEC_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_aztec_2.png" />
+    <Row ID="UNIT_ANTHRO_AZTEC_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_aztec_3.png" />
+    <Row ID="UNIT_ANTHRO_AZTEC_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_aztec_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_MOHAWK" Path="fs://game/anthroprocenia/art/civilizations/mohawk.png" />
+    <Row ID="cult_anthro_mohawk" Path="fs://game/anthroprocenia/art/civilizations/mohawk.png" />
+    <Row ID="CIVILIZATION_ANTHRO_MOHAWK" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_mohawk.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_MOHAWK" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_mohawk.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_MOHAWK" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_mohawk.png" />
+    <Row ID="BUILDING_ANTHRO_MOHAWK_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_mohawk_1.png" />
+    <Row ID="BUILDING_ANTHRO_MOHAWK_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_mohawk_2.png" />
+    <Row ID="QUARTER_ANTHRO_MOHAWK" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_mohawk.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_MOHAWK" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_mohawk.png" />
+    <Row ID="UNIT_ANTHRO_MOHAWK_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_mohawk_1.png" />
+    <Row ID="UNIT_ANTHRO_MOHAWK_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_mohawk_2.png" />
+    <Row ID="UNIT_ANTHRO_MOHAWK_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_mohawk_3.png" />
+    <Row ID="UNIT_ANTHRO_MOHAWK_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_mohawk_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_FRANKS" Path="fs://game/anthroprocenia/art/civilizations/franks.png" />
+    <Row ID="cult_anthro_franks" Path="fs://game/anthroprocenia/art/civilizations/franks.png" />
+    <Row ID="CIVILIZATION_ANTHRO_FRANKS" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_franks.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_FRANKS" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_franks.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_FRANKS" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_franks.png" />
+    <Row ID="BUILDING_ANTHRO_FRANKS_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_franks_1.png" />
+    <Row ID="BUILDING_ANTHRO_FRANKS_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_franks_2.png" />
+    <Row ID="QUARTER_ANTHRO_FRANKS" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_franks.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_FRANKS" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_franks.png" />
+    <Row ID="UNIT_ANTHRO_FRANKS_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_franks_1.png" />
+    <Row ID="UNIT_ANTHRO_FRANKS_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_franks_2.png" />
+    <Row ID="UNIT_ANTHRO_FRANKS_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_franks_3.png" />
+    <Row ID="UNIT_ANTHRO_FRANKS_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_franks_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_SELJUK" Path="fs://game/anthroprocenia/art/civilizations/seljuk.png" />
+    <Row ID="cult_anthro_seljuk" Path="fs://game/anthroprocenia/art/civilizations/seljuk.png" />
+    <Row ID="CIVILIZATION_ANTHRO_SELJUK" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_seljuk.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_SELJUK" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_seljuk.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_SELJUK" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_seljuk.png" />
+    <Row ID="BUILDING_ANTHRO_SELJUK_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_seljuk_1.png" />
+    <Row ID="BUILDING_ANTHRO_SELJUK_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_seljuk_2.png" />
+    <Row ID="QUARTER_ANTHRO_SELJUK" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_seljuk.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_SELJUK" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_seljuk.png" />
+    <Row ID="UNIT_ANTHRO_SELJUK_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_seljuk_1.png" />
+    <Row ID="UNIT_ANTHRO_SELJUK_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_seljuk_2.png" />
+    <Row ID="UNIT_ANTHRO_SELJUK_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_seljuk_3.png" />
+    <Row ID="UNIT_ANTHRO_SELJUK_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_seljuk_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_RUS" Path="fs://game/anthroprocenia/art/civilizations/rus.png" />
+    <Row ID="cult_anthro_rus" Path="fs://game/anthroprocenia/art/civilizations/rus.png" />
+    <Row ID="CIVILIZATION_ANTHRO_RUS" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_rus.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_RUS" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_rus.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_RUS" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_rus.png" />
+    <Row ID="BUILDING_ANTHRO_RUS_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_rus_1.png" />
+    <Row ID="BUILDING_ANTHRO_RUS_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_rus_2.png" />
+    <Row ID="QUARTER_ANTHRO_RUS" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_rus.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_RUS" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_rus.png" />
+    <Row ID="UNIT_ANTHRO_RUS_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_rus_1.png" />
+    <Row ID="UNIT_ANTHRO_RUS_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_rus_2.png" />
+    <Row ID="UNIT_ANTHRO_RUS_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_rus_3.png" />
+    <Row ID="UNIT_ANTHRO_RUS_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_rus_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_LOMBARDS" Path="fs://game/anthroprocenia/art/civilizations/lombards.png" />
+    <Row ID="cult_anthro_lombards" Path="fs://game/anthroprocenia/art/civilizations/lombards.png" />
+    <Row ID="CIVILIZATION_ANTHRO_LOMBARDS" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_lombards.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_LOMBARDS" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_lombards.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_LOMBARDS" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_lombards.png" />
+    <Row ID="BUILDING_ANTHRO_LOMBARDS_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_lombards_1.png" />
+    <Row ID="BUILDING_ANTHRO_LOMBARDS_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_lombards_2.png" />
+    <Row ID="QUARTER_ANTHRO_LOMBARDS" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_lombards.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_LOMBARDS" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_lombards.png" />
+    <Row ID="UNIT_ANTHRO_LOMBARDS_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_lombards_1.png" />
+    <Row ID="UNIT_ANTHRO_LOMBARDS_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_lombards_2.png" />
+    <Row ID="UNIT_ANTHRO_LOMBARDS_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_lombards_3.png" />
+    <Row ID="UNIT_ANTHRO_LOMBARDS_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_lombards_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_TIMURIDS" Path="fs://game/anthroprocenia/art/civilizations/timurids.png" />
+    <Row ID="cult_anthro_timurids" Path="fs://game/anthroprocenia/art/civilizations/timurids.png" />
+    <Row ID="CIVILIZATION_ANTHRO_TIMURIDS" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_timurids.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_TIMURIDS" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_timurids.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_TIMURIDS" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_timurids.png" />
+    <Row ID="BUILDING_ANTHRO_TIMURIDS_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_timurids_1.png" />
+    <Row ID="BUILDING_ANTHRO_TIMURIDS_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_timurids_2.png" />
+    <Row ID="QUARTER_ANTHRO_TIMURIDS" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_timurids.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_TIMURIDS" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_timurids.png" />
+    <Row ID="UNIT_ANTHRO_TIMURIDS_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_timurids_1.png" />
+    <Row ID="UNIT_ANTHRO_TIMURIDS_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_timurids_2.png" />
+    <Row ID="UNIT_ANTHRO_TIMURIDS_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_timurids_3.png" />
+    <Row ID="UNIT_ANTHRO_TIMURIDS_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_timurids_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_VENICE" Path="fs://game/anthroprocenia/art/civilizations/venice.png" />
+    <Row ID="cult_anthro_venice" Path="fs://game/anthroprocenia/art/civilizations/venice.png" />
+    <Row ID="CIVILIZATION_ANTHRO_VENICE" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_venice.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_VENICE" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_venice.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_VENICE" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_venice.png" />
+    <Row ID="BUILDING_ANTHRO_VENICE_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_venice_1.png" />
+    <Row ID="BUILDING_ANTHRO_VENICE_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_venice_2.png" />
+    <Row ID="QUARTER_ANTHRO_VENICE" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_venice.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_VENICE" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_venice.png" />
+    <Row ID="UNIT_ANTHRO_VENICE_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_venice_1.png" />
+    <Row ID="UNIT_ANTHRO_VENICE_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_venice_2.png" />
+    <Row ID="UNIT_ANTHRO_VENICE_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_venice_3.png" />
+    <Row ID="UNIT_ANTHRO_VENICE_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_venice_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_ALMOHADS" Path="fs://game/anthroprocenia/art/civilizations/almohads.png" />
+    <Row ID="cult_anthro_almohads" Path="fs://game/anthroprocenia/art/civilizations/almohads.png" />
+    <Row ID="CIVILIZATION_ANTHRO_ALMOHADS" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_almohads.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_ALMOHADS" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_almohads.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_ALMOHADS" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_almohads.png" />
+    <Row ID="BUILDING_ANTHRO_ALMOHADS_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_almohads_1.png" />
+    <Row ID="BUILDING_ANTHRO_ALMOHADS_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_almohads_2.png" />
+    <Row ID="QUARTER_ANTHRO_ALMOHADS" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_almohads.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_ALMOHADS" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_almohads.png" />
+    <Row ID="UNIT_ANTHRO_ALMOHADS_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_almohads_1.png" />
+    <Row ID="UNIT_ANTHRO_ALMOHADS_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_almohads_2.png" />
+    <Row ID="UNIT_ANTHRO_ALMOHADS_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_almohads_3.png" />
+    <Row ID="UNIT_ANTHRO_ALMOHADS_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_almohads_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_KHWARAZMIANS" Path="fs://game/anthroprocenia/art/civilizations/khwarazmians.png" />
+    <Row ID="cult_anthro_khwarazmians" Path="fs://game/anthroprocenia/art/civilizations/khwarazmians.png" />
+    <Row ID="CIVILIZATION_ANTHRO_KHWARAZMIANS" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_khwarazmians.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_KHWARAZMIANS" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_khwarazmians.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_KHWARAZMIANS" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_khwarazmians.png" />
+    <Row ID="BUILDING_ANTHRO_KHWARAZMIANS_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_khwarazmians_1.png" />
+    <Row ID="BUILDING_ANTHRO_KHWARAZMIANS_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_khwarazmians_2.png" />
+    <Row ID="QUARTER_ANTHRO_KHWARAZMIANS" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_khwarazmians.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_KHWARAZMIANS" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_khwarazmians.png" />
+    <Row ID="UNIT_ANTHRO_KHWARAZMIANS_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_khwarazmians_1.png" />
+    <Row ID="UNIT_ANTHRO_KHWARAZMIANS_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_khwarazmians_2.png" />
+    <Row ID="UNIT_ANTHRO_KHWARAZMIANS_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_khwarazmians_3.png" />
+    <Row ID="UNIT_ANTHRO_KHWARAZMIANS_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_khwarazmians_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_PAPAL_STATES" Path="fs://game/anthroprocenia/art/civilizations/papal_states.png" />
+    <Row ID="cult_anthro_papal_states" Path="fs://game/anthroprocenia/art/civilizations/papal_states.png" />
+    <Row ID="CIVILIZATION_ANTHRO_PAPAL_STATES" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_papal_states.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_PAPAL_STATES" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_papal_states.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_PAPAL_STATES" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_papal_states.png" />
+    <Row ID="BUILDING_ANTHRO_PAPAL_STATES_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_papal_states_1.png" />
+    <Row ID="BUILDING_ANTHRO_PAPAL_STATES_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_papal_states_2.png" />
+    <Row ID="QUARTER_ANTHRO_PAPAL_STATES" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_papal_states.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_PAPAL_STATES" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_papal_states.png" />
+    <Row ID="UNIT_ANTHRO_PAPAL_STATES_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_papal_states_1.png" />
+    <Row ID="UNIT_ANTHRO_PAPAL_STATES_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_papal_states_2.png" />
+    <Row ID="UNIT_ANTHRO_PAPAL_STATES_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_papal_states_3.png" />
+    <Row ID="UNIT_ANTHRO_PAPAL_STATES_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_papal_states_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_TAINO_EXPLORATION" Path="fs://game/anthroprocenia/art/civilizations/taino_exploration.png" />
+    <Row ID="cult_anthro_taino_exploration" Path="fs://game/anthroprocenia/art/civilizations/taino_exploration.png" />
+    <Row ID="CIVILIZATION_ANTHRO_TAINO_EXPLORATION" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_taino_exploration.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_TAINO_EXPLORATION" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_taino_exploration.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_TAINO_EXPLORATION" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_taino_exploration.png" />
+    <Row ID="BUILDING_ANTHRO_TAINO_EXPLORATION_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_taino_exploration_1.png" />
+    <Row ID="BUILDING_ANTHRO_TAINO_EXPLORATION_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_taino_exploration_2.png" />
+    <Row ID="QUARTER_ANTHRO_TAINO_EXPLORATION" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_taino_exploration.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_TAINO_EXPLORATION" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_taino_exploration.png" />
+    <Row ID="UNIT_ANTHRO_TAINO_EXPLORATION_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_taino_exploration_1.png" />
+    <Row ID="UNIT_ANTHRO_TAINO_EXPLORATION_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_taino_exploration_2.png" />
+    <Row ID="UNIT_ANTHRO_TAINO_EXPLORATION_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_taino_exploration_3.png" />
+    <Row ID="UNIT_ANTHRO_TAINO_EXPLORATION_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_taino_exploration_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_ASHANTI" Path="fs://game/anthroprocenia/art/civilizations/ashanti.png" />
+    <Row ID="cult_anthro_ashanti" Path="fs://game/anthroprocenia/art/civilizations/ashanti.png" />
+    <Row ID="CIVILIZATION_ANTHRO_ASHANTI" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_ashanti.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_ASHANTI" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_ashanti.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_ASHANTI" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_ashanti.png" />
+    <Row ID="BUILDING_ANTHRO_ASHANTI_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_ashanti_1.png" />
+    <Row ID="BUILDING_ANTHRO_ASHANTI_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_ashanti_2.png" />
+    <Row ID="QUARTER_ANTHRO_ASHANTI" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_ashanti.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_ASHANTI" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_ashanti.png" />
+    <Row ID="UNIT_ANTHRO_ASHANTI_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_ashanti_1.png" />
+    <Row ID="UNIT_ANTHRO_ASHANTI_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_ashanti_2.png" />
+    <Row ID="UNIT_ANTHRO_ASHANTI_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_ashanti_3.png" />
+    <Row ID="UNIT_ANTHRO_ASHANTI_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_ashanti_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_WAFDIST_EGYPT" Path="fs://game/anthroprocenia/art/civilizations/wafdist_egypt.png" />
+    <Row ID="cult_anthro_wafdist_egypt" Path="fs://game/anthroprocenia/art/civilizations/wafdist_egypt.png" />
+    <Row ID="CIVILIZATION_ANTHRO_WAFDIST_EGYPT" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_wafdist_egypt.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_WAFDIST_EGYPT" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_wafdist_egypt.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_WAFDIST_EGYPT" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_wafdist_egypt.png" />
+    <Row ID="BUILDING_ANTHRO_WAFDIST_EGYPT_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_wafdist_egypt_1.png" />
+    <Row ID="BUILDING_ANTHRO_WAFDIST_EGYPT_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_wafdist_egypt_2.png" />
+    <Row ID="QUARTER_ANTHRO_WAFDIST_EGYPT" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_wafdist_egypt.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_WAFDIST_EGYPT" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_wafdist_egypt.png" />
+    <Row ID="UNIT_ANTHRO_WAFDIST_EGYPT_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_wafdist_egypt_1.png" />
+    <Row ID="UNIT_ANTHRO_WAFDIST_EGYPT_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_wafdist_egypt_2.png" />
+    <Row ID="UNIT_ANTHRO_WAFDIST_EGYPT_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_wafdist_egypt_3.png" />
+    <Row ID="UNIT_ANTHRO_WAFDIST_EGYPT_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_wafdist_egypt_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_SERBIA" Path="fs://game/anthroprocenia/art/civilizations/serbia.png" />
+    <Row ID="cult_anthro_serbia" Path="fs://game/anthroprocenia/art/civilizations/serbia.png" />
+    <Row ID="CIVILIZATION_ANTHRO_SERBIA" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_serbia.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_SERBIA" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_serbia.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_SERBIA" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_serbia.png" />
+    <Row ID="BUILDING_ANTHRO_SERBIA_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_serbia_1.png" />
+    <Row ID="BUILDING_ANTHRO_SERBIA_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_serbia_2.png" />
+    <Row ID="QUARTER_ANTHRO_SERBIA" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_serbia.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_SERBIA" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_serbia.png" />
+    <Row ID="UNIT_ANTHRO_SERBIA_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_serbia_1.png" />
+    <Row ID="UNIT_ANTHRO_SERBIA_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_serbia_2.png" />
+    <Row ID="UNIT_ANTHRO_SERBIA_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_serbia_3.png" />
+    <Row ID="UNIT_ANTHRO_SERBIA_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_serbia_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_INDONESIA" Path="fs://game/anthroprocenia/art/civilizations/indonesia.png" />
+    <Row ID="cult_anthro_indonesia" Path="fs://game/anthroprocenia/art/civilizations/indonesia.png" />
+    <Row ID="CIVILIZATION_ANTHRO_INDONESIA" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_indonesia.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_INDONESIA" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_indonesia.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_INDONESIA" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_indonesia.png" />
+    <Row ID="BUILDING_ANTHRO_INDONESIA_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_indonesia_1.png" />
+    <Row ID="BUILDING_ANTHRO_INDONESIA_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_indonesia_2.png" />
+    <Row ID="QUARTER_ANTHRO_INDONESIA" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_indonesia.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_INDONESIA" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_indonesia.png" />
+    <Row ID="UNIT_ANTHRO_INDONESIA_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_indonesia_1.png" />
+    <Row ID="UNIT_ANTHRO_INDONESIA_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_indonesia_2.png" />
+    <Row ID="UNIT_ANTHRO_INDONESIA_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_indonesia_3.png" />
+    <Row ID="UNIT_ANTHRO_INDONESIA_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_indonesia_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_PORTUGAL" Path="fs://game/anthroprocenia/art/civilizations/portugal.png" />
+    <Row ID="cult_anthro_portugal" Path="fs://game/anthroprocenia/art/civilizations/portugal.png" />
+    <Row ID="CIVILIZATION_ANTHRO_PORTUGAL" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_portugal.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_PORTUGAL" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_portugal.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_PORTUGAL" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_portugal.png" />
+    <Row ID="BUILDING_ANTHRO_PORTUGAL_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_portugal_1.png" />
+    <Row ID="BUILDING_ANTHRO_PORTUGAL_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_portugal_2.png" />
+    <Row ID="QUARTER_ANTHRO_PORTUGAL" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_portugal.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_PORTUGAL" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_portugal.png" />
+    <Row ID="UNIT_ANTHRO_PORTUGAL_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_portugal_1.png" />
+    <Row ID="UNIT_ANTHRO_PORTUGAL_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_portugal_2.png" />
+    <Row ID="UNIT_ANTHRO_PORTUGAL_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_portugal_3.png" />
+    <Row ID="UNIT_ANTHRO_PORTUGAL_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_portugal_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_HUNGARY" Path="fs://game/anthroprocenia/art/civilizations/hungary.png" />
+    <Row ID="cult_anthro_hungary" Path="fs://game/anthroprocenia/art/civilizations/hungary.png" />
+    <Row ID="CIVILIZATION_ANTHRO_HUNGARY" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_hungary.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_HUNGARY" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_hungary.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_HUNGARY" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_hungary.png" />
+    <Row ID="BUILDING_ANTHRO_HUNGARY_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_hungary_1.png" />
+    <Row ID="BUILDING_ANTHRO_HUNGARY_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_hungary_2.png" />
+    <Row ID="QUARTER_ANTHRO_HUNGARY" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_hungary.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_HUNGARY" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_hungary.png" />
+    <Row ID="UNIT_ANTHRO_HUNGARY_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_hungary_1.png" />
+    <Row ID="UNIT_ANTHRO_HUNGARY_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_hungary_2.png" />
+    <Row ID="UNIT_ANTHRO_HUNGARY_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_hungary_3.png" />
+    <Row ID="UNIT_ANTHRO_HUNGARY_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_hungary_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_TAHITI" Path="fs://game/anthroprocenia/art/civilizations/tahiti.png" />
+    <Row ID="cult_anthro_tahiti" Path="fs://game/anthroprocenia/art/civilizations/tahiti.png" />
+    <Row ID="CIVILIZATION_ANTHRO_TAHITI" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_tahiti.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_TAHITI" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_tahiti.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_TAHITI" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_tahiti.png" />
+    <Row ID="BUILDING_ANTHRO_TAHITI_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_tahiti_1.png" />
+    <Row ID="BUILDING_ANTHRO_TAHITI_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_tahiti_2.png" />
+    <Row ID="QUARTER_ANTHRO_TAHITI" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_tahiti.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_TAHITI" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_tahiti.png" />
+    <Row ID="UNIT_ANTHRO_TAHITI_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_tahiti_1.png" />
+    <Row ID="UNIT_ANTHRO_TAHITI_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_tahiti_2.png" />
+    <Row ID="UNIT_ANTHRO_TAHITI_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_tahiti_3.png" />
+    <Row ID="UNIT_ANTHRO_TAHITI_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_tahiti_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_GRAN_COLOMBIA" Path="fs://game/anthroprocenia/art/civilizations/gran_colombia.png" />
+    <Row ID="cult_anthro_gran_colombia" Path="fs://game/anthroprocenia/art/civilizations/gran_colombia.png" />
+    <Row ID="CIVILIZATION_ANTHRO_GRAN_COLOMBIA" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_gran_colombia.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_GRAN_COLOMBIA" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_gran_colombia.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_GRAN_COLOMBIA" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_gran_colombia.png" />
+    <Row ID="BUILDING_ANTHRO_GRAN_COLOMBIA_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_gran_colombia_1.png" />
+    <Row ID="BUILDING_ANTHRO_GRAN_COLOMBIA_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_gran_colombia_2.png" />
+    <Row ID="QUARTER_ANTHRO_GRAN_COLOMBIA" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_gran_colombia.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_GRAN_COLOMBIA" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_gran_colombia.png" />
+    <Row ID="UNIT_ANTHRO_GRAN_COLOMBIA_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_gran_colombia_1.png" />
+    <Row ID="UNIT_ANTHRO_GRAN_COLOMBIA_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_gran_colombia_2.png" />
+    <Row ID="UNIT_ANTHRO_GRAN_COLOMBIA_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_gran_colombia_3.png" />
+    <Row ID="UNIT_ANTHRO_GRAN_COLOMBIA_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_gran_colombia_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_VATICAN" Path="fs://game/anthroprocenia/art/civilizations/vatican.png" />
+    <Row ID="cult_anthro_vatican" Path="fs://game/anthroprocenia/art/civilizations/vatican.png" />
+    <Row ID="CIVILIZATION_ANTHRO_VATICAN" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_vatican.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_VATICAN" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_vatican.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_VATICAN" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_vatican.png" />
+    <Row ID="BUILDING_ANTHRO_VATICAN_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_vatican_1.png" />
+    <Row ID="BUILDING_ANTHRO_VATICAN_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_vatican_2.png" />
+    <Row ID="QUARTER_ANTHRO_VATICAN" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_vatican.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_VATICAN" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_vatican.png" />
+    <Row ID="UNIT_ANTHRO_VATICAN_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_vatican_1.png" />
+    <Row ID="UNIT_ANTHRO_VATICAN_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_vatican_2.png" />
+    <Row ID="UNIT_ANTHRO_VATICAN_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_vatican_3.png" />
+    <Row ID="UNIT_ANTHRO_VATICAN_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_vatican_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_BERBER" Path="fs://game/anthroprocenia/art/civilizations/berber.png" />
+    <Row ID="cult_anthro_berber" Path="fs://game/anthroprocenia/art/civilizations/berber.png" />
+    <Row ID="CIVILIZATION_ANTHRO_BERBER" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_berber.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_BERBER" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_berber.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_BERBER" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_berber.png" />
+    <Row ID="BUILDING_ANTHRO_BERBER_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_berber_1.png" />
+    <Row ID="BUILDING_ANTHRO_BERBER_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_berber_2.png" />
+    <Row ID="QUARTER_ANTHRO_BERBER" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_berber.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_BERBER" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_berber.png" />
+    <Row ID="UNIT_ANTHRO_BERBER_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_berber_1.png" />
+    <Row ID="UNIT_ANTHRO_BERBER_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_berber_2.png" />
+    <Row ID="UNIT_ANTHRO_BERBER_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_berber_3.png" />
+    <Row ID="UNIT_ANTHRO_BERBER_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_berber_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_SWEDEN" Path="fs://game/anthroprocenia/art/civilizations/sweden.png" />
+    <Row ID="cult_anthro_sweden" Path="fs://game/anthroprocenia/art/civilizations/sweden.png" />
+    <Row ID="CIVILIZATION_ANTHRO_SWEDEN" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_sweden.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_SWEDEN" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_sweden.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_SWEDEN" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_sweden.png" />
+    <Row ID="BUILDING_ANTHRO_SWEDEN_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_sweden_1.png" />
+    <Row ID="BUILDING_ANTHRO_SWEDEN_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_sweden_2.png" />
+    <Row ID="QUARTER_ANTHRO_SWEDEN" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_sweden.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_SWEDEN" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_sweden.png" />
+    <Row ID="UNIT_ANTHRO_SWEDEN_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_sweden_1.png" />
+    <Row ID="UNIT_ANTHRO_SWEDEN_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_sweden_2.png" />
+    <Row ID="UNIT_ANTHRO_SWEDEN_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_sweden_3.png" />
+    <Row ID="UNIT_ANTHRO_SWEDEN_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_sweden_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_AFGHANISTAN" Path="fs://game/anthroprocenia/art/civilizations/afghanistan.png" />
+    <Row ID="cult_anthro_afghanistan" Path="fs://game/anthroprocenia/art/civilizations/afghanistan.png" />
+    <Row ID="CIVILIZATION_ANTHRO_AFGHANISTAN" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_afghanistan.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_AFGHANISTAN" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_afghanistan.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_AFGHANISTAN" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_afghanistan.png" />
+    <Row ID="BUILDING_ANTHRO_AFGHANISTAN_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_afghanistan_1.png" />
+    <Row ID="BUILDING_ANTHRO_AFGHANISTAN_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_afghanistan_2.png" />
+    <Row ID="QUARTER_ANTHRO_AFGHANISTAN" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_afghanistan.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_AFGHANISTAN" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_afghanistan.png" />
+    <Row ID="UNIT_ANTHRO_AFGHANISTAN_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_afghanistan_1.png" />
+    <Row ID="UNIT_ANTHRO_AFGHANISTAN_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_afghanistan_2.png" />
+    <Row ID="UNIT_ANTHRO_AFGHANISTAN_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_afghanistan_3.png" />
+    <Row ID="UNIT_ANTHRO_AFGHANISTAN_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_afghanistan_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_KAZAKH" Path="fs://game/anthroprocenia/art/civilizations/kazakh.png" />
+    <Row ID="cult_anthro_kazakh" Path="fs://game/anthroprocenia/art/civilizations/kazakh.png" />
+    <Row ID="CIVILIZATION_ANTHRO_KAZAKH" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_kazakh.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_KAZAKH" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_kazakh.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_KAZAKH" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_kazakh.png" />
+    <Row ID="BUILDING_ANTHRO_KAZAKH_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_kazakh_1.png" />
+    <Row ID="BUILDING_ANTHRO_KAZAKH_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_kazakh_2.png" />
+    <Row ID="QUARTER_ANTHRO_KAZAKH" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_kazakh.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_KAZAKH" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_kazakh.png" />
+    <Row ID="UNIT_ANTHRO_KAZAKH_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_kazakh_1.png" />
+    <Row ID="UNIT_ANTHRO_KAZAKH_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_kazakh_2.png" />
+    <Row ID="UNIT_ANTHRO_KAZAKH_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_kazakh_3.png" />
+    <Row ID="UNIT_ANTHRO_KAZAKH_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_kazakh_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_SCOTLAND" Path="fs://game/anthroprocenia/art/civilizations/scotland.png" />
+    <Row ID="cult_anthro_scotland" Path="fs://game/anthroprocenia/art/civilizations/scotland.png" />
+    <Row ID="CIVILIZATION_ANTHRO_SCOTLAND" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_scotland.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_SCOTLAND" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_scotland.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_SCOTLAND" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_scotland.png" />
+    <Row ID="BUILDING_ANTHRO_SCOTLAND_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_scotland_1.png" />
+    <Row ID="BUILDING_ANTHRO_SCOTLAND_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_scotland_2.png" />
+    <Row ID="QUARTER_ANTHRO_SCOTLAND" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_scotland.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_SCOTLAND" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_scotland.png" />
+    <Row ID="UNIT_ANTHRO_SCOTLAND_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_scotland_1.png" />
+    <Row ID="UNIT_ANTHRO_SCOTLAND_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_scotland_2.png" />
+    <Row ID="UNIT_ANTHRO_SCOTLAND_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_scotland_3.png" />
+    <Row ID="UNIT_ANTHRO_SCOTLAND_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_scotland_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_DOMINICAN" Path="fs://game/anthroprocenia/art/civilizations/dominican.png" />
+    <Row ID="cult_anthro_dominican" Path="fs://game/anthroprocenia/art/civilizations/dominican.png" />
+    <Row ID="CIVILIZATION_ANTHRO_DOMINICAN" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_dominican.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_DOMINICAN" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_dominican.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_DOMINICAN" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_dominican.png" />
+    <Row ID="BUILDING_ANTHRO_DOMINICAN_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_dominican_1.png" />
+    <Row ID="BUILDING_ANTHRO_DOMINICAN_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_dominican_2.png" />
+    <Row ID="QUARTER_ANTHRO_DOMINICAN" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_dominican.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_DOMINICAN" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_dominican.png" />
+    <Row ID="UNIT_ANTHRO_DOMINICAN_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_dominican_1.png" />
+    <Row ID="UNIT_ANTHRO_DOMINICAN_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_dominican_2.png" />
+    <Row ID="UNIT_ANTHRO_DOMINICAN_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_dominican_3.png" />
+    <Row ID="UNIT_ANTHRO_DOMINICAN_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_dominican_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_HAITI" Path="fs://game/anthroprocenia/art/civilizations/haiti.png" />
+    <Row ID="cult_anthro_haiti" Path="fs://game/anthroprocenia/art/civilizations/haiti.png" />
+    <Row ID="CIVILIZATION_ANTHRO_HAITI" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_haiti.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_HAITI" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_haiti.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_HAITI" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_haiti.png" />
+    <Row ID="BUILDING_ANTHRO_HAITI_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_haiti_1.png" />
+    <Row ID="BUILDING_ANTHRO_HAITI_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_haiti_2.png" />
+    <Row ID="QUARTER_ANTHRO_HAITI" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_haiti.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_HAITI" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_haiti.png" />
+    <Row ID="UNIT_ANTHRO_HAITI_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_haiti_1.png" />
+    <Row ID="UNIT_ANTHRO_HAITI_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_haiti_2.png" />
+    <Row ID="UNIT_ANTHRO_HAITI_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_haiti_3.png" />
+    <Row ID="UNIT_ANTHRO_HAITI_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_haiti_4.png" />
+    <Row ID="CIVILIZATION_ANTHRO_BRAZIL" Path="fs://game/anthroprocenia/art/civilizations/brazil.png" />
+    <Row ID="cult_anthro_brazil" Path="fs://game/anthroprocenia/art/civilizations/brazil.png" />
+    <Row ID="CIVILIZATION_ANTHRO_BRAZIL" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_brazil.png" IconSize="1080" />
+    <Row ID="CIVILIZATION_ANTHRO_BRAZIL" Context="BACKGROUND" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_brazil.png" IconSize="720" />
+    <Row ID="CIVILIZATION_ANTHRO_BRAZIL" Context="BACKGROUND_VERT" Path="fs://game/anthroprocenia/art/civilizations/scenes/scene_anthro_brazil.png" />
+    <Row ID="BUILDING_ANTHRO_BRAZIL_1" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_brazil_1.png" />
+    <Row ID="BUILDING_ANTHRO_BRAZIL_2" Path="fs://game/anthroprocenia/art/civilizations/icons/building_anthro_brazil_2.png" />
+    <Row ID="QUARTER_ANTHRO_BRAZIL" Path="fs://game/anthroprocenia/art/civilizations/icons/quarter_anthro_brazil.png" />
+    <Row ID="IMPROVEMENT_ANTHRO_BRAZIL" Path="fs://game/anthroprocenia/art/civilizations/icons/improvement_anthro_brazil.png" />
+    <Row ID="UNIT_ANTHRO_BRAZIL_1" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_brazil_1.png" />
+    <Row ID="UNIT_ANTHRO_BRAZIL_2" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_brazil_2.png" />
+    <Row ID="UNIT_ANTHRO_BRAZIL_3" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_brazil_3.png" />
+    <Row ID="UNIT_ANTHRO_BRAZIL_4" Path="fs://game/anthroprocenia/art/civilizations/icons/unit_anthro_brazil_4.png" />
   </IconDefinitions>
 </Database>

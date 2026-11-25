@@ -1,6 +1,14 @@
 <?xml version='1.0' encoding='utf-8'?>
 <Database>
 	<EnglishText>
+		<Row Tag="LOC_ANTHRO_COLOSSAL_MAP_SIZE"><Text>Colossal (128 x 128)</Text></Row>
+		<Row Tag="LOC_ANTHRO_COLOSSAL_MAP_SIZE_HELP"><Text>A 128 by 128 procedural world. Native maximum-size validation is in progress. Requires an oversized-map provider such as YnAMP.</Text></Row>
+		<Row Tag="LOC_ANTHRO_REALISTIC_SPEED_X10"><Text>Realistic x10</Text></Row>
+		<Row Tag="LOC_ANTHRO_REALISTIC_SPEED_X10_HELP"><Text>Calendar advances 10 times as fast as Realistic. Research, civics and celebrations use 1/10 the Realistic costs/durations; ages take 1/10 as many turns, rounded up. Other speed-adjusted costs use Marathon pacing.</Text></Row>
+		<Row Tag="LOC_ANTHRO_REALISTIC_SPEED_X20"><Text>Realistic x20</Text></Row>
+		<Row Tag="LOC_ANTHRO_REALISTIC_SPEED_X20_HELP"><Text>Calendar advances 20 times as fast as Realistic. Research, civics and celebrations use 1/20 the Realistic costs/durations; ages take 1/20 as many turns, rounded up. Other speed-adjusted costs use Marathon pacing.</Text></Row>
+		<Row Tag="LOC_ANTHRO_LUDICROUS_MAP_SIZE"><Text>Ludicrous (128 x 80)</Text></Row>
+		<Row Tag="LOC_ANTHRO_LUDICROUS_MAP_SIZE_HELP"><Text>A large 128 by 80 procedural world using native-compatible dimensions. Requires an oversized-map provider such as YnAMP.</Text></Row>
 		<Row Tag="LOC_ANTHRO_REALISTIC_SPEED"><Text>Realistic</Text></Row>
 		<Row Tag="LOC_ANTHRO_REALISTIC_SPEED_HELP"><Text>4,400 annual Antiquity turns, 5,400 seasonal Exploration turns, and 2,400 monthly Modern turns, ending December 1949. Research, civics and celebrations follow the extended ages. Other speed-adjusted costs use Marathon pacing.</Text></Row>
 		<Row Tag="LOC_ANTHRO_REALISTIC_SPEED_X2"><Text>Realistic x2</Text></Row>

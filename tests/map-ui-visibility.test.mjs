@@ -275,6 +275,22 @@ test('scale length measures 100 miles per tile at every supported zoom with read
   assert.match(ctx.mapScaleMetrics(18000 * 10000, 180).label, / feet$/);
 });
 
+test('map scale preserves Giant Earth world area across native, Ludicrous and experimental map dimensions', () => {
+  const ctx = context(['mapScaleMetrics'], {});
+  for (const [w, h] of [[180, 94], [128, 80], [256, 160], [106, 66]]) {
+    ctx.manifest = { w, h };
+    const expected = 100 * Math.sqrt(180 * 94 / (w * h));
+    for (const zoom of [0.1, 1, 10000]) {
+      const metrics = ctx.mapScaleMetrics(70 * zoom, 180);
+      assert.equal(metrics.tileMiles, expected);
+      assert.ok(Math.abs(metrics.pixels / (70 * zoom) * expected - metrics.miles) < 1e-9);
+      assert.ok(Math.abs(w * h * metrics.tileMiles ** 2 - 180 * 94 * 100 ** 2) < 1e-6);
+    }
+  }
+  ctx.manifest = { w: 0, h: 80 };
+  assert.throws(() => ctx.mapScaleMetrics(70, 180), /valid map dimensions/);
+});
+
 test('scale placement stays within the viewport, clears expanded and minimized panels, and hides if no space exists', () => {
   const ctx = context(['mapScalePosition'], {});
   for (const [w, h] of [[1920, 1080], [800, 600], [400, 700]]) {

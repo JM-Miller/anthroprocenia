@@ -11,11 +11,12 @@ INSERT INTO GameSpeed_Turns (Age, GameSpeedType, MonthIncrement, TurnsPerIncreme
 SELECT Age, 'GAMESPEED_STANDARD', Months, Turns FROM AnthroCalendar;
 DELETE FROM GameSpeed_Turns WHERE GameSpeedType LIKE 'GAMESPEED_ANTHRO_REALISTIC_X%' AND Age = (SELECT Age FROM AnthroCalendar);
 INSERT INTO GameSpeed_Turns (Age, GameSpeedType, MonthIncrement, TurnsPerIncrement)
-SELECT calendar.Age, speed.GameSpeedType, calendar.Months * CAST(SUBSTR(speed.GameSpeedType, -1) AS INTEGER),
-    (calendar.Turns + CAST(SUBSTR(speed.GameSpeedType, -1) AS INTEGER) - 1) / CAST(SUBSTR(speed.GameSpeedType, -1) AS INTEGER)
+SELECT calendar.Age, speed.GameSpeedType, calendar.Months * CAST(SUBSTR(speed.GameSpeedType, LENGTH('GAMESPEED_ANTHRO_REALISTIC_X') + 1) AS INTEGER),
+    (calendar.Turns + CAST(SUBSTR(speed.GameSpeedType, LENGTH('GAMESPEED_ANTHRO_REALISTIC_X') + 1) AS INTEGER) - 1) / CAST(SUBSTR(speed.GameSpeedType, LENGTH('GAMESPEED_ANTHRO_REALISTIC_X') + 1) AS INTEGER)
 FROM AnthroCalendar AS calendar CROSS JOIN GameSpeeds AS speed
 WHERE speed.GameSpeedType IN ('GAMESPEED_ANTHRO_REALISTIC_X2', 'GAMESPEED_ANTHRO_REALISTIC_X3',
-    'GAMESPEED_ANTHRO_REALISTIC_X4', 'GAMESPEED_ANTHRO_REALISTIC_X5', 'GAMESPEED_ANTHRO_REALISTIC_X6');
+    'GAMESPEED_ANTHRO_REALISTIC_X4', 'GAMESPEED_ANTHRO_REALISTIC_X5', 'GAMESPEED_ANTHRO_REALISTIC_X6',
+    'GAMESPEED_ANTHRO_REALISTIC_X10', 'GAMESPEED_ANTHRO_REALISTIC_X20');
 
 UPDATE AgeProgressions
 SET MaxPoints_Abbreviated = (SELECT (Turns + Factor - 1) / Factor FROM AnthroCalendarPace),

@@ -57,7 +57,7 @@ test('whole-home selection includes millions without constructing millions of pe
 test('the Home Location checkbox toggles all remaining people and does not expand the row', () => {
   const chosen = new panel.PeopleSelection(), node = { id: 'h', total: 1000000, icon: { owner: 1 } };
   const context = runFunctions(['cmdToggleHome', 'popActionTarget'], {
-    cmdState: { chosen }, cmdLiveTurn: () => true, cmdOwnPeople: o => o === 1,
+    cmdState: { chosen }, cmdLiveTurn: () => true, cmdGameplayAllowed: () => true, cmdOwnPeople: o => o === 1,
     cmdActed: () => new Map([['h#2', []]]), cmdCommandsLeft: () => 0, cmdUpdateStatus: () => {},
   });
   context.cmdToggleHome(node);

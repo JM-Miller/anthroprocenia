@@ -113,6 +113,16 @@ ui\map\anthroprocenia-civ-switch.js
 ui\map\anthroprocenia-ui.js
     Shared UI glyphs, formatting helpers, and UI installation.
 
+ui\map\anthroprocenia-storage.js
+    Shared recorder/playback storage. Multiplayer and hotseat keys include the
+    local observer ID; never fall back to unscoped legacy data in those modes.
+    Unknown multiplayer status or observer IDs must fail closed. A bounded
+    16-entry cache avoids identical writes; clear it when loading another game.
+    Walker rewards and health mutations remain single-player only until a
+    synchronized gameplay-command bridge is verified on multiple clients.
+    Live captures coalesce for 250 ms and back off by four times scan duration,
+    capped at 5000 ms. Never throttle resolved turn or game/age-end captures.
+
 ui\map\anthroprocenia-civ-icons.js
     Four alternative country emblems per supported civilization.
 

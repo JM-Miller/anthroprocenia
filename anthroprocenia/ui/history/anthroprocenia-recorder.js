@@ -57,6 +57,7 @@
 import { PEOPLE_PROGRESSION_NODES } from '../map/anthroprocenia-people.js';
 import { currentRealisticDate, REALISTIC_AGES, realisticSpeedMultiplier } from '../map/anthroprocenia-calendar.js';
 import { captureMapDetails } from '../map/anthroprocenia-map-details.js';
+import { createReplayStore } from '../map/anthroprocenia-storage.js';
 
 const TAG = '[ANTHROPROCENIA]';
 const STORE_NS = 'CivAnthroprocenia__';   // key prefix in the GAME config store (Configuration.getGame/editGame)
@@ -105,7 +106,7 @@ let prevVis = null;        // Int8Array[w*h]: 0 hidden / 1 revealed / 2 in-LOS (
 let prevBuildings = new Map();   // plotIndex -> sorted [buildingTypeIndex]; for delta-coding constructibles
 let prevDamaged = new Map();     // plotIndex -> sorted [typeIndex] of pillaged constructibles; for delta-coding
 let prevSettlements = new Map(); // centerPlotIndex -> [name, pop, type, [yields]]; for delta-coding settlements
-let lastUnitsJson = '', lastSuzeJson = '', lastSocietyJson = '', lastRelJson = '';   // last written per-frame payloads, for the manifest-rev change check
+let lastPayloadGi = -1, lastCapturePayloads = [];
 let prevIdentity = new Map();    // playerId -> [leader, civ, adjective, primaryInt, secondaryInt, civType, csType]; for delta-coding identity
 let prevRelationships = new Map(); // "a,b" (a<b majors) -> broad relationship code; for delta-coding relationships
 let prevWonders = new Map();      // plotIndex -> [ownerId, wonderTypeIndex]; for delta-coding man-made wonders
@@ -139,18 +140,19 @@ let baseIdentity = new Map(), baseRelationships = new Map();
 // GameTutorial-backed Catalog we used before, this SURVIVES age transitions (verified via the community
 // History mod), so the replay spans all ages in one game. Same getObject(id).write/read(key) shape as the
 // old Catalog, so the call sites are unchanged; keys are namespaced STORE_NS + id + '_' + key.
-const LEGACY_STORE_NS = ['CivRew', 'ind__'].join('');   // the earlier key prefix: saves recorded under it keep their history
+const replayStore = createReplayStore(() => Configuration, () => GameContext);
+let recordingScope = null;
 function cfgGet(k) {
-  try {
-    const g = (typeof Configuration !== 'undefined' && Configuration.getGame) ? Configuration.getGame() : null;
-    if (!g || !g.getValue) return null;
-    let v = g.getValue(k);
-    if ((v == null || v === '') && k.indexOf(STORE_NS) === 0) { const old = g.getValue(LEGACY_STORE_NS + k.slice(STORE_NS.length)); if (old != null && old !== '') v = old; }
-    return v;
-  } catch (e) { return null; }
+  try { return replayStore.read(k); }
+  catch (e) { err(`replay storage read failed: ${e}`); return null; }
 }
-function cfgSet(k, v) { try { const g = (typeof Configuration !== 'undefined' && Configuration.editGame) ? Configuration.editGame() : null; if (g && g.setValue) { g.setValue(k, v); return true; } } catch (e) {} return false; }
-const gameStore = { getObject(id) { const pfx = STORE_NS + id + '_'; return { read: (key) => cfgGet(pfx + key), write: (key, val) => cfgSet(pfx + key, val) }; } };
+function cfgSet(k, v) {
+  try { return replayStore.write(k, v); }
+  catch (e) { err(`replay storage write failed: ${e}`); return false; }
+}
+const gameStore = { getObject(id) { const pfx = STORE_NS + id + '_'; return { read: (key) => cfgGet(pfx + key), write(key, val) {
+  if (!cfgSet(pfx + key, val)) throw new Error('Replay record could not be saved.');
+} }; } };
 function getCatalog() { return gameStore; }
 // Map View's own saved data (population-panel people, townscape layouts) rides in the same store under OBJ_VIEW; the playback module
 // reads it directly and writes through this bridge.
@@ -161,7 +163,10 @@ try { window.AnthroproceniaViewStore = { write(key, val) { return cfgSet(STORE_N
 // positions are fixed by their seeds. Stored as one JSON object in the game config store, so it travels with saves.
 const NAMES_KEY = STORE_NS + 'label_names';
 let namesCache = null, namesFlushTimer = 0, namesDirty = false, namesWriteErrorLogged = false;
+let namesScope = null;
 function loadNames() {
+  const scope = replayStore.scope();
+  if (namesScope !== scope) { window.AnthroproceniaNames.reset(); namesScope = scope; }
   if (namesCache) return namesCache;
   let names = {};
   try { const raw = cfgGet(NAMES_KEY); if (raw) names = JSON.parse(raw) || {}; } catch (e) { err(`label names read failed: ${e}`); }
@@ -172,6 +177,7 @@ function flushNames() {
   if (namesFlushTimer) clearTimeout(namesFlushTimer);
   namesFlushTimer = 0;
   if (!namesCache || !namesDirty) return;
+  if (namesScope !== replayStore.scope()) { window.AnthroproceniaNames.reset(); return; }
   try {
     if (!cfgSet(NAMES_KEY, JSON.stringify(namesCache))) throw new Error('game configuration store is unavailable');
     namesDirty = false;
@@ -921,6 +927,58 @@ function readUnits(turn = Game.turn) {
 }
 const unitFormationOperations = new Map();
 const unitCombatTurns = new Map();
+const pendingRecruitments = [];
+function recordUnitProduction(data) {
+  if (!started || data.productionKind !== ProductionKind.UNIT) return;
+  try {
+    const city = Cities.get(data.cityID);
+    if (!city?.location) throw new Error('Completed unit production has no originating settlement');
+    const index = GameplayMap.getIndexFromLocation(city.location);
+    if (index < 0) throw new Error('Completed unit production has an invalid settlement location');
+    pendingRecruitments.push({ age: Game.age, turn: Game.turn, city: index, owner: city.owner,
+      type: data.productionItem, population: city.population, name: city.name,
+      known: new Set(lastUnitPlot.keys()), unitID: data.unitID });
+    resolveUnitProductions();
+    scheduleMidTurnRecord();
+  } catch (error) { err(`unit recruitment recording failed: ${error}`); }
+}
+function resolveUnitProductions() {
+  if (!pendingRecruitments.length) return;
+  if (!Array.isArray(manifest.recruitments)) manifest.recruitments = [];
+  const claimed = new Set(manifest.recruitments.filter(row => row[0] === Game.age).map(row => row[4]));
+  for (let i = pendingRecruitments.length - 1; i >= 0; i--) {
+    const pending = pendingRecruitments[i];
+    const ids = pending.unitID ? [pending.unitID] : Players.get(pending.owner)?.Units?.getUnitIds() || [];
+    const candidates = [];
+    for (const id of ids) {
+      const key = pending.owner + ':' + (id.id !== undefined ? id.id : JSON.stringify(id));
+      if (claimed.has(key) || !pending.unitID && pending.known.has(key)) continue;
+      const unit = Units.get(id);
+      if (!unit?.location || unit.owner !== pending.owner || unit.type !== pending.type) continue;
+      const plot = GameplayMap.getIndexFromLocation(unit.location), city = GameplayMap.getLocationFromIndex(pending.city);
+      const distance = GameplayMap.getPlotDistance(city.x, city.y, unit.location.x, unit.location.y);
+      if (!pending.unitID && distance > 2) continue;
+      candidates.push({ unit, key, plot, distance });
+    }
+    candidates.sort((a, b) => a.distance - b.distance || a.key.localeCompare(b.key));
+    if (!candidates.length) {
+      const duplicateID = pending.unitID && pending.owner + ':' + (pending.unitID.id !== undefined ? pending.unitID.id : JSON.stringify(pending.unitID));
+      if (duplicateID && claimed.has(duplicateID)) {
+        pendingRecruitments.splice(i, 1);
+      } else if (Game.age !== pending.age || Game.turn > pending.turn) {
+        err(`Could not identify the unit produced at settlement ${pending.city}, turn ${pending.turn}; recruitment was not invented`);
+        pendingRecruitments.splice(i, 1);
+      }
+      continue;
+    }
+    const { unit, key } = candidates[0];
+    manifest.recruitments.push([pending.age, pending.turn, pending.city, pending.owner, key,
+      unitTypeIndex(unit), pending.population, pending.name]);
+    manifest.rev = (manifest.rev || 0) + 1;
+    claimed.add(key);
+    pendingRecruitments.splice(i, 1);
+  }
+}
 function recordUnitBattle(data) {
   try {
     if (!data || (!data.attacker && !data.defender)) throw new Error('Combat event has no participants');
@@ -1147,11 +1205,13 @@ function clearData(reSnapshot) {
     } catch (e) {}
     try { window.dispatchEvent(new Event('anthroprocenia-view-data-cleared')); } catch (e) {}
     manifest = { v: DATA_VERSION, w: mapW, h: mapH, frames: [], ages: [], unitTypes: [], buildingTypes: [], wonderTypes: [], victoryTypes: [] };
+    pendingRecruitments.length = 0;
     rebuildUnitTypeMap(); rebuildBuildingTypeMap(); rebuildWonderTypeMap();
     saveManifest();
     prevOwner = null; prevCls = null; prevVis = null; prevBuildings = new Map(); prevDamaged = new Map();
     prevSettlements = new Map(); prevIdentity = new Map(); prevRelationships = new Map(); prevWonders = new Map();
     lastTurnRecorded = -1;   // next record() is a clean snapshot
+    lastPayloadGi = -1; lastCapturePayloads = [];
     lastRecordedGi = -1; baseOwner = null; baseCls = null; baseVis = null;   // reset the pinned diff baselines
     baseBuildings = new Map(); baseSettlements = new Map(); baseWonders = new Map(); baseDamaged = new Map(); baseIdentity = new Map(); baseRelationships = new Map();
     // Re-snapshot the current turn so the replay isn't empty (skipped for auto-delete, which wants nothing left).
@@ -1220,8 +1280,10 @@ function record(turn, forceSnap) {
   const set = settlementsDelta(snapshot, reads); // settlements (name/pop/type/yields), delta-coded onto the same frame record
   const vis = visibilityDelta(snapshot, readVisibility());   // local-observer visibility (packed), delta-coded onto the frame record
   const won = wondersDelta(snapshot, reads);     // man-made wonders (delta + type index), folded onto the frame record
-  getCatalog().getObject(OBJ_TURNS).write('t' + gi, JSON.stringify({ t: turn, s: snapshot ? 1 : 0, terr, bld, dmg, set, vis, won }));
+  const turnsJson = JSON.stringify({ t: turn, s: snapshot ? 1 : 0, terr, bld, dmg, set, vis, won });
+  getCatalog().getObject(OBJ_TURNS).write('t' + gi, turnsJson);
 
+  resolveUnitProductions();
   const unitData = readUnits(turn);
   const unitsJson = JSON.stringify({ t: turn, ...unitData });
   getCatalog().getObject(OBJ_UNITS).write('u' + gi, unitsJson);
@@ -1229,18 +1291,16 @@ function record(turn, forceSnap) {
   const suzeJson = JSON.stringify({ t: turn, s: suze });
   getCatalog().getObject(OBJ_SUZE).write('s' + gi, suzeJson);
   const idd = identityDelta(snapshot);     // per-player identity, government, and colors
-  const soc = readSociety(), societyJson = JSON.stringify(soc);
-  const rel = relationshipsDelta(snapshot), relJson = JSON.stringify([...prevRelationships]);
-  // Manifest revision: bumped only when this record changed anything the map draws — lets playback detect
-  // SAME-TURN re-records (mid-turn "record on map open") and drop its caches; identical re-records don't
-  // churn the caches.
-  if (snapshot || turnDateChanged || terr.length || vis.length || won.length || set.length || (bld && bld.length) || dmg.length || idd.length || unitsJson !== lastUnitsJson || suzeJson !== lastSuzeJson || societyJson !== lastSocietyJson || relJson !== lastRelJson) manifest.rev = (manifest.rev || 0) + 1;
-  lastUnitsJson = unitsJson; lastSuzeJson = suzeJson;
-  lastSocietyJson = societyJson; lastRelJson = relJson;
+  const soc = readSociety();
+  const rel = relationshipsDelta(snapshot);
   ensureVictoryTypes();                    // record the victory-point column labels once
   const vp = readVictoryPoints();          // per-major victory points by class + score (full each turn)
   const met = readMet();                   // majors the local observer has met (full each turn — small)
-  getCatalog().getObject(OBJ_PLAYERS).write('p' + gi, JSON.stringify({ t: turn, s: snapshot ? 1 : 0, vp, idd, met, rel, soc }));
+  const playersJson = JSON.stringify({ t: turn, s: snapshot ? 1 : 0, vp, idd, met, rel, soc });
+  getCatalog().getObject(OBJ_PLAYERS).write('p' + gi, playersJson);
+  const payloads = [turnsJson, unitsJson, suzeJson, playersJson];
+  // Deltas remain pinned to gi-1, so a nonempty delta does not imply this re-record changed.
+  if (capturePayloadChanged(gi, payloads) || turnDateChanged) manifest.rev = (manifest.rev || 0) + 1;
 
   manifest.frames[gi] = [ageId, turn, snapshot ? 1 : 0, turnDate];
   if (realistic) manifest.frames[gi].push(REALISTIC_AGES[GameInfo.Ages.lookup(ageId).AgeType].yearsPerTurn * realisticSpeedMultiplier());
@@ -1248,7 +1308,7 @@ function record(turn, forceSnap) {
   const lastAge = manifest.ages.length ? manifest.ages[manifest.ages.length - 1] : null;
   if (!lastAge || lastAge[1] !== ageId) manifest.ages.push([gi, ageId, currentAgeName()]);
   saveManifest();
-  if (snapshot) { captureTerrain(); captureMapFeatures(); captureMapDetailSnapshot(); captureResources(); }
+  if (snapshot && !reRecord) { captureTerrain(); captureMapFeatures(); captureMapDetailSnapshot(); captureResources(); }
 
   prevOwner = owner; prevCls = cls;
   lastTurnRecorded = turn;
@@ -1257,6 +1317,11 @@ function record(turn, forceSnap) {
   const captureMs = Date.now() - captureStarted;
   if (captureMs >= 250) console.warn(`[ANTHROPROCENIA] Replay capture: ${captureMs} ms (${tilesMs} ms tiles), age=${ageId}, turn=${turn}`);
   log(`frame ${gi} (age ${ageId} turn ${turn}) ${snapshot ? 'SNAPSHOT' : 'diff'}: ${terr.length} territory ${snapshot ? 'owned-plots' : 'changes'}, ${set.length} settlement ${snapshot ? '' : 'changes, '}${vis.length} vis, ${unitData.u.length} units, ${won.length} wonder ${snapshot ? '' : 'changes, '}${suze.length} suzerained (frames=${manifest.frames.length})`);
+}
+function capturePayloadChanged(gi, payloads) {
+  const changed = gi !== lastPayloadGi || payloads.some((text, i) => text !== lastCapturePayloads[i]);
+  lastPayloadGi = gi; lastCapturePayloads = payloads;
+  return changed;
 }
 
 // --- lifecycle ---------------------------------------------------------------
@@ -1268,6 +1333,7 @@ function init(evtName) {
     mapH = GameplayMap.getGridHeight();
     if (!(mapW > 0) || !(mapH > 0) || typeof Game === 'undefined' || Game.turn == null) return;
     getCatalog();
+    recordingScope = replayStore.scope();
     manifest = loadManifest();
     rebuildUnitTypeMap(); rebuildBuildingTypeMap(); rebuildWonderTypeMap();   // restore typeHash→index maps across a save/reload
     log(`init via '${evtName}': map ${mapW}x${mapH}, age=${Game.age}, prior recorded frames=${manifest.frames.length}`);
@@ -1302,8 +1368,9 @@ function scheduleInit(evtName, delay = 750) {
 // Mid-turn captures (a unit moved, a city was founded or claimed tiles). Bursts of events share one capture.
 // The capture is labeled Game.turn and is provisional: every one re-records the same frame, and the next
 // turn-begin overwrites it with the fully-resolved end-of-turn state (record() dedups by (age, turn)).
-const MID_TURN_RECORD_DELAY_MS = 0;
+const MID_TURN_RECORD_DELAY_MS = 250;
 let midTurnTimer = 0;
+let midTurnDelayMs = MID_TURN_RECORD_DELAY_MS;
 function scheduleMidTurnRecord() {
   if (!started || midTurnTimer) return;
   if (!localRecordingTurn()) return;
@@ -1317,10 +1384,12 @@ function scheduleMidTurnRecord() {
       // Wait for this turn's turn-begin capture (labeled Game.turn-1) so frames stay in chronological order.
       if (frameIndex(Game.age, Game.turn - 1) < 0) return;
       const prevLast = lastTurnRecorded;
+      const captureStarted = Date.now();
       record(Game.turn, false);
+      midTurnDelayMs = Math.max(MID_TURN_RECORD_DELAY_MS, Math.min(5000, (Date.now() - captureStarted) * 4));
       lastTurnRecorded = prevLast;   // the next turn-begin must still be allowed to overwrite this frame
     } catch (e) { err(`mid-turn capture failed: ${e}`); }
-  }, MID_TURN_RECORD_DELAY_MS);
+  }, midTurnDelayMs);
 }
 window.AnthroproceniaRequestCapture = scheduleMidTurnRecord;
 function localRecordingTurn() {
@@ -1331,6 +1400,7 @@ function localRecordingTurn() {
 function onTurnBegin() {
   try {
     if (midTurnTimer) { clearTimeout(midTurnTimer); midTurnTimer = 0; }
+    if (recordingScope !== null && recordingScope !== replayStore.scope()) resetRecordingSession();
     if (!started) {
       scheduleInit('LocalPlayerTurnBegin', 250);
       return;
@@ -1374,8 +1444,25 @@ function onPlayerDefeat(data) {
 try { window.AnthroproceniaRecordFinal = () => { try { if (started) onGameOrAgeEnd('endgame-screen'); } catch (e) {} }; } catch (e) {}
 
 log('recorder module loaded — binding lifecycle events');
-engine.on('GameStarted', () => { unitFormationOperations.clear(); unitCombatTurns.clear(); try { window.AnthroproceniaNames.reset(); } catch (e) {} scheduleInit('GameStarted'); });
-engine.on('LoadComplete', () => { unitFormationOperations.clear(); unitCombatTurns.clear(); try { window.AnthroproceniaNames.reset(); } catch (e) {} scheduleInit('LoadComplete'); });
+function resetRecordingSession() {
+  if (midTurnTimer) clearTimeout(midTurnTimer);
+  midTurnTimer = 0; midTurnDelayMs = MID_TURN_RECORD_DELAY_MS;
+  started = false; initAttempts = 0; recordingScope = null;
+  replayStore.clear();
+  lastRecordedGi = -1; lastTurnRecorded = -1;
+  prevOwner = baseOwner = null; prevCls = baseCls = null; prevVis = baseVis = null;
+  prevBuildings = new Map(); prevSettlements = new Map(); prevWonders = new Map(); prevDamaged = new Map();
+  prevIdentity = new Map(); prevRelationships = new Map();
+  baseBuildings = new Map(); baseSettlements = new Map(); baseWonders = new Map(); baseDamaged = new Map();
+  baseIdentity = new Map(); baseRelationships = new Map();
+  lastUnitPlot.clear(); baseUnitPlot = new Map();
+  lastPayloadGi = -1; lastCapturePayloads = [];
+  unitFormationOperations.clear(); unitCombatTurns.clear();
+  pendingRecruitments.length = 0;
+  window.AnthroproceniaNames.reset();
+}
+engine.on('GameStarted', () => { resetRecordingSession(); scheduleInit('GameStarted'); });
+engine.on('LoadComplete', () => { resetRecordingSession(); scheduleInit('LoadComplete'); });
 engine.on('StartSaveRequest', flushNames);
 engine.on('LocalPlayerTurnBegin', onTurnBegin);
 engine.on('TurnBegin', () => { if (typeof Autoplay !== 'undefined' && Autoplay.isActive) onTurnBegin(); });
@@ -1388,6 +1475,7 @@ engine.on('DistrictDamageChanged', scheduleMidTurnRecord);
 engine.on('UnitActivityChanged', recordUnitFormationActivity);
 engine.on('PlotOwnershipChanged', scheduleMidTurnRecord);          // capture when a city expands or borders change
 engine.on('CityAddedToMap', scheduleMidTurnRecord);                // capture when a city is founded
+engine.on('CityProductionCompleted', recordUnitProduction);
 engine.on('GameAgeEnded', () => onGameOrAgeEnd('GameAgeEnded'));   // captures each age's final resolved state (final age = game over)
 engine.on('TeamVictory', () => onGameOrAgeEnd('TeamVictory'));     // victory-triggered game over
 engine.on('PlayerDefeat', onPlayerDefeat);                         // local elimination → capture the post-conquest final state

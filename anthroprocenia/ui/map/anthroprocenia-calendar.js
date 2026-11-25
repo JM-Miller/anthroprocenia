@@ -12,7 +12,7 @@ export function calendarDateLabel(date, turn, lastTurn = turn) {
 export function realisticSpeedMultiplier() {
   const row = typeof GameInfo !== 'undefined' ? GameInfo.GlobalParameters.lookup('ANTHRO_REALISTIC_SPEED_FACTOR') : null;
   const factor = row ? Number(row.Value) : 1;
-  if (!Number.isInteger(factor) || factor < 1 || factor > 6) throw new Error(`Invalid realistic speed multiplier: ${row?.Value}`);
+  if (![1, 2, 3, 4, 5, 6, 10, 20].includes(factor)) throw new Error(`Invalid realistic speed multiplier: ${row?.Value}`);
   return factor;
 }
 export function realisticAgeTurns(age) {
@@ -22,7 +22,7 @@ export function realisticAgeTurns(age) {
 }
 export function realisticDate(age, turn, factor = realisticSpeedMultiplier()) {
   const config = REALISTIC_AGES[age];
-  if (!config || !Number.isFinite(turn) || !Number.isInteger(factor) || factor < 1 || factor > 6) throw new Error(`Invalid realistic calendar date: ${age}, ${turn}, ${factor}`);
+  if (!config || !Number.isFinite(turn) || ![1, 2, 3, 4, 5, 6, 10, 20].includes(factor)) throw new Error(`Invalid realistic calendar date: ${age}, ${turn}, ${factor}`);
   const index = Math.max(0, Math.floor(turn) - 1) * factor;
   if (age === 'AGE_ANTIQUITY') {
     const year = index < 4000 ? index - 4000 : index - 3999;

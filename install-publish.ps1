@@ -34,6 +34,19 @@ if (Test-Path -LiteralPath $mods) {
 New-Item -ItemType Directory -Force -Path $Destination | Out-Null
 & robocopy $Source $Destination /E /XD .git /NFL /NDL /NJH /NJS /NP | Out-Null
 if ($LASTEXITCODE -ge 8) { throw "Release installation failed: robocopy exit $LASTEXITCODE" }
+$mapScripts = 'continents', 'pangaea', 'fractal', 'archipelago', 'shattered-seas', 'shuffle', 'terra-incognita', 'donut'
+foreach ($name in $mapScripts) {
+    $relative = "maps\$name-voronoi.js"
+    $obsolete = Join-Path $Destination $relative
+    if ((Test-Path -LiteralPath (Join-Path $Source "maps\anthro-$name-voronoi.js")) -and
+        -not (Test-Path -LiteralPath (Join-Path $Source $relative)) -and
+        (Test-Path -LiteralPath $obsolete)) {
+        $expected = "import './oversized-dimensions.js';`nimport '/base-standard/maps/$name-voronoi.js';"
+        $contents = (Get-Content -LiteralPath $obsolete -Raw).Replace("`r`n", "`n").Trim()
+        if ($contents -ne $expected) { throw "Refusing to remove modified legacy map wrapper: $obsolete" }
+        Remove-Item -LiteralPath $obsolete
+    }
+}
 $files = @(Get-ChildItem -LiteralPath $Source -Recurse -File)
 foreach ($file in $files) {
     $relative = $file.FullName.Substring($Source.Length + 1)

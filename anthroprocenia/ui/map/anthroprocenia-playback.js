@@ -62,6 +62,7 @@ import { unitDestinationGroupSteps, destinationPathSteps, UNIT_DESTINATION_STYLE
 import { uiGlyph, installModUi, updateMapLoadingStatus } from './anthroprocenia-ui.js';
 import { countryIconAssignments } from './anthroprocenia-civ-icons.js';
 import { YIELDS, YIELD_LABELS, YIELD_COLORS, GAME_YIELDS, FULL_CROWD, commandMenu, resolveCommand, commandChance, commandsPerTurn, familyActions, ambientActions, familyInteraction, actionFits, yieldTotals, yieldShare, formatYield, meanderPath } from './anthroprocenia-commands.js';
+import { createReplayStore } from './anthroprocenia-storage.js';
 import { unitNamesForTile, unitSubcategory, estimatedWorldPopulation, parseGameYear, iconPopulation, homePopulation, formatCount, PILLAGED_FACTOR, unitPopulationFactor, settlementDamageFactor, populationWeight, populationVariation } from './anthroprocenia-units.js';
 import { generateTownscape, townscapePaths, townRadiusHex, townEra, TOWN_CLASSES, polygonBounds, polygonsOverlap, pointInPolygon, polygonNearSegment, polygonNearCircle, pointNearSegment, walkEdgeCost, walkCreekAllowed, stepWalker, stepCommanded, routeTree, routeFromTree, visibleQuota, WALKER_FADE_SECONDS, townDecorations, viewportVegetation, townRoadWidths, decorationPath, decorationGroup, decorationTouchesWater, DECO_GROUPS, DECORATION_STROKE_FEET, DecorationIndex } from './anthroprocenia-townscape.js';
 
@@ -153,15 +154,10 @@ function err(msg) { console.error(`${TAG} ${msg}`); }
 // Reads from the GAME config store (Configuration.getGame().getValue), which — unlike the GameTutorial-
 // backed Catalog we used before — SURVIVES age transitions. Same getObject(id).read(key) shape as before,
 // so the call sites below are unchanged; keys are namespaced as STORE_NS + id + '_' + key.
-const LEGACY_STORE_NS = ['CivRew', 'ind__'].join('');   // the earlier key prefix: saves recorded under it keep their history
+const replayStore = createReplayStore(() => Configuration, () => GameContext);
 function cfgGet(k) {
-  try {
-    const g = (typeof Configuration !== 'undefined' && Configuration.getGame) ? Configuration.getGame() : null;
-    if (!g || !g.getValue) return null;
-    let v = g.getValue(k);
-    if ((v == null || v === '') && k.indexOf(STORE_NS) === 0) { const old = g.getValue(LEGACY_STORE_NS + k.slice(STORE_NS.length)); if (old != null && old !== '') v = old; }
-    return v;
-  } catch (e) { return null; }
+  try { return replayStore.read(k); }
+  catch (e) { err(`replay storage read failed: ${e}`); return null; }
 }
 const unitHighlightState = { key: '', geometry: '', groups: null, paths: {}, legend: null, revision: 0, targets: null, styles: UNIT_DESTINATION_STYLES, job: null, timer: 0 };
 function syncUnitHighlights() {
@@ -358,6 +354,7 @@ function matchUnitLineage(t, before, beforeIds, now, neighbors) {
   // three passes, best match first: same type where it came from, any type there (upgrades), then the same type next door
   for (const pass of [0, 1, 2]) now.forEach((u, row) => {
     if (ids[row] !== undefined) return;
+    if (typeof u[7] === 'string') { ids[row] = `native:${u[7]}`; return; }
     let i = -1;
     if (pass < 2) i = take(from(u), u[1], pass === 0 ? u[2] : -1);
     else for (const n of (neighbors && neighbors[from(u)]) || []) if ((i = take(n, u[1], u[2])) >= 0) break;
@@ -367,6 +364,8 @@ function matchUnitLineage(t, before, beforeIds, now, neighbors) {
   return ids;
 }
 function unitLineageId(row, t = pos) {
+  const identity = readUnitsTurn(t)[row]?.[7];
+  if (typeof identity === 'string') return `native:${identity}`;
   const ids = unitLineage(t);
   return ids[row] !== undefined ? ids[row] : `${t}.${row}`;
 }
@@ -717,13 +716,13 @@ let viewZoom = DEFAULT_VIEW_ZOOM, mapPanX = 0, mapPanY = 0;
 let viewAspectY = 1;
 function viewTransformCss() { return `translate(${mapPanX}px,${mapPanY}px) scale(${viewZoom},${viewZoom * viewAspectY})`; }
 const MIN_VIEW_ZOOM = 0.01;
-const WALKER_MIN_DIAMETER_MILES = 0.0003, TILE_MILES = 100;
+const WALKER_MIN_DIAMETER_MILES = 0.0003;
 function walkerDotRadius(zoom = viewZoom) {
-  return Math.max(1.6, ps(1.6), hexW * zoom * WALKER_MIN_DIAMETER_MILES / TILE_MILES / 2);
+  return Math.max(1.6, ps(1.6), hexW * zoom * WALKER_MIN_DIAMETER_MILES / mapScaleMetrics(hexW, hexW).tileMiles / 2);
 }
 // At maximum zoom the minimum physical walker diameter occupies 12 UI-scaled pixels.
 function maxViewZoom() {
-  return Math.max(12, ps(12)) * TILE_MILES / (hexW * WALKER_MIN_DIAMETER_MILES);
+  return Math.max(12, ps(12)) * mapScaleMetrics(hexW, hexW).tileMiles / (hexW * WALKER_MIN_DIAMETER_MILES);
 }
 // Zoomed in so far that one tile takes most of the screen: tile tooltips are replaced by per-marker icons.
 function labelTier() {
@@ -4437,14 +4436,18 @@ function onUnitIconConsumedClick(event) {
 // (or too large) is simply rebuilt, since every record is a cache of something deterministic.
 const OBJ_VIEW = 'view';
 const viewData = { index: null, lib: null, twKey: '', twPlace: null, sigKey: '', sig: '', errorLogged: false };
+let viewDataScope = null;
 let civIconSeed = null;
 let civIconLayout = null;
 const viewQueue = createWriteQueue((key, value) => {
+  if (viewDataScope !== replayStore.scope()) throw new Error('Replay observer changed before the queued write.');
   const store = window.AnthroproceniaViewStore;
   if (!store || !store.write(key, value)) throw new Error('game configuration store is unavailable');
 }, { delay: 3000 });
 viewQueue.onError = (key, e) => { if (!viewData.errorLogged) err(`saving map view data (${key}) failed: ${e}`); viewData.errorLogged = true; };
 function viewRead(key) {
+  const scope = replayStore.scope();
+  if (viewDataScope !== scope) { resetViewData(); viewDataScope = scope; }
   try { const raw = getCatalog().getObject(OBJ_VIEW).read(key); return raw ? JSON.parse(raw) : null; }
   catch (e) { err(`saved map view data (${key}) unreadable: ${e}`); return null; }
 }
@@ -4481,6 +4484,7 @@ function viewSave(key, produce, track = true) {
   });
 }
 function resetViewData() {
+  recruitmentManpowerCache.clear();
   viewQueue.clear();
   civIconSeed = null;
   civIconLayout = null;
@@ -4489,6 +4493,7 @@ function resetViewData() {
   townRender.deferredPaths = null;
   townRender.decoJob = null;
   viewData.index = null; viewData.lib = null; viewData.twKey = ''; viewData.twPlace = null; viewData.sigKey = ''; viewData.errorLogged = false;
+  viewDataScope = null;
   townShapeCache.clear(); townPathCache.clear(); townEntryCache.clear(); townPanScene.key = '';
   townDecoScene.key = ''; townDecoScene.placements = []; townDecoScene.rect = null;
   popState.builtKey = ''; popState.pendingKey = ''; popState.bgKey = '';
@@ -4505,8 +4510,20 @@ try {
   engine.on('StartSaveRequest', () => { try { viewQueue.flush(); } catch (e) { err(`saving map view data failed: ${e}`); } });
   engine.on('GameStarted', resetViewData);
   engine.on('LoadComplete', resetViewData);
+  engine.on('LocalPlayerTurnBegin', invalidateReplayObserver);
   window.addEventListener('anthroprocenia-view-data-cleared', resetViewData);
 } catch (e) { err(`map view data save hooks unavailable: ${e}`); }
+function invalidateReplayObserver() {
+  try {
+    const scope = replayStore.scope();
+    if (viewDataScope === null || viewDataScope === scope) return;
+    closePanel(false);
+    resetViewData();
+    viewDataScope = scope;
+    prebuilt = false; lastRecordingFp = ''; curFrame = null;
+    manifest = null; frames = []; builtFrameCount = '';
+  } catch (e) { err(`replay observer handoff failed: ${e}`); }
+}
 // Identifies the turn's recorded world (and the map layout) a saved record was worked out against.
 function viewFrameSignature() {
   const key = `${pos}|${frames.length}|${manifest ? manifest.rev : 0}`;
@@ -6102,6 +6119,14 @@ const cmdState = {
   arrowTree: null, boxEl: null, toastEl: null, toastTimer: 0, actedTurn: -2, acted: new Map(), ledger: null, popMap: null, deathMap: null,
 };
 const CMD_MAX_ARROWS = 30, CMD_LEDGER_MAX = 300, CMD_ARROW_COLOR = '#7fe3ff';
+const CMD_MULTIPLAYER_TIP = 'Walker commands, yield rewards and unit healing are single-player only until synchronized gameplay commands are available. Multiplayer townscapes and population viewing remain available.';
+function cmdGameplayAllowed() {
+  try {
+    const game = Configuration.getGame();
+    if (!game || typeof game.isAnyMultiplayer !== 'boolean') throw new Error('Multiplayer status is unavailable.');
+    return game.isAnyMultiplayer === false && game.isHotseat !== true;
+  } catch (e) { err(`walker command availability failed: ${e}`); return false; }
+}
 function cmdLiveTurn() { return frames.length > 0 && pos === frames.length - 1 && !playing && !(typeof Autoplay !== 'undefined' && Autoplay.isActive); }
 function cmdLocalPlayer() {
   try {
@@ -6225,6 +6250,7 @@ function cmdCombatant(person, group) {
 }
 // A leader may be sent on again while still on the way (the new command takes over); anyone else waits for the next turn.
 function cmdCanCommand(person, group) {
+  if (!cmdGameplayAllowed()) return false;
   if (!cmdOwnPeople(group.owner)) return false;
   if (person.cmd && (person.cmd.dead || !cmdLeaderRole(person.key))) return false;
   return cmdCommandsLeft(person.key) > 0;
@@ -6460,6 +6486,7 @@ function cmdOpenMenu(target, clientX, clientY) {
 }
 // ---- carrying out a command -----------------------------------------------------------------------------------------------
 function cmdExecute(item, context = null) {
+  if (!cmdGameplayAllowed()) { cmdToast([CMD_MULTIPLAYER_TIP], '#ffce54'); return; }
   cmdConsumeInput();
   const menu = context || cmdState.menu;
   cmdCloseMenu();
@@ -6614,6 +6641,7 @@ function cmdSaveYieldQueue(q) {
 }
 // unit: { owner, id, type } (a unit's ComponentID); amount may be negative for Unit Health lost.
 function cmdOweYield(kind, amount, unit) {
+  if (!cmdGameplayAllowed()) throw new Error(CMD_MULTIPLAYER_TIP);
   let q = cmdYieldQueue();
   const turn = cmdGameTurn();
   if (q.turn !== turn) {
@@ -6655,6 +6683,7 @@ function cmdOweRivalYields(q, amount) {
   } catch (error) { err(`walker rival bonuses could not be queued: ${error}`); }
 }
 function cmdPayYield(player, kind, amount) {
+  if (!cmdGameplayAllowed()) { err(CMD_MULTIPLAYER_TIP); return false; }
   const key = GAME_YIELDS[kind];
   if (!key || !amount) return false;
   try {
@@ -6672,6 +6701,7 @@ function cmdPayYield(player, kind, amount) {
 }
 // Heals (or, for a negative amount, wounds) a unit by hit points, by whichever call the game offers the interface.
 function cmdHealUnit(owner, id, type, hp) {
+  if (!cmdGameplayAllowed()) { err(CMD_MULTIPLAYER_TIP); return false; }
   let unit = null;
   const cid = { owner, id, type };
   try { unit = Units.get(cid); } catch (e) { unit = null; }
@@ -6689,6 +6719,7 @@ function cmdHealUnit(owner, id, type, hp) {
 }
 let cmdPayLogged = false;
 function cmdPayYields(reason, olderOnly) {
+  if (!cmdGameplayAllowed()) return;
   const q = cmdYieldQueue();
   if (q.paid || q.p !== cmdLocalPlayer() || (olderOnly && q.turn >= cmdGameTurn())) return;
   if (!cmdPayLogged) {
@@ -6794,6 +6825,7 @@ function cmdUpdateStatus() {
   const el = els.popCmd;
   if (!el) return;
   if (!cmdLiveTurn()) { el.style.display = 'none'; return; }
+  if (!cmdGameplayAllowed()) { el.textContent = CMD_MULTIPLAYER_TIP; el.style.display = 'block'; return; }
   const parts = [], picked = cmdState.chosen.size;
   parts.push(picked ? `${picked} picked: right-click a building, tree or person on the townscapes to give a command` : 'Tick people (or drag a box on the townscapes) to give them a command');
   const totals = cmdYieldsOn(frames.length - 1), got = YIELDS.filter(y => totals[y]).map(y => `<span style="color:${YIELD_COLORS[y]};">+${formatYield(totals[y])} ${YIELD_LABELS[y]}</span>`);
@@ -6801,6 +6833,7 @@ function cmdUpdateStatus() {
   el.style.display = 'block';
 }
 function cmdToggleChosen(key, owner) {
+  if (!cmdGameplayAllowed()) return;
   if (!cmdLiveTurn() || !cmdOwnPeople(owner) || !cmdCommandsLeft(key)) return;
   if (cmdState.chosen.has(key)) cmdState.chosen.delete(key); else cmdState.chosen.add(key);
   cmdUpdateStatus();
@@ -6808,6 +6841,7 @@ function cmdToggleChosen(key, owner) {
 // The tick box at the start of a person row: shown for the player's own people on the live turn; ticked when picked, a grey
 // tick once they have had their command this turn.
 function cmdCheckHtml(key, owner) {
+  if (!cmdGameplayAllowed()) return '';
   if (!cmdLiveTurn() || !cmdOwnPeople(owner)) return '';
   const done = !cmdCommandsLeft(key), on = cmdState.chosen.has(key);
   const color = done ? '#5d6878' : on ? CMD_ARROW_COLOR : '#8fa2bf';
@@ -6824,11 +6858,13 @@ function popCheckTarget(target) {
   return false;
 }
 function cmdHomeCheckHtml(node) {
+  if (!cmdGameplayAllowed()) return '';
   if (node.kind !== 'icon' || !cmdLiveTurn() || !cmdOwnPeople(node.icon.owner)) return '';
   const status = cmdState.chosen.homeStatus(node.id);
   return `<span data-pop-home-check="1" role="checkbox" aria-checked="${status}" title="Select all people in this Home Location (commands use walkers on the map)" style="flex:0 0 ${ps(22)}px;color:${CMD_ARROW_COLOR};cursor:pointer;"><svg viewBox="0 0 20 20" style="width:${ps(14)}px;height:${ps(14)}px;pointer-events:none"><rect x="2" y="2" width="16" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>${status === 'true' ? '<path d="M5 10l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2"/>' : status === 'mixed' ? '<path d="M5 10h10" stroke="currentColor" stroke-width="2"/>' : ''}</svg></span>`;
 }
 function cmdToggleHome(node) {
+  if (!cmdGameplayAllowed()) return;
   if (!cmdLiveTurn() || !cmdOwnPeople(node.icon.owner)) return;
   const on = !cmdState.chosen.homes.has(node.id);
   cmdState.chosen.setHome(node.id, node.total, on);
@@ -6857,6 +6893,7 @@ function cmdShowBox(x0, y0, x1, y1) {
 function cmdHideBox() { if (cmdState.boxEl) cmdState.boxEl.style.display = 'none'; }
 // Picks the player's own walkers inside a screen rectangle (added to those picked already when `add`).
 function cmdSelectBox(x0, y0, x1, y1, add) {
+  if (!cmdGameplayAllowed()) { cmdToast([CMD_MULTIPLAYER_TIP], '#ffce54'); return; }
   if (!add) cmdState.chosen.clear();
   const left = Math.min(x0, x1), right = Math.max(x0, x1), top = Math.min(y0, y1), bottom = Math.max(y0, y1);
   let picked = 0, others = 0;
@@ -7134,8 +7171,8 @@ function townscapeFor(p) {
   }
   townShapeCache.delete(geoKey); townShapeCache.set(geoKey, shapes);
   while (townShapeCache.size > 24) townShapeCache.delete(townShapeCache.keys().next().value);
-  // One tile is 100 miles; each layout has a nominal diameter of 10 miles.
-  const radiusHex = townRadiusHex(population, era, kind), radius = hexW * radiusHex, pathKey = `${geoKey}@${p.x.toFixed(1)},${p.y.toFixed(1)},${radius.toFixed(1)}`;
+  // Keep town dimensions in miles as map tile area changes.
+  const radiusHex = townRadiusHex(population, era, kind) * 100 / mapScaleMetrics(hexW, hexW).tileMiles, radius = hexW * radiusHex, pathKey = `${geoKey}@${p.x.toFixed(1)},${p.y.toFixed(1)},${radius.toFixed(1)}`;
   const place = poly => poly.map(([x, y]) => [p.x + x * radius, p.y + y * radius]);
   // Buildings are kept as polygons so they can be tested against the map's own shapes and each other. Which of them cleared the
   // map's obstacles on this turn is saved with the game, and used instead of testing them again when it still fits.
@@ -7323,7 +7360,7 @@ function townDecoPlacements(entry, index, rect, limit = Infinity, incremental = 
     yield;
     const c = entry.center, r = entry.radius, out = [];
     if (limit <= 0) return out;
-    const count = Math.min(12000, 6 * Math.max(600, Math.min(4000, Math.round(600 + 8000 * r / Math.max(1, hexW))))), unit = hexW / (100 * 5280);
+    const count = Math.min(12000, 6 * Math.max(600, Math.min(4000, Math.round(600 + 8000 * r / Math.max(1, hexW))))), unit = hexW / (mapScaleMetrics(hexW, hexW).tileMiles * 5280);
     if (!entry.decoCandidates) entry.decoCandidates = townDecorations(hashString('deco|' + entry.pathKey), count, entry.era ? entry.era.age : 0);
     for (const deco of entry.decoCandidates) {
       yield;
@@ -7436,7 +7473,7 @@ function showTownDecorationPreview(entries) {
     x1: ((window.innerWidth || 1920) - mapX - mapPanX - cx) / viewZoom + cx,
     y0: (0 - mapY - mapPanY - cy) / zy + cy,
     y1: ((window.innerHeight || 1080) - mapY - mapPanY - cy) / zy + cy };
-  const placements = [], unit = hexW / (100 * 5280);
+  const placements = [], unit = hexW / (mapScaleMetrics(hexW, hexW).tileMiles * 5280);
   const cached = townDecoScene.key === sceneKey ? townDecoScene.placements : [];
   for (const placed of cached) {
     if (placed.x < rect.x0 || placed.x > rect.x1 || placed.y < rect.y0 || placed.y > rect.y1) continue;
@@ -7495,7 +7532,7 @@ function townDecoTiles(rect) {
 function tileDecoPlacements(tiles, rect, index, limit = 24000, incremental = false) {
   const steps = (function* () {
     yield;
-    const out = [], unit = hexW / (100 * 5280), step = hexW / 16;
+    const out = [], unit = hexW / (mapScaleMetrics(hexW, hexW).tileMiles * 5280), step = hexW / 16;
     if (limit <= 0) return out;
     const midX = (rect.x0 + rect.x1) / 2;
     for (const tile of tiles) {
@@ -7597,7 +7634,7 @@ function syncTownDecorations(entries, incremental = false) {
         const count = Math.min(12000, 6 * Math.max(600, Math.min(4000, Math.round(600 + 8000 * r / Math.max(1, hexW)))));
         const bounds = { x0: c.x - r * 1.2, x1: c.x + r * 1.2, y0: c.y - r * 1.2, y1: c.y + r * 1.2 };
         const density = count * 0.695 * 49 * 256 / (Math.PI * (r * 1.15) ** 2);
-        const unit = hexW / (100 * 5280);
+        const unit = hexW / (mapScaleMetrics(hexW, hexW).tileMiles * 5280);
         for (const deco of viewportVegetation(hashString(`dense-deco|${entry.pathKey}`), rect, bounds, density, Math.max(1, (placementBudget - placements.length) / entries.length))) {
           yield;
           if (placements.length >= placementBudget) break;
@@ -8339,7 +8376,7 @@ function syncTownscapes() {
     for (const name of [...roadNames, ...extraNames]) townPaths[name].style.visibility = 'hidden';
     const thin = Math.max(0.005, hexW * 0.0005);
     const widths = { ...townRoadWidths(hexW), fields: thin * 0.4, pools: thin * 0.8, water: thin * 0.9, walls: thin * 1.5, tileWalls: Math.max(0.16, hexW * 0.006), accents: thin * 0.9,
-      ...Object.fromEntries(DECO_GROUPS.map(name => [name, hexW * DECORATION_STROKE_FEET / (100 * 5280)])),
+      ...Object.fromEntries(DECO_GROUPS.map(name => [name, hexW * DECORATION_STROKE_FEET / (mapScaleMetrics(hexW, hexW).tileMiles * 5280)])),
       house: thin * 0.04 / 4, store: thin * 0.04 / 4, civic: thin * 0.05 / 4, sacred: thin * 0.05 / 4, industry: thin * 0.05 / 4, military: thin * 0.05 / 4, tents: thin * 0.015 / 4, fires: 0,
       detail: thin * 0.04 / 4, tentDetail: thin * 0.015 / 4, battleBuildings: thin * 0.05 / 4, battleAccents: thin * 1.1, highlight: thin * 1.4,
       linkWater: thin * 0.9, bridges: thin * 0.5 / 20, bridgeRails: thin * 0.7 / 20, quays: thin * 0.25 };
@@ -8695,7 +8732,7 @@ function scatterTileMarkers(markers, radius, allowOverlap = false) {
 // markers or rivers). The layout table contains one "u v" pair per line; the same
 // pairs are regenerated in code, so the layout is identical even if the file cannot be fetched at runtime.
 const LAYOUT_N = 2048;
-const LAYOUT_URL = 'fs://game/anthroprocenia_map_history/ui/map/anthroprocenia-layout.txt';
+const LAYOUT_URL = 'fs://game/anthroprocenia/ui/map/anthroprocenia-layout.txt';
 let layoutTable = null;
 function layoutGenerate(k) {
   const r6 = v => Math.round(v * 1e6) / 1e6;
@@ -10343,7 +10380,8 @@ function drawGeographyLayers(frame, vis) {
   if (!cachedLabels || cachedLabels.geography !== geography || cachedLabels.positions !== basePos ||
       cachedLabels.vis !== vis || cachedLabels.frame !== frame || cachedLabels.key !== labelKey) {
   const occupied = makeLabelBoxIndex(Math.max(16, hexW * 4));
-  if (showRegionLabels) placeGeographyLabels('regions', geography.regions.filter(region => !region.island && !region.id.startsWith('water:')), vis, 15, occupied);
+  if (showRegionLabels) placeGeographyLabels('regions', geography.regions.filter(region => !region.island && !region.id.startsWith('water:'))
+    .concat(hexW * viewZoom >= 30 ? (geography.subregions || []).filter(region => !region.island) : []), vis, 15, occupied);
   else {
     geographyLabelCache.regions = null;
     for (const slot of geographyLabelSlots.regions) if (slot && slot.visible) { slot.el.style.opacity = '0'; slot.visible = false; }
@@ -10352,7 +10390,8 @@ function drawGeographyLayers(frame, vis) {
     const riverNames = new Set(geography.features.filter(feature => feature.type === 'river').map(feature => feature.name));
     const labels = (showGeographicLabels ? geography.regions.filter(region => (region.island ? showIslandNames : (region.water || region.id.startsWith('water:')) && showWaterNames) && !riverNames.has(region.name))
       .concat(geography.features.filter(feature => /^(island|archipelago)$/.test(feature.type) ? showIslandNames : /^mountains?$/.test(feature.type) ? showMountainNames : feature.type !== 'river' && showWaterNames))
-      : []).concat(showWarNames ? historicalWarLabels(frame, geography, vis) : []);
+      : []).concat(showGeographicLabels && showIslandNames && hexW * viewZoom >= 30 ? (geography.subregions || []).filter(region => region.island) : [])
+      .concat(showWarNames ? historicalWarLabels(frame, geography, vis) : []);
     placeGeographyLabels('features', labels, vis, 12, occupied);
   } else {
     for (const slot of geographyLabelSlots.features) if (slot && slot.visible) { slot.el.style.opacity = '0'; slot.visible = false; }
@@ -10916,9 +10955,11 @@ function syncRegionHover(event = regionHoverState.pointer) {
     if (![...selectedTiles].some(index => basePos[index] && (!vis || (vis[index] || 0) !== 0))) { hideRegionHover(); return; }
   } else {
     const index = hexAt(event.clientX, event.clientY);
-    region = geography.regionForTile.get(index);
+    const subregion = hexW * viewZoom >= 30 && geography.subregionForTile?.get(index);
+    region = subregion || geography.regionForTile.get(index);
     if (region === undefined || vis && (vis[index] || 0) === 0) { hideRegionHover(); return; }
-    regionIds = [region];
+    regionIds = subregion ? [] : [region];
+    if (subregion) selectedTiles = new Set(geography.subregions.find(entry => entry.id === subregion).tiles);
   }
   const key = `${peopleCameraKey()}|${pos}|${fogMode}|${colShift}|${hexW}|${hexH}|${area.x}|${area.y}|${area.w}|${area.h}|${JSON.stringify(regionIds)}`;
   if (state.geography !== geography || state.positions !== basePos || state.vis !== vis || state.region !== region || state.key !== key) {
@@ -11024,10 +11065,10 @@ function drawRegionBoundaries(geography, vis) {
   const key = `${hexW}|${hexH}|${colShift}`;
   if (state.geography !== geography || state.positions !== basePos || state.vis !== vis || state.key !== key) {
     const edges = [];
-    for (const region of geography.regions) for (const edge of region.boundary || []) {
+    for (const region of geography.regions.concat(geography.subregions || [])) for (const edge of region.boundary || []) {
       const { index, direction } = edge, neighbor = (neighborsByIndex[index] || [])[direction];
       if (!basePos[index] || vis && !(vis[index] > 0)) continue;
-      const other = geography.regionForTile.get(neighbor);
+      const other = (region.type === 'subregion' ? geography.subregionForTile : geography.regionForTile).get(neighbor);
       if (other !== undefined && other !== region.id && neighbor < index && (!vis || vis[neighbor] > 0)) continue;
       const vertices = EDGE_VERTS[direction];
       edges.push({ a: hexVert(index, vertices[0]), b: hexVert(index, vertices[1]) });
@@ -12356,7 +12397,11 @@ function continentNameForType(continentType) {
     const continent = GameInfo.Continents.lookup(continentType);
     if (continent && continent.Description) {
       const composed = String(Locale.compose(continent.Description) || '').trim();
-      if (composed && !/^LOC_/i.test(composed)) name = composed;
+      if (composed && !/^LOC_/i.test(composed)) {
+        const geography = window.AnthroproceniaGeography;
+        if (!geography || typeof geography.continentNameForMap !== 'function') throw new Error('Geographic continent naming is unavailable.');
+        name = geography.continentNameForMap(continentType, composed);
+      }
     }
   } catch (e) {
     if (!continentApiErrorLogged) {
@@ -13240,15 +13285,17 @@ let prebuilt = false;   // map already built (possibly hidden) and valid for the
 let builtFrameCount = ''; // count + manifest rev the built/prebuilt map represents — so we can detect BOTH new frames and same-turn re-records (mid-turn record-on-open)
 // Cheap peek straight from the manifest (no state mutation), used to decide whether a prebuilt map is stale.
 function recordedFrameCount() {
-  try { const m = readManifest(); return ((m && Array.isArray(m.frames)) ? m.frames.length : 0) + '@' + ((m && m.rev != null) ? m.rev : 0); } catch (e) { return '0@0'; }
+  try { const m = readManifest(); return replayStore.scope() + ':' + ((m && Array.isArray(m.frames)) ? m.frames.length : 0) + '@' + ((m && m.rev != null) ? m.rev : 0); } catch (e) { err(`recording status unavailable: ${e}`); return 'unavailable'; }
 }
 function refresh(preserveLayout = false) {
+  const scope = replayStore.scope();
+  if (viewDataScope !== scope) { resetViewData(); viewDataScope = scope; }
   manifest = readManifest();
   // Cross-open retention: only reset the derived state (record caches, per-age canvases, state gate,
   // conquest table) when the RECORDING actually changed — new game, new age, or new turns recorded. Same
   // fingerprint → reopening the map reuses every cached canvas.
   const framesNow = (manifest && Array.isArray(manifest.frames)) ? manifest.frames : [];
-  const fp = `${manifest && manifest.rev != null ? manifest.rev : 0}|${framesNow.length}|${manifest ? manifest.w + 'x' + manifest.h : ''}|${framesNow.length ? framesNow[0][0] + ':' + framesNow[0][1] + '>' + framesNow[framesNow.length - 1][0] + ':' + framesNow[framesNow.length - 1][1] : ''}`;
+  const fp = `${scope}|${manifest && manifest.rev != null ? manifest.rev : 0}|${framesNow.length}|${manifest ? manifest.w + 'x' + manifest.h : ''}|${framesNow.length ? framesNow[0][0] + ':' + framesNow[0][1] + '>' + framesNow[framesNow.length - 1][0] + ':' + framesNow[framesNow.length - 1][1] : ''}`;
   const recordingChanged = fp !== lastRecordingFp;
   lastRecordingFp = fp;
   if (recordingChanged) {
@@ -13499,7 +13546,10 @@ function installMiniMapIntegration() {
     const tryOpen = () => {
       try {
         if (mapVisible || building) return;
-        if (mapHudGameReady() && parseInt(recordedFrameCount(), 10) > 0) { requestShow(true); return; }
+        if (mapHudGameReady()) {
+          const recording = readManifest();
+          if (recording && Array.isArray(recording.frames) && recording.frames.length > 0) { requestShow(true); return; }
+        }
         if (++attempts < 20) setTimeout(tryOpen, 700);
       } catch (e) { err(`auto-open failed: ${e}`); }
     };
@@ -14587,6 +14637,10 @@ function populationForItem(item) {
   // then divided by 5 to give the individual icon's share; weighted by where it is (cities hold far more people than the
   // improvements around them) and spread a little per icon.
   const origin = originSettlement(item);
+  if (item.kind !== 'unit' && manifest?.recruitments?.length) {
+    const population = recordedPopulationSnapshot(pos).homes.get(populationItemKey(item));
+    if (population !== undefined) return population;
+  }
   let damage = 1;
   if (item.kind === 'unit') damage *= unitPopulationFactor(item.health, item.bonus);
   else {
@@ -14596,9 +14650,14 @@ function populationForItem(item) {
   return Math.max(1, homePopulation(estimatedWorldPopulation(currentMapYear()), entityCountForPos(), seed,
     origin ? origin.population : null, populationWeight(populationClassFor(item)), damage) + cmdPopulationDelta(item));
 }
+function populationItemKey(item) {
+  return `${item.kind}|${item.index}|${item.typeIndex ?? item.type ?? ''}|${item.n || 0}|${item.dot || 0}`;
+}
 const settlementPopulationSnapshots = new Map();
-function recordedPopulationSnapshot(turn) {
-  const key = `${manifest?.rev}|${turn}|population7`;
+const recruitmentManpowerCache = new Map();
+function recordedPopulationSnapshot(turn, raw = false) {
+  const commandVersion = typeof cmdState !== 'undefined' ? cmdState.ledger?.p?.length || 0 : 0;
+  const key = `${manifest?.rev}|${turn}|${commandVersion}|population8|${raw}`;
   if (settlementPopulationSnapshots.has(key)) return settlementPopulationSnapshots.get(key);
   const settlements = reconstructSettlements(turn), buildings = reconstructBuildings(turn), wonders = reconstructWonders(turn);
   const damaged = reconstructDamaged(turn), frame = frameFor(turn), identities = reconstructIdentity(turn), units = readUnitsTurn(turn);
@@ -14652,24 +14711,32 @@ function recordedPopulationSnapshot(turn) {
       item: { kind: 'specialist', index }, weight: populationWeight('specialist'), damage: 1 });
   }
   units.forEach(([index, owner, type, health, , bonus], row) => {
-    homes.push({ index, owner, city: origin(index, owner), row,
+    const identity = units[row][7], recruitment = manifest.recruitments?.find(entry => entry[0] === frames[turn]?.[0] &&
+      entry[3] === owner && entry[4] === identity);
+    homes.push({ index, owner, city: recruitment ? { index: recruitment[2], population: recruitment[6] } : origin(index, owner), row,
       seed: `u|${type}|u${unitLineageId(row, turn)}`, weight: populationWeight('unit'),
       item: { kind: 'unit', index, owner, type, health, bonus: bonus || 0, row, turn },
       damage: unitPopulationFactor(health, bonus || 0) });
   });
-  const result = { settlements: new Map(), tiles: new Map(), units: new Map() }, record = readPlayersRec(turn);
+  const result = { settlements: new Map(), tiles: new Map(), units: new Map(), homes: new Map() }, record = readPlayersRec(turn);
   const ageInfo = [...(manifest.ages || [])].reverse().find(row => row[0] <= turn);
   const era = ageInfo ? ageEraKey(ageInfo[1], ageInfo[2]) : ageEraKey(frames[turn]?.[0]);
   const year = parseGameYear(frames[turn]?.[3]) ?? (era === 'MODERN' ? 1900 : era === 'EXPLORATION' ? 1200 : -1500);
   const age = townEra(era, frames[turn]?.[1] || 1).age;
+  result.worldPopulation = estimatedWorldPopulation(year); result.entities = Math.max(1, entities);
+  const civilianHomes = new Map();
   for (const home of homes) {
     const tally = home.city && totals.get(home.city.index);
     const damage = home.damage * (home.item.kind !== 'unit' && tally ? settlementDamageFactor(tally.damaged, tally.total) : 1);
     const population = Math.max(1, homePopulation(estimatedWorldPopulation(year), Math.max(1, entities), home.seed,
       home.city ? home.city.population : null, home.weight, damage) + cmdPopulationDelta(home.item, turn));
+    result.homes.set(populationItemKey(home.item), population);
+    home.population = population;
     result.tiles.set(home.index, (result.tiles.get(home.index) || 0) + population);
     if (home.item.kind === 'unit') { result.units.set(home.row, population); continue; }
     if (!home.city) continue;
+    if (!civilianHomes.has(home.city.index)) civilianHomes.set(home.city.index, []);
+    civilianHomes.get(home.city.index).push(home);
     const settlement = settlements.get(home.city.index);
     const continent = continentTypeForTile(home.index), nodeId = iconNodeId(home.owner < 0 ? 'none' : `o${home.owner}`, continent == null ? 'sea' : String(continent), home.index, home.group, home.icon);
     const identity = identities.get(home.owner), society = record?.soc?.find(row => row[0] === home.owner);
@@ -14683,6 +14750,41 @@ function recordedPopulationSnapshot(turn) {
       if (yieldIndex >= 0) entry.occupations[yieldIndex] += group.count;
     }
   }
+    if (!raw && manifest.recruitments?.length) {
+      const debits = new Map(), seen = new Set();
+      for (const entry of manifest.recruitments) {
+        const [age, productionTurn, city, , identity, type, population] = entry;
+        if (age !== frames[turn]?.[0] || productionTurn > frames[turn]?.[1]) continue;
+        const eventKey = `${age}|${identity}`;
+        if (seen.has(eventKey)) continue;
+        seen.add(eventKey);
+        const birth = frames.findIndex(frame => frame[0] === age && frame[1] >= productionTurn);
+        if (birth < 0 || birth > turn) throw new Error('Recruitment has no recorded production frame');
+        let cached = recruitmentManpowerCache.get(eventKey);
+        if (!cached || birth === turn && cached.rev !== manifest.rev) {
+          const baseline = recordedPopulationSnapshot(birth, true);
+          cached = { rev: manifest.rev, manpower: homePopulation(baseline.worldPopulation, baseline.entities,
+            `u|${type}|unative:${identity}`, population, populationWeight('unit'), 1) };
+          recruitmentManpowerCache.set(eventKey, cached);
+        }
+        const manpower = cached.manpower;
+        debits.set(city, (debits.get(city) || 0) + manpower);
+      }
+      for (const [city, debit] of debits) {
+        const settlement = result.settlements.get(city);
+        if (!settlement) continue;
+        const total = settlement.population, kept = Math.max(0, total - debit);
+        let before = 0;
+        for (const home of civilianHomes.get(city) || []) {
+          const reduced = total ? Math.floor((before + home.population) / total * kept) - Math.floor(before / total * kept) : 0;
+          before += home.population;
+          result.tiles.set(home.index, result.tiles.get(home.index) - home.population + reduced);
+          result.homes.set(populationItemKey(home.item), reduced);
+        }
+        settlement.population = kept;
+        settlement.occupations = settlement.occupations.map(count => total ? Math.floor(count * kept / total) : 0);
+      }
+    }
   settlementPopulationSnapshots.set(key, result);
   if (settlementPopulationSnapshots.size > 4) settlementPopulationSnapshots.delete(settlementPopulationSnapshots.keys().next().value);
   return result;
@@ -14737,9 +14839,7 @@ function syncNativePopulationDisplays() {
     if (productionLabel) {
       if (!city) write(productionLabel, '');
       else {
-        const tiles = new Set([GameplayMap.getIndexFromLocation(city.location), ...city.getPurchasedPlots()]);
-        let population = 0;
-        for (const tile of tiles) population += snapshot.tiles.get(tile) || 0;
+        const population = snapshot.settlements.get(GameplayMap.getIndexFromLocation(city.location))?.population || 0;
         write(productionLabel, `Population: ${formatThousands(population)}`);
       }
     }
@@ -14828,6 +14928,11 @@ function itemOwner(item) {
 function originSettlement(item) {
   const owner = itemOwner(item);
   if (owner < 0) return null;
+  if (item.kind === 'unit' && manifest?.recruitments?.length) {
+    const turn = Number.isInteger(item.turn) ? item.turn : pos, identity = readUnitsTurn(turn)[item.row]?.[7];
+    const entry = manifest.recruitments.find(row => row[0] === frames[turn]?.[0] && row[3] === owner && row[4] === identity);
+    if (entry) return { index: entry[2], population: entry[6], name: mapLabelText(entry[7]) };
+  }
   if (!originMemo) return nearestSettlement(item.index, owner);
   const key = item.index * 64 + owner;
   if (!originMemo.has(key)) originMemo.set(key, nearestSettlement(item.index, owner));
@@ -15663,7 +15768,7 @@ function popSortOptions() { return { sort: popState.sortMode, plan: popNodePlan,
 function popFrameSignature() {
   const units = readUnitsTurn(pos);
   const strength = units.reduce((sum, unit) => sum + unit[3] + (unit[5] || 0) * 7, 0);
-  return `v8.${NAME_LISTS_VERSION}|${manifest ? manifest.rev : 0}|${frames[pos] ? frames[pos][3] : ''}|${entityCountForPos()}|${settlementsForPos().size}|${buildingsForPos().size}|${damagedForPos().size}|${units.length}|${strength}|${wondersForPos().size}|${fogMode ? 1 : 0}`;
+  return `v9.${NAME_LISTS_VERSION}|${manifest ? manifest.rev : 0}|${frames[pos] ? frames[pos][3] : ''}|${entityCountForPos()}|${settlementsForPos().size}|${buildingsForPos().size}|${damagedForPos().size}|${units.length}|${strength}|${wondersForPos().size}|${fogMode ? 1 : 0}`;
 }
 // The turn's people come from the saved record when there is one that still matches; otherwise they are worked out and saved.
 function popLoadEntries(recordKey, signature) {
@@ -15712,9 +15817,12 @@ function popBuildModel(key) {
     const geography = typeof window !== 'undefined' ? window.AnthroproceniaGeography?.getMapData() : null;
     if (geography) {
       const regions = new Map(geography.regions.map(region => [region.id, region]));
+      const subregions = new Map((geography.subregions || []).map(region => [region.id, region]));
       for (const entry of entries) {
         const region = regions.get(geography.regionForTile.get(entry.tile.index));
         if (region) entry.region = { id: region.id, name: region.name, type: region.island ? 'island' : region.water ? 'water' : 'region' };
+        const subregion = subregions.get(geography.subregionForTile?.get(entry.tile.index));
+        if (subregion) entry.subregion = { id: subregion.id, name: subregion.name };
       }
     }
     popState.tree = buildPopulationTree(entries);
@@ -18182,7 +18290,7 @@ function syncCommandPanel() {
   const now = nowMs();
   if (now - cmdPanelState.at < 250) return;
   cmdPanelState.at = now;
-  const show = mapVisible && !!els.panel && !gameOverlayActive() && cmdLiveTurn() && cmdState.chosen.size > 0;
+  const show = mapVisible && !!els.panel && !gameOverlayActive() && cmdLiveTurn() && cmdGameplayAllowed() && cmdState.chosen.size > 0;
   const walkers = show ? cmdChosenWalkers() : [];
   const key = show ? `${cmdState.chosen.revision}|${walkers.map(w => `${w.person.key}:${cmdCommandsLeft(w.person.key)}`).join(',')}|${window.innerWidth}x${window.innerHeight}` : '';
   if (key === cmdPanelState.key) return;
@@ -19105,13 +19213,16 @@ function pointInRect(x, y, r) {
   return x >= left && x <= right && y >= top && y <= bottom;
 }
 function mapScaleMetrics(tilePixels, targetPixels) {
-  const rawMiles = targetPixels * 100 / tilePixels;
+  const area = typeof manifest !== 'undefined' && manifest ? manifest.w * manifest.h : 180 * 94;
+  if (!Number.isFinite(area) || area <= 0) throw new Error('Map scale requires valid map dimensions.');
+  const tileMiles = 100 * Math.sqrt(180 * 94 / area);
+  const rawMiles = targetPixels * tileMiles / tilePixels;
   const feet = rawMiles < 1, raw = feet ? rawMiles * 5280 : rawMiles;
   const power = Math.pow(10, Math.floor(Math.log10(raw)));
   const factor = raw / power >= 5 ? 5 : raw / power >= 2 ? 2 : 1;
   const value = factor * power, miles = feet ? value / 5280 : value;
   const unit = feet ? (value === 1 ? 'foot' : 'feet') : (value === 1 ? 'mile' : 'miles');
-  return { miles, pixels: miles * tilePixels / 100, label: `${Number(value.toPrecision(3))} ${unit}` };
+  return { miles, pixels: miles * tilePixels / tileMiles, tileMiles, label: `${Number(value.toPrecision(3))} ${unit}` };
 }
 function mapScaleForView() {
   return mapScaleMetrics(hexW * viewZoom, Math.min(ps(180), measureArea().w * 0.3));
@@ -19217,8 +19328,9 @@ function syncMapScale() {
     for (let i = 0; i <= 4; i++) path += `M${x + length * i / 4} ${y - ps(4)}v${tooth + ps(4)}`;
     const blocks = [0, 2].map(i => `<rect x="${x + length * i / 4}" y="${y}" width="${length / 4}" height="${tooth}" fill="#f1ead6"/>`).join('');
     scale.graphic.innerHTML = `<svg aria-hidden="true" width="${width - ps(16)}" height="${ps(38)}" style="display:block;overflow:visible" fill="none" stroke="#f1ead6" stroke-width="${ps(1)}"><text x="${x}" y="${ps(11)}" fill="#fff" stroke="none" font-family="sans-serif" font-size="${ps(12)}">0</text><text x="${x + length}" y="${ps(11)}" text-anchor="end" fill="#fff" stroke="none" font-family="sans-serif" font-size="${ps(12)}">${metrics.label}</text>${blocks}<path d="${path}"/></svg>`;
-    scale.graphic.setAttribute('aria-label', `Map scale: ${metrics.label}; each tile is 100 miles across`);
-    scale.setAttribute('title', 'Map scale: each tile is 100 miles across');
+    const tileMiles = Number(metrics.tileMiles.toPrecision(4));
+    scale.graphic.setAttribute('aria-label', `Map scale: ${metrics.label}; each tile is ${tileMiles} miles across`);
+    scale.setAttribute('title', `Map scale: each tile is ${tileMiles} miles across (Giant Earth: 100 miles per tile)`);
     scale.scaleKey = key;
   }
   scale.style.width = width + 'px'; scale.style.height = height + 'px';

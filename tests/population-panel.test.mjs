@@ -41,11 +41,54 @@ test('geographic divisions sit below continents without changing saved tile and 
   assert.equal(region.kind, 'region'); assert.equal(region.label, 'Scandinavia'); assert.equal(region.total, 150);
   assert.equal(continent.total, 150); assert.equal(icon.id, before.id);
   assert.deepEqual(ancestorIds(icon.id, tree), [tree[0].id, continent.id, region.id, region.children[0].id, region.children[0].children[0].id]);
+  const nested = buildPopulationTree([{ ...original, region: { id: 'region', name: 'Elysium', type: 'region' },
+    subregion: { id: 'east', name: 'Eastern Elysium' } }]);
+  const parent = nested[0].children[0].children[0], subregion = parent.children[0];
+  assert.equal(subregion.geographicKind, 'subregion'); assert.equal(subregion.total, 100);
+  assert.equal(parent.total, 100); assert.equal(nested[0].total, 100);
+  assert.equal(subregion.children[0].children[0].children[0].id, before.id);
+});
+
+test('recruitment removes the exact manpower from origin civilians once and persists after movement, death and replay reload', async () => {
+  const playback = await read('anthroprocenia-playback.js'), units = await load('anthroprocenia-units.js');
+  const source = playback.slice(playback.indexOf('function populationItemKey('), playback.indexOf('let cityDetailsTimer'));
+  const metadata = { rev: 1, w: 10, buildingTypes: [[0, 0, 0]],
+    recruitments: [[0, 2, 0, 0, '0:2', 0, 5, 'Roma'], [0, 2, 0, 0, '0:2', 0, 5, 'Roma']] };
+  const context = vm.createContext({
+    ...units, manifest: metadata, frames: [[0, 1, 1, '1 AD'], [0, 2, 0, '2 AD'], [0, 3, 0, '3 AD']], pos: 99,
+    basePos: null, mapPxW: 10, DOTS_PER_ITEM: 2, PEOPLE_PROGRESSION_NODES: [],
+    reconstructSettlements: () => new Map([[0, ['Roma', 5, '', []]], [5, ['Other', 5, '', []]]]),
+    reconstructBuildings: () => new Map([[0, [0]], [5, [0]]]),
+    reconstructWonders: () => new Map(), reconstructDamaged: () => new Map(), reconstructIdentity: () => new Map(),
+    readUnitsTurn: turn => turn === 0 || turn === 2 ? [] : [[9, 0, 0, 100, -1, 0, 0, '0:2']],
+    frameFor: () => new Map([[0, 0], [5, 0]]), readPlayersRec: () => null, unitLineageId: () => 'native:0:2',
+    ageEraKey: () => 'ANTIQUITY', townEra: () => ({ age: 0 }), cmdPopulationDelta: () => 0,
+    popIconTraits: () => ({ category: 'generic' }), personBaseId: id => id, continentTypeForTile: () => 1,
+    iconNodeId: panel.iconNodeId, homePlan: () => ({ groups: [] }), occupationYieldIndex: () => -1,
+    homePopulation: (world, count, seed) => seed.startsWith('u|') ? 20 : 100,
+  });
+  vm.runInContext(source, context);
+  const before = context.recordedPopulationSnapshot(0), moved = context.recordedPopulationSnapshot(1);
+  assert.equal(before.settlements.get(0).population, 300);
+  assert.equal(moved.settlements.get(0).population, 280);
+  assert.equal(moved.settlements.get(5).population, 300, 'the nearer settlement cannot acquire the recruitment debit');
+  assert.equal(moved.tiles.get(0), 280); assert.equal(moved.tiles.get(9), 20);
+  assert.equal([...moved.homes].filter(([key]) => key.startsWith('building|0|') || key.startsWith('specialist|0|'))
+    .reduce((sum, [, count]) => sum + count, 0), 280, 'all visible civilian home populations match the settlement total');
+  assert.equal(context.recordedPopulationSnapshot(2).settlements.get(0).population, 280, 'a dead unit does not return recruits home');
+  context.manifest = JSON.parse(JSON.stringify(metadata)); context.manifest.rev++;
+  assert.equal(context.recordedPopulationSnapshot(1).settlements.get(0).population, 280, 'reload and duplicated records do not repeat the debit');
+  assert.equal(context.pos, 99, 'historical accounting cannot mutate playback position');
+  context.manifest.recruitments.push([0, 2, 0, 0, '0:3', 0, 5, 'Roma']); context.manifest.rev++;
+  assert.equal(context.recordedPopulationSnapshot(1).settlements.get(0).population, 260);
+  context.homePopulation = (world, count, seed) => seed.startsWith('u|') ? 1000 : 100;
+  context.manifest.recruitments.push([0, 2, 0, 0, '0:4', 0, 5, 'Roma']); context.manifest.rev++;
+  assert.equal(context.recordedPopulationSnapshot(1).settlements.get(0).population, 0);
 });
 
 test('recorded settlement population and occupations share home plans without mutating the viewed turn', async () => {
   const playback = await read('anthroprocenia-playback.js');
-  const source = playback.slice(playback.indexOf('const settlementPopulationSnapshots'), playback.indexOf('let cityDetailsTimer'));
+  const source = playback.slice(playback.indexOf('function populationItemKey('), playback.indexOf('let cityDetailsTimer'));
   const units = await load('anthroprocenia-units.js'), people = await load('anthroprocenia-people.js');
   const frame = new Map([[0, 0]]), settlement = ['Roma', 5, 'Capital', [0, 0, 0, 0, 0, 0, 0]];
   const context = vm.createContext({
@@ -81,7 +124,7 @@ test('recorded settlement population and occupations share home plans without mu
   assert.equal(context.pos, 99);
 });
 
-test('native production totals use purchased tiles and manpower uses the selected recorded unit, independent of replay position', async () => {
+test('native production totals use settlement civilians, not units standing there, independently of replay position', async () => {
   const playback = await read('anthroprocenia-playback.js');
   const start = playback.indexOf('function nativePopulationRecord('), end = playback.indexOf('let cityDetailsTimer');
   const element = () => {
@@ -107,7 +150,8 @@ test('native production totals use purchased tiles and manpower uses the selecte
   const firstUnit = { owner: 0, type: 42, location: { x: 5, y: 0 } }, selectedUnit = { ...firstUnit, location: { x: 5, y: 0 } };
   production.component = { cityID: cityId, cityNameElement: header }; actions.component = { unitId: selectedId };
   let captures = 0;
-  const rows = [[5, 0, 0, 100, -1, 0, 0, '0:1'], [5, 0, 0, 100, -1, 0, 0, '0:2']], snapshots = { tiles: new Map([[0, 100], [5, 70], [9, 900]]), units: new Map([[0, 30], [1, 70]]) };
+  const rows = [[5, 0, 0, 100, -1, 0, 0, '0:1'], [5, 0, 0, 100, -1, 0, 0, '0:2']], snapshots = {
+    tiles: new Map([[0, 100], [5, 70], [9, 900]]), units: new Map([[0, 30], [1, 70]]), settlements: new Map([[0, { population: 100 }]]) };
   const context = vm.createContext({
     syncCivilizationUnitPortrait() {}, GameInfo: { Units: {} }, WorldUI: {},
     manifest: { rev: 1, frames: [[], []], unitTypes: [[42]] }, frames: [[], []], pos: 99,
@@ -125,7 +169,7 @@ test('native production totals use purchased tiles and manpower uses the selecte
   context.syncNativePopulationDisplays();
   const population = production.querySelector('.anthroprocenia-settlement-population'), manpower = actions.querySelector('.anthroprocenia-unit-manpower');
   assert.equal(production.children[1], population, 'population is directly under the real city header');
-  assert.equal(population.textContent, 'Population: 170', 'purchased plots are deduplicated and outside tiles excluded');
+  assert.equal(population.textContent, 'Population: 100', 'stationed unit manpower is not added back to settlement civilians');
   assert.equal(manpower.textContent, 'Manpower: 70', 'same-type, same-tile units cannot exchange their population seeds');
   context.syncNativePopulationDisplays(); assert.equal(production.children.length, 2); assert.equal(actions.children.length, 2);
   selectedUnit.location.x = 6;

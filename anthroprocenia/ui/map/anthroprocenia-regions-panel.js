@@ -13,11 +13,12 @@ export function regionRows(geography, frame, settlements, tree, visibility, owne
     else stack.push(...(node.children || []));
   }
   const add = (record, type, collection) => {
-    let row = named.get(record.name);
+    const key = record.parentId ? `${record.parentId}|${record.name}` : record.name;
+    let row = named.get(key);
     if (!row) {
       row = { id: record.id, name: record.name, type, types: [], regionIds: [], featureIds: [], continentIds: [],
         indices: new Set(), tiles: 0, population: 0, settlements: [], owners: new Map() };
-      named.set(record.name, row);
+      named.set(key, row);
     }
     if (!row.types.includes(type)) row.types.push(type);
     row[collection].push(record.id);
@@ -32,6 +33,10 @@ export function regionRows(geography, frame, settlements, tree, visibility, owne
   for (const [index, id] of geography.regionForTile) {
     const row = rows.get(id);
     if (row) row.indices.add(index);
+  }
+  for (const subregion of geography.subregions || []) {
+    const row = add(subregion, 'Sub-region', 'featureIds');
+    row.parentId = rows.get(subregion.parentId)?.id;
   }
   for (const feature of geography.features || []) {
     if (feature.type === 'river' || feature.type === 'mountains') {
@@ -70,7 +75,8 @@ export function regionRows(geography, frame, settlements, tree, visibility, owne
 
 const PAGE = 40;
 const REGION_TYPES = [['Region', 'Regions', 'regions'], ['Island', 'Islands', 'island'], ['Water', 'Water', 'water'],
-  ['Mountains', 'Mountains', 'mountains'], ['River', 'Rivers', 'river'], ['Continent', 'Continents', 'continent']];
+  ['Mountains', 'Mountains', 'mountains'], ['River', 'Rivers', 'river'], ['Continent', 'Continents', 'continent'],
+  ['Sub-region', 'Sub-regions', 'regions']];
 export class RegionsPanel {
   constructor({ document, scale, className, onHighlight }) {
     this.document = document; this.scale = scale; this.onHighlight = onHighlight;
@@ -124,7 +130,7 @@ export class RegionsPanel {
       button.setAttribute('title', `Show or hide ${label.toLowerCase()}`);
       this.activate(button, () => {
         if (this.types.has(type)) this.types.delete(type); else this.types.add(type);
-        this.page = 0; this.render();
+        this.page = 0; this.render(true);
       });
       this.typeButtons.push({ type, button }); filters.appendChild(button);
     }
@@ -143,9 +149,9 @@ export class RegionsPanel {
     this.activate(this.button, () => this.setOpen(!this.open));
     this.activate(this.close, () => this.setOpen(false));
     this.activate(this.clear, () => { this.selected = null; this.hover = null; this.paintSelection(); this.syncHighlight(); });
-    this.activate(this.previous, () => { this.page = Math.max(0, this.page - 1); this.render(); });
-    this.activate(this.next, () => { this.page++; this.render(); });
-    this.search.addEventListener('input', () => { this.query = this.search.value.trim().toLowerCase(); this.searchCollapsed.clear(); this.page = 0; this.render(); });
+    this.activate(this.previous, () => { this.page = Math.max(0, this.page - 1); this.render(true); });
+    this.activate(this.next, () => { this.page++; this.render(true); });
+    this.search.addEventListener('input', () => { this.query = this.search.value.trim().toLowerCase(); this.searchCollapsed.clear(); this.page = 0; this.render(true); });
     this.panel.addEventListener('mouseleave', () => { this.hover = null; this.syncHighlight(); });
   }
   activate(element, run) {
@@ -200,10 +206,12 @@ export class RegionsPanel {
     }
     this.clear.disabled = this.selected === null;
   }
-  render() {
+  render(resetScroll = false) {
+    const scrollTop = this.list.scrollTop || 0;
     const hover = this.hover, hovered = this.slots.find(slot => slot.row && slot.row.id === hover);
     for (const { type, button } of this.typeButtons) button.setAttribute('aria-pressed', String(this.types.has(type)));
-    const matches = row => (row.types || [row.type]).some(type => this.types.has(type)) &&
+    const included = row => (row.types || [row.type]).some(type => this.types.has(type));
+    const matches = row => included(row) &&
       (!this.query || [row.name, ...row.settlements.map(city => city.name), ...row.owners.map(owner => owner.name)].join(' ').toLowerCase().includes(this.query));
     const continents = this.rows.filter(row => (row.types || [row.type]).includes('Continent'));
     let rows;
@@ -216,7 +224,7 @@ export class RegionsPanel {
         if (continents.includes(row)) continue;
         const group = byName.get(row.continent) || other;
         if (matches(row) || this.query && group !== other && group.name.toLowerCase().includes(this.query) &&
-          (row.types || [row.type]).some(type => this.types.has(type))) group.children.push(row);
+          included(row)) group.children.push(row);
       }
       rows = [];
       for (const group of [...groups.sort((a, b) => a.name.localeCompare(b.name)), other]) {
@@ -227,6 +235,25 @@ export class RegionsPanel {
         if (group.expanded) rows.push(...group.children);
       }
     } else rows = this.rows.filter(matches);
+    const parents = new Map(this.rows.map(row => [row.id, row])), children = new Map();
+    for (const row of rows.slice()) if (row.parentId && !rows.some(parent => parent.id === row.parentId)) {
+      const parent = parents.get(row.parentId);
+      if (parent) rows.push(parent);
+    }
+    for (const row of rows) if (row.parentId && parents.has(row.parentId)) {
+      if (!children.has(row.parentId)) children.set(row.parentId, []);
+      children.get(row.parentId).push(row);
+    }
+    const nested = [];
+    for (const row of rows) {
+      if (row.parentId && rows.some(parent => parent.id === row.parentId)) continue;
+      const parts = children.get(row.id);
+      nested.push(parts ? { ...row, subregions: parts, expanded: this.query ? !this.searchCollapsed.has(row.id) : this.expanded.has(row.id) } : row);
+      if (parts && (this.query ? !this.searchCollapsed.has(row.id) : this.expanded.has(row.id))) {
+        nested.push(...parts.sort((a, b) => b.population - a.population || a.name.localeCompare(b.name)));
+      }
+    }
+    rows = nested;
     this.page = Math.max(0, Math.min(this.page, Math.ceil(rows.length / PAGE) - 1));
     const shown = rows.slice(this.page * PAGE, (this.page + 1) * PAGE), p = this.scale;
     for (let i = 0; i < shown.length; i++) {
@@ -243,7 +270,17 @@ export class RegionsPanel {
           return text;
         });
         lines[0].style.fontWeight = '700';
-        slot = { button, lines, row: null }; this.slots.push(slot); this.list.appendChild(button);
+        const container = this.document.createElement('div'), expand = this.document.createElement('button');
+        container.style.cssText = 'position:relative;';
+        expand.style.cssText = `position:absolute;left:${p(4)}px;top:${p(8)}px;width:${p(24)}px;height:${p(24)}px;color:#e1c58e;background:#1a2638;border:1px solid #6a88bb;cursor:pointer;`;
+        container.append(button, expand);
+        slot = { button, lines, expand, container, row: null }; this.slots.push(slot); this.list.appendChild(container);
+        this.activate(expand, () => {
+          if (!slot.row?.subregions) return;
+          const state = this.query ? this.searchCollapsed : this.expanded;
+          if (state.has(slot.row.id)) state.delete(slot.row.id); else state.add(slot.row.id);
+          this.render();
+        });
         this.activate(button, () => {
           if (!slot.row) return;
           if (slot.row.group) {
@@ -260,8 +297,12 @@ export class RegionsPanel {
         });
         for (const type of ['mouseleave', 'blur']) button.addEventListener(type, () => { if (slot.row && this.hover === slot.row.id) { this.hover = null; this.syncHighlight(); } });
       }
-      const row = shown[i]; slot.row = row; slot.button.style.display = 'block';
-      slot.button.style.paddingLeft = p(row.group || !continents.length ? 8 : 24) + 'px';
+      const row = shown[i]; slot.row = row; slot.button.style.display = 'block'; slot.container.style.display = 'block';
+      slot.expand.style.display = row.subregions ? 'block' : 'none';
+      slot.expand.innerHTML = uiGlyph(row.expanded ? 'previous' : 'next', false, p(16));
+      slot.expand.setAttribute('aria-label', `${row.expanded ? 'Collapse' : 'Expand'} sub-regions of ${row.name}`);
+      slot.expand.setAttribute('aria-expanded', String(!!row.expanded));
+      slot.button.style.paddingLeft = p(row.subregions || row.parentId ? 36 : row.group || !continents.length ? 8 : 24) + 'px';
       slot.button.setAttribute('aria-expanded', row.group ? String(row.expanded) : 'false');
       slot.lines[0].textContent = row.group ? `${row.expanded ? '-' : '+'} ${row.name} (${row.children.length} areas)`
         : `${row.name} (${(row.types || [row.type]).join(', ')})`;
@@ -275,13 +316,13 @@ export class RegionsPanel {
       const label = slot.lines.map(line => line.textContent).join('; ');
       slot.button.setAttribute('aria-label', label); slot.button.setAttribute('title', label);
     }
-    for (let i = shown.length; i < this.slots.length; i++) { this.slots[i].button.style.display = 'none'; this.slots[i].row = null; }
+    for (let i = shown.length; i < this.slots.length; i++) { this.slots[i].button.style.display = 'none'; this.slots[i].container.style.display = 'none'; this.slots[i].row = null; }
     this.hover = hovered && hovered.row && hovered.row.id === hover ? hover : null;
-    this.status.textContent = !this.rows.length ? 'No known regions available.' : !rows.length ? 'No regions match these filters.' : 'Expand a continent to browse areas by population. Hover to highlight; click an area to select.';
+    this.status.textContent = !this.rows.length ? 'No known regions available.' : !rows.length ? 'No regions match these filters.' : 'Expand continents and region arrows to browse areas. Hover to highlight; click an area to select.';
     this.counter.textContent = `${rows.length ? this.page * PAGE + 1 : 0}-${this.page * PAGE + shown.length} of ${rows.length}`;
     this.previous.disabled = this.page === 0; this.next.disabled = (this.page + 1) * PAGE >= rows.length;
-    this.list.scrollTop = 0;
+    this.list.scrollTop = resetScroll ? 0 : scrollTop;
     this.paintSelection(); this.syncHighlight();
   }
-  reset() { this.setOpen(false); this.rows = []; this.expanded.clear(); this.searchCollapsed.clear(); this.query = ''; this.search.value = ''; this.types = new Set(REGION_TYPES.map(([type]) => type)); this.page = 0; this.key = ''; this.geography = null; this.tree = null; this.render(); }
+  reset() { this.setOpen(false); this.rows = []; this.expanded.clear(); this.searchCollapsed.clear(); this.query = ''; this.search.value = ''; this.types = new Set(REGION_TYPES.map(([type]) => type)); this.page = 0; this.key = ''; this.geography = null; this.tree = null; this.render(true); }
 }

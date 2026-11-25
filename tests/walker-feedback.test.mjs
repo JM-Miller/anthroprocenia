@@ -214,7 +214,7 @@ test('command execution attaches only actually earned rewards and they survive r
   const outcome = { amount: 0.013, yield: 'food', deaths: [], popDelta: 0, success: true, chance: 0.2, wound: 0 };
   const ctx = context(['cmdExecute', 'cmdRewardShares', 'cmdShowCompletedReward', 'cmdTickPerson'], {
     cmdConsumeInput: () => {}, cmdState: { menu: null, chosen: new Set() }, cmdCloseMenu: () => { ctx.cmdState.menu = null; },
-    townWorld: {}, cmdLiveTurn: () => true, cmdCanCommand: () => true, cmdInReach: () => true,
+    townWorld: {}, cmdLiveTurn: () => true, cmdGameplayAllowed: () => true, cmdCanCommand: () => true, cmdInReach: () => true,
     cmdPersonActions: () => [{ id: 'work', at: ['building'] }], actionFits: () => true,
     frames: [1], cmdNearby: () => ({ allies: 0, enemies: 0 }), cmdIsLeader: () => false,
     resolveCommand: () => outcome, cmdActedCount: () => 0, cmdActed: () => new Map(),

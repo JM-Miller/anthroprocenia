@@ -1,13 +1,13 @@
 CREATE TEMP TABLE AnthroMapWrappers (Original TEXT PRIMARY KEY, Wrapper TEXT NOT NULL);
 INSERT INTO AnthroMapWrappers VALUES
-('{base-standard}maps/continents-voronoi.js', '{anthroprocenia_map_history}maps/continents-voronoi.js'),
-('{base-standard}maps/pangaea-voronoi.js', '{anthroprocenia_map_history}maps/pangaea-voronoi.js'),
-('{base-standard}maps/fractal-voronoi.js', '{anthroprocenia_map_history}maps/fractal-voronoi.js'),
-('{base-standard}maps/archipelago-voronoi.js', '{anthroprocenia_map_history}maps/archipelago-voronoi.js'),
-('{base-standard}maps/shattered-seas-voronoi.js', '{anthroprocenia_map_history}maps/shattered-seas-voronoi.js'),
-('{base-standard}maps/shuffle-voronoi.js', '{anthroprocenia_map_history}maps/shuffle-voronoi.js'),
-('{base-standard}maps/terra-incognita-voronoi.js', '{anthroprocenia_map_history}maps/terra-incognita-voronoi.js'),
-('{base-standard}maps/donut-voronoi.js', '{anthroprocenia_map_history}maps/donut-voronoi.js');
+('{base-standard}maps/continents-voronoi.js', '{anthroprocenia_map_history}maps/anthro-continents-voronoi.js'),
+('{base-standard}maps/pangaea-voronoi.js', '{anthroprocenia_map_history}maps/anthro-pangaea-voronoi.js'),
+('{base-standard}maps/fractal-voronoi.js', '{anthroprocenia_map_history}maps/anthro-fractal-voronoi.js'),
+('{base-standard}maps/archipelago-voronoi.js', '{anthroprocenia_map_history}maps/anthro-archipelago-voronoi.js'),
+('{base-standard}maps/shattered-seas-voronoi.js', '{anthroprocenia_map_history}maps/anthro-shattered-seas-voronoi.js'),
+('{base-standard}maps/shuffle-voronoi.js', '{anthroprocenia_map_history}maps/anthro-shuffle-voronoi.js'),
+('{base-standard}maps/terra-incognita-voronoi.js', '{anthroprocenia_map_history}maps/anthro-terra-incognita-voronoi.js'),
+('{base-standard}maps/donut-voronoi.js', '{anthroprocenia_map_history}maps/anthro-donut-voronoi.js');
 
 UPDATE Maps SET File = (SELECT Wrapper FROM AnthroMapWrappers WHERE Original = File)
 WHERE File IN (SELECT Original FROM AnthroMapWrappers);
@@ -58,3 +58,15 @@ WHERE MapFile IN (SELECT Original FROM AnthroMapWrappers);
 UPDATE MapStartPositions SET Map = (SELECT Wrapper FROM AnthroMapWrappers WHERE Original = Map)
 WHERE Map IN (SELECT Original FROM AnthroMapWrappers);
 DROP TABLE AnthroMapWrappers;
+
+UPDATE MapSizes
+SET Name = 'LOC_ANTHRO_LUDICROUS_MAP_SIZE',
+    Description = 'LOC_ANTHRO_LUDICROUS_MAP_SIZE_HELP'
+WHERE MapSizeType = 'MAPSIZE_LUDICROUS';
+
+INSERT OR REPLACE INTO MapSizes (Domain, MapSizeType, Name, Description,
+    MinPlayers, MaxPlayers, MaxHumans, DefaultPlayers, SortIndex)
+SELECT Domain, 'MAPSIZE_ANTHRO_COLOSSAL', 'LOC_ANTHRO_COLOSSAL_MAP_SIZE',
+    'LOC_ANTHRO_COLOSSAL_MAP_SIZE_HELP', MinPlayers, MaxPlayers, MaxHumans,
+    DefaultPlayers, SortIndex + 1
+FROM MapSizes WHERE MapSizeType = 'MAPSIZE_LUDICROUS';

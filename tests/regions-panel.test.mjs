@@ -90,6 +90,40 @@ function element() {
 function fire(element, type, extra = {}) {
   for (const fn of element.events[type] || []) fn({ type, button: 0, preventDefault() {}, stopPropagation() {}, ...extra });
 }
+test('sub-regions retain independent fog-safe statistics, nesting, highlighting and scroll through updates and expansion', t => {
+  let time = 1000;
+  t.mock.method(Date, 'now', () => time);
+  const geography = {
+    regions: [{ id: 'parent', name: 'Elysium', tiles: [0, 1, 2] }],
+    subregions: [{ id: 'west', parentId: 'parent', name: 'Western Elysium', tiles: [0] },
+      { id: 'east', parentId: 'parent', name: 'Eastern Elysium', tiles: [1, 2] }],
+    regionForTile: new Map([[0, 'parent'], [1, 'parent'], [2, 'parent']]),
+  };
+  const rows = regionRows(geography, new Map([[0, 1], [1, 9], [2, 9]]),
+    new Map([[1, ['Easton', 4]], [2, ['Hidden', 9]]]),
+    [100, 200, 999].map((total, tile) => ({ kind: 'tile', tile, total })), [2, 2, 0], owner => ['A', 'B'][owner]);
+  const parent = rows.find(row => row.id === 'parent'), east = rows.find(row => row.id === 'east');
+  assert.equal(parent.population, 300);
+  assert.equal(east.population, 200); assert.equal(east.parentId, 'parent');
+  assert.deepEqual(east.tileIndices, [1]); assert.deepEqual(east.regionIds, []);
+  assert.deepEqual(east.settlements, [{ name: 'Easton', citizens: 4 }]);
+  const panel = new RegionsPanel({ document: { body: element(), createElement: element }, scale: n => n, className: 'chrome', onHighlight() {} });
+  panel.update(rows);
+  assert.deepEqual(panel.slots.filter(slot => slot.row).map(slot => slot.row.id), ['parent']);
+  panel.list.scrollTop = 80;
+  fire(panel.slots[0].expand, 'click');
+  assert.equal(panel.list.scrollTop, 80);
+  assert.deepEqual(panel.slots.filter(slot => slot.row).map(slot => slot.row.id), ['parent', 'east', 'west']);
+  fire(panel.slots[1].button, 'click'); assert.equal(panel.selected, 'east');
+  panel.update(rows); assert.equal(panel.list.scrollTop, 80); assert.equal(panel.selected, 'east');
+  time += 400; fire(panel.slots[0].expand, 'click');
+  assert.equal(panel.list.scrollTop, 80); assert.equal(panel.selected, 'east');
+  panel.search.value = 'Easton'; fire(panel.search, 'input');
+  assert.equal(panel.list.scrollTop, 0);
+  assert.deepEqual(panel.slots.filter(slot => slot.row).map(slot => slot.row.id), ['parent', 'east']);
+  assert.equal(panel.slots.length, 3);
+});
+
 test('regions panel toolbar placement, hover/selection precedence, paging and lifecycle reuse bounded row slots', t => {
   let time = 1000;
   t.mock.method(Date, 'now', () => time);
@@ -171,13 +205,13 @@ test('region-type toggles compose with search, reset paging and preserve selecti
   assert.equal(panel.counter.textContent, '0-0 of 0');
   assert.match(panel.status.textContent, /No regions match/);
   toggle('Region');
-  for (const type of ['Mountains', 'River', 'Continent']) toggle(type);
+  for (const type of ['Mountains', 'River', 'Continent', 'Sub-region']) toggle(type);
   assert.equal(panel.types.size, 0);
   toggle('Island');
   assert.equal(panel.slots[0].row.id, 4, 're-enabling a type still honors the search');
   assert.equal(panel.slots.length, 40, 'filtering reuses the bounded row pool');
   panel.reset();
-  assert.deepEqual([...panel.types], ['Region', 'Island', 'Water', 'Mountains', 'River', 'Continent']);
+  assert.deepEqual([...panel.types], ['Region', 'Island', 'Water', 'Mountains', 'River', 'Continent', 'Sub-region']);
   assert.ok(panel.typeButtons.every(({ button }) => button.attrs['aria-pressed'] === 'true'));
   panel.update(rows);
   assert.match(panel.counter.textContent, /of 95$/);

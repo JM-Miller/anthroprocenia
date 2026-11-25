@@ -19,6 +19,7 @@ function slice(name) {
   return source.slice(start, end + 1);
 }
 function context(names, state) {
+  names = [...new Set([...names, 'mapScaleMetrics'])];
   const ctx = vm.createContext({ ...panel, ...people, ...town, ...state });
   vm.runInContext(names.map(slice).join('\n'), ctx);
   return ctx;

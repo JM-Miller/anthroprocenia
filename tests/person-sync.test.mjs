@@ -173,7 +173,7 @@ test('wounds cost people, strength bonuses add them, pillaging costs a quarter, 
 test('population follows health, strength, pillage and settlement damage through populationForItem', () => {
   const state = { damaged: new Map(), settlementDamage: new Map() };
   const context = vm.createContext({
-    ...units, Map, Math, Number,
+    ...units, Map, Math, Number, manifest: {},
     originSettlement: () => ({ population: 50, index: 5 }), estimatedWorldPopulation: () => 1e9, currentMapYear: () => 0, entityCountForPos: () => 1000,
     damagedForPos: () => state.damaged, settlementDamageFor: index => state.settlementDamage.get(index) ?? 1,
     populationClassFor: item => (item.kind === 'building' ? state.classOf(item) : item.kind),

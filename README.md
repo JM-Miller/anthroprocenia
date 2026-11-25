@@ -27,6 +27,176 @@ Version 107 fixes loading-screen icon feedback and scopes custom unit abilities
 to their native unit classes to prevent new-game initialization stalls.
 Fully restart Civ VII after installing; no civilization features need disabling.
 
+## Map View startup (version 122)
+
+Map View again opens automatically after **Begin Game**, including when resuming
+existing saves. Startup checks the actual recorded frames rather than parsing
+the observer-scoped cache fingerprint as a number. It waits for the opening
+capture without rebuilding an already-visible map. Fully restart Civ VII after
+installing this fix.
+
+## Offline prerecorded narration
+
+`tools/build-narration.py` records the mod's authored civilization introductions,
+overviews, Civilopedia histories, civic descriptions, units, buildings, improvements, quarters,
+traditions and civilization abilities as standalone 24 kHz, mono, 16-bit PCM
+WAVs in `anthroprocenia/audio/narration`. These files play directly from File
+Explorer. `narrator-preview.wav` is an original voice sample; `index.json`
+associates each recording with its localization key and spoken script.
+
+The narrator uses Kokoro's British female `bf_emma` voice at a measured 0.94
+speed, without celebrity imitation or artificial pitch shifting. Synthesis
+runs locally with two inference threads; no text is sent to an online service.
+The engine is MIT-licensed and its model is Apache-2.0-licensed. Model downloads
+are cached outside the mod in `%LOCALAPPDATA%\AnthroproceniaNarrator\models`.
+
+Use Python 3.12 and install `tools/narration-requirements.txt` into an isolated
+environment. Run `python tools/build-narration.py preview` for the sample or
+`python tools/build-narration.py generate` for the complete authored inventory.
+Interrupted generation resumes using the recording index.
+
+`python tools/build-narration.py official` records original introductions for
+all 38 installed leader/persona identifiers and 50 official civilizations,
+including DLC. These are new scripts, not copies of the game's original quotes.
+Their completed inventory is in `official-index.json`.
+
+Native research, civic and landmark quote events also use the new voice when
+their subject is available in the gameplay database. Original game quotations
+are not copied: stock discoveries receive new narration synthesized locally,
+while authored Anthroprocenia discoveries use their prerecorded descriptions.
+Closing a quote stops its replacement voice; unrelated music and effects remain
+native. A missing subject or unavailable companion logs an error and preserves
+native narration rather than leaving the player without audio.
+
+Civilization, civic, unit and building artwork now uses the mod's actual
+`anthroprocenia` resource mount, rather than its manifest identity. This fixes
+blank legacy civic icons without changing native civilization backgrounds.
+
+After installing the mod, start `python tools/narration-companion.py` using the
+same isolated Python environment, then fully restart Civ VII. The companion
+plays the prerecorded WAVs locally and synthesizes dynamic narrative text with
+the same voice. It binds only to loopback, uses a per-run authentication token
+written only to the installed mod, and never uploads game text. Civ VII's
+native XMLHttpRequest handler does not reach localhost HTTP, so in-game
+requests use a bounded local UI-log bridge and atomic file acknowledgements.
+The HTTP interface is for local diagnostics, not the game's transport.
+Readiness is verified by a native ping/acknowledgement, not a stale status file.
+The acknowledgement file is registered for native resource lookup and changes
+only in response to requests, rather than continuously during game loading.
+Keep the companion running while playing; music and sound effects remain native.
+
+Loading-screen voices start before ordinary game-scoped mod scripts. With Civ VII
+closed, run `powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\install-narration-loader.ps1`
+to install a single early-loader line in the game's UI. This opt-in patch verifies
+an original backup under `%LOCALAPPDATA%\AnthroproceniaNarrator\backups`.
+It uses the enabled initial-script catalog and its canonical URLs, so disabling
+the mod does not enable narration and ordinary startup does not load it twice.
+Run the same command with `-Restore` to remove only the added line. Game updates
+or Steam file verification may remove the patch; reinstall it afterward if needed.
+
+The UI replaces leader-selection voice animations and the mapped leader/civ
+loading introductions, narrates civilization details, and reads narrative popup bodies. Choices speak only on mouse hover,
+after a short debounce; leaving or choosing an option cancels it. Without a
+working companion, native narration remains enabled and the UI log explains
+the failure. Dynamic WAVs are cached under
+`%LOCALAPPDATA%\AnthroproceniaNarrator\recordings` and play from File Explorer.
+
+Native Civ VII 1.5.1 testing verified local WAV playback from Amina's leader
+selection, Egypt's civilization details, and Elizabeth's existing-save loading
+introduction. The early loader connected before the loading voice request, and
+the save finished loading successfully. This does not claim that every cinematic,
+diplomacy line, or original quote has been replaced.
+
+## Native map compatibility (version 123)
+
+The Voronoi map wrappers now support Civ VII 1.5.1, whose native module no
+longer exports `SquareMapDims`. A namespace import preserves compatibility with
+older versions while avoiding a fatal module-linking error in current versions.
+Existing provider dimensions and all Giant/63-player defaults are preserved.
+Giant Earth generation still requires separate native diagnosis.
+
+Official icon overrides also use the resource mount `fs://game/anthroprocenia/`,
+not the mod's database identity. Native civilization background contexts remain
+untouched.
+
+## Settlement spacing
+
+Anthroprocenia sets the native `CITY_MIN_RANGE` parameter to **2** instead of
+the default **3**, in every Age and game mode. This is the native hex-range
+setting, not a separate simulated-settlement rule. Existing settlements are
+not moved. Fully restart Civ VII and reload your game after installation;
+multiplayer participants must all install the same change.
+
+## Geographic and population update (version 125)
+
+Realistic x10 and x20 are available in single-player and multiplayer setup.
+Their Antiquity / Exploration / Modern turn budgets are respectively
+440 / 540 / 240 and 220 / 270 / 120. Research, civics, celebrations and calendar
+increments follow the selected multiplier; other costs retain Marathon pacing.
+Start a new game to select a different speed.
+
+Colossal is an explicitly experimental **256 x 160** option, with twice
+Ludicrous's width and height (four times its tile area). The native 1.5.1
+oversized-width failure is not fixed by registering this option; it is expected
+to fail native generation. Ludicrous remains the tested 128 x 80 option, and
+Giant Earth retains its original 180 x 94 dimensions.
+
+Map scale is anchored to Giant Earth at 100 miles across a tile. Other recorded
+dimensions use `100 * sqrt((180 * 94) / (width * height))` miles per tile,
+preserving the same world area. The scale bar, walker speeds, town radii and
+physical decoration sizes use this exact value.
+
+Non-Earth continents use invented names. Procedural regions, islands, waters,
+rivers and mountains retire descriptive prefixes such as Misty and Fabled.
+Nearby duplicate names can use geographically justified Eastern/Western or
+Northern/Southern pairs; remote duplicates get distinct invented place stems.
+Single-tile procedural peaks use Mount names. Native Earth names are preserved.
+
+Regions of at least eight land tiles have deterministic connected sub-regions.
+They appear below their parent in the Regions and Population panels, with
+independent known-tile populations, settlements and territorial statistics.
+The Regions panel provides a Sub-regions filter and separate expansion arrows,
+leaving parent selection available. Sub-regions reuse map labels, boundaries,
+hover shading and offscreen selection arrows. Expansion and background
+statistics refresh preserve scrolling; searches, filters and page changes reset it.
+
+Completed native unit production records the originating settlement and unit
+identity in the observer-scoped save. Its modeled manpower is deducted once
+from that settlement's civilian homes, populations and occupations, and does
+not return when the unit moves or dies. Starting units, upgrades and ordinary
+movement do not create recruitment records. Production UI population excludes
+stationed-unit manpower. Older saves begin recording recruitment on installation;
+unobserved past production is not guessed. Existing opposite-sex, adult-only
+marriage rules remain unchanged and are regression-tested.
+
+All **1,550** authored description and history WAV recordings are complete,
+alongside the **88** official leader/civilization introduction recordings.
+They are ordinary playable audio files; narrative option text still speaks
+only on hover using the same local narrator.
+
+## Multiplayer-safe foundation (version 121)
+
+Multiplayer/hotseat replay, visibility, labels and Map View records now use
+observer-specific save keys. Clients no longer overwrite each other's fog,
+population data or command queues. Ambiguous older multiplayer recordings are
+not imported; recording starts afresh for each observer. Existing single-player
+recordings remain compatible. Loading another game resets recorder baselines.
+
+**This is not full multiplayer certification.** Walker commands, yield rewards
+and unit healing are blocked in multiplayer/hotseat: the existing UI mutation
+calls have no verified synchronized gameplay-command transport. Population
+viewing, autonomous walkers and townscapes remain available. Skip Ahead and
+civilization takeover retain their single-player restrictions. All participants
+must install identical mod/content versions, and added civilizations, buildings,
+units, maps and game speeds still require live host/client and reload testing.
+
+Live movement/damage/ownership event bursts share a capture after at least
+250 ms. Expensive captures back off by four times their measured scan cost,
+up to five seconds; resolved turn-begin and final captures are not throttled.
+Identical recent save payloads skip native configuration writes, and identical
+same-turn deltas no longer invalidate playback or rescan static map layers.
+These are bounded-work improvements, not a claimed native FPS benchmark.
+
 Version 109 uses Child for ages under 13, Youth for ages 13-15, Adult for
 ages 16-59, and Elder from 60. Youths cannot hold adult leadership offices;
 the hereditary heir remains an exception. Modeled marriages require a male
@@ -1756,7 +1926,7 @@ so games without the realistic-calendar database changes retain their native dat
 
 **Start a new game after installing this version.** The mod now affects gameplay and saved games,
 not just the map UI. **Realistic** replaces Standard and remains the default,
-including for multiplayer; version 90 adds x2 through x6 alternatives.
+including for multiplayer; x2 through x6, x10 and x20 alternatives are available.
 Its internal ID remains `GAMESPEED_STANDARD`.
 
 - **Antiquity:** 4,400 annual turns, from 4000 BCE through 400 CE, without a year zero.
@@ -1793,14 +1963,27 @@ Full live-game age transitions, research and celebrations still require verifica
 
 New setups default to no end-of-age countdown, Catastrophic disasters, score victory off,
 and Giant map size when a map mod such as YnAMP provides Giant in the selected size domain.
-Only **Giant**, **Giant Earth** (if supplied as a size), and **Ludicrous** sizes remain selectable.
-YnAMP's **Giant Earth** map script remains available and uses Giant size. Map scripts limited
-to other sizes cannot be used with this restriction. An oversized-map provider such as YnAMP
-must be enabled; the mod does not invent oversized maps if none are installed.
-All map sizes default to **63 total players**, with the setup player ceiling raised to at least
-63 and existing human-player limits preserved. Fewer players may still be chosen manually.
+**Tiny, Small, Standard, Large, and Huge** remain selectable, alongside provider-specific
+sizes and **Colossal**. Each map script retains its own size restrictions.
+YnAMP's **Giant Earth** map script remains available and uses Giant size.
+An oversized-map provider such as YnAMP must be enabled for the additional oversized sizes.
+Only **Giant**, **Giant Earth** (if supplied as a size), **Ludicrous**, and **Colossal**
+default to **63 total players**, with their setup player ceilings raised to at least 63.
+Smaller and unrelated provider sizes retain their original player defaults and limits;
+all existing human-player limits are preserved. Fewer players may still be chosen manually.
 Large maps with 63 players can substantially increase memory use and turn times.
 The countdown setting does not remove the native age-progression rules.
+
+Ludicrous now uses **128 x 80** instead of YnAMP's 230 x 116, with matching setup
+labels. Native 1.5.1 tests reached generation at 128 x 94 but failed before generation
+at 130 x 94 and 180 x 80, with 63 players in each test. Giant Earth remains **180 x 94**
+as requested; its full-width native initialization failure is unresolved. Changing
+Ludicrous dimensions does not rescale or crop Giant Earth's geography.
+The 128 x 116 candidate generated terrain and placed 63 players but crashed during
+native advanced-start-region assignment. Version 124's 128 x 80 Ludicrous completed
+Terra Fractal generation, assigned all 63 advanced-start regions, and reached
+`LOADSTATE_FINISHED` in a native new-game test. Full campaigns and multiplayer
+remain unverified. Existing saves retain their stored map dimensions.
 
 Version 35 routes the eight native Voronoi map choices (including Continents, Shuffle and Donut)
 through small compatibility entry points. They register oversized engine dimensions before the
@@ -1881,7 +2064,8 @@ restore/minimize button. Population hierarchy, building-people sections, and lea
 (including pinned leaders) start collapsed; expanding one does not expand the others.
 It hides the body without closing the panel or clearing its contents; use the header's restore
 button to expand it again.
-An alternating toothed scale bar measures distance in miles, using 100 miles across each tile.
+An alternating toothed scale bar measures distance in miles, anchored to Giant Earth's
+100 miles across a tile and adjusted to each recorded map's tile area.
 Its length follows the map zoom, and it moves to free screen space to avoid the visible map panels
 and controls. It hides behind game menus and when no unobstructed space remains.
 The visibility controls include civilization and settlement labels, river
@@ -2450,3 +2634,111 @@ Upload steps are in [Publish/PUBLISHING.md](Publish/PUBLISHING.md).
 ## License
 
 [MIT](LICENSE) Â© 2026 SLIM_AL
+
+## Expanded research: three times the technologies and civics
+
+Every installed native/DLC research tree and every Anthroprocenia civilization
+civic tree now has exactly three times its original node count. Attribute trees
+are deliberately unchanged. Each original subject is followed by two related
+applications or institutions; successors retain their original AND/OR choice
+semantics through those applications. Original node IDs, names, icons, quotes,
+unlock rows, civilization traits and tree-reveal modifiers are retained.
+
+With all currently installed official DLC, the counts are:
+
+| Age | Technologies | Common main civics | Other common civic branches | Test of Time civics | Civilization-specific civics |
+| --- | ---: | ---: | ---: | ---: | --- |
+| Antiquity | 16 → **48** | 14 → **42** | — | 35 → **105** | 12 native/DLC trees: 3 → **9** each; 5 native/DLC trees: 4 → **12** each; 13 Anthroprocenia trees: 6 → **18** each |
+| Exploration | 15 → **45** | 13 → **39** | Theology: 2 → **6** | 34 → **102** | 13 native/DLC trees: 3 → **9** each; 5 native/DLC trees: 4 → **12** each; 17 Anthroprocenia trees: 6 → **18** each |
+| Modern | 17 → **51** | 10 → **30** | Democracy, Fascism, Communism: 3 → **9** each | 37 → **111** | 6 native/DLC trees: 3 → **9** each; 9 native/DLC trees: 4 → **12** each; 17 Anthroprocenia trees: 6 → **18** each |
+
+Total civic nodes, including common branches and Test of Time: Antiquity
+**183 → 549**, Exploration **210 → 630**, Modern **212 → 636**. There are
+**1,306 new nodes** across **110 research trees**. Optional DLC is not required:
+an extension is created only if its original node is present.
+
+### Exactly retained budgets, useful additional unlocks
+
+The original raw integer research budget is split across each expanded tree.
+Both the base-research sum and the cost-weighted mastery budget are exactly
+retained. Costs remain positive; one-point starting nodes remain one point.
+Repeatable originals keep their original cost, repeat flag and escalation
+parameters, with the two minimum-cost companions funded from the same tree's
+finite budget. Existing mastery unlock depths are unchanged. New companions
+have mastery only where the loaded original has mastery, including DLC-specific
+mastery additions. Difficulty/speed multipliers and engine per-node rounding
+can still cause small differences in actual turn counts.
+
+New content includes **12 trainable units** and **18 ordinary urban buildings**
+(four units and six buildings per Age), plus **1,726 policy definitions** when
+all DLC and all Ages are represented, including **420 mastery refinements**.
+Companion policies provide different, complementary yields from a named
+building, not unbounded empire-wide flat yields; their effects apply only
+while slotted. Refinements obsolete their own earlier policy. New units trade
+two points of armed combat strength for one movement point, cost 20% more,
+inherit native AI/abilities and upgrade destinations, and replace no existing
+units. Buildings have authored roles and mixed local yields. Examples include
+Seed Houses, Rigging Lofts, Computing Bureaux, Coastal Cutters and Motor Scouts.
+
+Artwork uses **36 original white geometric PNG symbols** mounted under
+`fs://game/anthroprocenia/art/progression/`; physical units/buildings remap to
+installed native meshes. Existing civilization/background art is not changed.
+Every new node has a unique `VO_ANTHRO_*` TypeQuotes identifier and authored
+quote localization. Its `LOC_NODE_ANTHRO_*_NAME` and matching `_DESCRIPTION`,
+along with new unit/building/policy descriptions and Civilopedia histories,
+are automatically included in `tools\build-narration.py`'s existing inventory.
+This adds **4,398 authored recording scripts** (descriptions and histories).
+Generating this content does not record or overwrite narration audio.
+Original Anthroprocenia civic nodes also register unique
+`VO_ANTHRO_ORIGINAL_*` TypeQuotes identifiers. Their quotes reference only
+their existing authored `_DESCRIPTION` localization, allowing the same
+completion hook to play existing recordings without adding narration scripts
+or changing native quotations.
+
+The game-only `ui\progression\anthroprocenia-progression-icons.js` bridge
+resolves Anthroprocenia node/tree `IconString` identifiers through
+`UI.getIconURL` to their registered PNGs rather than treating them as native
+`blp:` textures. It wraps the shared culture-node, technology-node and
+culture-tree image helpers used by completion panels, choosers and tree-grid
+delegates. Native IDs and civilization-injected icons keep their native
+behavior; invalid custom lookups fall back to the original helpers. No
+tree-grid CSS override or native file replacement is needed. The progression
+generator does not overwrite this bridge or its manifest UIScript registration.
+
+### Rebuilding and validation
+
+```powershell
+python tools\build-progression.py
+python tests\progression-native.py
+node --test tests\progression-icons.test.mjs
+```
+
+Both commands default to the installed Steam game's `Base` directory; the
+generator accepts `--base PATH`, and the tests accept `PATH` as their first
+argument. `tools\progression-inventory.json` records every original/added node,
+its tree, costs and unlocks; authored subjects are in
+`tools\progression-content.py`. Generated gameplay files are
+`anthroprocenia\data\progression-expansion.sql` and the three
+`progression-content-AGE.sql` files; localization/art registrations are
+`ProgressionExpansion.xml`, `progression-icons.xml` and `progression-remaps.xml`.
+`anthroprocenia\config\ProgressionExpansion.sql` keeps registered civilization
+selection-screen research previews at the same expanded counts and budgets,
+without changing existing civilization items or native frontend node IDs.
+
+Focused tests load installed native schemas/data for all three Ages with and
+without DLC, verify exact per-tree tripling and budgets, retained unlocks and
+traits, DAG reachability, original AND/OR prerequisite order, functional policy
+effect/argument contracts, unit statistics/upgrades, building placement/yields,
+art mounts, narration inventory and stable save/replay type IDs. They also
+verify that rerunning the generated SQL is idempotent. Native cross-Age
+references to unloaded Ages and engine-expanded GameEffects are compared
+against the baseline rather than mistaken for new content failures.
+
+Native in-game verification still needs fresh campaigns in each Age to check
+long-tree layout/scrolling, technology and civic completion/mastery, policy
+slotting/refinement, civilization-selection previews, unit production/upgrades, building placement/models,
+TypeQuotes narration, DLC enable/disable and Test of Time choices. Existing
+save IDs are retained, but saves with partial research need actual load/resave
+testing because costs and intervening prerequisites change. Back up campaigns
+before enabling the expanded progression; stable database IDs are not a claim
+that an old partial research queue has been tested in the engine.

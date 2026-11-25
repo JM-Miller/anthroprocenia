@@ -7,13 +7,13 @@ const LAYER_TYPES = {
   features: "anthroprocenia-geographic-labels",
 };
 const NAME_PARTS = {
-  islands: ["Aster", "Beryl", "Cypress", "Dawn", "Ember", "Pearl", "Sable", "Willow"],
-  mountains: ["Ashen", "Bright", "Copper", "Cloud", "Frost", "Iron", "Storm", "White"],
-  rivers: ["Amber", "Clear", "Golden", "Silver", "Swift", "Verdant", "Wild", "Willow"],
-  seas: ["Azure", "Calm", "Cerulean", "Coral", "Distant", "Opal", "Sapphire", "Tranquil"],
-  gulfs: ["Amber", "Blue", "Crescent", "Jade", "Quiet", "Shining", "Summer", "Windward"],
-  oceans: ["Endless", "Far", "Great", "Open", "Outer", "Silent", "Western", "World"],
-  lakes: ["Crystal", "Dawn", "Emerald", "Mirror", "Pearl", "Silver", "Still", "Willow"],
+  islands: ["Asteria", "Berylia", "Cyrenia", "Davenia", "Embria", "Perelia", "Sabilia", "Valleria"],
+  mountains: ["Avaria", "Brentia", "Corvenia", "Caldria", "Frelia", "Istria", "Soravia", "Veloria"],
+  rivers: ["Ambria", "Celoria", "Galdia", "Seloria", "Suvria", "Valdoria", "Walleria", "Ylenia"],
+  seas: ["Azoria", "Calmia", "Cerulia", "Coralia", "Davenia", "Opalia", "Saphoria", "Trelia"],
+  gulfs: ["Ambria", "Beloria", "Cresia", "Jadria", "Queria", "Selinia", "Sumeria", "Valoria"],
+  oceans: ["Endria", "Faria", "Grelia", "Operia", "Othria", "Silenia", "Vestria", "Worlia"],
+  lakes: ["Cyrenia", "Davenia", "Embria", "Meroria", "Perelia", "Seloria", "Stelia", "Valleria"],
 };
 const HISTORICAL_REGION_NAMES = {
   AKSUM: ["Aksum", "Tigray", "Hamasien"],
@@ -164,6 +164,7 @@ function gameSeed() {
 const GEOGRAPHIC_QUALIFIER_GROUPS = [
   ["North", "Northern", "South", "Southern"], ["East", "Eastern", "West", "Western"], ["Inner", "Outer"],
   ["Great", "Greater", "Lesser", "Upper", "Lower"],
+  ["Central", "Interior", "Coastal", "Inland", "Near", "Far", "Northeastern", "Northwestern", "Southeastern", "Southwestern"],
 ];
 const GEOGRAPHIC_QUALIFIERS = GEOGRAPHIC_QUALIFIER_GROUPS.flat();
 function canAddGeographicQualifier(name, qualifier) {
@@ -173,7 +174,7 @@ function canAddGeographicQualifier(name, qualifier) {
 }
 function normalizeGeographicQualifiers(name) {
   const pattern = new RegExp(`^((?:War of\\s+)?(?:(?:The|Lake|Rio)\\s+)?)((?:(?:${GEOGRAPHIC_QUALIFIERS.join("|")})\\s+){2,})`, "i");
-  return String(name).replace(pattern, (_, prefix, adjectives) => {
+  return String(name).replace(/\b(?:Misty|Windswept|Hidden|Rocky|Shimmering|Fabled|Remote|Distant|Ashen|Bright|Golden|Silver|Swift|Verdant|Wild|Azure|Calm|Cerulean|Quiet|Shining|Silent|Tranquil|Endless)\s+/gi, "").replace(pattern, (_, prefix, adjectives) => {
     const kept = [];
     for (const word of adjectives.trim().split(/\s+/)) {
       const group = GEOGRAPHIC_QUALIFIER_GROUPS.find(values => values.some(value => value.toLowerCase() === word.toLowerCase()));
@@ -188,7 +189,7 @@ function normalizeGeographicQualifiers(name) {
 function uniqueGeographicName(base, used, normalize = value => value, cursors = null) {
   base = normalizeGeographicQualifiers(base);
   const qualifiers = ["", ...GEOGRAPHIC_QUALIFIERS];
-  const modifiers = ["Distant", "Misty", "Windswept", "Hidden", "Rocky", "Shimmering", "Fabled", "Remote"];
+  const modifiers = ["Central", "Interior", "Coastal", "Inland", "Upper", "Lower", "Near", "Far"];
   const words = base.toLowerCase().split(/[^a-z]+/);
   const cursorKey = normalize(base), cursor = cursors && cursors.get(cursorKey);
   let name = base, round = cursor && used.has(normalize(cursor.name)) ? cursor.round : 0;
@@ -208,7 +209,7 @@ function uniqueGeographicName(base, used, normalize = value => value, cursors = 
     if (variant) {
       let suffix = "";
       while (variant > 0) { variant--; suffix = String.fromCharCode(97 + variant % 26) + suffix; variant = Math.floor(variant / 26); }
-      name = `${stem} near Vala${suffix}`;
+      name = `${stem} Vala${suffix}`;
     } else name = stem;
   }
   if (cursors) cursors.set(cursorKey, { name, round });
@@ -230,6 +231,20 @@ function validateGeographicNames(entries, locations, width, reservedNames = []) 
     groups.get(key).push(item);
   }
   for (const group of groups.values()) {
+    if (group.length === 2 && group.every(item => item.center)) {
+      const [a, b] = group;
+      const dx = ((b.center.x - a.center.x + width * 1.5) % width) - width / 2, dy = b.center.y - a.center.y;
+      if (Math.hypot(dx, dy) <= Math.max(8, width / 8) && (dx || dy)) {
+        const qualifiers = Math.abs(dy) > Math.abs(dx)
+          ? dy > 0 ? ['Southern', 'Northern'] : ['Northern', 'Southern']
+          : dx > 0 ? ['Western', 'Eastern'] : ['Eastern', 'Western'];
+        group.forEach((item, index) => {
+          item.qualifiers = [qualifiers[index]];
+          item.entry.name = /^the\s+/i.test(item.base) ? item.base.replace(/^the\s+/i, `The ${qualifiers[index]} `)
+            : `${qualifiers[index]} ${item.base}`;
+        });
+      }
+    }
     for (const item of group) {
       const peers = group.filter(other => other !== item);
       const keep = item.qualifiers.filter(qualifier => {
@@ -240,6 +255,10 @@ function validateGeographicNames(entries, locations, width, reservedNames = []) 
           return peers.every(other => q === "lesser" ? size < other.entry.tiles.length : size > other.entry.tiles.length);
         }
         if (!item.center || peers.some(other => !other.center)) return false;
+        if (peers.some(other => {
+          const dx = ((other.center.x - item.center.x + width * 1.5) % width) - width / 2;
+          return Math.hypot(dx, other.center.y - item.center.y) > Math.max(8, width / 8);
+        })) return false;
         if (q === "north" || q === "northern" || q === "south" || q === "southern") {
           return peers.every(other => q.startsWith("north") ? item.center.y > other.center.y : item.center.y < other.center.y);
         }
@@ -272,16 +291,14 @@ function validateGeographicNames(entries, locations, width, reservedNames = []) 
     if (!usedByKind.has(kind)) usedByKind.set(kind, new Set());
     const used = usedByKind.get(kind);
     if (used.has(entry.name.toLowerCase())) {
-      const modifiers = ["Distant", "Misty", "Windswept", "Hidden", "Rocky", "Shimmering", "Fabled", "Remote"];
       const base = entry.name;
       if (!nextDuplicateByKind.has(kind)) nextDuplicateByKind.set(kind, new Map());
       const nextByBase = nextDuplicateByKind.get(kind), baseKey = base.toLowerCase();
       let n = nextByBase.get(baseKey) || 1;
       do {
-        const words = [];
-        let value = n++;
-        while (value > 0) { value--; words.push(modifiers[value % modifiers.length]); value = Math.floor(value / modifiers.length); }
-        entry.name = /^the\s+/i.test(base) ? base.replace(/^the\s+/i, `The ${words.join(" ")} `) : `${words.join(" ")} ${base}`;
+        let suffix = "", value = n++;
+        while (value > 0) { value--; suffix = String.fromCharCode(97 + value % 26) + suffix; value = Math.floor(value / 26); }
+        entry.name = `${base} Vala${suffix}`;
       } while (used.has(entry.name.toLowerCase()));
       nextByBase.set(baseKey, n);
     }
@@ -320,13 +337,28 @@ function locationFor(index) {
   return apiValue("plot location lookup", () => GameplayMap.getLocationFromIndex(index), null);
 }
 
-function continentFor(x, y) {
+function continentNameForMap(id, nativeName, namedEarth) {
+  if (namedEarth === undefined) {
+    const mapName = apiValue("map name lookup", () => Configuration.getMap?.()?.mapName, "");
+    const localized = mapName ? apiValue("map name localization", () => Locale.compose(mapName), "") : "";
+    namedEarth = /earth/i.test(String(mapName)) || /earth/i.test(String(localized));
+  }
+  if (namedEarth) return String(nativeName).trim().replace(/^Antartica$/i, "Antarctica");
+  const starts = ["Ael", "Vor", "Kel", "Syr", "Dren", "Oth", "Mer", "Tal"];
+  const ends = ["oria", "athia", "evia", "andria", "unia", "alor", "essia", "ovia"];
+  const offset = deterministicIndex(`${gameSeed()}|continents`, starts.length * ends.length);
+  const number = (id + offset) % (starts.length * ends.length);
+  const cycle = Math.floor(id / (starts.length * ends.length));
+  return starts[number % starts.length] + ends[Math.floor(number / starts.length)] + (cycle ? String.fromCharCode(97 + cycle) : "");
+}
+
+function continentFor(x, y, namedEarth = true) {
   const id = apiValue("continent lookup", () => GameplayMap.getContinentType(x, y), -1);
   if (typeof id !== "number" || id < 0) return null;
   const description = apiValue("continent definition lookup", () => GameInfo.Continents.lookup(id)?.Description, null);
   if (!description) return null;
   const name = apiValue("continent name localization", () => Locale.compose(description), "");
-  return name && !/^LOC_/i.test(name) ? { id, name: String(name).trim() } : null;
+  return name && !/^LOC_/i.test(name) ? { id, name: continentNameForMap(id, name, namedEarth) } : null;
 }
 
 const EARTH_REGION_NAMES = {
@@ -1256,6 +1288,50 @@ function splitRegionTiles(tiles, locations) {
   return [a, b];
 }
 
+function buildSubregions(regions, locations) {
+    const subregions = [], subregionForTile = new Map();
+    for (const parent of regions) {
+      if (parent.water || parent.tiles.length < 8) continue;
+      let parts = splitConnectedBy(parent.tiles, locations, () => null);
+      const target = Math.max(parts.length, Math.min(4, Math.floor(parent.tiles.length / 8)));
+      while (parts.length < Math.max(2, target)) {
+        const biggest = parts.reduce((a, b) => a.length > b.length ? a : b);
+        if (biggest.length < 2) break;
+        parts.splice(parts.indexOf(biggest), 1, ...splitRegionTiles(biggest, locations));
+      }
+      const centers = parts.map(tiles => centerIndex(tiles, locations));
+      const names = new Set();
+      for (let n = 0; n < parts.length; n++) {
+        const tiles = parts[n].slice().sort((a, b) => a - b), center = centers[n];
+        const at = locations.get(center), peers = centers.filter((_, i) => i !== n).map(index => locations.get(index));
+        const north = peers.every(point => at.y > point.y), south = peers.every(point => at.y < point.y);
+        const offsets = peers.map(point => ((point.x - at.x + mapWidth * 1.5) % mapWidth) - mapWidth / 2);
+        const west = offsets.every(dx => dx > 0), east = offsets.every(dx => dx < 0);
+        const qualifier = north && west ? 'Northwestern' : north && east ? 'Northeastern'
+          : south && west ? 'Southwestern' : south && east ? 'Southeastern'
+          : north ? 'Northern' : south ? 'Southern' : west ? 'Western' : east ? 'Eastern' : '';
+        const stem = parent.nativeEarthName ? parent.name : normalizeGeographicQualifiers(parent.name);
+        let name = qualifier ? (/^the\s+/i.test(stem) ? stem.replace(/^the\s+/i, `The ${qualifier} `) : `${qualifier} ${stem}`)
+          : `${stem} ${NAME_PARTS.islands[deterministicIndex(`${parent.id}|${tiles[0]}`, NAME_PARTS.islands.length)]}`;
+        if (names.has(name)) name += ` ${NAME_PARTS.islands[n % NAME_PARTS.islands.length]}`;
+        names.add(name);
+        const membership = new Set(tiles), boundary = [];
+        for (const index of tiles) {
+          const adjacent = new Map(neighborsOf(locations.get(index)).map(neighbor => [neighbor.direction, neighbor]));
+          for (let direction = 0; direction < 6; direction++) {
+            const neighbor = adjacent.get(direction);
+            if (!neighbor || !membership.has(neighbor.index) || neighbor.wrapped) boundary.push({ index, direction });
+          }
+        }
+        const entry = { id: `subregion:${parent.id}:${tiles[0]}`, parentId: parent.id, name, center, tiles, boundary,
+          water: false, island: parent.island, type: 'subregion' };
+        subregions.push(entry);
+        for (const index of tiles) subregionForTile.set(index, entry.id);
+      }
+    }
+    return { subregions, subregionForTile };
+}
+
 // Bring the region count to `target`: split the biggest regions while short, merge the smallest while over.
 function fitRegionCount(entries, locations, target) {
   entries = entries.flatMap(entry => entry.island || entry.archipelago ? [entry] : splitConnectedBy(entry.tiles, locations, () => null)
@@ -1353,7 +1429,7 @@ function buildGeography() {
       if (index < 0) continue;
       const plot = { x, y };
       const terrain = landClass(x, y);
-      const continent = terrain.water ? null : continentFor(x, y);
+      const continent = terrain.water ? null : continentFor(x, y, namedEarth);
       records.set(index, { ...terrain, continent });
       locations.set(index, plot);
     }
@@ -1549,12 +1625,13 @@ function buildGeography() {
     }
     for (const [earthName, tiles] of named) {
       if (nativeEarthRivers && !earthName) continue;
-      if (tiles.length < 2) continue;
       const sorted = tiles.slice().sort((a, b) => a - b);
       features.push({
         id: `mountains:${sorted[0]}`,
         type: "mountains",
-        name: earthName || geographicName(NAME_PARTS.mountains[deterministicIndex(`${seed}|mountains|${sorted[0]}`, NAME_PARTS.mountains.length)], "mountains", sorted[0]),
+        name: earthName || (sorted.length === 1
+          ? `Mount ${NAME_PARTS.mountains[deterministicIndex(`${seed}|mountains|${sorted[0]}`, NAME_PARTS.mountains.length)]}`
+          : geographicName(NAME_PARTS.mountains[deterministicIndex(`${seed}|mountains|${sorted[0]}`, NAME_PARTS.mountains.length)], "mountains", sorted[0])),
         nativeEarthName: !!earthName,
         center: centerIndex(sorted, locations),
         tiles: sorted,
@@ -1580,7 +1657,7 @@ function buildGeography() {
       features.push({
         id: `rivers:${sorted[0]}`,
         type: "river",
-        name: realName || geographicName(NAME_PARTS.rivers[deterministicIndex(`${seed}|rivers|${sorted[0]}`, NAME_PARTS.rivers.length)], "river", sorted[0]),
+        name: geographicName(NAME_PARTS.rivers[deterministicIndex(`${seed}|rivers|${sorted[0]}`, NAME_PARTS.rivers.length)], "river", sorted[0]),
         center: centerIndex(sorted, locations),
         tiles: sorted,
       });
@@ -1641,32 +1718,21 @@ function buildGeography() {
     let cursors = nameCursorsByKind.get(kind);
     if (!cursors) { cursors = new Map(); nameCursorsByKind.set(kind, cursors); }
     if (entry.nativeEarthName) { used.add(entry.name.toLowerCase()); return; }
-    const migratedKey = `name3:${key}`, correctedKey = `name4:${key}`;
-    const migrated = rememberName(migratedKey, "");
-    let name = rememberName(correctedKey, "") || migrated || rememberName(key, "");
-    const corrected = name && normalizeGeographicQualifiers(name);
-    const needsCorrection = !!name && corrected !== name;
-    const badDigits = !!name && /\d/.test(name) && !/\d/.test(entry.name);
-    const reserved = kind === "river" ? new Set([...used, ...reservedEarthRivers]) : used;
-    if (!name || reserved.has(name.toLowerCase()) || needsCorrection || badDigits) {
-      const base = needsCorrection && !badDigits ? corrected : normalizeGeographicQualifiers(entry.name);
-      name = uniqueGeographicName(base, reserved, value => value.toLowerCase(), cursors);
-      const storageKey = needsCorrection || (migrated && badDigits) ? correctedKey : migratedKey;
-      name = rememberName(storageKey, name);
-      if (reserved.has(name.toLowerCase())) name = uniqueGeographicName(base, reserved, value => value.toLowerCase(), cursors);
+    {
+      entry.name = uniqueGeographicName(entry.name, used, value => value.toLowerCase(), cursors);
+      used.add(entry.name.toLowerCase());
+      return;
     }
-    used.add(name.toLowerCase());
-    entry.name = name;
   };
   for (const region of regions) saveUniqueName(region, "regions", `region2:${region.id}`);
   for (const feature of features) saveUniqueName(feature, feature.type, `feature2:${feature.id}`);
   validateGeographicNames(regions, locations, width);
   validateGeographicNames(features, locations, width, reservedEarthRivers);
   for (const region of regions) {
-    if (!region.nativeEarthName) region.name = rememberValidatedName(`name5:region2:${region.id}`, region.name);
+    if (!region.nativeEarthName) region.name = rememberValidatedName(`name7:region2:${region.id}`, region.name);
   }
   for (const feature of features) {
-    if (!feature.nativeEarthName) feature.name = rememberValidatedName(`name5:feature2:${feature.id}`, feature.name);
+    if (!feature.nativeEarthName) feature.name = rememberValidatedName(`name7:feature2:${feature.id}`, feature.name);
   }
   for (const feature of features) {
     if (feature.type !== "island" && feature.type !== "lake") continue;
@@ -1687,7 +1753,7 @@ function buildGeography() {
     if (!continents.has(id)) continents.set(id, { id: `continent:${id}`, name, tiles: [] });
     continents.get(id).tiles.push(index);
   }
-  geographyCache = { width, height, regions, continents: [...continents.values()],
+  geographyCache = { width, height, regions, ...buildSubregions(regions, locations), continents: [...continents.values()],
     features: features.filter(feature => feature.name), boundary, regionForTile, locations };
   geographyCacheKey = cacheKey;
   return geographyCache;
@@ -1867,6 +1933,7 @@ function registerWarRefreshEvent() {
 registerWarRefreshEvent();
 
 window.AnthroproceniaGeography = {
+  continentNameForMap,
   getMapData: buildGeography,
   getWarLabels: currentWarLabels,
   rememberWarName,

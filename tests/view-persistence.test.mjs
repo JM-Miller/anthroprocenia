@@ -31,7 +31,8 @@ function makeWorld(store) {
     window: { AnthroproceniaViewStore: { write: (key, value) => { store.set(key, value); written.push(key); return true; } } },
     getCatalog: () => ({ getObject: () => ({ read: key => store.get(key) || null }) }),
     err: message => { throw new Error(message); },
-    OBJ_VIEW: 'view', playing: false, pos: 7, frames: Array.from({ length: 8 }, (_, i) => [0, i, 1, `T${i}`]), manifest: { rev: 3 },
+    replayStore: { scope: () => '' },
+    OBJ_VIEW: 'view', playing: false, pos: 7, frames: Array.from({ length: 8 }, (_, i) => [0, i, 1, `T${i}`]), manifest: { rev: 3, w: 180, h: 94 },
     hexW: 20, detailD: 4,
     buildingsForPos: () => new Map([[1, [1]]]), settlementsForPos: () => new Map(), wondersForPos: () => new Map(), readUnitsTurn: () => [],
     itemOwner: () => 1, identityForPos: () => new Map([[1, ['', '', '', 0, 0, 'ROME']]]), normalizedCivKey: v => v,
@@ -46,10 +47,11 @@ function makeWorld(store) {
   vm.runInContext(`
     const townShapeCache = new Map(), townPathCache = new Map();
     const viewData = { index: null, lib: null, twKey: '', twPlace: null, sigKey: '', sig: '', errorLogged: false };
+    let viewDataScope = '';
     const viewQueue = createWriteQueue((key, value) => { if (!window.AnthroproceniaViewStore.write(key, value)) throw new Error('store'); }, { delay: 3000 });
     viewQueue.onError = (key, e) => { throw e; };
   `, context);
-  vm.runInContext(['viewRead', 'viewIndex', 'viewSave', 'viewFrameSignature', 'twLibrary', 'twLibGet', 'twLibPut', 'twPlacements', 'twRememberPlacement', 'townscapeFor', 'polygonPath'].map(slice).join('\n'), context);
+  vm.runInContext(['viewRead', 'viewIndex', 'viewSave', 'viewFrameSignature', 'twLibrary', 'twLibGet', 'twLibPut', 'twPlacements', 'twRememberPlacement', 'townscapeFor', 'polygonPath', 'mapScaleMetrics'].map(slice).join('\n'), context);
   return { context, counters, written };
 }
 const item = { kind: 'building', index: 1, typeIndex: 4, dot: 2 };

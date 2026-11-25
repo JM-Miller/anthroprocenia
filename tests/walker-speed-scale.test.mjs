@@ -73,10 +73,10 @@ test('walkers default to 1x, including missing saved/session speed values', () =
 });
 
 test('walker dots have a 0.0003-mile minimum diameter and maximum zoom derives from that scale', () => {
-  const ctx = context(['walkerDotRadius', 'maxViewZoom'], {
+  const ctx = context(['walkerDotRadius', 'maxViewZoom', 'mapScaleMetrics'], {
     hexW: 12, viewZoom: 1, ps: n => n, TILE_MILES: 100, WALKER_MIN_DIAMETER_MILES: 0.0003,
   });
-  assert.match(source, /WALKER_MIN_DIAMETER_MILES = 0\.0003, TILE_MILES = 100/);
+  assert.match(source, /WALKER_MIN_DIAMETER_MILES = 0\.0003/);
   for (const tileWidth of [0.1, 12, 70, 1000]) for (const uiScale of [0.5, 1, 2]) {
     ctx.hexW = tileWidth;
     ctx.ps = n => n * uiScale;
@@ -289,7 +289,7 @@ test('miniature townscape paths retain distinct road, creek and vegetation coord
   const paths = town.townscapePaths({ streets: [[[0, 0], [0.001, 0]]], water: [[[0, 0], [0, 0.001]]] }, 0, 0, radius);
   assert.equal(paths.streets, 'M0,0L0.001,0');
   assert.equal(paths.water, 'M0,0L0,0.001');
-  const ctx = context(['townDecoPaths'], { DECO_GROUPS: town.DECO_GROUPS, DECORATION_STROKE_FEET: town.DECORATION_STROKE_FEET, decorationPath: town.decorationPath });
+  const ctx = context(['townDecoPaths', 'townDecoPathSteps'], { DECO_GROUPS: town.DECO_GROUPS, DECORATION_STROKE_FEET: town.DECORATION_STROKE_FEET, decorationPath: town.decorationPath });
   const result = ctx.townDecoPaths([{ x: 0, y: 0, pad: 1, unit: 0.01, deco: { kind: 'bush', size: 1, a: 0 } }],
     { x0: -1, x1: 1, y0: -1, y1: 1 });
   const vertices = result.decoBushes.match(/-?\d*\.?\d+,-?\d*\.?\d+/g);
@@ -297,7 +297,7 @@ test('miniature townscape paths retain distinct road, creek and vegetation coord
 });
 
 test('town decoration physical sizes stay fixed across town sizes while positions follow the layout', () => {
-  const ctx = context(['townDecoPlacements'], {
+  const ctx = context(['townDecoPlacements', 'mapScaleMetrics'], {
     hexW: 100, isWaterAt: () => false, townDecorations: () => [{ kind: 'bench', x: 0.1, y: 0.2, size: 1 }],
     hashString: () => 1, decorationTouchesWater: () => false,
   });

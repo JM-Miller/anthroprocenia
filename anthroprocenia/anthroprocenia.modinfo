@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<Mod xmlns="ModInfo" id="anthroprocenia_map_history" version="120">
+<Mod xmlns="ModInfo" id="anthroprocenia_map_history" version="128">
 	<Properties>
 		<Name>Anthroprocenia</Name>
 		<Description>Explore a historical map of your Civilization VII game with replay, geographic labels, and customizable map layers.</Description>
@@ -95,6 +95,20 @@
 		</Criteria>
 		<Criteria id="antiquity">
 			<AgeInUse>AGE_ANTIQUITY</AgeInUse>
+		</Criteria>
+		<Criteria id="realistic-x10">
+			<ConfigurationValueMatches>
+				<Group>Game</Group>
+				<ConfigurationId>SpeedType</ConfigurationId>
+				<Value>GAMESPEED_ANTHRO_REALISTIC_X10</Value>
+			</ConfigurationValueMatches>
+		</Criteria>
+		<Criteria id="realistic-x20">
+			<ConfigurationValueMatches>
+				<Group>Game</Group>
+				<ConfigurationId>SpeedType</ConfigurationId>
+				<Value>GAMESPEED_ANTHRO_REALISTIC_X20</Value>
+			</ConfigurationValueMatches>
 		</Criteria>
 		<Criteria id="exploration">
 			<AgeInUse>AGE_EXPLORATION</AgeInUse>
@@ -1175,6 +1189,26 @@
 				</UpdateDatabase>
 			</Actions>
 		</ActionGroup>
+		<ActionGroup id="ludicrous-map-dimensions" scope="game" criteria="always">
+			<Properties>
+				<LoadOrder>1100</LoadOrder>
+			</Properties>
+			<Actions>
+				<UpdateDatabase>
+					<Item>data/ludicrous-map-dimensions.sql</Item>
+				</UpdateDatabase>
+			</Actions>
+		</ActionGroup>
+		<ActionGroup id="settlement-distance" scope="game" criteria="always">
+			<Properties>
+				<LoadOrder>10000</LoadOrder>
+			</Properties>
+			<Actions>
+				<UpdateDatabase>
+					<Item>data/settlement-distance.sql</Item>
+				</UpdateDatabase>
+			</Actions>
+		</ActionGroup>
 		<ActionGroup id="realistic-x2" scope="game" criteria="realistic-x2">
 			<Properties>
 				<LoadOrder>995</LoadOrder>
@@ -1235,9 +1269,32 @@
 					<Item>config/SetupDefaults.sql</Item>
 					<Item>config/OversizedMaps.sql</Item>
 				</UpdateDatabase>
+				<UIScripts>
+					<Item>ui/setup/anthroprocenia-oversized-players.js</Item>
+				</UIScripts>
 				<UpdateText>
 					<Item>text/en_us/AnthroproceniaText.xml</Item>
 				</UpdateText>
+			</Actions>
+		</ActionGroup>
+		<ActionGroup id="realistic-x10" scope="game" criteria="realistic-x10">
+			<Properties>
+				<LoadOrder>995</LoadOrder>
+			</Properties>
+			<Actions>
+				<UpdateDatabase>
+					<Item>data/realistic-x10.sql</Item>
+				</UpdateDatabase>
+			</Actions>
+		</ActionGroup>
+		<ActionGroup id="realistic-x20" scope="game" criteria="realistic-x20">
+			<Properties>
+				<LoadOrder>995</LoadOrder>
+			</Properties>
+			<Actions>
+				<UpdateDatabase>
+					<Item>data/realistic-x20.sql</Item>
+				</UpdateDatabase>
 			</Actions>
 		</ActionGroup>
 		<ActionGroup id="realistic-antiquity" scope="game" criteria="antiquity">
@@ -1280,6 +1337,30 @@
 				</UpdateDatabase>
 			</Actions>
 		</ActionGroup>
+		<ActionGroup id="narration-shell" scope="shell" criteria="always">
+			<Actions>
+				<UIScripts>
+					<Item>ui/narration/anthroprocenia-narrator.js</Item>
+				</UIScripts>
+				<ImportFiles>
+					<Item>ui/narration/anthroprocenia-early-loader.js</Item>
+					<Item>ui/narration/connection.json</Item>
+					<Item>audio/narration/scripts.json</Item>
+				</ImportFiles>
+			</Actions>
+		</ActionGroup>
+		<ActionGroup id="narration-game" scope="game" criteria="always">
+			<Actions>
+				<UIScripts>
+					<Item>ui/narration/anthroprocenia-narrator.js</Item>
+				</UIScripts>
+				<ImportFiles>
+					<Item>ui/narration/anthroprocenia-early-loader.js</Item>
+					<Item>ui/narration/connection.json</Item>
+					<Item>audio/narration/scripts.json</Item>
+				</ImportFiles>
+			</Actions>
+		</ActionGroup>
 		<ActionGroup id="anthroprocenia-ingame" scope="game" criteria="always">
 			<Actions>
 				<UpdateText>
@@ -1294,14 +1375,14 @@
 				</UIScripts>
 				<ImportFiles>
 					<Item>maps/oversized-dimensions.js</Item>
-					<Item>maps/continents-voronoi.js</Item>
-					<Item>maps/pangaea-voronoi.js</Item>
-					<Item>maps/fractal-voronoi.js</Item>
-					<Item>maps/archipelago-voronoi.js</Item>
-					<Item>maps/shattered-seas-voronoi.js</Item>
-					<Item>maps/shuffle-voronoi.js</Item>
-					<Item>maps/terra-incognita-voronoi.js</Item>
-					<Item>maps/donut-voronoi.js</Item>
+					<Item>maps/anthro-continents-voronoi.js</Item>
+					<Item>maps/anthro-pangaea-voronoi.js</Item>
+					<Item>maps/anthro-fractal-voronoi.js</Item>
+					<Item>maps/anthro-archipelago-voronoi.js</Item>
+					<Item>maps/anthro-shattered-seas-voronoi.js</Item>
+					<Item>maps/anthro-shuffle-voronoi.js</Item>
+					<Item>maps/anthro-terra-incognita-voronoi.js</Item>
+					<Item>maps/anthro-donut-voronoi.js</Item>
 					<Item>ui/map/anthroprocenia-calendar.js</Item>
 					<Item>ui/map/anthroprocenia-skipahead.js</Item>
 					<Item>ui/map/anthroprocenia-civ-switch.js</Item>
@@ -1328,6 +1409,7 @@
 					<Item>ui/map/anthroprocenia-townlinks.js</Item>
 					<Item>ui/map/anthroprocenia-river-deltas.js</Item>
 					<Item>ui/map/anthroprocenia-persist.js</Item>
+					<Item>ui/map/anthroprocenia-storage.js</Item>
 					<Item>ui/map/anthroprocenia-commands.js</Item>
 					<Item>ui/map/anthroprocenia-linenames.js</Item>
 				</ImportFiles>
@@ -2266,6 +2348,77 @@
 					<Item>art/official-icons/official_quarter_uwaybil_kuh.png</Item>
 					<Item>art/official-icons/official_quarter_zaibatsu.png</Item>
 					<Item>art/official-icons/official_quarter_zocalo.png</Item>
+				</ImportFiles>
+			</Actions>
+		</ActionGroup>
+		<ActionGroup id="progression-expansion" scope="game" criteria="always">
+			<Properties><LoadOrder>20000</LoadOrder></Properties>
+			<Actions>
+				<UIScripts><Item>ui/progression/anthroprocenia-progression-icons.js</Item></UIScripts>
+				<UpdateDatabase><Item>data/progression-expansion.sql</Item></UpdateDatabase>
+				<UpdateText><Item>text/en_us/ProgressionExpansion.xml</Item></UpdateText>
+				<UpdateIcons><Item>data/progression-icons.xml</Item></UpdateIcons>
+				<UpdateVisualRemaps><Item>data/progression-remaps.xml</Item></UpdateVisualRemaps>
+				<ImportFiles>
+					<Item>art/progression/arch-1.png</Item><Item>art/progression/arch-2.png</Item>
+					<Item>art/progression/atom-1.png</Item><Item>art/progression/atom-2.png</Item>
+					<Item>art/progression/book-1.png</Item><Item>art/progression/book-2.png</Item>
+					<Item>art/progression/circuit-1.png</Item><Item>art/progression/circuit-2.png</Item>
+					<Item>art/progression/coin-1.png</Item><Item>art/progression/coin-2.png</Item>
+					<Item>art/progression/compass-1.png</Item><Item>art/progression/compass-2.png</Item>
+					<Item>art/progression/council-1.png</Item><Item>art/progression/council-2.png</Item>
+					<Item>art/progression/grain-1.png</Item><Item>art/progression/grain-2.png</Item>
+					<Item>art/progression/kiln-1.png</Item><Item>art/progression/kiln-2.png</Item>
+					<Item>art/progression/rocket-1.png</Item><Item>art/progression/rocket-2.png</Item>
+					<Item>art/progression/sail-1.png</Item><Item>art/progression/sail-2.png</Item>
+					<Item>art/progression/scales-1.png</Item><Item>art/progression/scales-2.png</Item>
+					<Item>art/progression/shield-1.png</Item><Item>art/progression/shield-2.png</Item>
+					<Item>art/progression/signal-1.png</Item><Item>art/progression/signal-2.png</Item>
+					<Item>art/progression/sun-1.png</Item><Item>art/progression/sun-2.png</Item>
+					<Item>art/progression/water-1.png</Item><Item>art/progression/water-2.png</Item>
+					<Item>art/progression/wheel-1.png</Item><Item>art/progression/wheel-2.png</Item>
+					<Item>art/progression/wing-1.png</Item><Item>art/progression/wing-2.png</Item>
+				</ImportFiles>
+			</Actions>
+		</ActionGroup>
+		<ActionGroup id="progression-content-antiquity" scope="game" criteria="antiquity">
+			<Properties><LoadOrder>20001</LoadOrder></Properties>
+			<Actions><UpdateDatabase><Item>data/progression-content-antiquity.sql</Item></UpdateDatabase></Actions>
+		</ActionGroup>
+		<ActionGroup id="progression-content-exploration" scope="game" criteria="exploration">
+			<Properties><LoadOrder>20001</LoadOrder></Properties>
+			<Actions><UpdateDatabase><Item>data/progression-content-exploration.sql</Item></UpdateDatabase></Actions>
+		</ActionGroup>
+		<ActionGroup id="progression-content-modern" scope="game" criteria="modern">
+			<Properties><LoadOrder>20001</LoadOrder></Properties>
+			<Actions><UpdateDatabase><Item>data/progression-content-modern.sql</Item></UpdateDatabase></Actions>
+		</ActionGroup>
+		<ActionGroup id="progression-shell-art" scope="shell" criteria="always">
+			<Properties><LoadOrder>20000</LoadOrder></Properties>
+			<Actions>
+				<UpdateDatabase><Item>config/ProgressionExpansion.sql</Item></UpdateDatabase>
+				<UpdateText><Item>text/en_us/ProgressionExpansion.xml</Item></UpdateText>
+				<UpdateIcons><Item>data/progression-icons.xml</Item></UpdateIcons>
+				<UpdateVisualRemaps><Item>data/progression-remaps.xml</Item></UpdateVisualRemaps>
+				<ImportFiles>
+					<Item>art/progression/arch-1.png</Item><Item>art/progression/arch-2.png</Item>
+					<Item>art/progression/atom-1.png</Item><Item>art/progression/atom-2.png</Item>
+					<Item>art/progression/book-1.png</Item><Item>art/progression/book-2.png</Item>
+					<Item>art/progression/circuit-1.png</Item><Item>art/progression/circuit-2.png</Item>
+					<Item>art/progression/coin-1.png</Item><Item>art/progression/coin-2.png</Item>
+					<Item>art/progression/compass-1.png</Item><Item>art/progression/compass-2.png</Item>
+					<Item>art/progression/council-1.png</Item><Item>art/progression/council-2.png</Item>
+					<Item>art/progression/grain-1.png</Item><Item>art/progression/grain-2.png</Item>
+					<Item>art/progression/kiln-1.png</Item><Item>art/progression/kiln-2.png</Item>
+					<Item>art/progression/rocket-1.png</Item><Item>art/progression/rocket-2.png</Item>
+					<Item>art/progression/sail-1.png</Item><Item>art/progression/sail-2.png</Item>
+					<Item>art/progression/scales-1.png</Item><Item>art/progression/scales-2.png</Item>
+					<Item>art/progression/shield-1.png</Item><Item>art/progression/shield-2.png</Item>
+					<Item>art/progression/signal-1.png</Item><Item>art/progression/signal-2.png</Item>
+					<Item>art/progression/sun-1.png</Item><Item>art/progression/sun-2.png</Item>
+					<Item>art/progression/water-1.png</Item><Item>art/progression/water-2.png</Item>
+					<Item>art/progression/wheel-1.png</Item><Item>art/progression/wheel-2.png</Item>
+					<Item>art/progression/wing-1.png</Item><Item>art/progression/wing-2.png</Item>
 				</ImportFiles>
 			</Actions>
 		</ActionGroup>

@@ -16,12 +16,12 @@ function slice(source, name) {
   return source.slice(start, end + 1);
 }
 
-test('movement captures run without a debounce delay, coalesce event bursts and retain resolved-turn bookkeeping', () => {
+test('movement captures coalesce event bursts within a bounded delay and retain resolved-turn bookkeeping', () => {
   const callbacks = [], captures = [];
   const ctx = vm.createContext({
     started: true, lastTurnRecorded: 6, Game: { age: 0, turn: 8 },
     localRecordingTurn: () => true, frameIndex: () => 1, window: { AnthroproceniaReplay: { isVisible: () => true } },
-    setTimeout: (callback, delay) => { assert.equal(delay, 0); callbacks.push(callback); return callbacks.length; },
+    setTimeout: (callback, delay) => { assert.equal(delay, 250); callbacks.push(callback); return callbacks.length; },
     record: turn => { captures.push(turn); ctx.lastTurnRecorded = turn; },
     err: message => assert.fail(message),
   });
@@ -93,7 +93,7 @@ test('age end, victory and local defeat resume replay animation without waiting 
 test('pending provisional capture is canceled at turn begin while the resolved previous turn is still recorded', () => {
   const calls = [], canceled = [];
   const ctx = vm.createContext({
-    started: true, midTurnTimer: 9, clearTimeout: id => canceled.push(id),
+    started: true, midTurnTimer: 9, clearTimeout: id => canceled.push(id), recordingScope: null,
     Game: { turn: 8 }, lastTurnRecorded: 6, record: (turn, snap) => calls.push([turn, snap]),
     err: e => assert.fail(e),
   });
@@ -107,7 +107,7 @@ test('provisional scan rechecks view visibility when its delayed timer fires', (
   const tasks = [];
   let visible = true, captures = 0;
   const ctx = vm.createContext({
-    started: true, midTurnTimer: 0, MID_TURN_RECORD_DELAY_MS: 1000,
+    started: true, midTurnTimer: 0, MID_TURN_RECORD_DELAY_MS: 250, midTurnDelayMs: 250,
     localRecordingTurn: () => true, window: { AnthroproceniaReplay: { isVisible: () => visible } },
     setTimeout: fn => { tasks.push(fn); return 1; }, Game: { turn: 8, age: 0 },
     frameIndex: () => 0, lastTurnRecorded: 6, record: () => captures++, err: e => assert.fail(e),
@@ -119,4 +119,26 @@ test('provisional scan rechecks view visibility when its delayed timer fires', (
   visible = true; ctx.scheduleMidTurnRecord(); tasks.shift()();
   assert.equal(captures, 1);
   assert.equal(ctx.lastTurnRecorded, 6);
+});
+test('expensive captures back off by four times scan duration, bounded at five seconds', () => {
+  let clock = 0, cost = 1000;
+  const tasks = [], delays = [];
+  const ctx = vm.createContext({
+    Date: { now: () => clock }, started: true, midTurnTimer: 0,
+    MID_TURN_RECORD_DELAY_MS: 250, midTurnDelayMs: 250,
+    localRecordingTurn: () => true, window: { AnthroproceniaReplay: { isVisible: () => true } },
+    setTimeout: (fn, ms) => { tasks.push(fn); delays.push(ms); return 1; },
+    Game: { turn: 8, age: 0 }, frameIndex: () => 0, lastTurnRecorded: 6,
+    record: () => { clock += cost; }, err: e => assert.fail(e),
+  });
+  vm.runInContext(slice(recorder, 'scheduleMidTurnRecord'), ctx);
+  for (let i = 0; i < 100; i++) ctx.scheduleMidTurnRecord();
+  assert.equal(tasks.length, 1);
+  tasks.shift()();
+  ctx.scheduleMidTurnRecord();
+  assert.deepEqual(delays, [250, 4000]);
+  cost = 2000; tasks.shift()();
+  ctx.scheduleMidTurnRecord(); assert.equal(delays.at(-1), 5000);
+  cost = 0; tasks.shift()();
+  ctx.scheduleMidTurnRecord(); assert.equal(delays.at(-1), 250);
 });

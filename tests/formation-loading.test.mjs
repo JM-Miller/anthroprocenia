@@ -33,6 +33,51 @@ function makeGroup(sub, state = '', count = 32) {
 const extent = points => ({ width: Math.max(...points.map(p => p.x)) - Math.min(...points.map(p => p.x)),
   height: Math.max(...points.map(p => p.y)) - Math.min(...points.map(p => p.y)) });
 
+test('native unit identities bypass historical lineage reconstruction and remain stable through movement and upgrades', () => {
+  const rows = [[5, 0, 0, 100, -1, 0, 0, '0:42']];
+  const ctx = context(['unitLineageId'], { pos: 20000, readUnitsTurn: () => rows,
+    unitLineage: () => assert.fail('stable native identities must not reconstruct twenty thousand turns') });
+  assert.equal(ctx.unitLineageId(0), 'native:0:42');
+  rows[0][0] = 9; rows[0][2] = 7;
+  assert.equal(ctx.unitLineageId(0), 'native:0:42');
+});
+
+test('only completed native unit production records recruitment once, with persistent origin and stable identity', () => {
+  const errors = [], units = new Map([[1, { owner: 0, type: 42, location: { x: 0, y: 0 } }]]), manifest = { rev: 0 };
+  const state = {
+    started: true, manifest, pendingRecruitments: [], lastUnitPlot: new Map([['0:1', 0]]), unitTypeMap: new Map([[42, 0]]),
+    Game: { age: 0, turn: 3 }, ProductionKind: { UNIT: 1, CONSTRUCTIBLE: 2 },
+    Cities: { get: () => ({ owner: 0, population: 5, name: 'Roma', location: { x: 0, y: 0 } }) },
+    Players: { get: () => ({ Units: { getUnitIds: () => [...units.keys()].map(id => ({ id })) } }) },
+    Units: { get: id => units.get(id.id) }, unitTypeIndex: () => 0, scheduleMidTurnRecord() {},
+    GameplayMap: { getIndexFromLocation: point => point.x, getLocationFromIndex: x => ({ x, y: 0 }),
+      getPlotDistance: (x, y, a, b) => Math.abs(x - a) + Math.abs(y - b) },
+    err: message => errors.push(message),
+  };
+  const ctx = context(['recordUnitProduction', 'resolveUnitProductions'], state, recorder);
+  const event = { cityID: { id: 0 }, productionItem: 42, productionKind: 1 };
+  units.set(2, { owner: 0, type: 42, location: { x: 1, y: 0 } });
+  ctx.recordUnitProduction({ ...event, productionKind: 2 });
+  assert.equal(manifest.recruitments, undefined, 'constructibles cannot recruit units');
+  ctx.recordUnitProduction(event);
+  assert.deepEqual(JSON.parse(JSON.stringify(manifest.recruitments)), [[0, 3, 0, 0, '0:2', 0, 5, 'Roma']]);
+  ctx.recordUnitProduction({ ...event }); ctx.resolveUnitProductions();
+  assert.equal(manifest.recruitments.length, 1, 'repeated production notifications cannot debit the same native unit twice');
+  ctx.pendingRecruitments.length = 0;
+  ctx.recordUnitProduction(event);
+  assert.equal(ctx.pendingRecruitments.length, 1, 'a second actual production can wait for its new unit even with an identical same-turn type');
+  units.set(3, { owner: 0, type: 42, location: { x: 0, y: 0 } });
+  ctx.resolveUnitProductions();
+  assert.equal(manifest.recruitments.length, 2, 'two real units of the same type on the same turn are both recorded');
+  units.get(2).location.x = 12; units.get(1).type = 99;
+  assert.equal(manifest.recruitments[0][2], 0, 'movement and upgrades do not rewrite recruitment origin');
+  ctx.pendingRecruitments.length = 0; ctx.lastUnitPlot = new Map([['0:1', 0], ['0:2', 12], ['0:3', 0]]);
+  ctx.recordUnitProduction(event);
+  assert.equal(manifest.recruitments.length, 2, 'reloaded identities do not become newly recruited units');
+  assert.equal(errors.length, 0);
+  assert.match(recorder, /engine.on\('CityProductionCompleted', recordUnitProduction\)/);
+});
+
 test('military formations require battle this turn and dissolve immediately at the next turn at both zoom levels', () => {
   for (const coarse of [false, true]) {
     const graph = makeGraph(), group = makeGroup('cavalry'), clumps = new crowds.WalkerClumps();

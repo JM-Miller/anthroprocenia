@@ -10,7 +10,7 @@ export function skipDuration(mode, age, turns, years, parts, factor = realisticS
   if (mode === 'turns') count = whole(turns, 'Turns');
   else if (mode === 'calendar') {
     if (!REALISTIC_AGES[age]) throw new Error('Calendar duration is unavailable for this Age; use turns.');
-    if (!Number.isInteger(factor) || factor < 1 || factor > 6) throw new Error('Invalid Realistic speed multiplier.');
+    if (![1, 2, 3, 4, 5, 6, 10, 20].includes(factor)) throw new Error('Invalid Realistic speed multiplier.');
     const perYear = Math.round(1 / REALISTIC_AGES[age].yearsPerTurn);
     const part = whole(parts, 'Seasons/months');
     if (part >= perYear) throw new Error(`Extra seasons/months must be between 0 and ${perYear - 1}.`);
@@ -22,7 +22,7 @@ export function skipDuration(mode, age, turns, years, parts, factor = realisticS
 export function skipTargetTurn(age, input, part = 0, factor = realisticSpeedMultiplier()) {
   const config = REALISTIC_AGES[age];
   if (!config) throw new Error('Target dates are unavailable for this Age.');
-  if (!Number.isInteger(factor) || factor < 1 || factor > 6) throw new Error('Invalid Realistic speed multiplier.');
+  if (![1, 2, 3, 4, 5, 6, 10, 20].includes(factor)) throw new Error('Invalid Realistic speed multiplier.');
   const match = /^(-?\d+)\s*(BCE|BC|CE|AD)?$/i.exec(String(input).trim());
   if (!match) throw new Error('Enter a whole year, such as 3000 BCE or 1800 CE.');
   let year = Number(match[1]);
